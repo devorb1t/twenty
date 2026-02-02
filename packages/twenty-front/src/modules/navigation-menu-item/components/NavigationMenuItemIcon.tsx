@@ -24,7 +24,7 @@ export const NavigationMenuItemIcon = ({
 }) => {
   const theme = useTheme();
   const { getIcon } = useIcons();
-  const { Icon: StandardIcon } = useGetStandardObjectIcon(
+  const { Icon: StandardIcon, IconColor } = useGetStandardObjectIcon(
     navigationMenuItem.objectNameSingular || '',
   );
   const IconToUse =
@@ -33,22 +33,39 @@ export const NavigationMenuItemIcon = ({
 
   const placeholderColorSeed = navigationMenuItem.targetRecordId ?? undefined;
 
+  const isRecord = isDefined(navigationMenuItem.targetRecordId);
   const iconColors = getNavigationMenuItemIconColors(theme);
-  const iconBackgroundColor = isDefined(navigationMenuItem.viewId)
-    ? iconColors.view
-    : iconColors.object;
+  const iconBackgroundColor = isRecord
+    ? undefined
+    : isDefined(navigationMenuItem.viewId)
+      ? iconColors.view
+      : iconColors.object;
+
+  const iconColorToUse = iconBackgroundColor
+    ? theme.grayScale.gray1
+    : StandardIcon
+      ? IconColor
+      : theme.font.color.secondary;
+
+  const avatar = (
+    <Avatar
+      size={iconBackgroundColor ? 'xs' : 'md'}
+      type={navigationMenuItem.avatarType}
+      Icon={IconToUse}
+      iconColor={iconColorToUse}
+      avatarUrl={navigationMenuItem.avatarUrl}
+      placeholder={navigationMenuItem.labelIdentifier}
+      placeholderColorSeed={placeholderColorSeed}
+    />
+  );
+
+  if (!iconBackgroundColor) {
+    return avatar;
+  }
 
   return (
     <StyledIconWithBackground backgroundColor={iconBackgroundColor}>
-      <Avatar
-        size="md"
-        type={navigationMenuItem.avatarType}
-        Icon={IconToUse}
-        iconColor={theme.grayScale.gray1}
-        avatarUrl={navigationMenuItem.avatarUrl}
-        placeholder={navigationMenuItem.labelIdentifier}
-        placeholderColorSeed={placeholderColorSeed}
-      />
+      {avatar}
     </StyledIconWithBackground>
   );
 };
