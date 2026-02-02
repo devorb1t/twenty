@@ -1,8 +1,7 @@
-import { t } from '@lingui/core/macro';
 import { useIsSettingsPage } from '@/navigation/hooks/useIsSettingsPage';
+import { NAVIGATION_DRAWER_COLLAPSED_WIDTH } from '@/ui/layout/resizable-panel/constants/NavigationDrawerCollapsedWidth';
 import { NavigationDrawerAnimatedCollapseWrapper } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerAnimatedCollapseWrapper';
 import { NavigationDrawerItemBreadcrumb } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerItemBreadcrumb';
-import { NAVIGATION_DRAWER_COLLAPSED_WIDTH } from '@/ui/layout/resizable-panel/constants/NavigationDrawerCollapsedWidth';
 import { useNavigationDrawerTooltip } from '@/ui/navigation/navigation-drawer/hooks/useNavigationDrawerTooltip';
 import { type NavigationDrawerSubItemState } from '@/ui/navigation/navigation-drawer/types/NavigationDrawerSubItemState';
 import { isNavigationDrawerExpandedState } from '@/ui/navigation/states/isNavigationDrawerExpanded';
@@ -10,6 +9,7 @@ import { useIsMobile } from '@/ui/utilities/responsive/hooks/useIsMobile';
 import isPropValid from '@emotion/is-prop-valid';
 import { css, useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
+import { t } from '@lingui/core/macro';
 import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
@@ -42,6 +42,7 @@ export type NavigationDrawerItemProps = {
   to?: string;
   onClick?: () => void;
   Icon?: IconComponent | ((props: TablerIconsProps) => JSX.Element);
+  iconBackgroundColor?: string;
   active?: boolean;
   danger?: boolean;
   soon?: boolean;
@@ -193,13 +194,22 @@ const StyledSpacer = styled.span`
   flex-grow: 1;
 `;
 
-const StyledIcon = styled.div`
-  flex-shrink: 0;
-  flex-grow: 0;
-  display: flex;
+const StyledIcon = styled.div<{ $backgroundColor?: string }>`
   align-items: center;
+  display: flex;
+  flex-grow: 0;
+  flex-shrink: 0;
   justify-content: center;
   margin-right: ${({ theme }) => theme.spacing(2)};
+
+  ${({ theme, $backgroundColor }) =>
+    $backgroundColor &&
+    `
+    background-color: ${$backgroundColor};
+    border-radius: ${theme.border.radius.xs};
+    height: ${theme.spacing(4)};
+    width: ${theme.spacing(4)};
+  `}
 `;
 
 const StyledRightOptionsContainer = styled.div`
@@ -251,6 +261,7 @@ export const NavigationDrawerItem = ({
   secondaryLabel,
   indentationLevel = DEFAULT_INDENTATION_LEVEL,
   Icon,
+  iconBackgroundColor,
   to,
   onClick,
   active,
@@ -324,17 +335,25 @@ export const NavigationDrawerItem = ({
           )}
 
           {Icon && (
-            <StyledIcon>
+            <StyledIcon $backgroundColor={iconBackgroundColor}>
               <Icon
-                style={{ minWidth: theme.icon.size.md }}
-                size={theme.icon.size.md}
+                style={{
+                  minWidth: iconBackgroundColor
+                    ? theme.spacing(3)
+                    : theme.icon.size.md,
+                }}
+                size={
+                  iconBackgroundColor ? theme.spacing(3) : theme.icon.size.md
+                }
                 stroke={theme.icon.stroke.md}
                 color={
-                  showBreadcrumb &&
-                  !isSettingsPage &&
-                  !isNavigationDrawerExpanded
-                    ? theme.font.color.light
-                    : 'currentColor'
+                  iconBackgroundColor
+                    ? theme.grayScale.gray1
+                    : showBreadcrumb &&
+                        !isSettingsPage &&
+                        !isNavigationDrawerExpanded
+                      ? theme.font.color.light
+                      : 'currentColor'
                 }
               />
             </StyledIcon>

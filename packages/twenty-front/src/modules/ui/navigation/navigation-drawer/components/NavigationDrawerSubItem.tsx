@@ -10,6 +10,7 @@ export const NavigationDrawerSubItem = ({
   label,
   secondaryLabel,
   Icon,
+  iconBackgroundColor,
   to,
   onClick,
   active,
@@ -30,6 +31,7 @@ export const NavigationDrawerSubItem = ({
       indentationLevel={2}
       subItemState={subItemState}
       Icon={Icon}
+      iconBackgroundColor={iconBackgroundColor}
       to={to}
       onClick={onClick}
       active={active}

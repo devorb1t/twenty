@@ -1,3 +1,4 @@
+import { useTheme } from '@emotion/react';
 import { Droppable } from '@hello-pangea/dnd';
 import { useLingui } from '@lingui/react/macro';
 import { useContext, useState } from 'react';
@@ -5,6 +6,8 @@ import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { IconFolder, IconFolderOpen, IconHeartOff } from 'twenty-ui/display';
+
+import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { LightIconButton } from 'twenty-ui/input';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
 import { useIsMobile } from 'twenty-ui/utilities';
@@ -50,6 +53,8 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
   isGroup,
 }: CurrentWorkspaceMemberNavigationMenuItemsProps) => {
   const { t } = useLingui();
+  const theme = useTheme();
+  const iconColors = getNavigationMenuItemIconColors(theme);
   const objectMetadataItems = useRecoilValue(objectMetadataItemsState);
   const currentPath = useLocation().pathname;
   const currentViewPath = useLocation().pathname + useLocation().search;
@@ -194,6 +199,7 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
             <NavigationDrawerItem
               label={folder.folderName}
               Icon={isOpen ? IconFolderOpen : IconFolder}
+              iconBackgroundColor={iconColors.folder}
               onClick={handleToggle}
               rightOptions={rightOptions}
               className="navigation-drawer-item"

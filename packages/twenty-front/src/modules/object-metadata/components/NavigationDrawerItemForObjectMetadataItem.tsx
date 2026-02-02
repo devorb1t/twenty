@@ -1,5 +1,6 @@
 import { MAIN_CONTEXT_STORE_INSTANCE_ID } from '@/context-store/constants/MainContextStoreInstanceId';
 import { contextStoreCurrentViewIdComponentState } from '@/context-store/states/contextStoreCurrentViewIdComponentState';
+import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { lastVisitedViewPerObjectMetadataItemState } from '@/navigation/states/lastVisitedViewPerObjectMetadataItemState';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { NavigationDrawerItem } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerItem';
@@ -8,6 +9,7 @@ import { NavigationDrawerSubItem } from '@/ui/navigation/navigation-drawer/compo
 import { getNavigationSubItemLeftAdornment } from '@/ui/navigation/navigation-drawer/utils/getNavigationSubItemLeftAdornment';
 import { useRecoilComponentValue } from '@/ui/utilities/state/component-state/hooks/useRecoilComponentValue';
 import { coreViewsFromObjectMetadataItemFamilySelector } from '@/views/states/selectors/coreViewsFromObjectMetadataItemFamilySelector';
+import { useTheme } from '@emotion/react';
 import { useLocation } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { AppPath } from 'twenty-shared/types';
@@ -22,6 +24,8 @@ export type NavigationDrawerItemForObjectMetadataItemProps = {
 export const NavigationDrawerItemForObjectMetadataItem = ({
   objectMetadataItem,
 }: NavigationDrawerItemForObjectMetadataItemProps) => {
+  const theme = useTheme();
+  const iconColors = getNavigationMenuItemIconColors(theme);
   const views = useRecoilValue(
     coreViewsFromObjectMetadataItemFamilySelector({
       objectMetadataItemId: objectMetadataItem.id,
@@ -82,6 +86,7 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
         label={objectMetadataItem.labelPlural}
         to={navigationPath}
         Icon={getIcon(objectMetadataItem.icon)}
+        iconBackgroundColor={iconColors.object}
         active={isActive}
       />
 
@@ -106,6 +111,7 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
               selectedIndex: selectedSubItemIndex,
             })}
             Icon={getIcon(view.icon)}
+            iconBackgroundColor={iconColors.view}
             key={view.id}
           />
         ))}
