@@ -31,6 +31,9 @@ type NavigationDrawerSectionForObjectMetadataItemsProps = {
   isEditMode?: boolean;
   selectedObjectMetadataItemId?: string | null;
   onObjectMetadataItemClick?: (objectMetadataItem: ObjectMetadataItem) => void;
+  onActiveObjectMetadataItemClick?: (
+    objectMetadataItem: ObjectMetadataItem,
+  ) => void;
 };
 
 export const NavigationDrawerSectionForObjectMetadataItems = ({
@@ -41,6 +44,7 @@ export const NavigationDrawerSectionForObjectMetadataItems = ({
   isEditMode = false,
   selectedObjectMetadataItemId = null,
   onObjectMetadataItemClick,
+  onActiveObjectMetadataItemClick,
 }: NavigationDrawerSectionForObjectMetadataItemsProps) => {
   const { toggleNavigationSection, isNavigationSectionOpenState } =
     useNavigationSection('Objects' + (isRemote ? 'Remote' : 'Workspace'));
@@ -127,6 +131,11 @@ export const NavigationDrawerSectionForObjectMetadataItems = ({
                 onEditModeClick={
                   onObjectMetadataItemClick
                     ? () => onObjectMetadataItemClick(objectMetadataItem)
+                    : undefined
+                }
+                onActiveItemClickWhenNotInEditMode={
+                  onActiveObjectMetadataItemClick
+                    ? () => onActiveObjectMetadataItemClick(objectMetadataItem)
                     : undefined
                 }
               />

@@ -22,6 +22,7 @@ export type NavigationDrawerItemForObjectMetadataItemProps = {
   isEditMode?: boolean;
   isSelectedInEditMode?: boolean;
   onEditModeClick?: () => void;
+  onActiveItemClickWhenNotInEditMode?: () => void;
 };
 
 export const NavigationDrawerItemForObjectMetadataItem = ({
@@ -29,6 +30,7 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
   isEditMode = false,
   isSelectedInEditMode = false,
   onEditModeClick,
+  onActiveItemClickWhenNotInEditMode,
 }: NavigationDrawerItemForObjectMetadataItemProps) => {
   const theme = useTheme();
   const iconColors = getNavigationMenuItemIconColors(theme);
@@ -83,7 +85,18 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
 
   const subItemArrayLength = sortedObjectMetadataViews.length;
 
-  const handleClick = isEditMode ? onEditModeClick : undefined;
+  const shouldUseClickHandler = isEditMode
+    ? Boolean(onEditModeClick)
+    : isActive && Boolean(onActiveItemClickWhenNotInEditMode);
+
+  const handleClick = shouldUseClickHandler
+    ? isEditMode
+      ? onEditModeClick
+      : onActiveItemClickWhenNotInEditMode
+    : undefined;
+
+  const shouldNavigate =
+    !isEditMode && !(isActive && onActiveItemClickWhenNotInEditMode);
 
   return (
     <NavigationDrawerItemsCollapsableContainer
@@ -92,7 +105,7 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
       <NavigationDrawerItem
         key={objectMetadataItem.id}
         label={objectMetadataItem.labelPlural}
-        to={isEditMode ? undefined : navigationPath}
+        to={shouldNavigate ? navigationPath : undefined}
         onClick={handleClick}
         Icon={getIcon(objectMetadataItem.icon)}
         iconBackgroundColor={iconColors.object}

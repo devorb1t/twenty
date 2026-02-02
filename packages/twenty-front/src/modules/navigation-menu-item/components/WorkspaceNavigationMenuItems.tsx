@@ -1,10 +1,13 @@
+import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { useCallback } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { IconTool } from 'twenty-ui/display';
+import { IconPlus, IconTool } from 'twenty-ui/display';
 import { LightIconButton } from 'twenty-ui/input';
 import { FeatureFlagKey } from '~/generated-metadata/graphql';
 
+import { useNavigateCommandMenu } from '@/command-menu/hooks/useNavigateCommandMenu';
+import { CommandMenuPages } from '@/command-menu/types/CommandMenuPages';
 import { useNavigationMenuEditModeActions } from '@/navigation-menu-item/hooks/useNavigationMenuEditModeActions';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
 import { useWorkspaceNavigationMenuItems } from '@/navigation-menu-item/hooks/useWorkspaceNavigationMenuItems';
@@ -15,6 +18,12 @@ import { NavigationDrawerSectionForObjectMetadataItemsSkeletonLoader } from '@/o
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { useIsPrefetchLoading } from '@/prefetch/hooks/useIsPrefetchLoading';
 import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
+
+const StyledRightIconsContainer = styled.div`
+  align-items: center;
+  display: flex;
+  gap: ${({ theme }) => theme.spacing(1)};
+`;
 
 export const WorkspaceNavigationMenuItems = () => {
   const { workspaceNavigationMenuItemsObjectMetadataItems } =
@@ -30,6 +39,7 @@ export const WorkspaceNavigationMenuItems = () => {
     selectedWorkspaceObjectMetadataItemIdInEditMode,
     setSelectedWorkspaceObjectMetadataItemIdInEditMode,
   ] = useRecoilState(selectedWorkspaceObjectMetadataItemIdInEditModeState);
+  const { navigateCommandMenu } = useNavigateCommandMenu();
   const { openNavigationMenuItemInCommandMenu } =
     useOpenNavigationMenuItemInCommandMenu();
 
@@ -52,6 +62,14 @@ export const WorkspaceNavigationMenuItems = () => {
     ],
   );
 
+  const handleActiveObjectMetadataItemClick = (
+    objectMetadataItem: ObjectMetadataItem,
+  ) => {
+    enterEditMode();
+    setSelectedWorkspaceObjectMetadataItemIdInEditMode(objectMetadataItem.id);
+    openNavigationMenuItemInCommandMenu({ objectMetadataItem });
+  };
+
   const isEditMode =
     isNavigationMenuItemEditingEnabled && isNavigationMenuInEditMode;
 
@@ -66,12 +84,31 @@ export const WorkspaceNavigationMenuItems = () => {
       isRemote={false}
       rightIcon={
         isNavigationMenuItemEditingEnabled ? (
-          <LightIconButton
-            Icon={IconTool}
-            accent="tertiary"
-            size="small"
-            onClick={handleEditClick}
-          />
+          <StyledRightIconsContainer>
+            {isEditMode ? (
+              <LightIconButton
+                Icon={IconPlus}
+                accent="tertiary"
+                size="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  navigateCommandMenu({
+                    page: CommandMenuPages.NavigationMenuAddItem,
+                    pageTitle: t`New sidebar item`,
+                    pageIcon: IconPlus,
+                    resetNavigationStack: true,
+                  });
+                }}
+              />
+            ) : (
+              <LightIconButton
+                Icon={IconTool}
+                accent="tertiary"
+                size="small"
+                onClick={handleEditClick}
+              />
+            )}
+          </StyledRightIconsContainer>
         ) : undefined
       }
       isEditMode={isEditMode}
@@ -80,6 +117,11 @@ export const WorkspaceNavigationMenuItems = () => {
       }
       onObjectMetadataItemClick={
         isEditMode ? handleObjectMetadataItemClick : undefined
+      }
+      onActiveObjectMetadataItemClick={
+        isNavigationMenuItemEditingEnabled
+          ? handleActiveObjectMetadataItemClick
+          : undefined
       }
     />
   );
