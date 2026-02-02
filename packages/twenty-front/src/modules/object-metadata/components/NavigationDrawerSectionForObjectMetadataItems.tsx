@@ -27,12 +27,14 @@ type NavigationDrawerSectionForObjectMetadataItemsProps = {
   sectionTitle: string;
   isRemote: boolean;
   objectMetadataItems: ObjectMetadataItem[];
+  rightIcon?: React.ReactNode;
 };
 
 export const NavigationDrawerSectionForObjectMetadataItems = ({
   sectionTitle,
   isRemote,
   objectMetadataItems,
+  rightIcon,
 }: NavigationDrawerSectionForObjectMetadataItemsProps) => {
   const { toggleNavigationSection, isNavigationSectionOpenState } =
     useNavigationSection('Objects' + (isRemote ? 'Remote' : 'Workspace'));
@@ -103,6 +105,7 @@ export const NavigationDrawerSectionForObjectMetadataItems = ({
           <NavigationDrawerSectionTitle
             label={sectionTitle}
             onClick={() => toggleNavigationSection()}
+            rightIcon={rightIcon}
           />
         </NavigationDrawerAnimatedCollapseWrapper>
         {isNavigationSectionOpen &&

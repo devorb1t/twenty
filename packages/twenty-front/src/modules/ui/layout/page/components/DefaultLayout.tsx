@@ -4,6 +4,7 @@ import { AppFullScreenErrorFallback } from '@/error-handler/components/AppFullSc
 import { AppPageErrorFallback } from '@/error-handler/components/AppPageErrorFallback';
 import { InformationBannerIsImpersonating } from '@/information-banner/components/impersonate/InformationBannerIsImpersonating';
 import { KeyboardShortcutMenu } from '@/keyboard-shortcut-menu/components/KeyboardShortcutMenu';
+import { NavigationMenuEditModeBar } from '@/navigation-menu-item/components/NavigationMenuEditModeBar';
 import { AppNavigationDrawer } from '@/navigation/components/AppNavigationDrawer';
 import { MobileNavigationBar } from '@/navigation/components/MobileNavigationBar';
 import { useIsSettingsPage } from '@/navigation/hooks/useIsSettingsPage';
@@ -76,6 +77,7 @@ export const DefaultLayout = () => {
       <StyledLayout>
         <AppErrorBoundary FallbackComponent={AppFullScreenErrorFallback}>
           <InformationBannerIsImpersonating />
+          <NavigationMenuEditModeBar />
           <StyledPageContainer
             animate={{
               marginLeft:
