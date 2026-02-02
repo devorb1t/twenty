@@ -22,4 +22,5 @@ export enum CommandMenuPages {
   PageLayoutIframeSettings = 'page-layout-iframe-settings',
   PageLayoutTabSettings = 'page-layout-tab-settings',
   ViewFrontComponent = 'view-front-component',
+  NavigationMenuItemEdit = 'navigation-menu-item-edit',
 }

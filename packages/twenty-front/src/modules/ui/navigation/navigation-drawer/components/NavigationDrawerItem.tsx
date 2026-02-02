@@ -55,24 +55,39 @@ export type NavigationDrawerItemProps = {
   triggerEvent?: TriggerEventType;
   mouseUpNavigation?: boolean;
   preventCollapseOnMobile?: boolean;
+  isSelectedInEditMode?: boolean;
 };
 
 type StyledItemProps = Pick<
   NavigationDrawerItemProps,
-  'active' | 'danger' | 'indentationLevel' | 'soon' | 'to' | 'isDragging'
+  | 'active'
+  | 'danger'
+  | 'indentationLevel'
+  | 'soon'
+  | 'to'
+  | 'isDragging'
+  | 'isSelectedInEditMode'
 > & { isNavigationDrawerExpanded: boolean; hasRightOptions: boolean };
 
 const StyledItem = styled('button', {
   shouldForwardProp: (prop) =>
-    !['active', 'danger', 'soon', 'isDragging'].includes(prop) &&
-    isPropValid(prop),
+    ![
+      'active',
+      'danger',
+      'soon',
+      'isDragging',
+      'isSelectedInEditMode',
+    ].includes(prop) && isPropValid(prop),
 })<StyledItemProps>`
-  box-sizing: content-box;
+  box-sizing: border-box;
   align-items: center;
   background: ${(props) =>
     props.active ? props.theme.background.transparent.light : 'inherit'};
-  height: ${({ theme }) => theme.spacing(5)};
-  border: none;
+  height: ${({ theme }) => theme.spacing(7)};
+  border: ${({ theme, isSelectedInEditMode }) =>
+    isSelectedInEditMode
+      ? `1px solid ${theme.color.blue}`
+      : '1px solid transparent'};
   border-radius: ${({ theme }) => theme.border.radius.sm};
   text-decoration: none;
   color: ${(props) => {
@@ -277,6 +292,7 @@ export const NavigationDrawerItem = ({
   triggerEvent,
   mouseUpNavigation = false,
   preventCollapseOnMobile = false,
+  isSelectedInEditMode = false,
 }: NavigationDrawerItemProps) => {
   const theme = useTheme();
   const isMobile = useIsMobile();
@@ -326,6 +342,7 @@ export const NavigationDrawerItem = ({
         isNavigationDrawerExpanded={isNavigationDrawerExpanded}
         isDragging={isDragging}
         hasRightOptions={!!rightOptions}
+        isSelectedInEditMode={isSelectedInEditMode}
       >
         <StyledItemElementsContainer>
           {showBreadcrumb && (

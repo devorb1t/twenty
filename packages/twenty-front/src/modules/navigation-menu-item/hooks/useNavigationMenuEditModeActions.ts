@@ -3,6 +3,7 @@ import { isDefined } from 'twenty-shared/utils';
 
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
+import { selectedWorkspaceObjectMetadataItemIdInEditModeState } from '@/navigation-menu-item/states/selectedWorkspaceObjectMetadataItemIdInEditModeState';
 import { prefetchNavigationMenuItemsState } from '@/prefetch/states/prefetchNavigationMenuItemsState';
 
 export const useNavigationMenuEditModeActions = () => {
@@ -11,6 +12,9 @@ export const useNavigationMenuEditModeActions = () => {
   );
   const setNavigationMenuItemsDraft = useSetRecoilState(
     navigationMenuItemsDraftState,
+  );
+  const setSelectedObjectMetadataItemId = useSetRecoilState(
+    selectedWorkspaceObjectMetadataItemIdInEditModeState,
   );
 
   const enterEditMode = useRecoilCallback(
@@ -32,6 +36,7 @@ export const useNavigationMenuEditModeActions = () => {
 
   const cancelEditMode = () => {
     setNavigationMenuItemsDraft(null);
+    setSelectedObjectMetadataItemId(null);
     setIsNavigationMenuInEditMode(false);
   };
 

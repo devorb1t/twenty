@@ -19,10 +19,16 @@ import { AnimatedExpandableContainer } from 'twenty-ui/layout';
 
 export type NavigationDrawerItemForObjectMetadataItemProps = {
   objectMetadataItem: ObjectMetadataItem;
+  isEditMode?: boolean;
+  isSelectedInEditMode?: boolean;
+  onEditModeClick?: () => void;
 };
 
 export const NavigationDrawerItemForObjectMetadataItem = ({
   objectMetadataItem,
+  isEditMode = false,
+  isSelectedInEditMode = false,
+  onEditModeClick,
 }: NavigationDrawerItemForObjectMetadataItemProps) => {
   const theme = useTheme();
   const iconColors = getNavigationMenuItemIconColors(theme);
@@ -77,6 +83,8 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
 
   const subItemArrayLength = sortedObjectMetadataViews.length;
 
+  const handleClick = isEditMode ? onEditModeClick : undefined;
+
   return (
     <NavigationDrawerItemsCollapsableContainer
       isGroup={shouldSubItemsBeDisplayed}
@@ -84,10 +92,12 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
       <NavigationDrawerItem
         key={objectMetadataItem.id}
         label={objectMetadataItem.labelPlural}
-        to={navigationPath}
+        to={isEditMode ? undefined : navigationPath}
+        onClick={handleClick}
         Icon={getIcon(objectMetadataItem.icon)}
         iconBackgroundColor={iconColors.object}
         active={isActive}
+        isSelectedInEditMode={isSelectedInEditMode}
       />
 
       <AnimatedExpandableContainer
