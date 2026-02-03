@@ -11,7 +11,7 @@ import { useNavigationSection } from '@/ui/navigation/navigation-drawer/hooks/us
 import { useRecoilValue } from 'recoil';
 
 const getWorkspaceSectionItemId = (item: WorkspaceSectionItem): string =>
-  item.type === 'folder' ? item.folder.folderId : item.objectMetadataItem.id;
+  item.type === 'folder' ? item.folder.folderId : item.navigationMenuItem.id;
 
 type NavigationDrawerSectionForWorkspaceItemsProps = {
   sectionTitle: string;
@@ -22,6 +22,7 @@ type NavigationDrawerSectionForWorkspaceItemsProps = {
   onNavigationMenuItemClick?: (item: WorkspaceSectionItem) => void;
   onActiveObjectMetadataItemClick?: (
     objectMetadataItem: ObjectMetadataItem,
+    navigationMenuItemId: string,
   ) => void;
 };
 
@@ -102,7 +103,10 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
                 onActiveItemClickWhenNotInEditMode={
                   onActiveObjectMetadataItemClick
                     ? () =>
-                        onActiveObjectMetadataItemClick(item.objectMetadataItem)
+                        onActiveObjectMetadataItemClick(
+                          item.objectMetadataItem,
+                          item.navigationMenuItem.id,
+                        )
                     : undefined
                 }
               />

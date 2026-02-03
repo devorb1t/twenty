@@ -59,7 +59,7 @@ export const WorkspaceNavigationMenuItems = () => {
       const id =
         item.type === 'folder'
           ? item.folder.folderId
-          : item.objectMetadataItem.id;
+          : item.navigationMenuItem.id;
       setSelectedNavigationMenuItemInEditMode(id);
       if (item.type === 'folder') {
         openNavigationMenuItemInCommandMenu({
@@ -82,9 +82,10 @@ export const WorkspaceNavigationMenuItems = () => {
 
   const handleActiveObjectMetadataItemClick = (
     objectMetadataItem: ObjectMetadataItem,
+    navigationMenuItemId: string,
   ) => {
     enterEditMode();
-    setSelectedNavigationMenuItemInEditMode(objectMetadataItem.id);
+    setSelectedNavigationMenuItemInEditMode(navigationMenuItemId);
     openNavigationMenuItemInCommandMenu({
       pageTitle: objectMetadataItem.labelPlural,
       pageIcon: getIcon(objectMetadataItem.icon),
