@@ -10,11 +10,11 @@ import { useNavigateCommandMenu } from '@/command-menu/hooks/useNavigateCommandM
 import { CommandMenuPages } from '@/command-menu/types/CommandMenuPages';
 import { useNavigationMenuEditModeActions } from '@/navigation-menu-item/hooks/useNavigationMenuEditModeActions';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
-import { useWorkspaceNavigationMenuItems } from '@/navigation-menu-item/hooks/useWorkspaceNavigationMenuItems';
+import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
 import { selectedWorkspaceObjectMetadataItemIdInEditModeState } from '@/navigation-menu-item/states/selectedWorkspaceObjectMetadataItemIdInEditModeState';
-import { NavigationDrawerSectionForObjectMetadataItems } from '@/object-metadata/components/NavigationDrawerSectionForObjectMetadataItems';
 import { NavigationDrawerSectionForObjectMetadataItemsSkeletonLoader } from '@/object-metadata/components/NavigationDrawerSectionForObjectMetadataItemsSkeletonLoader';
+import { NavigationDrawerSectionForWorkspaceItems } from '@/object-metadata/components/NavigationDrawerSectionForWorkspaceItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { useIsPrefetchLoading } from '@/prefetch/hooks/useIsPrefetchLoading';
 import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
@@ -26,8 +26,7 @@ const StyledRightIconsContainer = styled.div`
 `;
 
 export const WorkspaceNavigationMenuItems = () => {
-  const { workspaceNavigationMenuItemsObjectMetadataItems } =
-    useWorkspaceNavigationMenuItems();
+  const workspaceSectionItems = useWorkspaceSectionItems();
   const { enterEditMode } = useNavigationMenuEditModeActions();
   const isNavigationMenuItemEditingEnabled = useIsFeatureEnabled(
     FeatureFlagKey.IS_NAVIGATION_MENU_ITEM_EDITING_ENABLED,
@@ -78,10 +77,9 @@ export const WorkspaceNavigationMenuItems = () => {
   }
 
   return (
-    <NavigationDrawerSectionForObjectMetadataItems
+    <NavigationDrawerSectionForWorkspaceItems
       sectionTitle={t`Workspace`}
-      objectMetadataItems={workspaceNavigationMenuItemsObjectMetadataItems}
-      isRemote={false}
+      workspaceSectionItems={workspaceSectionItems}
       rightIcon={
         isNavigationMenuItemEditingEnabled ? (
           <StyledRightIconsContainer>

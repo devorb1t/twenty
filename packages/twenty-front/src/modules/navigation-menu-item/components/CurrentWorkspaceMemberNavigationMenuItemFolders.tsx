@@ -21,7 +21,7 @@ import { useNavigationSection } from '@/ui/navigation/navigation-drawer/hooks/us
 export const CurrentWorkspaceMemberNavigationMenuItemFolders = () => {
   const currentWorkspaceMember = useRecoilValue(currentWorkspaceMemberState);
   const { navigationMenuItemsSorted } = useSortedNavigationMenuItems();
-  const { navigationMenuItemsByFolder } = useNavigationMenuItemsByFolder();
+  const { userNavigationMenuItemsByFolder } = useNavigationMenuItemsByFolder();
 
   const [
     isNavigationMenuItemFolderCreating,
@@ -51,7 +51,8 @@ export const CurrentWorkspaceMemberNavigationMenuItemFolders = () => {
   if (
     (!navigationMenuItemsSorted || navigationMenuItemsSorted.length === 0) &&
     !isNavigationMenuItemFolderCreating &&
-    (!navigationMenuItemsByFolder || navigationMenuItemsByFolder.length === 0)
+    (!userNavigationMenuItemsByFolder ||
+      userNavigationMenuItemsByFolder.length === 0)
   ) {
     return null;
   }

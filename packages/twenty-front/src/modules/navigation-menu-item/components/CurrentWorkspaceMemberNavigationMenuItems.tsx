@@ -46,11 +46,13 @@ type CurrentWorkspaceMemberNavigationMenuItemsProps = {
     navigationMenuItems: ProcessedNavigationMenuItem[];
   };
   isGroup: boolean;
+  isWorkspaceFolder?: boolean;
 };
 
 export const CurrentWorkspaceMemberNavigationMenuItems = ({
   folder,
   isGroup,
+  isWorkspaceFolder = false,
 }: CurrentWorkspaceMemberNavigationMenuItemsProps) => {
   const { t } = useLingui();
   const theme = useTheme();
@@ -159,7 +161,7 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
     await deleteNavigationMenuItemFolder(folder.folderId);
   };
 
-  const rightOptions = (
+  const rightOptions = isWorkspaceFolder ? undefined : (
     <NavigationMenuItemFolderNavigationDrawerItemDropdown
       folderId={folder.folderId}
       onRename={() => setIsNavigationMenuItemFolderRenaming(true)}
@@ -250,13 +252,15 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
                           selectedIndex: selectedNavigationMenuItemIndex,
                         })}
                         rightOptions={
-                          <LightIconButton
-                            Icon={IconHeartOff}
-                            onClick={() =>
-                              deleteNavigationMenuItem(navigationMenuItem.id)
-                            }
-                            accent="tertiary"
-                          />
+                          isWorkspaceFolder ? undefined : (
+                            <LightIconButton
+                              Icon={IconHeartOff}
+                              onClick={() =>
+                                deleteNavigationMenuItem(navigationMenuItem.id)
+                              }
+                              accent="tertiary"
+                            />
+                          )
                         }
                         isDragging={isDragging}
                         triggerEvent="CLICK"
