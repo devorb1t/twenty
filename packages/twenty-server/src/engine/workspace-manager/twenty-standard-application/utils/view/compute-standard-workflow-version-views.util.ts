@@ -6,20 +6,20 @@ import {
   type CreateStandardViewArgs,
 } from 'src/engine/workspace-manager/twenty-standard-application/utils/view/create-standard-view-flat-metadata.util';
 
-export const computeStandardWorkflowViews = (
-  args: Omit<CreateStandardViewArgs<'workflow'>, 'context'>,
+export const computeStandardWorkflowVersionViews = (
+  args: Omit<CreateStandardViewArgs<'workflowVersion'>, 'context'>,
 ): Record<string, FlatView> => {
   return {
-    allWorkflows: createStandardViewFlatMetadata({
+    allWorkflowVersions: createStandardViewFlatMetadata({
       ...args,
-      objectName: 'workflow',
+      objectName: 'workflowVersion',
       context: {
-        viewName: 'allWorkflows',
-        name: 'All Workflows',
+        viewName: 'allWorkflowVersions',
+        name: 'Versions',
         type: ViewType.TABLE,
         key: ViewKey.INDEX,
         position: 0,
-        icon: 'IconTable',
+        icon: 'IconRestore',
       },
     }),
   };
