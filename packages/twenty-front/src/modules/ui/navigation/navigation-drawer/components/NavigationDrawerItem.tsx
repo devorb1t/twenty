@@ -120,8 +120,8 @@ const StyledItem = styled('button', {
 
   width: ${(props) =>
     !props.isNavigationDrawerExpanded
-      ? `calc(${NAVIGATION_DRAWER_COLLAPSED_WIDTH}px - ${props.theme.spacing(6)})`
-      : `calc(100% - ${props.theme.spacing(1.5)})`};
+      ? `calc(${NAVIGATION_DRAWER_COLLAPSED_WIDTH}px - ${props.theme.spacing(6)} + ${props.theme.spacing(1)} + ${props.hasRightOptions ? props.theme.spacing(0.5) : props.theme.spacing(1)})`
+      : `calc(100% - ${props.theme.spacing(1.5)} + ${props.theme.spacing(1)} + ${props.hasRightOptions ? props.theme.spacing(0.5) : props.theme.spacing(1)})`};
 
   ${({ isDragging }) =>
     isDragging &&
