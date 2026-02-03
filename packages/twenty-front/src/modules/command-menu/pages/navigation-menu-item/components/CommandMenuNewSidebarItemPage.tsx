@@ -1,0 +1,424 @@
+import styled from '@emotion/styled';
+import { useLingui } from '@lingui/react/macro';
+import { useMemo, useState } from 'react';
+import { useRecoilValue } from 'recoil';
+import { isDefined } from 'twenty-shared/utils';
+import {
+  Avatar,
+  IconAddressBook,
+  IconChevronLeft,
+  IconCube,
+  IconFolder,
+  IconLink,
+  IconList,
+  useIcons,
+} from 'twenty-ui/display';
+import { useDebounce } from 'use-debounce';
+
+import { CommandGroup } from '@/command-menu/components/CommandGroup';
+import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
+import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
+import { MAX_SEARCH_RESULTS } from '@/command-menu/constants/MaxSearchResults';
+import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
+import { useAddObjectToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddObjectToNavigationMenuDraft';
+import { useAddRecordToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddRecordToNavigationMenuDraft';
+import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
+import { useWorkspaceNavigationMenuItems } from '@/navigation-menu-item/hooks/useWorkspaceNavigationMenuItems';
+import { useApolloCoreClient } from '@/object-metadata/hooks/useApolloCoreClient';
+import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
+import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
+import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
+import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
+import { useObjectPermissions } from '@/object-record/hooks/useObjectPermissions';
+import { getObjectPermissionsFromMapByObjectMetadataId } from '@/settings/roles/role-permissions/objects-permissions/utils/getObjectPermissionsFromMapByObjectMetadataId';
+import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
+import { coreIndexViewIdFromObjectMetadataItemFamilySelector } from '@/views/states/selectors/coreIndexViewIdFromObjectMetadataItemFamilySelector';
+import { useSearchQuery } from '~/generated/graphql';
+
+const StyledBackBar = styled.button`
+  align-items: center;
+  background: none;
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.border.color.medium};
+  color: ${({ theme }) => theme.font.color.secondary};
+  cursor: pointer;
+  display: flex;
+  font-size: ${({ theme }) => theme.font.size.sm};
+  gap: ${({ theme }) => theme.spacing(1)};
+  padding: ${({ theme }) => theme.spacing(2, 3)};
+  text-align: left;
+  width: 100%;
+
+  &:hover {
+    color: ${({ theme }) => theme.font.color.primary};
+  }
+`;
+
+const StyledSearchContainer = styled.div`
+  border-bottom: 1px solid ${({ theme }) => theme.border.color.medium};
+  min-width: 0;
+  padding: ${({ theme }) => theme.spacing(2, 3)};
+`;
+
+const StyledSearchInput = styled.input`
+  background: transparent;
+  border: none;
+  border-radius: ${({ theme }) => theme.border.radius.sm};
+  box-sizing: border-box;
+  color: ${({ theme }) => theme.font.color.primary};
+  font-size: ${({ theme }) => theme.font.size.md};
+  padding: 0;
+  width: 100%;
+  outline: none;
+
+  &::placeholder {
+    color: ${({ theme }) => theme.font.color.tertiary};
+  }
+`;
+
+const StyledSubViewContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+`;
+
+const StyledScrollableListWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+
+  & > * {
+    flex: 1;
+    min-height: 0;
+  }
+`;
+
+type SelectedOption = 'object' | 'record' | null;
+
+const CommandMenuAddObjectMenuItem = ({
+  objectMetadataItem,
+  onSelect,
+}: {
+  objectMetadataItem: ObjectMetadataItem;
+  onSelect: (
+    objectMetadataItem: ObjectMetadataItem,
+    defaultViewId: string,
+  ) => void;
+}) => {
+  const { getIcon } = useIcons();
+  const defaultViewId = useRecoilValue(
+    coreIndexViewIdFromObjectMetadataItemFamilySelector({
+      objectMetadataItemId: objectMetadataItem.id,
+    }),
+  );
+  const Icon = getIcon(objectMetadataItem.icon);
+  const isDisabled = !isDefined(defaultViewId);
+
+  const handleClick = () => {
+    if (!isDisabled && isDefined(defaultViewId)) {
+      onSelect(objectMetadataItem, defaultViewId);
+    }
+  };
+
+  return (
+    <SelectableListItem itemId={objectMetadataItem.id} onEnter={handleClick}>
+      <CommandMenuItem
+        Icon={Icon}
+        label={objectMetadataItem.labelPlural}
+        id={objectMetadataItem.id}
+        onClick={handleClick}
+        disabled={isDisabled}
+      />
+    </SelectableListItem>
+  );
+};
+
+export const CommandMenuNewSidebarItemPage = () => {
+  const { t } = useLingui();
+  const { closeCommandMenu } = useCommandMenu();
+  const [selectedOption, setSelectedOption] = useState<SelectedOption>(null);
+  const [recordSearchInput, setRecordSearchInput] = useState('');
+  const [deferredRecordSearchInput] = useDebounce(recordSearchInput, 300);
+
+  const coreClient = useApolloCoreClient();
+  const { objectMetadataItems } = useObjectMetadataItems();
+  const { objectPermissionsByObjectMetadataId } = useObjectPermissions();
+  const { addObjectToDraft } = useAddObjectToNavigationMenuDraft();
+  const { addRecordToDraft } = useAddRecordToNavigationMenuDraft();
+  const { workspaceNavigationMenuItems, navigationMenuItemsDraft } =
+    useNavigationMenuItemsDraftState();
+  const { workspaceNavigationMenuItemsObjectMetadataItems } =
+    useWorkspaceNavigationMenuItems();
+  const { activeNonSystemObjectMetadataItems } =
+    useFilteredObjectMetadataItems();
+
+  const objectMetadataItemsInWorkspaceIds = new Set(
+    workspaceNavigationMenuItemsObjectMetadataItems.map((item) => item.id),
+  );
+  const availableObjectMetadataItems = activeNonSystemObjectMetadataItems
+    .filter((item) => !objectMetadataItemsInWorkspaceIds.has(item.id))
+    .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
+
+  const nonReadableObjectMetadataItemsNameSingular = useMemo(() => {
+    return Object.values(objectMetadataItems)
+      .filter((objectMetadataItem) => {
+        const objectPermission = getObjectPermissionsFromMapByObjectMetadataId({
+          objectPermissionsByObjectMetadataId,
+          objectMetadataId: objectMetadataItem.id,
+        });
+        return !objectPermission?.canReadObjectRecords;
+      })
+      .map((objectMetadataItem) => objectMetadataItem.nameSingular);
+  }, [objectMetadataItems, objectPermissionsByObjectMetadataId]);
+
+  const { data: searchData, loading: recordSearchLoading } = useSearchQuery({
+    client: coreClient,
+    skip: selectedOption !== 'record',
+    variables: {
+      searchInput: deferredRecordSearchInput ?? '',
+      limit: MAX_SEARCH_RESULTS,
+      excludedObjectNameSingulars: [
+        'workspaceMember',
+        ...nonReadableObjectMetadataItemsNameSingular,
+      ],
+    },
+  });
+
+  const currentDraft = isDefined(navigationMenuItemsDraft)
+    ? navigationMenuItemsDraft
+    : workspaceNavigationMenuItems;
+
+  const workspaceRecordIds = useMemo(() => {
+    const items = navigationMenuItemsDraft ?? workspaceNavigationMenuItems;
+    return new Set(
+      items
+        .filter((item) => isDefined(item.targetRecordId))
+        .map((item) => item.targetRecordId as string),
+    );
+  }, [navigationMenuItemsDraft, workspaceNavigationMenuItems]);
+
+  const searchRecords = searchData?.search.edges.map((edge) => edge.node) ?? [];
+  const availableSearchRecords = searchRecords.filter(
+    (record) => !workspaceRecordIds.has(record.recordId),
+  );
+
+  const handleSelectObject = (
+    objectMetadataItem: ObjectMetadataItem,
+    defaultViewId: string,
+  ) => {
+    addObjectToDraft(objectMetadataItem, defaultViewId, currentDraft);
+    closeCommandMenu();
+  };
+
+  const handleSelectRecord = (record: (typeof searchRecords)[number]) => {
+    addRecordToDraft(
+      {
+        recordId: record.recordId,
+        objectNameSingular: record.objectNameSingular,
+        label: record.label,
+        imageUrl: record.imageUrl,
+      },
+      currentDraft,
+    );
+    closeCommandMenu();
+  };
+
+  const handleBack = () => {
+    setSelectedOption(null);
+    setRecordSearchInput('');
+  };
+
+  if (selectedOption === 'object') {
+    const selectableItemIds =
+      availableObjectMetadataItems.length > 0
+        ? availableObjectMetadataItems.map((item) => item.id)
+        : ['empty'];
+
+    return (
+      <StyledSubViewContainer>
+        <StyledBackBar onClick={handleBack}>
+          <IconChevronLeft size={16} />
+          {t`Add object`}
+        </StyledBackBar>
+        <StyledScrollableListWrapper>
+          <CommandMenuList
+            commandGroups={[]}
+            selectableItemIds={selectableItemIds}
+          >
+            <CommandGroup heading={t`Objects`}>
+              {availableObjectMetadataItems.length === 0 ? (
+                <SelectableListItem itemId="empty" onEnter={() => {}}>
+                  <CommandMenuItem
+                    label={t`All objects are already in the sidebar`}
+                    id="empty"
+                    disabled={true}
+                  />
+                </SelectableListItem>
+              ) : (
+                availableObjectMetadataItems.map((objectMetadataItem) => (
+                  <CommandMenuAddObjectMenuItem
+                    key={objectMetadataItem.id}
+                    objectMetadataItem={objectMetadataItem}
+                    onSelect={handleSelectObject}
+                  />
+                ))
+              )}
+            </CommandGroup>
+          </CommandMenuList>
+        </StyledScrollableListWrapper>
+      </StyledSubViewContainer>
+    );
+  }
+
+  if (selectedOption === 'record') {
+    const selectableItemIds =
+      availableSearchRecords.length > 0
+        ? availableSearchRecords.map((record) => record.recordId)
+        : ['empty'];
+
+    return (
+      <StyledSubViewContainer>
+        <StyledBackBar onClick={handleBack}>
+          <IconChevronLeft size={16} />
+          {t`Add a record`}
+        </StyledBackBar>
+        <StyledSearchContainer>
+          <StyledSearchInput
+            placeholder={t`Search records...`}
+            value={recordSearchInput}
+            onChange={(event) => setRecordSearchInput(event.target.value)}
+            autoFocus
+          />
+        </StyledSearchContainer>
+        <StyledScrollableListWrapper>
+          <CommandMenuList
+            commandGroups={[]}
+            selectableItemIds={selectableItemIds}
+            loading={recordSearchLoading}
+            noResults={
+              !recordSearchLoading &&
+              deferredRecordSearchInput.length > 0 &&
+              !searchRecords.length
+            }
+          >
+            <CommandGroup heading={t`Results`}>
+              {availableSearchRecords.length === 0 && !recordSearchLoading ? (
+                <SelectableListItem itemId="empty" onEnter={() => {}}>
+                  <CommandMenuItem
+                    label={
+                      deferredRecordSearchInput.length > 0
+                        ? t`No results found`
+                        : t`Type to search records`
+                    }
+                    id="empty"
+                    disabled={true}
+                  />
+                </SelectableListItem>
+              ) : (
+                availableSearchRecords.map((record) => (
+                  <SelectableListItem
+                    key={record.recordId}
+                    itemId={record.recordId}
+                    onEnter={() => handleSelectRecord(record)}
+                  >
+                    <CommandMenuItem
+                      Icon={() => (
+                        <Avatar
+                          type={
+                            record.objectNameSingular ===
+                            CoreObjectNameSingular.Company
+                              ? 'squared'
+                              : 'rounded'
+                          }
+                          avatarUrl={record.imageUrl}
+                          placeholderColorSeed={record.recordId}
+                          placeholder={record.label}
+                        />
+                      )}
+                      label={record.label}
+                      id={record.recordId}
+                      description={
+                        objectMetadataItems.find(
+                          (item) =>
+                            item.nameSingular === record.objectNameSingular,
+                        )?.labelSingular ?? record.objectNameSingular
+                      }
+                      onClick={() => handleSelectRecord(record)}
+                    />
+                  </SelectableListItem>
+                ))
+              )}
+            </CommandGroup>
+          </CommandMenuList>
+        </StyledScrollableListWrapper>
+      </StyledSubViewContainer>
+    );
+  }
+
+  return (
+    <CommandMenuList
+      commandGroups={[]}
+      selectableItemIds={['object', 'view', 'record', 'folder', 'link']}
+    >
+      <CommandGroup heading={t`Data`}>
+        <SelectableListItem
+          itemId="object"
+          onEnter={() => setSelectedOption('object')}
+        >
+          <CommandMenuItem
+            Icon={IconCube}
+            label={t`Object`}
+            id="object"
+            hasSubMenu={true}
+            onClick={() => setSelectedOption('object')}
+          />
+        </SelectableListItem>
+        <SelectableListItem itemId="view" onEnter={() => {}}>
+          <CommandMenuItem
+            Icon={IconList}
+            label={t`View`}
+            id="view"
+            hasSubMenu={true}
+            disabled={true}
+          />
+        </SelectableListItem>
+        <SelectableListItem
+          itemId="record"
+          onEnter={() => setSelectedOption('record')}
+        >
+          <CommandMenuItem
+            Icon={IconAddressBook}
+            label={t`Record`}
+            id="record"
+            hasSubMenu={true}
+            onClick={() => setSelectedOption('record')}
+          />
+        </SelectableListItem>
+      </CommandGroup>
+      <CommandGroup heading={t`Other`}>
+        <SelectableListItem itemId="folder" onEnter={() => {}}>
+          <CommandMenuItem
+            Icon={IconFolder}
+            label={t`Folder`}
+            id="folder"
+            hasSubMenu={true}
+            disabled={true}
+          />
+        </SelectableListItem>
+        <SelectableListItem itemId="link" onEnter={() => {}}>
+          <CommandMenuItem
+            Icon={IconLink}
+            label={t`Link`}
+            id="link"
+            hasSubMenu={true}
+            disabled={true}
+          />
+        </SelectableListItem>
+      </CommandGroup>
+    </CommandMenuList>
+  );
+};

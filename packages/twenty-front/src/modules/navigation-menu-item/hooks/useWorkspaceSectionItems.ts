@@ -60,18 +60,26 @@ export const useWorkspaceSectionItems = (): WorkspaceSectionItem[] => {
       }
     } else {
       const processedItem = processedObjectViewsById.get(item.id);
-      if (!isDefined(processedItem) || !isDefined(processedItem.viewId)) {
+      if (!isDefined(processedItem)) {
         return acc;
       }
 
-      const view = views.find((v) => v.id === processedItem.viewId);
-      if (!isDefined(view)) {
-        return acc;
+      let objectMetadataItem: ObjectMetadataItem | undefined;
+
+      if (isDefined(processedItem.viewId)) {
+        const view = views.find((v) => v.id === processedItem.viewId);
+        if (!isDefined(view)) {
+          return acc;
+        }
+        objectMetadataItem = objectMetadataItems.find(
+          (meta) => meta.id === view.objectMetadataId,
+        );
+      } else if (isDefined(processedItem.targetObjectMetadataId)) {
+        objectMetadataItem = objectMetadataItems.find(
+          (meta) => meta.id === processedItem.targetObjectMetadataId,
+        );
       }
 
-      const objectMetadataItem = objectMetadataItems.find(
-        (meta) => meta.id === view.objectMetadataId,
-      );
       if (!isDefined(objectMetadataItem)) {
         return acc;
       }

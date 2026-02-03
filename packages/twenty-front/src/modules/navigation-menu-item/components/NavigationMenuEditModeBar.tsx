@@ -1,11 +1,14 @@
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
+import { useState } from 'react';
 import { IconCheck, useIcons } from 'twenty-ui/display';
 
 import { useNavigationMenuEditModeActions } from '@/navigation-menu-item/hooks/useNavigationMenuEditModeActions';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
+import { useSaveNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useSaveNavigationMenuItemsDraft';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
 import { SaveAndCancelButtons } from '@/settings/components/SaveAndCancelButtons/SaveAndCancelButtons';
+import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
 import { useRecoilValue } from 'recoil';
 import { FeatureFlagKey } from '~/generated/graphql';
@@ -30,7 +33,10 @@ const StyledTitle = styled.span`
 export const NavigationMenuEditModeBar = () => {
   const { t } = useLingui();
   const { getIcon } = useIcons();
+  const [isSaving, setIsSaving] = useState(false);
+  const { enqueueErrorSnackBar } = useSnackBar();
   const { cancelEditMode } = useNavigationMenuEditModeActions();
+  const { saveDraft } = useSaveNavigationMenuItemsDraft();
   const { isDirty } = useNavigationMenuItemsDraftState();
 
   const isNavigationMenuInEditMode = useRecoilValue(
@@ -47,9 +53,20 @@ export const NavigationMenuEditModeBar = () => {
     return null;
   }
 
-  const handleSave = () => {
-    // TODO: Phase 5 - persist draft to backend, then cancelEditMode()
-    cancelEditMode();
+  const handleSave = async () => {
+    if (!isDirty) return;
+
+    setIsSaving(true);
+    try {
+      await saveDraft();
+      cancelEditMode();
+    } catch {
+      enqueueErrorSnackBar({
+        message: t`Failed to save navigation layout`,
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const PaintIcon = getIcon('IconPaint');
@@ -63,7 +80,8 @@ export const NavigationMenuEditModeBar = () => {
       <SaveAndCancelButtons
         onSave={handleSave}
         onCancel={cancelEditMode}
-        isSaveDisabled={!isDirty}
+        isSaveDisabled={!isDirty || isSaving}
+        isLoading={isSaving}
         inverted
         saveIcon={IconCheck}
       />

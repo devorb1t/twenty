@@ -88,8 +88,9 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
               />
             ) : (
               <NavigationDrawerItemForObjectMetadataItem
-                key={`navigation-drawer-item-${item.objectMetadataItem.id}`}
+                key={`navigation-drawer-item-${item.navigationMenuItem.id}`}
                 objectMetadataItem={item.objectMetadataItem}
+                navigationMenuItem={item.navigationMenuItem}
                 isEditMode={isEditMode}
                 isSelectedInEditMode={
                   selectedNavigationMenuItemId ===

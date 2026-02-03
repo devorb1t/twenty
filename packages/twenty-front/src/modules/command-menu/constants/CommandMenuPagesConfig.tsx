@@ -5,6 +5,7 @@ import { CommandMenuCalendarEventPage } from '@/command-menu/pages/calendar-even
 import { CommandMenuFrontComponentPage } from '@/command-menu/pages/front-component/components/CommandMenuFrontComponentPage';
 import { CommandMenuMessageThreadPage } from '@/command-menu/pages/message-thread/components/CommandMenuMessageThreadPage';
 import { CommandMenuNavigationMenuItemEditPage } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNavigationMenuItemEditPage';
+import { CommandMenuNewSidebarItemPage } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemPage';
 import { CommandMenuPageLayoutChartSettings } from '@/command-menu/pages/page-layout/components/CommandMenuPageLayoutChartSettings';
 import { CommandMenuPageLayoutGraphFilter } from '@/command-menu/pages/page-layout/components/CommandMenuPageLayoutGraphFilter';
 import { CommandMenuPageLayoutIframeSettings } from '@/command-menu/pages/page-layout/components/CommandMenuPageLayoutIframeSettings';
@@ -71,4 +72,5 @@ export const COMMAND_MENU_PAGES_CONFIG = new Map<
     CommandMenuPages.NavigationMenuItemEdit,
     <CommandMenuNavigationMenuItemEditPage />,
   ],
+  [CommandMenuPages.NavigationMenuAddItem, <CommandMenuNewSidebarItemPage />],
 ]);

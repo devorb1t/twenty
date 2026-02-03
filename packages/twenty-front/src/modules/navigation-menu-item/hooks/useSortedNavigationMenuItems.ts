@@ -90,7 +90,7 @@ export const useSortedNavigationMenuItems = () => {
     });
     return sortNavigationMenuItems(
       filtered,
-      false,
+      true,
       coreViews,
       objectMetadataItems,
       targetRecordIdentifiers,
