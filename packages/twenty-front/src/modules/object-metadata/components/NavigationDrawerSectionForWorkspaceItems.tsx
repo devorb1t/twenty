@@ -10,13 +10,16 @@ import { NavigationDrawerSectionTitle } from '@/ui/navigation/navigation-drawer/
 import { useNavigationSection } from '@/ui/navigation/navigation-drawer/hooks/useNavigationSection';
 import { useRecoilValue } from 'recoil';
 
+const getWorkspaceSectionItemId = (item: WorkspaceSectionItem): string =>
+  item.type === 'folder' ? item.folder.folderId : item.objectMetadataItem.id;
+
 type NavigationDrawerSectionForWorkspaceItemsProps = {
   sectionTitle: string;
   workspaceSectionItems: WorkspaceSectionItem[];
   rightIcon?: React.ReactNode;
   isEditMode?: boolean;
-  selectedObjectMetadataItemId?: string | null;
-  onObjectMetadataItemClick?: (objectMetadataItem: ObjectMetadataItem) => void;
+  selectedNavigationMenuItemId?: string | null;
+  onNavigationMenuItemClick?: (item: WorkspaceSectionItem) => void;
   onActiveObjectMetadataItemClick?: (
     objectMetadataItem: ObjectMetadataItem,
   ) => void;
@@ -27,8 +30,8 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
   workspaceSectionItems,
   rightIcon,
   isEditMode = false,
-  selectedObjectMetadataItemId = null,
-  onObjectMetadataItemClick,
+  selectedNavigationMenuItemId = null,
+  onNavigationMenuItemClick,
   onActiveObjectMetadataItemClick,
 }: NavigationDrawerSectionForWorkspaceItemsProps) => {
   const { toggleNavigationSection, isNavigationSectionOpenState } =
@@ -71,6 +74,16 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
                 key={item.folder.folderId}
                 folder={item.folder}
                 isGroup={folderCount > 1}
+                isEditMode={isEditMode}
+                isSelectedInEditMode={
+                  selectedNavigationMenuItemId ===
+                  getWorkspaceSectionItemId(item)
+                }
+                onEditModeClick={
+                  onNavigationMenuItemClick
+                    ? () => onNavigationMenuItemClick(item)
+                    : undefined
+                }
               />
             ) : (
               <NavigationDrawerItemForObjectMetadataItem
@@ -78,11 +91,12 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
                 objectMetadataItem={item.objectMetadataItem}
                 isEditMode={isEditMode}
                 isSelectedInEditMode={
-                  selectedObjectMetadataItemId === item.objectMetadataItem.id
+                  selectedNavigationMenuItemId ===
+                  getWorkspaceSectionItemId(item)
                 }
                 onEditModeClick={
-                  onObjectMetadataItemClick
-                    ? () => onObjectMetadataItemClick(item.objectMetadataItem)
+                  onNavigationMenuItemClick
+                    ? () => onNavigationMenuItemClick(item)
                     : undefined
                 }
                 onActiveItemClickWhenNotInEditMode={

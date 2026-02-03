@@ -1,13 +1,14 @@
 import { useTheme } from '@emotion/react';
+import styled from '@emotion/styled';
 import { useLocation } from 'react-router-dom';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { IconFolder, IconFolderOpen } from 'twenty-ui/display';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
 import { useIsMobile } from 'twenty-ui/utilities';
 
-import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { NavigationMenuItemIcon } from '@/navigation-menu-item/components/NavigationMenuItemIcon';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
+import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { getNavigationMenuItemSecondaryLabel } from '@/navigation-menu-item/utils/getNavigationMenuItemSecondaryLabel';
 import { isLocationMatchingNavigationMenuItem } from '@/navigation-menu-item/utils/isLocationMatchingNavigationMenuItem';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
@@ -18,6 +19,14 @@ import { NavigationDrawerSubItem } from '@/ui/navigation/navigation-drawer/compo
 import { currentNavigationMenuItemFolderIdState } from '@/ui/navigation/navigation-drawer/states/currentNavigationMenuItemFolderIdState';
 import { getNavigationSubItemLeftAdornment } from '@/ui/navigation/navigation-drawer/utils/getNavigationSubItemLeftAdornment';
 
+const StyledFolderContainer = styled.div<{ $isSelectedInEditMode: boolean }>`
+  border: ${({ theme, $isSelectedInEditMode }) =>
+    $isSelectedInEditMode
+      ? `1px solid ${theme.color.blue}`
+      : '1px solid transparent'};
+  border-radius: ${({ theme }) => theme.border.radius.sm};
+`;
+
 type WorkspaceNavigationMenuItemsFolderProps = {
   folder: {
     folderId: string;
@@ -25,11 +34,17 @@ type WorkspaceNavigationMenuItemsFolderProps = {
     navigationMenuItems: ProcessedNavigationMenuItem[];
   };
   isGroup: boolean;
+  isEditMode?: boolean;
+  isSelectedInEditMode?: boolean;
+  onEditModeClick?: () => void;
 };
 
 export const WorkspaceNavigationMenuItemsFolder = ({
   folder,
   isGroup,
+  isEditMode = false,
+  isSelectedInEditMode = false,
+  onEditModeClick,
 }: WorkspaceNavigationMenuItemsFolderProps) => {
   const theme = useTheme();
   const iconColors = getNavigationMenuItemIconColors(theme);
@@ -63,6 +78,9 @@ export const WorkspaceNavigationMenuItemsFolder = ({
     }
   };
 
+  const shouldUseEditModeClick = isEditMode && Boolean(onEditModeClick);
+  const handleClick = shouldUseEditModeClick ? onEditModeClick : handleToggle;
+
   const selectedNavigationMenuItemIndex = folder.navigationMenuItems.findIndex(
     (item) =>
       isLocationMatchingNavigationMenuItem(currentPath, currentViewPath, item),
@@ -72,53 +90,55 @@ export const WorkspaceNavigationMenuItemsFolder = ({
     folder.navigationMenuItems.length;
 
   return (
-    <NavigationDrawerItemsCollapsableContainer
+    <StyledFolderContainer
       key={folder.folderId}
-      isGroup={isGroup}
+      $isSelectedInEditMode={isSelectedInEditMode}
     >
-      <NavigationDrawerItem
-        label={folder.folderName}
-        Icon={isOpen ? IconFolderOpen : IconFolder}
-        iconBackgroundColor={iconColors.folder}
-        onClick={handleToggle}
-        className="navigation-drawer-item"
-        triggerEvent="CLICK"
-        preventCollapseOnMobile={isMobile}
-      />
+      <NavigationDrawerItemsCollapsableContainer isGroup={isGroup}>
+        <NavigationDrawerItem
+          label={folder.folderName}
+          Icon={isOpen ? IconFolderOpen : IconFolder}
+          iconBackgroundColor={iconColors.folder}
+          onClick={handleClick}
+          className="navigation-drawer-item"
+          triggerEvent="CLICK"
+          preventCollapseOnMobile={isMobile}
+        />
 
-      <AnimatedExpandableContainer
-        isExpanded={isOpen}
-        dimension="height"
-        mode="fit-content"
-        containAnimation
-      >
-        <div>
-          {folder.navigationMenuItems.map((navigationMenuItem, index) => (
-            <NavigationDrawerSubItem
-              key={navigationMenuItem.id}
-              secondaryLabel={getNavigationMenuItemSecondaryLabel({
-                objectMetadataItems,
-                navigationMenuItemObjectNameSingular:
-                  navigationMenuItem.objectNameSingular,
-              })}
-              label={navigationMenuItem.labelIdentifier}
-              Icon={() => (
-                <NavigationMenuItemIcon
-                  navigationMenuItem={navigationMenuItem}
-                />
-              )}
-              to={navigationMenuItem.link}
-              active={index === selectedNavigationMenuItemIndex}
-              subItemState={getNavigationSubItemLeftAdornment({
-                index,
-                arrayLength: navigationMenuItemFolderContentLength,
-                selectedIndex: selectedNavigationMenuItemIndex,
-              })}
-              triggerEvent="CLICK"
-            />
-          ))}
-        </div>
-      </AnimatedExpandableContainer>
-    </NavigationDrawerItemsCollapsableContainer>
+        <AnimatedExpandableContainer
+          isExpanded={isOpen}
+          dimension="height"
+          mode="fit-content"
+          containAnimation
+        >
+          <div>
+            {folder.navigationMenuItems.map((navigationMenuItem, index) => (
+              <NavigationDrawerSubItem
+                key={navigationMenuItem.id}
+                secondaryLabel={getNavigationMenuItemSecondaryLabel({
+                  objectMetadataItems,
+                  navigationMenuItemObjectNameSingular:
+                    navigationMenuItem.objectNameSingular,
+                })}
+                label={navigationMenuItem.labelIdentifier}
+                Icon={() => (
+                  <NavigationMenuItemIcon
+                    navigationMenuItem={navigationMenuItem}
+                  />
+                )}
+                to={navigationMenuItem.link}
+                active={index === selectedNavigationMenuItemIndex}
+                subItemState={getNavigationSubItemLeftAdornment({
+                  index,
+                  arrayLength: navigationMenuItemFolderContentLength,
+                  selectedIndex: selectedNavigationMenuItemIndex,
+                })}
+                triggerEvent="CLICK"
+              />
+            ))}
+          </div>
+        </AnimatedExpandableContainer>
+      </NavigationDrawerItemsCollapsableContainer>
+    </StyledFolderContainer>
   );
 };

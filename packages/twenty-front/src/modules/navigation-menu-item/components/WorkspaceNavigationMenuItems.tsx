@@ -2,7 +2,7 @@ import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { useCallback } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { IconPlus, IconTool } from 'twenty-ui/display';
+import { IconFolder, IconPlus, IconTool, useIcons } from 'twenty-ui/display';
 import { LightIconButton } from 'twenty-ui/input';
 import { FeatureFlagKey } from '~/generated-metadata/graphql';
 
@@ -10,9 +10,12 @@ import { useNavigateCommandMenu } from '@/command-menu/hooks/useNavigateCommandM
 import { CommandMenuPages } from '@/command-menu/types/CommandMenuPages';
 import { useNavigationMenuEditModeActions } from '@/navigation-menu-item/hooks/useNavigationMenuEditModeActions';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
-import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
+import {
+  type WorkspaceSectionItem,
+  useWorkspaceSectionItems,
+} from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
-import { selectedWorkspaceObjectMetadataItemIdInEditModeState } from '@/navigation-menu-item/states/selectedWorkspaceObjectMetadataItemIdInEditModeState';
+import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { NavigationDrawerSectionForObjectMetadataItemsSkeletonLoader } from '@/object-metadata/components/NavigationDrawerSectionForObjectMetadataItemsSkeletonLoader';
 import { NavigationDrawerSectionForWorkspaceItems } from '@/object-metadata/components/NavigationDrawerSectionForWorkspaceItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
@@ -35,12 +38,13 @@ export const WorkspaceNavigationMenuItems = () => {
     isNavigationMenuInEditModeState,
   );
   const [
-    selectedWorkspaceObjectMetadataItemIdInEditMode,
-    setSelectedWorkspaceObjectMetadataItemIdInEditMode,
-  ] = useRecoilState(selectedWorkspaceObjectMetadataItemIdInEditModeState);
+    selectedNavigationMenuItemInEditMode,
+    setSelectedNavigationMenuItemInEditMode,
+  ] = useRecoilState(selectedNavigationMenuItemInEditModeState);
   const { navigateCommandMenu } = useNavigateCommandMenu();
   const { openNavigationMenuItemInCommandMenu } =
     useOpenNavigationMenuItemInCommandMenu();
+  const { getIcon } = useIcons();
 
   const loading = useIsPrefetchLoading();
   const { t } = useLingui();
@@ -50,14 +54,29 @@ export const WorkspaceNavigationMenuItems = () => {
     enterEditMode();
   };
 
-  const handleObjectMetadataItemClick = useCallback(
-    (objectMetadataItem: ObjectMetadataItem) => {
-      setSelectedWorkspaceObjectMetadataItemIdInEditMode(objectMetadataItem.id);
-      openNavigationMenuItemInCommandMenu({ objectMetadataItem });
+  const handleNavigationMenuItemClick = useCallback(
+    (item: WorkspaceSectionItem) => {
+      const id =
+        item.type === 'folder'
+          ? item.folder.folderId
+          : item.objectMetadataItem.id;
+      setSelectedNavigationMenuItemInEditMode(id);
+      if (item.type === 'folder') {
+        openNavigationMenuItemInCommandMenu({
+          pageTitle: item.folder.folderName,
+          pageIcon: IconFolder,
+        });
+      } else {
+        openNavigationMenuItemInCommandMenu({
+          pageTitle: item.objectMetadataItem.labelPlural,
+          pageIcon: getIcon(item.objectMetadataItem.icon),
+        });
+      }
     },
     [
-      setSelectedWorkspaceObjectMetadataItemIdInEditMode,
+      setSelectedNavigationMenuItemInEditMode,
       openNavigationMenuItemInCommandMenu,
+      getIcon,
     ],
   );
 
@@ -65,8 +84,11 @@ export const WorkspaceNavigationMenuItems = () => {
     objectMetadataItem: ObjectMetadataItem,
   ) => {
     enterEditMode();
-    setSelectedWorkspaceObjectMetadataItemIdInEditMode(objectMetadataItem.id);
-    openNavigationMenuItemInCommandMenu({ objectMetadataItem });
+    setSelectedNavigationMenuItemInEditMode(objectMetadataItem.id);
+    openNavigationMenuItemInCommandMenu({
+      pageTitle: objectMetadataItem.labelPlural,
+      pageIcon: getIcon(objectMetadataItem.icon),
+    });
   };
 
   const isEditMode =
@@ -110,11 +132,9 @@ export const WorkspaceNavigationMenuItems = () => {
         ) : undefined
       }
       isEditMode={isEditMode}
-      selectedObjectMetadataItemId={
-        selectedWorkspaceObjectMetadataItemIdInEditMode
-      }
-      onObjectMetadataItemClick={
-        isEditMode ? handleObjectMetadataItemClick : undefined
+      selectedNavigationMenuItemId={selectedNavigationMenuItemInEditMode}
+      onNavigationMenuItemClick={
+        isEditMode ? handleNavigationMenuItemClick : undefined
       }
       onActiveObjectMetadataItemClick={
         isNavigationMenuItemEditingEnabled

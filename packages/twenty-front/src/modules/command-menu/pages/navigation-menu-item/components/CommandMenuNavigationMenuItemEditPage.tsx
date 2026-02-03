@@ -2,9 +2,9 @@ import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { useRecoilValue } from 'recoil';
 
-import { selectedWorkspaceObjectMetadataItemIdInEditModeState } from '@/navigation-menu-item/states/selectedWorkspaceObjectMetadataItemIdInEditModeState';
+import { useNavigationMenuItemsByFolder } from '@/navigation-menu-item/hooks/useNavigationMenuItemsByFolder';
+import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
-import { isDefined } from 'twenty-shared/utils';
 
 const StyledContainer = styled.div`
   padding: ${({ theme }) => theme.spacing(3)};
@@ -17,20 +17,32 @@ const StyledPlaceholder = styled.p`
 
 export const CommandMenuNavigationMenuItemEditPage = () => {
   const { t } = useLingui();
-  const selectedWorkspaceObjectMetadataItemIdInEditMode = useRecoilValue(
-    selectedWorkspaceObjectMetadataItemIdInEditModeState,
+  const selectedNavigationMenuItemInEditMode = useRecoilValue(
+    selectedNavigationMenuItemInEditModeState,
   );
   const objectMetadataItems = useRecoilValue(objectMetadataItemsState);
+  const { workspaceNavigationMenuItemsByFolder } =
+    useNavigationMenuItemsByFolder();
 
-  const objectMetadataItem = isDefined(
-    selectedWorkspaceObjectMetadataItemIdInEditMode,
-  )
+  const objectMetadataItem = selectedNavigationMenuItemInEditMode
     ? objectMetadataItems.find(
-        (item) => item.id === selectedWorkspaceObjectMetadataItemIdInEditMode,
+        (item) => item.id === selectedNavigationMenuItemInEditMode,
       )
     : undefined;
 
-  if (!selectedWorkspaceObjectMetadataItemIdInEditMode || !objectMetadataItem) {
+  const selectedFolder = selectedNavigationMenuItemInEditMode
+    ? workspaceNavigationMenuItemsByFolder.find(
+        (folder) => folder.folderId === selectedNavigationMenuItemInEditMode,
+      )
+    : undefined;
+
+  const selectedItemLabel = objectMetadataItem
+    ? objectMetadataItem.labelPlural
+    : selectedFolder
+      ? selectedFolder.folderName
+      : null;
+
+  if (!selectedNavigationMenuItemInEditMode || !selectedItemLabel) {
     return (
       <StyledContainer>
         <StyledPlaceholder>{t`Select a navigation item to edit`}</StyledPlaceholder>
@@ -41,7 +53,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   return (
     <StyledContainer>
       <StyledPlaceholder>
-        {t`Edit`} {objectMetadataItem.labelPlural}{' '}
+        {t`Edit`} {selectedItemLabel}{' '}
         {t`(Move up, Move down, Remove - coming in Phase 5)`}
       </StyledPlaceholder>
     </StyledContainer>
