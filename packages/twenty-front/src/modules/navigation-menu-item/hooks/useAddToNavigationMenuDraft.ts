@@ -73,6 +73,35 @@ export const useAddToNavigationMenuDraft = () => {
     setNavigationMenuItemsDraft([...currentDraft, newItem]);
   };
 
+  const addFolderToDraft = (
+    name: string,
+    currentDraft: NavigationMenuItem[],
+  ): string => {
+    const maxPosition = Math.max(
+      ...currentDraft.map((item) => item.position),
+      0,
+    );
+
+    const newItemId = v4();
+    const newItem: NavigationMenuItem = {
+      __typename: 'NavigationMenuItem',
+      id: newItemId,
+      viewId: undefined,
+      targetObjectMetadataId: undefined,
+      targetRecordId: undefined,
+      folderId: undefined,
+      position: maxPosition + 1,
+      userWorkspaceId: undefined,
+      name: name.trim(),
+      applicationId: undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setNavigationMenuItemsDraft([...currentDraft, newItem]);
+    return newItemId;
+  };
+
   const addRecordToDraft = (
     searchRecord: SearchRecord,
     currentDraft: NavigationMenuItem[],
@@ -113,5 +142,10 @@ export const useAddToNavigationMenuDraft = () => {
     setNavigationMenuItemsDraft([...currentDraft, newItem]);
   };
 
-  return { addObjectToDraft, addViewToDraft, addRecordToDraft };
+  return {
+    addObjectToDraft,
+    addViewToDraft,
+    addRecordToDraft,
+    addFolderToDraft,
+  };
 };

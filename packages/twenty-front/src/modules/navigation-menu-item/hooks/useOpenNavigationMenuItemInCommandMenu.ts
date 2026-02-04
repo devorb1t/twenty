@@ -8,15 +8,18 @@ export const useOpenNavigationMenuItemInCommandMenu = () => {
   const openNavigationMenuItemInCommandMenu = ({
     pageTitle,
     pageIcon,
+    focusTitleInput = false,
   }: {
     pageTitle: string;
     pageIcon: IconComponent;
+    focusTitleInput?: boolean;
   }) => {
     navigateCommandMenu({
       page: CommandMenuPages.NavigationMenuItemEdit,
       pageTitle,
       pageIcon,
       resetNavigationStack: true,
+      focusTitleInput,
     });
   };
 

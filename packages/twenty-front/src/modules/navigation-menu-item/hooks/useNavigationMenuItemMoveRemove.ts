@@ -104,8 +104,29 @@ export const useNavigationMenuItemMoveRemove = () => {
       );
       if (!itemToMove) return draft;
 
-      if (isNavigationMenuItemFolder(itemToMove)) {
+      const isFolder = isNavigationMenuItemFolder(itemToMove);
+      if (isFolder && targetFolderId === navigationMenuItemId) {
         return draft;
+      }
+
+      if (isFolder && isDefined(targetFolderId)) {
+        const descendantFolderIds = new Set<string>();
+        const collectDescendants = (folderId: string) => {
+          draft
+            ?.filter(
+              (item) =>
+                isNavigationMenuItemFolder(item) &&
+                item.folderId === folderId,
+            )
+            .forEach((item) => {
+              descendantFolderIds.add(item.id);
+              collectDescendants(item.id);
+            });
+        };
+        collectDescendants(navigationMenuItemId);
+        if (descendantFolderIds.has(targetFolderId)) {
+          return draft;
+        }
       }
 
       const itemsInTargetFolder = draft.filter((item) =>

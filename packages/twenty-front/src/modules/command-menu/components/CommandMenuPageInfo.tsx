@@ -1,10 +1,17 @@
+import { CommandMenuFolderInfo } from '@/command-menu/components/CommandMenuFolderInfo';
 import { CommandMenuMultipleRecordsInfo } from '@/command-menu/components/CommandMenuMultipleRecordsInfo';
 import { CommandMenuPageLayoutInfo } from '@/command-menu/components/CommandMenuPageLayoutInfo';
 import { CommandMenuRecordInfo } from '@/command-menu/components/CommandMenuRecordInfo';
 import { CommandMenuWorkflowStepInfo } from '@/command-menu/components/CommandMenuWorkflowStepInfo';
 import { CommandMenuPages } from '@/command-menu/types/CommandMenuPages';
+import {
+  type WorkspaceSectionItem,
+  useWorkspaceSectionItems,
+} from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
+import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import styled from '@emotion/styled';
 import { isDefined } from 'twenty-shared/utils';
+import { useRecoilValue } from 'recoil';
 import { OverflowingTextWithTooltip } from 'twenty-ui/display';
 import { type CommandMenuContextChipProps } from './CommandMenuContextChip';
 
@@ -18,9 +25,32 @@ type CommandMenuPageInfoProps = {
   pageChip: CommandMenuContextChipProps | undefined;
 };
 
+const getWorkspaceSectionItemId = (item: WorkspaceSectionItem): string =>
+  item.type === 'folder' ? item.folder.folderId : item.navigationMenuItem.id;
+
 export const CommandMenuPageInfo = ({ pageChip }: CommandMenuPageInfoProps) => {
+  const selectedNavigationMenuItemInEditMode = useRecoilValue(
+    selectedNavigationMenuItemInEditModeState,
+  );
+  const workspaceSectionItems = useWorkspaceSectionItems();
+
   if (!isDefined(pageChip)) {
     return null;
+  }
+
+  const isNavigationMenuItemEditPage =
+    pageChip.page?.page === CommandMenuPages.NavigationMenuItemEdit;
+  const selectedFolder = isNavigationMenuItemEditPage
+    ? workspaceSectionItems.find(
+        (item) =>
+          item.type === 'folder' &&
+          getWorkspaceSectionItemId(item) ===
+            selectedNavigationMenuItemInEditMode,
+      )
+    : undefined;
+
+  if (isNavigationMenuItemEditPage && selectedFolder?.type === 'folder') {
+    return <CommandMenuFolderInfo />;
   }
 
   const isRecordPage = pageChip.page?.page === CommandMenuPages.ViewRecord;

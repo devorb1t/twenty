@@ -8,7 +8,6 @@ export const isNavigationMenuItemFolder = (item: {
   targetObjectMetadataId?: string | null;
 }) =>
   isDefined(item.name) &&
-  !isDefined(item.folderId) &&
   !isDefined(item.targetRecordId) &&
   !isDefined(item.targetObjectMetadataId) &&
   !isDefined(item.viewId);

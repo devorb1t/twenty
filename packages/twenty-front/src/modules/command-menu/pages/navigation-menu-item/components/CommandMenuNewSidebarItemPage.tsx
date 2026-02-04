@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { useMemo, useState } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import {
   Avatar,
@@ -22,7 +22,9 @@ import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { MAX_SEARCH_RESULTS } from '@/command-menu/constants/MaxSearchResults';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
+import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
+import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { useWorkspaceNavigationMenuItems } from '@/navigation-menu-item/hooks/useWorkspaceNavigationMenuItems';
 import { useApolloCoreClient } from '@/object-metadata/hooks/useApolloCoreClient';
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
@@ -190,10 +192,15 @@ export const CommandMenuNewSidebarItemPage = () => {
   const coreViews = useRecoilValue(coreViewsState);
   const { objectMetadataItems } = useObjectMetadataItems();
   const { objectPermissionsByObjectMetadataId } = useObjectPermissions();
-  const { addObjectToDraft, addViewToDraft, addRecordToDraft } =
+  const { addObjectToDraft, addViewToDraft, addRecordToDraft, addFolderToDraft } =
     useAddToNavigationMenuDraft();
   const { workspaceNavigationMenuItems, navigationMenuItemsDraft } =
     useNavigationMenuItemsDraftState();
+  const setSelectedNavigationMenuItemInEditMode = useSetRecoilState(
+    selectedNavigationMenuItemInEditModeState,
+  );
+  const { openNavigationMenuItemInCommandMenu } =
+    useOpenNavigationMenuItemInCommandMenu();
   const { workspaceNavigationMenuItemsObjectMetadataItems } =
     useWorkspaceNavigationMenuItems();
   const { activeNonSystemObjectMetadataItems } =
@@ -391,6 +398,16 @@ export const CommandMenuNewSidebarItemPage = () => {
   const handleSelectView = (view: View) => {
     addViewToDraft(view, currentDraft);
     closeCommandMenu();
+  };
+
+  const handleAddFolderAndOpenEdit = () => {
+    const newFolderId = addFolderToDraft(t`New folder`, currentDraft);
+    setSelectedNavigationMenuItemInEditMode(newFolderId);
+    openNavigationMenuItemInCommandMenu({
+      pageTitle: t`Edit folder`,
+      pageIcon: IconFolder,
+      focusTitleInput: true,
+    });
   };
 
   if (selectedOption === 'view' && isDefined(selectedObjectMetadataIdForView)) {
@@ -851,13 +868,15 @@ export const CommandMenuNewSidebarItemPage = () => {
         </SelectableListItem>
       </CommandGroup>
       <CommandGroup heading={t`Other`}>
-        <SelectableListItem itemId="folder" onEnter={() => {}}>
+        <SelectableListItem
+          itemId="folder"
+          onEnter={handleAddFolderAndOpenEdit}
+        >
           <CommandMenuItem
             Icon={IconFolder}
             label={t`Folder`}
             id="folder"
-            hasSubMenu={true}
-            disabled={true}
+            onClick={handleAddFolderAndOpenEdit}
           />
         </SelectableListItem>
         <SelectableListItem itemId="link" onEnter={() => {}}>

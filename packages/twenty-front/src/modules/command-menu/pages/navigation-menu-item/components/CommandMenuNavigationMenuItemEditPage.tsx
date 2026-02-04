@@ -4,10 +4,12 @@ import { useMemo, useState } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import {
+  IconApps,
   IconChevronDown,
   IconChevronLeft,
   IconChevronUp,
   IconFolder,
+  IconRefresh,
   IconSettings,
   IconTrash,
   useIcons,
@@ -26,6 +28,7 @@ import {
 } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
+import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
 import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
@@ -436,6 +439,45 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     }),
   );
 
+  const foldersForFolderPicker = useMemo(() => {
+    const folders =
+      currentDraft?.filter(isNavigationMenuItemFolder).map((item) => ({
+        id: item.id,
+        name: item.name ?? 'Folder',
+        folderId: item.folderId ?? undefined,
+      })) ?? [];
+
+    if (!isFolderItem || !selectedNavigationMenuItemInEditMode) {
+      return { folders, includeNoFolderOption: false };
+    }
+
+    const currentFolderId = selectedNavigationMenuItemInEditMode;
+    const descendantFolderIds = new Set<string>();
+    const collectDescendants = (folderId: string) => {
+      folders
+        .filter((folder) => folder.folderId === folderId)
+        .forEach((folder) => {
+          descendantFolderIds.add(folder.id);
+          collectDescendants(folder.id);
+        });
+    };
+    collectDescendants(currentFolderId);
+
+    const availableFolders = folders.filter(
+      (folder) =>
+        folder.id !== currentFolderId && !descendantFolderIds.has(folder.id),
+    );
+
+    return {
+      folders: availableFolders,
+      includeNoFolderOption: true,
+    };
+  }, [
+    currentDraft,
+    isFolderItem,
+    selectedNavigationMenuItemInEditMode,
+  ]);
+
   if (!selectedNavigationMenuItemInEditMode || !selectedItemLabel) {
     return (
       <StyledContainer>
@@ -513,15 +555,21 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   };
 
   if (editSubView === 'folder-picker') {
-    const filteredFolders = workspaceFolders.filter((folder) =>
+    const foldersToShow = foldersForFolderPicker.includeNoFolderOption
+      ? foldersForFolderPicker.folders
+      : workspaceFolders;
+    const filteredFolders = foldersToShow.filter((folder) =>
       folder.name
         .toLowerCase()
         .includes(folderSearchInput.toLowerCase().trim()),
     );
-    const selectableItemIds =
-      filteredFolders.length > 0
-        ? filteredFolders.map((f) => f.id)
-        : ['empty'];
+    const selectableItemIds = [
+      ...(foldersForFolderPicker.includeNoFolderOption ? ['no-folder'] : []),
+      ...(filteredFolders.length > 0 ? filteredFolders.map((f) => f.id) : []),
+    ];
+    if (selectableItemIds.length === 0) {
+      selectableItemIds.push('empty');
+    }
 
     return (
       <StyledSubViewContainer>
@@ -543,7 +591,19 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
             selectableItemIds={selectableItemIds}
           >
             <CommandGroup heading={t`Folders`}>
-              {filteredFolders.length === 0 ? (
+              {foldersForFolderPicker.includeNoFolderOption && (
+                <SelectableListItem
+                  itemId="no-folder"
+                  onEnter={() => handleMoveToFolder(null)}
+                >
+                  <CommandMenuItem
+                    label={t`No folder`}
+                    id="no-folder"
+                    onClick={() => handleMoveToFolder(null)}
+                  />
+                </SelectableListItem>
+              )}
+              {filteredFolders.length === 0 && !foldersForFolderPicker.includeNoFolderOption ? (
                 <SelectableListItem itemId="empty" onEnter={() => {}}>
                   <CommandMenuItem
                     label={
@@ -979,32 +1039,16 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   }
 
   if (isFolderItem && selectedItem?.type === 'folder') {
-    const selectableItemIds = ['rename', 'move-up', 'move-down', 'remove'];
+    const selectableItemIds = [
+      'move-up',
+      'move-down',
+      'remove',
+      'standard-app',
+      'reset-to-default',
+    ];
 
     return (
       <CommandMenuList commandGroups={[]} selectableItemIds={selectableItemIds}>
-        <CommandGroup heading={t`Customize`}>
-          <SelectableListItem
-            itemId="rename"
-            onEnter={() => {
-              setFolderRenameInput(selectedItem.folder.folderName);
-              setEditSubView('folder-rename');
-            }}
-          >
-            <CommandMenuItem
-              Icon={IconFolder}
-              label={t`Rename`}
-              description={selectedItem.folder.folderName}
-              contextualTextPosition="right"
-              hasSubMenu={true}
-              id="rename"
-              onClick={() => {
-                setFolderRenameInput(selectedItem.folder.folderName);
-                setEditSubView('folder-rename');
-              }}
-            />
-          </SelectableListItem>
-        </CommandGroup>
         <CommandGroup heading={t`Organize`}>
           <SelectableListItem
             itemId="move-up"
@@ -1036,6 +1080,26 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
               label={t`Remove from sidebar`}
               id="remove"
               onClick={handleRemove}
+            />
+          </SelectableListItem>
+        </CommandGroup>
+        <CommandGroup heading={t`Owner`}>
+          <SelectableListItem itemId="standard-app" onEnter={() => {}}>
+            <CommandMenuItem
+              Icon={IconApps}
+              label={t`Standard app`}
+              id="standard-app"
+              disabled={true}
+              onClick={() => {}}
+            />
+          </SelectableListItem>
+          <SelectableListItem itemId="reset-to-default" onEnter={() => {}}>
+            <CommandMenuItem
+              Icon={IconRefresh}
+              label={t`Reset to default`}
+              id="reset-to-default"
+              disabled={true}
+              onClick={() => {}}
             />
           </SelectableListItem>
         </CommandGroup>

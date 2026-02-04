@@ -63,7 +63,7 @@ export const WorkspaceNavigationMenuItems = () => {
       setSelectedNavigationMenuItemInEditMode(id);
       if (item.type === 'folder') {
         openNavigationMenuItemInCommandMenu({
-          pageTitle: item.folder.folderName,
+          pageTitle: t`Edit folder`,
           pageIcon: IconFolder,
         });
       } else {
