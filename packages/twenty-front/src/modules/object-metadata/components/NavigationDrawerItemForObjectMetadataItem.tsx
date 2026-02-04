@@ -124,9 +124,15 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
       ? iconColors.view
       : iconColors.object;
 
+  const secondaryLabel =
+    isRecord || isViewWithCustomName
+      ? objectMetadataItem.labelSingular
+      : undefined;
+
   return (
     <NavigationDrawerItem
       label={label}
+      secondaryLabel={secondaryLabel}
       to={shouldNavigate ? navigationPath : undefined}
       onClick={handleClick}
       Icon={Icon}
