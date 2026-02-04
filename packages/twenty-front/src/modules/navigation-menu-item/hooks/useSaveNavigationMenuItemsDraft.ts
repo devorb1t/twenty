@@ -58,17 +58,41 @@ export const useSaveNavigationMenuItemsDraft = () => {
         }
 
         const prefetchIds = new Set(workspacePrefetch.map((i) => i.id));
+        const workspacePrefetchById = new Map(
+          workspacePrefetch.map((i) => [i.id, i]),
+        );
         const idsToCreate = draft.filter((item) => !prefetchIds.has(item.id));
+        const idsToRecreate = draft.filter((item) => {
+          const original = workspacePrefetchById.get(item.id);
+          if (!original) return false;
+          return (
+            original.viewId !== item.viewId ||
+            original.targetObjectMetadataId !== item.targetObjectMetadataId
+          );
+        });
 
-        for (const draftItem of idsToCreate) {
+        for (const draftItem of idsToRecreate) {
+          await deleteNavigationMenuItem(draftItem.id);
+        }
+
+        const idsToCreateIncludingRecreated = [
+          ...idsToCreate,
+          ...idsToRecreate,
+        ];
+
+        for (const draftItem of idsToCreateIncludingRecreated) {
           const input: {
             position: number;
+            folderId?: string | null;
+            name?: string;
             viewId?: string;
             targetObjectMetadataId?: string;
             targetRecordId?: string;
           } = { position: draftItem.position };
 
-          if (isDefined(draftItem.viewId)) {
+          if (isNavigationMenuItemFolder(draftItem)) {
+            input.name = draftItem.name ?? undefined;
+          } else if (isDefined(draftItem.viewId)) {
             input.viewId = draftItem.viewId;
           } else if (isDefined(draftItem.targetRecordId)) {
             input.targetRecordId = draftItem.targetRecordId;
@@ -76,18 +100,48 @@ export const useSaveNavigationMenuItemsDraft = () => {
               draftItem.targetObjectMetadataId ?? undefined;
           }
 
+          if (isDefined(draftItem.folderId)) {
+            input.folderId = draftItem.folderId;
+          }
+
           await createNavigationMenuItemMutation({
             variables: { input },
           });
         }
 
+        const idsToRecreateSet = new Set(idsToRecreate.map((i) => i.id));
         for (const draftItem of draft) {
-          const original = topLevelWorkspace.find((p) => p.id === draftItem.id);
-          if (isDefined(original) && original.position !== draftItem.position) {
-            await updateNavigationMenuItem({
-              id: draftItem.id,
-              position: draftItem.position,
-            });
+          if (idsToRecreateSet.has(draftItem.id)) continue;
+
+          const original = workspacePrefetchById.get(draftItem.id);
+          if (!original) continue;
+
+          const positionChanged = original.position !== draftItem.position;
+          const folderIdChanged =
+            (original.folderId ?? null) !== (draftItem.folderId ?? null);
+          const nameChanged =
+            isNavigationMenuItemFolder(draftItem) &&
+            (original.name ?? null) !== (draftItem.name ?? null);
+
+          if (positionChanged || folderIdChanged || nameChanged) {
+            const updateInput: {
+              id: string;
+              position?: number;
+              folderId?: string | null;
+              name?: string;
+            } = { id: draftItem.id };
+
+            if (positionChanged) {
+              updateInput.position = draftItem.position;
+            }
+            if (folderIdChanged) {
+              updateInput.folderId = draftItem.folderId ?? null;
+            }
+            if (nameChanged && isNavigationMenuItemFolder(draftItem)) {
+              updateInput.name = draftItem.name ?? undefined;
+            }
+
+            await updateNavigationMenuItem(updateInput);
           }
         }
       },

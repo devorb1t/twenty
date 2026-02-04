@@ -21,9 +21,7 @@ import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { MAX_SEARCH_RESULTS } from '@/command-menu/constants/MaxSearchResults';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
-import { useAddObjectToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddObjectToNavigationMenuDraft';
-import { useAddRecordToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddRecordToNavigationMenuDraft';
-import { useAddViewToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddViewToNavigationMenuDraft';
+import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useWorkspaceNavigationMenuItems } from '@/navigation-menu-item/hooks/useWorkspaceNavigationMenuItems';
 import { useApolloCoreClient } from '@/object-metadata/hooks/useApolloCoreClient';
@@ -192,9 +190,8 @@ export const CommandMenuNewSidebarItemPage = () => {
   const coreViews = useRecoilValue(coreViewsState);
   const { objectMetadataItems } = useObjectMetadataItems();
   const { objectPermissionsByObjectMetadataId } = useObjectPermissions();
-  const { addObjectToDraft } = useAddObjectToNavigationMenuDraft();
-  const { addRecordToDraft } = useAddRecordToNavigationMenuDraft();
-  const { addViewToDraft } = useAddViewToNavigationMenuDraft();
+  const { addObjectToDraft, addViewToDraft, addRecordToDraft } =
+    useAddToNavigationMenuDraft();
   const { workspaceNavigationMenuItems, navigationMenuItemsDraft } =
     useNavigationMenuItemsDraftState();
   const { workspaceNavigationMenuItemsObjectMetadataItems } =
