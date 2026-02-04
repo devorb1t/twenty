@@ -370,8 +370,20 @@ export const CommandMenuNewSidebarItemPage = () => {
   };
 
   const handleBackToViewObjectList = () => {
+    const selectedObjectMetadataItem = isDefined(
+      selectedObjectMetadataIdForView,
+    )
+      ? objectMetadataItems.find(
+          (item) => item.id === selectedObjectMetadataIdForView,
+        )
+      : undefined;
+    const cameFromSystemObjects = selectedObjectMetadataItem?.isSystem ?? false;
+
     setSelectedObjectMetadataIdForView(null);
     setViewSearchInput('');
+    if (cameFromSystemObjects) {
+      setSelectedOption('view-system');
+    }
   };
 
   const handleBackToViewObjectListFromSystem = () => {
