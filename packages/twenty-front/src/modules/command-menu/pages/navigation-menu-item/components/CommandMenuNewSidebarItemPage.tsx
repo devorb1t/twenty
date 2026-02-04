@@ -391,10 +391,12 @@ export const CommandMenuNewSidebarItemPage = () => {
     const filteredViews = viewsForSelectedObject.filter((view) =>
       view.name.toLowerCase().includes(viewSearchInput.toLowerCase().trim()),
     );
-    const selectableItemIds =
-      filteredViews.length > 0
-        ? filteredViews.map((view) => view.id)
-        : ['empty'];
+    const selectableItemIds = filteredViews.map((view) => view.id);
+    const isEmpty = filteredViews.length === 0;
+    const noResultsText =
+      viewSearchInput.trim().length > 0
+        ? t`No results found`
+        : t`No custom views available`;
 
     return (
       <StyledSubViewContainer>
@@ -414,39 +416,27 @@ export const CommandMenuNewSidebarItemPage = () => {
           <CommandMenuList
             commandGroups={[]}
             selectableItemIds={selectableItemIds}
+            noResults={isEmpty}
+            noResultsText={noResultsText}
           >
             <CommandGroup heading={t`Views`}>
-              {filteredViews.length === 0 ? (
-                <SelectableListItem itemId="empty" onEnter={() => {}}>
-                  <CommandMenuItem
-                    label={
-                      viewSearchInput.trim().length > 0
-                        ? t`No results found`
-                        : t`All views are already in the sidebar`
-                    }
-                    id="empty"
-                    disabled={true}
-                  />
-                </SelectableListItem>
-              ) : (
-                filteredViews.map((view) => {
-                  const ViewIcon = getIcon(view.icon);
-                  return (
-                    <SelectableListItem
-                      key={view.id}
-                      itemId={view.id}
-                      onEnter={() => handleSelectView(view)}
-                    >
-                      <CommandMenuItem
-                        Icon={ViewIcon}
-                        label={view.name}
-                        id={view.id}
-                        onClick={() => handleSelectView(view)}
-                      />
-                    </SelectableListItem>
-                  );
-                })
-              )}
+              {filteredViews.map((view) => {
+                const ViewIcon = getIcon(view.icon);
+                return (
+                  <SelectableListItem
+                    key={view.id}
+                    itemId={view.id}
+                    onEnter={() => handleSelectView(view)}
+                  >
+                    <CommandMenuItem
+                      Icon={ViewIcon}
+                      label={view.name}
+                      id={view.id}
+                      onClick={() => handleSelectView(view)}
+                    />
+                  </SelectableListItem>
+                );
+              })}
             </CommandGroup>
           </CommandMenuList>
         </StyledScrollableListWrapper>
