@@ -11,6 +11,7 @@ import {
   IconFolder,
   IconLink,
   IconList,
+  IconSettings,
   useIcons,
 } from 'twenty-ui/display';
 import { useDebounce } from 'use-debounce';
@@ -32,7 +33,10 @@ import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataI
 import { useObjectPermissions } from '@/object-record/hooks/useObjectPermissions';
 import { getObjectPermissionsFromMapByObjectMetadataId } from '@/settings/roles/role-permissions/objects-permissions/utils/getObjectPermissionsFromMapByObjectMetadataId';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
+import { coreViewsState } from '@/views/states/coreViewState';
 import { coreIndexViewIdFromObjectMetadataItemFamilySelector } from '@/views/states/selectors/coreIndexViewIdFromObjectMetadataItemFamilySelector';
+import { ViewKey } from '@/views/types/ViewKey';
+import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
 import { useSearchQuery } from '~/generated/graphql';
 
 const StyledBackBar = styled.button`
@@ -97,7 +101,7 @@ const StyledScrollableListWrapper = styled.div`
   }
 `;
 
-type SelectedOption = 'object' | 'record' | null;
+type SelectedOption = 'object' | 'record' | 'system' | null;
 
 const CommandMenuAddObjectMenuItem = ({
   objectMetadataItem,
@@ -141,10 +145,13 @@ export const CommandMenuNewSidebarItemPage = () => {
   const { t } = useLingui();
   const { closeCommandMenu } = useCommandMenu();
   const [selectedOption, setSelectedOption] = useState<SelectedOption>(null);
+  const [objectSearchInput, setObjectSearchInput] = useState('');
   const [recordSearchInput, setRecordSearchInput] = useState('');
+  const [systemObjectSearchInput, setSystemObjectSearchInput] = useState('');
   const [deferredRecordSearchInput] = useDebounce(recordSearchInput, 300);
 
   const coreClient = useApolloCoreClient();
+  const coreViews = useRecoilValue(coreViewsState);
   const { objectMetadataItems } = useObjectMetadataItems();
   const { objectPermissionsByObjectMetadataId } = useObjectPermissions();
   const { addObjectToDraft } = useAddObjectToNavigationMenuDraft();
@@ -159,9 +166,54 @@ export const CommandMenuNewSidebarItemPage = () => {
   const objectMetadataItemsInWorkspaceIds = new Set(
     workspaceNavigationMenuItemsObjectMetadataItems.map((item) => item.id),
   );
+
+  const currentDraft = isDefined(navigationMenuItemsDraft)
+    ? navigationMenuItemsDraft
+    : workspaceNavigationMenuItems;
+
+  const objectMetadataIdsInWorkspace = useMemo(() => {
+    const views = coreViews.map(convertCoreViewToView);
+    const ids = new Set<string>();
+    for (const item of currentDraft) {
+      if (isDefined(item.viewId)) {
+        const view = views.find((view) => view.id === item.viewId);
+        if (isDefined(view)) {
+          ids.add(view.objectMetadataId);
+        }
+      }
+      if (isDefined(item.targetObjectMetadataId)) {
+        ids.add(item.targetObjectMetadataId);
+      }
+    }
+    return ids;
+  }, [coreViews, currentDraft]);
+
   const availableObjectMetadataItems = activeNonSystemObjectMetadataItems
     .filter((item) => !objectMetadataItemsInWorkspaceIds.has(item.id))
     .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
+
+  const objectMetadataIdsWithIndexView = useMemo(() => {
+    const views = coreViews.map(convertCoreViewToView);
+    return new Set(
+      views
+        .filter((view) => view.key === ViewKey.Index)
+        .map((view) => view.objectMetadataId),
+    );
+  }, [coreViews]);
+
+  const activeSystemObjectMetadataItems = useMemo(
+    () =>
+      Object.values(objectMetadataItems)
+        .filter((item) => item.isActive && item.isSystem)
+        .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural)),
+    [objectMetadataItems],
+  );
+  const availableSystemObjectMetadataItems =
+    activeSystemObjectMetadataItems.filter(
+      (item) =>
+        !objectMetadataIdsInWorkspace.has(item.id) &&
+        objectMetadataIdsWithIndexView.has(item.id),
+    );
 
   const nonReadableObjectMetadataItemsNameSingular = useMemo(() => {
     return Object.values(objectMetadataItems)
@@ -187,10 +239,6 @@ export const CommandMenuNewSidebarItemPage = () => {
       ],
     },
   });
-
-  const currentDraft = isDefined(navigationMenuItemsDraft)
-    ? navigationMenuItemsDraft
-    : workspaceNavigationMenuItems;
 
   const workspaceRecordIds = useMemo(() => {
     const items = navigationMenuItemsDraft ?? workspaceNavigationMenuItems;
@@ -227,39 +275,136 @@ export const CommandMenuNewSidebarItemPage = () => {
     closeCommandMenu();
   };
 
-  const handleBack = () => {
+  const handleBackToMain = () => {
     setSelectedOption(null);
+    setObjectSearchInput('');
     setRecordSearchInput('');
+    setSystemObjectSearchInput('');
+  };
+
+  const handleBackToObjectList = () => {
+    setSelectedOption('object');
+    setSystemObjectSearchInput('');
   };
 
   if (selectedOption === 'object') {
+    const filteredObjectMetadataItems = availableObjectMetadataItems.filter(
+      (item) =>
+        item.labelPlural
+          .toLowerCase()
+          .includes(objectSearchInput.toLowerCase().trim()),
+    );
     const selectableItemIds =
-      availableObjectMetadataItems.length > 0
-        ? availableObjectMetadataItems.map((item) => item.id)
-        : ['empty'];
+      filteredObjectMetadataItems.length > 0
+        ? [...filteredObjectMetadataItems.map((item) => item.id), 'system']
+        : ['empty', 'system'];
 
     return (
       <StyledSubViewContainer>
-        <StyledBackBar onClick={handleBack}>
+        <StyledBackBar onClick={handleBackToMain}>
           <IconChevronLeft size={16} />
-          {t`Add object`}
+          {t`Pick an object`}
         </StyledBackBar>
+        <StyledSearchContainer>
+          <StyledSearchInput
+            placeholder={t`Search an object...`}
+            value={objectSearchInput}
+            onChange={(event) => setObjectSearchInput(event.target.value)}
+            autoFocus
+          />
+        </StyledSearchContainer>
         <StyledScrollableListWrapper>
           <CommandMenuList
             commandGroups={[]}
             selectableItemIds={selectableItemIds}
           >
             <CommandGroup heading={t`Objects`}>
-              {availableObjectMetadataItems.length === 0 ? (
+              {filteredObjectMetadataItems.length === 0 ? (
                 <SelectableListItem itemId="empty" onEnter={() => {}}>
                   <CommandMenuItem
-                    label={t`All objects are already in the sidebar`}
+                    label={
+                      objectSearchInput.trim().length > 0
+                        ? t`No results found`
+                        : t`All objects are already in the sidebar`
+                    }
                     id="empty"
                     disabled={true}
                   />
                 </SelectableListItem>
               ) : (
-                availableObjectMetadataItems.map((objectMetadataItem) => (
+                filteredObjectMetadataItems.map((objectMetadataItem) => (
+                  <CommandMenuAddObjectMenuItem
+                    key={objectMetadataItem.id}
+                    objectMetadataItem={objectMetadataItem}
+                    onSelect={handleSelectObject}
+                  />
+                ))
+              )}
+              <SelectableListItem
+                itemId="system"
+                onEnter={() => setSelectedOption('system')}
+              >
+                <CommandMenuItem
+                  Icon={IconSettings}
+                  label={t`System objects`}
+                  id="system"
+                  hasSubMenu={true}
+                  onClick={() => setSelectedOption('system')}
+                />
+              </SelectableListItem>
+            </CommandGroup>
+          </CommandMenuList>
+        </StyledScrollableListWrapper>
+      </StyledSubViewContainer>
+    );
+  }
+
+  if (selectedOption === 'system') {
+    const filteredSystemObjectMetadataItems =
+      availableSystemObjectMetadataItems.filter((item) =>
+        item.labelPlural
+          .toLowerCase()
+          .includes(systemObjectSearchInput.toLowerCase().trim()),
+      );
+    const selectableItemIds =
+      filteredSystemObjectMetadataItems.length > 0
+        ? filteredSystemObjectMetadataItems.map((item) => item.id)
+        : ['empty'];
+
+    return (
+      <StyledSubViewContainer>
+        <StyledBackBar onClick={handleBackToObjectList}>
+          <IconChevronLeft size={16} />
+          {t`System objects`}
+        </StyledBackBar>
+        <StyledSearchContainer>
+          <StyledSearchInput
+            placeholder={t`Search a system object...`}
+            value={systemObjectSearchInput}
+            onChange={(event) => setSystemObjectSearchInput(event.target.value)}
+            autoFocus
+          />
+        </StyledSearchContainer>
+        <StyledScrollableListWrapper>
+          <CommandMenuList
+            commandGroups={[]}
+            selectableItemIds={selectableItemIds}
+          >
+            <CommandGroup heading={t`System objects`}>
+              {filteredSystemObjectMetadataItems.length === 0 ? (
+                <SelectableListItem itemId="empty" onEnter={() => {}}>
+                  <CommandMenuItem
+                    label={
+                      systemObjectSearchInput.trim().length > 0
+                        ? t`No results found`
+                        : t`All system objects are already in the sidebar`
+                    }
+                    id="empty"
+                    disabled={true}
+                  />
+                </SelectableListItem>
+              ) : (
+                filteredSystemObjectMetadataItems.map((objectMetadataItem) => (
                   <CommandMenuAddObjectMenuItem
                     key={objectMetadataItem.id}
                     objectMetadataItem={objectMetadataItem}
@@ -282,7 +427,7 @@ export const CommandMenuNewSidebarItemPage = () => {
 
     return (
       <StyledSubViewContainer>
-        <StyledBackBar onClick={handleBack}>
+        <StyledBackBar onClick={handleBackToMain}>
           <IconChevronLeft size={16} />
           {t`Add a record`}
         </StyledBackBar>
