@@ -70,8 +70,6 @@ export const useSaveNavigationMenuItemsDraft = () => {
 
           if (isDefined(draftItem.viewId)) {
             input.viewId = draftItem.viewId;
-            input.targetObjectMetadataId =
-              draftItem.targetObjectMetadataId ?? undefined;
           } else if (isDefined(draftItem.targetRecordId)) {
             input.targetRecordId = draftItem.targetRecordId;
             input.targetObjectMetadataId =
