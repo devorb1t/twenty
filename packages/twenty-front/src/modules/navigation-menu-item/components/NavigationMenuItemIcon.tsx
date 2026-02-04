@@ -6,6 +6,7 @@ import { Avatar, useIcons } from 'twenty-ui/display';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
+import { ViewKey } from '@/views/types/ViewKey';
 
 const StyledIconWithBackground = styled.div<{ backgroundColor: string }>`
   align-items: center;
@@ -35,9 +36,12 @@ export const NavigationMenuItemIcon = ({
 
   const isRecord = isDefined(navigationMenuItem.targetRecordId);
   const iconColors = getNavigationMenuItemIconColors(theme);
+  const isObjectIndexView =
+    isDefined(navigationMenuItem.viewId) &&
+    navigationMenuItem.viewKey === ViewKey.Index;
   const iconBackgroundColor = isRecord
     ? undefined
-    : isDefined(navigationMenuItem.viewId)
+    : isDefined(navigationMenuItem.viewId) && !isObjectIndexView
       ? iconColors.view
       : iconColors.object;
 

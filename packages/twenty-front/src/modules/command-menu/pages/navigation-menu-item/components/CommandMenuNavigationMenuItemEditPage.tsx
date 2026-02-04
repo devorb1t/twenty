@@ -428,7 +428,10 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         .toLowerCase()
         .includes(folderSearchInput.toLowerCase().trim()),
     );
-    const selectableItemIds = ['root', ...filteredFolders.map((f) => f.id)];
+    const selectableItemIds =
+      filteredFolders.length > 0
+        ? filteredFolders.map((f) => f.id)
+        : ['empty'];
 
     return (
       <StyledSubViewContainer>
@@ -450,30 +453,34 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
             selectableItemIds={selectableItemIds}
           >
             <CommandGroup heading={t`Folders`}>
-              <SelectableListItem
-                itemId="root"
-                onEnter={() => handleMoveToFolder(null)}
-              >
-                <CommandMenuItem
-                  label={t`No folder`}
-                  id="root"
-                  onClick={() => handleMoveToFolder(null)}
-                />
-              </SelectableListItem>
-              {filteredFolders.map((folder) => (
-                <SelectableListItem
-                  key={folder.id}
-                  itemId={folder.id}
-                  onEnter={() => handleMoveToFolder(folder.id)}
-                >
+              {filteredFolders.length === 0 ? (
+                <SelectableListItem itemId="empty" onEnter={() => {}}>
                   <CommandMenuItem
-                    Icon={IconFolder}
-                    label={folder.name}
-                    id={folder.id}
-                    onClick={() => handleMoveToFolder(folder.id)}
+                    label={
+                      folderSearchInput.trim().length > 0
+                        ? t`No results found`
+                        : t`No folders available`
+                    }
+                    id="empty"
+                    disabled={true}
                   />
                 </SelectableListItem>
-              ))}
+              ) : (
+                filteredFolders.map((folder) => (
+                  <SelectableListItem
+                    key={folder.id}
+                    itemId={folder.id}
+                    onEnter={() => handleMoveToFolder(folder.id)}
+                  >
+                    <CommandMenuItem
+                      Icon={IconFolder}
+                      label={folder.name}
+                      id={folder.id}
+                      onClick={() => handleMoveToFolder(folder.id)}
+                    />
+                  </SelectableListItem>
+                ))
+              )}
             </CommandGroup>
           </CommandMenuList>
         </StyledScrollableListWrapper>
@@ -826,13 +833,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   }
 
   if (isFolderItem && selectedItem?.type === 'folder') {
-    const selectableItemIds = [
-      'rename',
-      'move-up',
-      'move-down',
-      'move-to-folder',
-      'remove',
-    ];
+    const selectableItemIds = ['rename', 'move-up', 'move-down', 'remove'];
 
     return (
       <CommandMenuList commandGroups={[]} selectableItemIds={selectableItemIds}>
@@ -881,17 +882,6 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
               id="move-down"
               onClick={handleMoveDown}
               disabled={!canMoveDown}
-            />
-          </SelectableListItem>
-          <SelectableListItem
-            itemId="move-to-folder"
-            onEnter={() => setEditSubView('folder-picker')}
-          >
-            <CommandMenuItem
-              Icon={IconFolder}
-              label={t`Move to folder`}
-              id="move-to-folder"
-              onClick={() => setEditSubView('folder-picker')}
             />
           </SelectableListItem>
           <SelectableListItem itemId="remove" onEnter={handleRemove}>

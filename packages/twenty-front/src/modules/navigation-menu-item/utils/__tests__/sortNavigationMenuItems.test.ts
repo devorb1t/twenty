@@ -37,6 +37,8 @@ describe('sortNavigationMenuItems', () => {
     id: 'metadata-id',
     nameSingular: 'person',
     namePlural: 'people',
+    labelPlural: 'People',
+    icon: 'IconUser',
   } as ObjectMetadataItem;
 
   const mockView: Pick<
@@ -88,8 +90,8 @@ describe('sortNavigationMenuItems', () => {
       id: 'item-id',
       viewId: 'view-id',
       position: 1,
-      labelIdentifier: 'All People',
-      objectNameSingular: 'view',
+      labelIdentifier: 'People',
+      objectNameSingular: 'person',
       Icon: 'IconUser',
     });
     expect(result[0].link).toContain('viewId=view-id');
@@ -302,7 +304,7 @@ describe('sortNavigationMenuItems', () => {
 
     expect(result).toHaveLength(2);
     expect(result[0].id).toBe('view-item');
-    expect(result[0].objectNameSingular).toBe('view');
+    expect(result[0].objectNameSingular).toBe('person');
     expect(result[1].id).toBe('record-item');
     expect(result[1].objectNameSingular).toBe('person');
   });
@@ -344,7 +346,7 @@ describe('sortNavigationMenuItems', () => {
     );
 
     expect(result).toHaveLength(1);
-    expect(result[0].objectNameSingular).toBe('view');
+    expect(result[0].objectNameSingular).toBe('person');
     expect(result[0].viewId).toBe('view-id');
   });
 

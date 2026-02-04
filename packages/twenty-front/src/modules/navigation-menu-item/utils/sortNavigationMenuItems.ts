@@ -1,7 +1,7 @@
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { type ObjectRecordIdentifier } from '@/object-record/types/ObjectRecordIdentifier';
 import { type View } from '@/views/types/View';
-import { type ViewKey } from '@/views/types/ViewKey';
+import { ViewKey } from '@/views/types/ViewKey';
 import { AppPath } from 'twenty-shared/types';
 import { getAppPath, isDefined } from 'twenty-shared/utils';
 import { type NavigationMenuItem } from '~/generated-metadata/graphql';
@@ -34,9 +34,23 @@ export const sortNavigationMenuItems = (
             view,
             objectMetadataItems,
           );
+          const objectMetadataItem = objectMetadataItems.find(
+            (meta) => meta.id === view.objectMetadataId,
+          );
+          const isIndexView = view.key === ViewKey.Index;
+          const labelIdentifier =
+            isIndexView && isDefined(objectMetadataItem)
+              ? objectMetadataItem.labelPlural
+              : view.name;
+          const icon =
+            isIndexView &&
+            isDefined(objectMetadataItem) &&
+            isDefined(objectMetadataItem.icon)
+              ? objectMetadataItem.icon
+              : view.icon;
 
           const displayFields: NavigationMenuItemDisplayFields = {
-            labelIdentifier: view.name,
+            labelIdentifier,
             avatarUrl: '',
             avatarType: 'icon',
             link: getAppPath(
@@ -44,8 +58,10 @@ export const sortNavigationMenuItems = (
               { objectNamePlural: namePlural },
               { viewId: navigationMenuItem.viewId },
             ),
-            objectNameSingular: 'view',
-            Icon: view.icon,
+            objectNameSingular: isIndexView
+              ? (objectMetadataItem?.nameSingular ?? 'view')
+              : 'view',
+            Icon: icon,
           };
 
           return {
