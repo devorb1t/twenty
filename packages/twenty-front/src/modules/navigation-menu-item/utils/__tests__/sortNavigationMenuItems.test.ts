@@ -2,6 +2,7 @@ import { sortNavigationMenuItems } from '@/navigation-menu-item/utils/sortNaviga
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { type ObjectRecordIdentifier } from '@/object-record/types/ObjectRecordIdentifier';
 import { type View } from '@/views/types/View';
+import { ViewKey } from '@/views/types/ViewKey';
 import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
 jest.mock('@/favorites/utils/getObjectMetadataNamePluralFromViewId', () => ({
@@ -38,11 +39,15 @@ describe('sortNavigationMenuItems', () => {
     namePlural: 'people',
   } as ObjectMetadataItem;
 
-  const mockView: Pick<View, 'id' | 'name' | 'objectMetadataId' | 'icon'> = {
+  const mockView: Pick<
+    View,
+    'id' | 'name' | 'objectMetadataId' | 'icon' | 'key'
+  > = {
     id: 'view-id',
     name: 'All People',
     objectMetadataId: 'metadata-id',
     icon: 'IconUser',
+    key: ViewKey.Index,
   };
 
   const mockObjectRecordIdentifier: ObjectRecordIdentifier = {

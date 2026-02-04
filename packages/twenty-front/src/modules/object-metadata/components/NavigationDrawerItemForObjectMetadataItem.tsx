@@ -4,6 +4,7 @@ import { lastVisitedViewPerObjectMetadataItemState } from '@/navigation/states/l
 import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { NavigationDrawerItem } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerItem';
+import { ViewKey } from '@/views/types/ViewKey';
 import { useTheme } from '@emotion/react';
 import { useLocation } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
@@ -38,14 +39,23 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
     lastVisitedViewPerObjectMetadataItem?.[objectMetadataItem.id];
 
   const { getIcon } = useIcons();
-  const currentPath = useLocation().pathname;
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const currentPathWithSearch = `${location.pathname}${location.search}`;
 
   const isRecord =
     isDefined(navigationMenuItem?.targetRecordId) &&
     isDefined(navigationMenuItem?.link) &&
     isDefined(navigationMenuItem?.labelIdentifier);
 
-  const navigationPath = isRecord
+  const isView =
+    isDefined(navigationMenuItem?.viewId) &&
+    isDefined(navigationMenuItem?.link) &&
+    isDefined(navigationMenuItem?.labelIdentifier);
+
+  const hasCustomLink = isRecord || isView;
+
+  const navigationPath = hasCustomLink
     ? navigationMenuItem!.link
     : getAppPath(
         AppPath.RecordIndexPage,
@@ -53,8 +63,9 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
         lastVisitedViewId ? { viewId: lastVisitedViewId } : undefined,
       );
 
-  const isActive = isRecord
-    ? currentPath === navigationMenuItem!.link
+  const isActive = hasCustomLink
+    ? (isView ? currentPathWithSearch : currentPath) ===
+      navigationMenuItem!.link
     : currentPath ===
         getAppPath(AppPath.RecordIndexPage, {
           objectNamePlural: objectMetadataItem.namePlural,
@@ -79,9 +90,16 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
   const shouldNavigate =
     !isEditMode && !(isActive && onActiveItemClickWhenNotInEditMode);
 
+  const isViewWithCustomName =
+    isView &&
+    navigationMenuItem?.viewKey !== ViewKey.Index &&
+    isDefined(navigationMenuItem?.labelIdentifier);
+
   const label = isRecord
     ? navigationMenuItem!.labelIdentifier
-    : objectMetadataItem.labelPlural;
+    : isViewWithCustomName
+      ? navigationMenuItem!.labelIdentifier
+      : objectMetadataItem.labelPlural;
 
   const Icon = isRecord
     ? () => (
@@ -96,9 +114,15 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
           placeholder={navigationMenuItem!.labelIdentifier}
         />
       )
-    : getIcon(objectMetadataItem.icon);
+    : isViewWithCustomName && isDefined(navigationMenuItem?.Icon)
+      ? getIcon(navigationMenuItem.Icon)
+      : getIcon(objectMetadataItem.icon);
 
-  const iconBackgroundColor = isRecord ? undefined : iconColors.object;
+  const iconBackgroundColor = isRecord
+    ? undefined
+    : isViewWithCustomName
+      ? iconColors.view
+      : iconColors.object;
 
   return (
     <NavigationDrawerItem

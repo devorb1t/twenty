@@ -23,6 +23,7 @@ import { MAX_SEARCH_RESULTS } from '@/command-menu/constants/MaxSearchResults';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useAddObjectToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddObjectToNavigationMenuDraft';
 import { useAddRecordToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddRecordToNavigationMenuDraft';
+import { useAddViewToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddViewToNavigationMenuDraft';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useWorkspaceNavigationMenuItems } from '@/navigation-menu-item/hooks/useWorkspaceNavigationMenuItems';
 import { useApolloCoreClient } from '@/object-metadata/hooks/useApolloCoreClient';
@@ -35,6 +36,7 @@ import { getObjectPermissionsFromMapByObjectMetadataId } from '@/settings/roles/
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { coreViewsState } from '@/views/states/coreViewState';
 import { coreIndexViewIdFromObjectMetadataItemFamilySelector } from '@/views/states/selectors/coreIndexViewIdFromObjectMetadataItemFamilySelector';
+import { type View } from '@/views/types/View';
 import { ViewKey } from '@/views/types/ViewKey';
 import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
 import { useSearchQuery } from '~/generated/graphql';
@@ -101,7 +103,13 @@ const StyledScrollableListWrapper = styled.div`
   }
 `;
 
-type SelectedOption = 'object' | 'record' | 'system' | null;
+type SelectedOption =
+  | 'object'
+  | 'record'
+  | 'system'
+  | 'view'
+  | 'view-system'
+  | null;
 
 const CommandMenuAddObjectMenuItem = ({
   objectMetadataItem,
@@ -141,13 +149,43 @@ const CommandMenuAddObjectMenuItem = ({
   );
 };
 
+const CommandMenuSelectObjectForViewMenuItem = ({
+  objectMetadataItem,
+  onSelect,
+}: {
+  objectMetadataItem: ObjectMetadataItem;
+  onSelect: (objectMetadataItem: ObjectMetadataItem) => void;
+}) => {
+  const { getIcon } = useIcons();
+  const Icon = getIcon(objectMetadataItem.icon);
+
+  const handleClick = () => {
+    onSelect(objectMetadataItem);
+  };
+
+  return (
+    <SelectableListItem itemId={objectMetadataItem.id} onEnter={handleClick}>
+      <CommandMenuItem
+        Icon={Icon}
+        label={objectMetadataItem.labelPlural}
+        id={objectMetadataItem.id}
+        onClick={handleClick}
+      />
+    </SelectableListItem>
+  );
+};
+
 export const CommandMenuNewSidebarItemPage = () => {
   const { t } = useLingui();
+  const { getIcon } = useIcons();
   const { closeCommandMenu } = useCommandMenu();
   const [selectedOption, setSelectedOption] = useState<SelectedOption>(null);
+  const [selectedObjectMetadataIdForView, setSelectedObjectMetadataIdForView] =
+    useState<string | null>(null);
   const [objectSearchInput, setObjectSearchInput] = useState('');
   const [recordSearchInput, setRecordSearchInput] = useState('');
   const [systemObjectSearchInput, setSystemObjectSearchInput] = useState('');
+  const [viewSearchInput, setViewSearchInput] = useState('');
   const [deferredRecordSearchInput] = useDebounce(recordSearchInput, 300);
 
   const coreClient = useApolloCoreClient();
@@ -156,6 +194,7 @@ export const CommandMenuNewSidebarItemPage = () => {
   const { objectPermissionsByObjectMetadataId } = useObjectPermissions();
   const { addObjectToDraft } = useAddObjectToNavigationMenuDraft();
   const { addRecordToDraft } = useAddRecordToNavigationMenuDraft();
+  const { addViewToDraft } = useAddViewToNavigationMenuDraft();
   const { workspaceNavigationMenuItems, navigationMenuItemsDraft } =
     useNavigationMenuItemsDraftState();
   const { workspaceNavigationMenuItemsObjectMetadataItems } =
@@ -214,6 +253,47 @@ export const CommandMenuNewSidebarItemPage = () => {
         !objectMetadataIdsInWorkspace.has(item.id) &&
         objectMetadataIdsWithIndexView.has(item.id),
     );
+
+  const objectMetadataIdsWithAnyView = useMemo(() => {
+    const views = coreViews.map(convertCoreViewToView);
+    return new Set(views.map((view) => view.objectMetadataId));
+  }, [coreViews]);
+
+  const viewIdsInWorkspace = useMemo(() => {
+    const items = navigationMenuItemsDraft ?? workspaceNavigationMenuItems;
+    return new Set(
+      items
+        .filter((item) => isDefined(item.viewId))
+        .map((item) => item.viewId as string),
+    );
+  }, [navigationMenuItemsDraft, workspaceNavigationMenuItems]);
+
+  const objectMetadataItemsWithViews = useMemo(() => {
+    const objects = Object.values(objectMetadataItems).filter(
+      (item) => item.isActive && objectMetadataIdsWithAnyView.has(item.id),
+    );
+    return objects
+      .filter((item) => !item.isSystem)
+      .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
+  }, [objectMetadataItems, objectMetadataIdsWithAnyView]);
+
+  const availableSystemObjectMetadataItemsForView =
+    activeSystemObjectMetadataItems.filter((item) =>
+      objectMetadataIdsWithAnyView.has(item.id),
+    );
+
+  const viewsForSelectedObject = useMemo(() => {
+    if (!selectedObjectMetadataIdForView) return [];
+    const views = coreViews.map(convertCoreViewToView);
+    return views
+      .filter(
+        (view) =>
+          view.objectMetadataId === selectedObjectMetadataIdForView &&
+          !viewIdsInWorkspace.has(view.id) &&
+          view.key !== ViewKey.Index,
+      )
+      .sort((a, b) => a.position - b.position);
+  }, [coreViews, selectedObjectMetadataIdForView, viewIdsInWorkspace]);
 
   const nonReadableObjectMetadataItemsNameSingular = useMemo(() => {
     return Object.values(objectMetadataItems)
@@ -277,15 +357,239 @@ export const CommandMenuNewSidebarItemPage = () => {
 
   const handleBackToMain = () => {
     setSelectedOption(null);
+    setSelectedObjectMetadataIdForView(null);
     setObjectSearchInput('');
     setRecordSearchInput('');
     setSystemObjectSearchInput('');
+    setViewSearchInput('');
   };
 
   const handleBackToObjectList = () => {
     setSelectedOption('object');
     setSystemObjectSearchInput('');
   };
+
+  const handleBackToViewObjectList = () => {
+    setSelectedObjectMetadataIdForView(null);
+    setViewSearchInput('');
+  };
+
+  const handleBackToViewObjectListFromSystem = () => {
+    setSelectedOption('view');
+    setSystemObjectSearchInput('');
+  };
+
+  const handleSelectView = (view: View) => {
+    addViewToDraft(view, currentDraft);
+    closeCommandMenu();
+  };
+
+  if (selectedOption === 'view' && isDefined(selectedObjectMetadataIdForView)) {
+    const selectedObjectMetadataItem = objectMetadataItems.find(
+      (item) => item.id === selectedObjectMetadataIdForView,
+    );
+    const filteredViews = viewsForSelectedObject.filter((view) =>
+      view.name.toLowerCase().includes(viewSearchInput.toLowerCase().trim()),
+    );
+    const selectableItemIds =
+      filteredViews.length > 0
+        ? filteredViews.map((view) => view.id)
+        : ['empty'];
+
+    return (
+      <StyledSubViewContainer>
+        <StyledBackBar onClick={handleBackToViewObjectList}>
+          <IconChevronLeft size={16} />
+          {selectedObjectMetadataItem?.labelPlural ?? t`Pick a view`}
+        </StyledBackBar>
+        <StyledSearchContainer>
+          <StyledSearchInput
+            placeholder={t`Search a view...`}
+            value={viewSearchInput}
+            onChange={(event) => setViewSearchInput(event.target.value)}
+            autoFocus
+          />
+        </StyledSearchContainer>
+        <StyledScrollableListWrapper>
+          <CommandMenuList
+            commandGroups={[]}
+            selectableItemIds={selectableItemIds}
+          >
+            <CommandGroup heading={t`Views`}>
+              {filteredViews.length === 0 ? (
+                <SelectableListItem itemId="empty" onEnter={() => {}}>
+                  <CommandMenuItem
+                    label={
+                      viewSearchInput.trim().length > 0
+                        ? t`No results found`
+                        : t`All views are already in the sidebar`
+                    }
+                    id="empty"
+                    disabled={true}
+                  />
+                </SelectableListItem>
+              ) : (
+                filteredViews.map((view) => {
+                  const ViewIcon = getIcon(view.icon);
+                  return (
+                    <SelectableListItem
+                      key={view.id}
+                      itemId={view.id}
+                      onEnter={() => handleSelectView(view)}
+                    >
+                      <CommandMenuItem
+                        Icon={ViewIcon}
+                        label={view.name}
+                        id={view.id}
+                        onClick={() => handleSelectView(view)}
+                      />
+                    </SelectableListItem>
+                  );
+                })
+              )}
+            </CommandGroup>
+          </CommandMenuList>
+        </StyledScrollableListWrapper>
+      </StyledSubViewContainer>
+    );
+  }
+
+  if (selectedOption === 'view') {
+    const filteredObjectMetadataItems = objectMetadataItemsWithViews.filter(
+      (item) =>
+        item.labelPlural
+          .toLowerCase()
+          .includes(objectSearchInput.toLowerCase().trim()),
+    );
+    const selectableItemIds =
+      filteredObjectMetadataItems.length > 0
+        ? [...filteredObjectMetadataItems.map((item) => item.id), 'system']
+        : ['empty', 'system'];
+
+    return (
+      <StyledSubViewContainer>
+        <StyledBackBar onClick={handleBackToMain}>
+          <IconChevronLeft size={16} />
+          {t`Pick an object`}
+        </StyledBackBar>
+        <StyledSearchContainer>
+          <StyledSearchInput
+            placeholder={t`Search an object...`}
+            value={objectSearchInput}
+            onChange={(event) => setObjectSearchInput(event.target.value)}
+            autoFocus
+          />
+        </StyledSearchContainer>
+        <StyledScrollableListWrapper>
+          <CommandMenuList
+            commandGroups={[]}
+            selectableItemIds={selectableItemIds}
+          >
+            <CommandGroup heading={t`Objects`}>
+              {filteredObjectMetadataItems.length === 0 ? (
+                <SelectableListItem itemId="empty" onEnter={() => {}}>
+                  <CommandMenuItem
+                    label={
+                      objectSearchInput.trim().length > 0
+                        ? t`No results found`
+                        : t`No objects with views found`
+                    }
+                    id="empty"
+                    disabled={true}
+                  />
+                </SelectableListItem>
+              ) : (
+                filteredObjectMetadataItems.map((objectMetadataItem) => (
+                  <CommandMenuSelectObjectForViewMenuItem
+                    key={objectMetadataItem.id}
+                    objectMetadataItem={objectMetadataItem}
+                    onSelect={(item) =>
+                      setSelectedObjectMetadataIdForView(item.id)
+                    }
+                  />
+                ))
+              )}
+              <SelectableListItem
+                itemId="system"
+                onEnter={() => setSelectedOption('view-system')}
+              >
+                <CommandMenuItem
+                  Icon={IconSettings}
+                  label={t`System objects`}
+                  id="system"
+                  hasSubMenu={true}
+                  onClick={() => setSelectedOption('view-system')}
+                />
+              </SelectableListItem>
+            </CommandGroup>
+          </CommandMenuList>
+        </StyledScrollableListWrapper>
+      </StyledSubViewContainer>
+    );
+  }
+
+  if (selectedOption === 'view-system') {
+    const filteredSystemObjectMetadataItems =
+      availableSystemObjectMetadataItemsForView.filter((item) =>
+        item.labelPlural
+          .toLowerCase()
+          .includes(systemObjectSearchInput.toLowerCase().trim()),
+      );
+    const selectableItemIds =
+      filteredSystemObjectMetadataItems.length > 0
+        ? filteredSystemObjectMetadataItems.map((item) => item.id)
+        : ['empty'];
+
+    return (
+      <StyledSubViewContainer>
+        <StyledBackBar onClick={handleBackToViewObjectListFromSystem}>
+          <IconChevronLeft size={16} />
+          {t`System objects`}
+        </StyledBackBar>
+        <StyledSearchContainer>
+          <StyledSearchInput
+            placeholder={t`Search a system object...`}
+            value={systemObjectSearchInput}
+            onChange={(event) => setSystemObjectSearchInput(event.target.value)}
+            autoFocus
+          />
+        </StyledSearchContainer>
+        <StyledScrollableListWrapper>
+          <CommandMenuList
+            commandGroups={[]}
+            selectableItemIds={selectableItemIds}
+          >
+            <CommandGroup heading={t`System objects`}>
+              {filteredSystemObjectMetadataItems.length === 0 ? (
+                <SelectableListItem itemId="empty" onEnter={() => {}}>
+                  <CommandMenuItem
+                    label={
+                      systemObjectSearchInput.trim().length > 0
+                        ? t`No results found`
+                        : t`No system objects with views found`
+                    }
+                    id="empty"
+                    disabled={true}
+                  />
+                </SelectableListItem>
+              ) : (
+                filteredSystemObjectMetadataItems.map((objectMetadataItem) => (
+                  <CommandMenuSelectObjectForViewMenuItem
+                    key={objectMetadataItem.id}
+                    objectMetadataItem={objectMetadataItem}
+                    onSelect={(item) => {
+                      setSelectedObjectMetadataIdForView(item.id);
+                      setSelectedOption('view');
+                    }}
+                  />
+                ))
+              )}
+            </CommandGroup>
+          </CommandMenuList>
+        </StyledScrollableListWrapper>
+      </StyledSubViewContainer>
+    );
+  }
 
   if (selectedOption === 'object') {
     const filteredObjectMetadataItems = availableObjectMetadataItems.filter(
@@ -522,13 +826,16 @@ export const CommandMenuNewSidebarItemPage = () => {
             onClick={() => setSelectedOption('object')}
           />
         </SelectableListItem>
-        <SelectableListItem itemId="view" onEnter={() => {}}>
+        <SelectableListItem
+          itemId="view"
+          onEnter={() => setSelectedOption('view')}
+        >
           <CommandMenuItem
             Icon={IconList}
             label={t`View`}
             id="view"
             hasSubMenu={true}
-            disabled={true}
+            onClick={() => setSelectedOption('view')}
           />
         </SelectableListItem>
         <SelectableListItem

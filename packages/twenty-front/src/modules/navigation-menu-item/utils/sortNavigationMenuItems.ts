@@ -1,6 +1,7 @@
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { type ObjectRecordIdentifier } from '@/object-record/types/ObjectRecordIdentifier';
 import { type View } from '@/views/types/View';
+import { type ViewKey } from '@/views/types/ViewKey';
 import { AppPath } from 'twenty-shared/types';
 import { getAppPath, isDefined } from 'twenty-shared/utils';
 import { type NavigationMenuItem } from '~/generated-metadata/graphql';
@@ -12,12 +13,12 @@ import {
 } from './computeNavigationMenuItemDisplayFields';
 
 export type ProcessedNavigationMenuItem = NavigationMenuItem &
-  NavigationMenuItemDisplayFields;
+  NavigationMenuItemDisplayFields & { viewKey?: ViewKey | null };
 
 export const sortNavigationMenuItems = (
   navigationMenuItems: NavigationMenuItem[],
   hasLinkToShowPage: boolean,
-  views: Pick<View, 'id' | 'name' | 'objectMetadataId' | 'icon'>[],
+  views: Pick<View, 'id' | 'name' | 'objectMetadataId' | 'icon' | 'key'>[],
   objectMetadataItems: ObjectMetadataItem[],
   targetRecordIdentifiers: Map<string, ObjectRecordIdentifier>,
 ): ProcessedNavigationMenuItem[] => {
@@ -50,6 +51,7 @@ export const sortNavigationMenuItems = (
           return {
             ...navigationMenuItem,
             ...displayFields,
+            viewKey: view.key,
           };
         }
 
