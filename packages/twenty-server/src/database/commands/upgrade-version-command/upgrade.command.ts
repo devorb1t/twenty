@@ -24,6 +24,7 @@ import { FixNanPositionValuesInNotesCommand } from 'src/database/commands/upgrad
 import { MigratePageLayoutWidgetConfigurationCommand } from 'src/database/commands/upgrade-version-command/1-15/1-15-migrate-page-layout-widget-configuration.command';
 import { BackfillOpportunityOwnerFieldCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-backfill-opportunity-owner-field.command';
 import { BackfillStandardPageLayoutsCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-backfill-standard-page-layouts.command';
+import { DeleteFileRecordsCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-delete-all-files.command';
 import { FlushV2CacheAndIncrementMetadataVersionCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-flush-v2-cache-and-increment-metadata-version.command';
 import { IdentifyAgentMetadataCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-identify-agent-metadata.command';
 import { IdentifyFieldMetadataCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-identify-field-metadata.command';
@@ -45,6 +46,7 @@ import { MakeViewFieldUniversalIdentifierAndApplicationIdNotNullableMigrationCom
 import { MakeViewFilterUniversalIdentifierAndApplicationIdNotNullableMigrationCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-make-view-filter-universal-identifier-and-application-id-not-nullable-migration.command';
 import { MakeViewGroupUniversalIdentifierAndApplicationIdNotNullableMigrationCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-make-view-group-universal-identifier-and-application-id-not-nullable-migration.command';
 import { MakeViewUniversalIdentifierAndApplicationIdNotNullableMigrationCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-make-view-universal-identifier-and-application-id-not-nullable-migration.command';
+import { UpdateFileTableMigrationCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-update-file-table-migration.command';
 import { UpdateTaskOnDeleteActionCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-update-task-on-delete-action.command';
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
@@ -109,6 +111,8 @@ export class UpgradeCommand extends UpgradeCommandRunner {
     protected readonly identifyRemainingEntitiesMetadataCommand: IdentifyRemainingEntitiesMetadataCommand,
     protected readonly makeRemainingEntitiesUniversalIdentifierAndApplicationIdNotNullableMigrationCommand: MakeRemainingEntitiesUniversalIdentifierAndApplicationIdNotNullableMigrationCommand,
     protected readonly flushV2CacheAndIncrementMetadataVersionCommand: FlushV2CacheAndIncrementMetadataVersionCommand,
+    protected readonly deleteFileRecordsCommand: DeleteFileRecordsCommand,
+    protected readonly updateFileTableMigrationCommand: UpdateFileTableMigrationCommand,
   ) {
     super(
       workspaceRepository,
@@ -177,6 +181,8 @@ export class UpgradeCommand extends UpgradeCommandRunner {
         .makeRemainingEntitiesUniversalIdentifierAndApplicationIdNotNullableMigrationCommand,
       this.flushV2CacheAndIncrementMetadataVersionCommand,
       this.updateTaskOnDeleteActionCommand,
+      this.deleteFileRecordsCommand,
+      this.updateFileTableMigrationCommand,
     ];
 
     this.allCommands = {

@@ -24,6 +24,7 @@ import { MakeViewFieldUniversalIdentifierAndApplicationIdNotNullableMigrationCom
 import { MakeViewFilterUniversalIdentifierAndApplicationIdNotNullableMigrationCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-make-view-filter-universal-identifier-and-application-id-not-nullable-migration.command';
 import { MakeViewGroupUniversalIdentifierAndApplicationIdNotNullableMigrationCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-make-view-group-universal-identifier-and-application-id-not-nullable-migration.command';
 import { MakeViewUniversalIdentifierAndApplicationIdNotNullableMigrationCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-make-view-universal-identifier-and-application-id-not-nullable-migration.command';
+import { UpdateFileTableMigrationCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-update-file-table-migration.command';
 import { UpdateTaskOnDeleteActionCommand } from 'src/database/commands/upgrade-version-command/1-16/1-16-update-task-on-delete-action.command';
 import { ApplicationModule } from 'src/engine/core-modules/application/application.module';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
@@ -120,6 +121,7 @@ import { WorkspaceMigrationModule } from 'src/engine/workspace-manager/workspace
     MakeRemainingEntitiesUniversalIdentifierAndApplicationIdNotNullableMigrationCommand,
     IdentifyRemainingEntitiesMetadataCommand,
     FlushV2CacheAndIncrementMetadataVersionCommand,
+    UpdateFileTableMigrationCommand,
   ],
 })
 export class V1_16_UpgradeVersionCommandModule {}
