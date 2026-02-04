@@ -160,6 +160,32 @@ const CommandMenuSelectObjectForEditMenuItem = ({
   );
 };
 
+const CommandMenuSelectObjectForViewEditMenuItem = ({
+  objectMetadataItem,
+  onSelect,
+}: {
+  objectMetadataItem: ObjectMetadataItem;
+  onSelect: (objectMetadataItem: ObjectMetadataItem) => void;
+}) => {
+  const { getIcon } = useIcons();
+  const Icon = getIcon(objectMetadataItem.icon);
+
+  const handleClick = () => {
+    onSelect(objectMetadataItem);
+  };
+
+  return (
+    <SelectableListItem itemId={objectMetadataItem.id} onEnter={handleClick}>
+      <CommandMenuItem
+        Icon={Icon}
+        label={objectMetadataItem.labelPlural}
+        id={objectMetadataItem.id}
+        onClick={handleClick}
+      />
+    </SelectableListItem>
+  );
+};
+
 export const CommandMenuNavigationMenuItemEditPage = () => {
   const { t } = useLingui();
   const { getIcon } = useIcons();
@@ -172,6 +198,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     | 'folder-rename'
     | null
   >(null);
+  const [selectedObjectMetadataIdForViewEdit, setSelectedObjectMetadataIdForViewEdit] =
+    useState<string | null>(null);
   const [objectSearchInput, setObjectSearchInput] = useState('');
   const [systemObjectSearchInput, setSystemObjectSearchInput] = useState('');
   const [folderSearchInput, setFolderSearchInput] = useState('');
@@ -260,6 +288,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     );
   }, [coreViews]);
 
+  const objectMetadataIdsWithAnyView = useMemo(() => {
+    const views = coreViews.map(convertCoreViewToView);
+    return new Set(views.map((view) => view.objectMetadataId));
+  }, [coreViews]);
+
   const objectMetadataItemsInWorkspaceIds = useMemo(() => {
     const views = coreViews.map(convertCoreViewToView);
     const ids = new Set<string>();
@@ -327,6 +360,39 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         : true),
   );
 
+  const objectsForViewEditObjectPicker = useMemo(() => {
+    const objects = activeNonSystemObjectMetadataItems.filter((item) =>
+      objectMetadataIdsWithAnyView.has(item.id),
+    );
+    const currentObject =
+      currentObjectMetadataId !== undefined
+        ? objectMetadataItems.find(
+            (item) => item.id === currentObjectMetadataId,
+          )
+        : undefined;
+    if (
+      currentObject !== undefined &&
+      !objects.some((object) => object.id === currentObject.id)
+    ) {
+      return [currentObject, ...objects].sort((a, b) =>
+        a.labelPlural.localeCompare(b.labelPlural),
+      );
+    }
+    return objects.sort((a, b) =>
+      a.labelPlural.localeCompare(b.labelPlural),
+    );
+  }, [
+    activeNonSystemObjectMetadataItems,
+    objectMetadataIdsWithAnyView,
+    currentObjectMetadataId,
+    objectMetadataItems,
+  ]);
+
+  const systemObjectsForViewEditObjectPicker =
+    activeSystemObjectMetadataItems.filter((item) =>
+      objectMetadataIdsWithAnyView.has(item.id),
+    );
+
   const viewIdsInOtherSidebarItems = useMemo(() => {
     const currentItemId = selectedNavigationMenuItemInEditMode;
     return new Set(
@@ -341,8 +407,12 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   }, [currentDraft, selectedNavigationMenuItemInEditMode]);
 
   const viewsForViewPicker = useMemo(() => {
-    if (!isViewItem || selectedItem?.type !== 'objectView') return [];
-    const objectMetadataId = selectedItem.objectMetadataItem.id;
+    const objectMetadataId = isDefined(selectedObjectMetadataIdForViewEdit)
+      ? selectedObjectMetadataIdForViewEdit
+      : selectedItem?.type === 'objectView'
+        ? selectedItem.objectMetadataItem.id
+        : undefined;
+    if (!objectMetadataId) return [];
     const views = coreViews.map(convertCoreViewToView);
     return views
       .filter(
@@ -352,7 +422,12 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
           !viewIdsInOtherSidebarItems.has(view.id),
       )
       .sort((a, b) => a.position - b.position);
-  }, [coreViews, isViewItem, selectedItem, viewIdsInOtherSidebarItems]);
+  }, [
+    coreViews,
+    selectedItem,
+    selectedObjectMetadataIdForViewEdit,
+    viewIdsInOtherSidebarItems,
+  ]);
 
   const workspaceFolders = workspaceNavigationMenuItemsByFolder.map(
     (folder) => ({
@@ -400,6 +475,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     closeCommandMenu();
   };
 
+  const handleSelectObjectForViewEdit = (objectMetadataItem: ObjectMetadataItem) => {
+    setSelectedObjectMetadataIdForViewEdit(objectMetadataItem.id);
+    setEditSubView('view-picker');
+  };
+
   const handleMoveToFolder = (folderId: string | null) => {
     moveToFolder(selectedNavigationMenuItemInEditMode, folderId);
     setEditSubView(null);
@@ -408,8 +488,18 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   const handleChangeView = (view: View) => {
     updateViewInDraft(selectedNavigationMenuItemInEditMode, view);
+    setSelectedObjectMetadataIdForViewEdit(null);
     setEditSubView(null);
     closeCommandMenu();
+  };
+
+  const handleBackFromViewPicker = () => {
+    if (isDefined(selectedObjectMetadataIdForViewEdit)) {
+      setSelectedObjectMetadataIdForViewEdit(null);
+      setEditSubView('object-picker');
+    } else {
+      setEditSubView(null);
+    }
   };
 
   const handleRenameFolder = () => {
@@ -489,7 +579,10 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   }
 
   if (editSubView === 'object-picker-system') {
-    const filteredSystemObjects = systemObjectsForObjectPicker.filter((item) =>
+    const systemObjects = isViewItem
+      ? systemObjectsForViewEditObjectPicker
+      : systemObjectsForObjectPicker;
+    const filteredSystemObjects = systemObjects.filter((item) =>
       item.labelPlural
         .toLowerCase()
         .includes(systemObjectSearchInput.toLowerCase().trim()),
@@ -519,13 +612,21 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
             selectableItemIds={selectableItemIds}
           >
             <CommandGroup heading={t`System objects`}>
-              {filteredSystemObjects.map((objectMetadataItem) => (
-                <CommandMenuSelectObjectForEditMenuItem
-                  key={objectMetadataItem.id}
-                  objectMetadataItem={objectMetadataItem}
-                  onSelect={handleChangeObject}
-                />
-              ))}
+              {filteredSystemObjects.map((objectMetadataItem) =>
+                isViewItem ? (
+                  <CommandMenuSelectObjectForViewEditMenuItem
+                    key={objectMetadataItem.id}
+                    objectMetadataItem={objectMetadataItem}
+                    onSelect={handleSelectObjectForViewEdit}
+                  />
+                ) : (
+                  <CommandMenuSelectObjectForEditMenuItem
+                    key={objectMetadataItem.id}
+                    objectMetadataItem={objectMetadataItem}
+                    onSelect={handleChangeObject}
+                  />
+                ),
+              )}
             </CommandGroup>
           </CommandMenuList>
         </StyledScrollableListWrapper>
@@ -534,11 +635,13 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   }
 
   if (editSubView === 'object-picker') {
-    const filteredObjects = objectsForObjectPickerIncludingCurrent.filter(
-      (item) =>
-        item.labelPlural
-          .toLowerCase()
-          .includes(objectSearchInput.toLowerCase().trim()),
+    const objects = isViewItem
+      ? objectsForViewEditObjectPicker
+      : objectsForObjectPickerIncludingCurrent;
+    const filteredObjects = objects.filter((item) =>
+      item.labelPlural
+        .toLowerCase()
+        .includes(objectSearchInput.toLowerCase().trim()),
     );
     const selectableItemIds =
       filteredObjects.length > 0
@@ -565,13 +668,21 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
             selectableItemIds={selectableItemIds}
           >
             <CommandGroup heading={t`Objects`}>
-              {filteredObjects.map((objectMetadataItem) => (
-                <CommandMenuSelectObjectForEditMenuItem
-                  key={objectMetadataItem.id}
-                  objectMetadataItem={objectMetadataItem}
-                  onSelect={handleChangeObject}
-                />
-              ))}
+              {filteredObjects.map((objectMetadataItem) =>
+                isViewItem ? (
+                  <CommandMenuSelectObjectForViewEditMenuItem
+                    key={objectMetadataItem.id}
+                    objectMetadataItem={objectMetadataItem}
+                    onSelect={handleSelectObjectForViewEdit}
+                  />
+                ) : (
+                  <CommandMenuSelectObjectForEditMenuItem
+                    key={objectMetadataItem.id}
+                    objectMetadataItem={objectMetadataItem}
+                    onSelect={handleChangeObject}
+                  />
+                ),
+              )}
               <SelectableListItem
                 itemId="system"
                 onEnter={() => setEditSubView('object-picker-system')}
@@ -599,12 +710,25 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
       filteredViews.length > 0
         ? filteredViews.map((view) => view.id)
         : ['empty'];
+    const selectedObjectForViewEdit = isDefined(selectedObjectMetadataIdForViewEdit)
+      ? objectMetadataItems.find(
+          (item) => item.id === selectedObjectMetadataIdForViewEdit,
+        )
+      : undefined;
+    const backBarLabel = isDefined(selectedObjectForViewEdit)
+      ? selectedObjectForViewEdit.labelPlural
+      : t`Pick a view`;
+    const isEmpty = filteredViews.length === 0;
+    const noResultsText =
+      viewSearchInput.trim().length > 0
+        ? t`No results found`
+        : t`No custom views available`;
 
     return (
       <StyledSubViewContainer>
-        <StyledBackBar onClick={() => setEditSubView(null)}>
+        <StyledBackBar onClick={handleBackFromViewPicker}>
           <IconChevronLeft size={16} />
-          {t`Pick a view`}
+          {backBarLabel}
         </StyledBackBar>
         <StyledSearchContainer>
           <StyledSearchInput
@@ -618,6 +742,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
           <CommandMenuList
             commandGroups={[]}
             selectableItemIds={selectableItemIds}
+            noResults={isEmpty}
+            noResultsText={noResultsText}
           >
             <CommandGroup heading={t`Views`}>
               {filteredViews.map((view) => (
@@ -758,6 +884,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   if (isViewItem && selectedItem?.type === 'objectView') {
     const selectableItemIds = [
+      'object',
       'view',
       'move-up',
       'move-down',
@@ -769,13 +896,32 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
       <CommandMenuList commandGroups={[]} selectableItemIds={selectableItemIds}>
         <CommandGroup heading={t`Customize`}>
           <SelectableListItem
+            itemId="object"
+            onEnter={() => setEditSubView('object-picker')}
+          >
+            <CommandMenuItem
+              Icon={
+                StandardObjectIcon ??
+                getIcon(
+                  selectedItem.objectMetadataItem.icon ?? 'IconCube',
+                )
+              }
+              label={t`Object`}
+              description={selectedItemLabel ?? undefined}
+              contextualTextPosition="right"
+              hasSubMenu={true}
+              id="object"
+              onClick={() => setEditSubView('object-picker')}
+            />
+          </SelectableListItem>
+          <SelectableListItem
             itemId="view"
             onEnter={() => setEditSubView('view-picker')}
           >
             <CommandMenuItem
               Icon={getIcon(selectedItem.navigationMenuItem.Icon ?? 'IconList')}
               label={t`View`}
-              description={selectedViewLabel ?? selectedItemLabel ?? undefined}
+              description={selectedViewLabel ?? undefined}
               contextualTextPosition="right"
               hasSubMenu={true}
               id="view"
