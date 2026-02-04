@@ -3,6 +3,7 @@ import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
 import { IconCheck, useIcons } from 'twenty-ui/display';
 
+import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useNavigationMenuEditModeActions } from '@/navigation-menu-item/hooks/useNavigationMenuEditModeActions';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useSaveNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useSaveNavigationMenuItemsDraft';
@@ -34,6 +35,7 @@ export const NavigationMenuEditModeBar = () => {
   const { t } = useLingui();
   const { getIcon } = useIcons();
   const [isSaving, setIsSaving] = useState(false);
+  const { closeCommandMenu } = useCommandMenu();
   const { enqueueErrorSnackBar } = useSnackBar();
   const { cancelEditMode } = useNavigationMenuEditModeActions();
   const { saveDraft } = useSaveNavigationMenuItemsDraft();
@@ -60,6 +62,7 @@ export const NavigationMenuEditModeBar = () => {
     try {
       await saveDraft();
       cancelEditMode();
+      closeCommandMenu();
     } catch {
       enqueueErrorSnackBar({
         message: t`Failed to save navigation layout`,
