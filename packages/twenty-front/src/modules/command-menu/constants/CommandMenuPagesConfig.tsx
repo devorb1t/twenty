@@ -7,6 +7,8 @@ import { CommandMenuMessageThreadPage } from '@/command-menu/pages/message-threa
 import { CommandMenuNavigationMenuItemEditPage } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNavigationMenuItemEditPage';
 import { CommandMenuNewSidebarItemPage } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemPage';
 import { CommandMenuPageLayoutChartSettings } from '@/command-menu/pages/page-layout/components/CommandMenuPageLayoutChartSettings';
+import { CommandMenuPageLayoutFieldsLayout } from '@/command-menu/pages/page-layout/components/CommandMenuPageLayoutFieldsLayout';
+import { CommandMenuPageLayoutFieldsSettings } from '@/command-menu/pages/page-layout/components/CommandMenuPageLayoutFieldsSettings';
 import { CommandMenuPageLayoutGraphFilter } from '@/command-menu/pages/page-layout/components/CommandMenuPageLayoutGraphFilter';
 import { CommandMenuPageLayoutIframeSettings } from '@/command-menu/pages/page-layout/components/CommandMenuPageLayoutIframeSettings';
 import { CommandMenuPageLayoutTabSettings } from '@/command-menu/pages/page-layout/components/CommandMenuPageLayoutTabSettings';
@@ -66,6 +68,14 @@ export const COMMAND_MENU_PAGES_CONFIG = new Map<
   [
     CommandMenuPages.PageLayoutTabSettings,
     <CommandMenuPageLayoutTabSettings />,
+  ],
+  [
+    CommandMenuPages.PageLayoutFieldsSettings,
+    <CommandMenuPageLayoutFieldsSettings />,
+  ],
+  [
+    CommandMenuPages.PageLayoutFieldsLayout,
+    <CommandMenuPageLayoutFieldsLayout />,
   ],
   [CommandMenuPages.ViewFrontComponent, <CommandMenuFrontComponentPage />],
   [

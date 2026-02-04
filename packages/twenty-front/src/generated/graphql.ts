@@ -70,7 +70,6 @@ export type Agent = {
   prompt: Scalars['String'];
   responseFormat?: Maybe<Scalars['JSON']>;
   roleId?: Maybe<Scalars['UUID']>;
-  standardId?: Maybe<Scalars['UUID']>;
   updatedAt: Scalars['DateTime'];
 };
 
@@ -269,6 +268,7 @@ export type Application = {
   __typename?: 'Application';
   agents: Array<Agent>;
   applicationVariables: Array<ApplicationVariable>;
+  availablePackages: Scalars['JSON'];
   canBeUninstalled: Scalars['Boolean'];
   defaultLogicFunctionRole?: Maybe<Role>;
   defaultRoleId?: Maybe<Scalars['String']>;
@@ -277,8 +277,12 @@ export type Application = {
   logicFunctions: Array<LogicFunction>;
   name: Scalars['String'];
   objects: Array<Object>;
+  packageJsonChecksum?: Maybe<Scalars['String']>;
+  packageJsonFileId?: Maybe<Scalars['UUID']>;
   universalIdentifier: Scalars['String'];
   version: Scalars['String'];
+  yarnLockChecksum?: Maybe<Scalars['String']>;
+  yarnLockFileId?: Maybe<Scalars['UUID']>;
 };
 
 export type ApplicationVariable = {
@@ -468,6 +472,7 @@ export type BillingEntitlement = {
 };
 
 export enum BillingEntitlementKey {
+  AUDIT_LOGS = 'AUDIT_LOGS',
   CUSTOM_DOMAIN = 'CUSTOM_DOMAIN',
   RLS = 'RLS',
   SSO = 'SSO'
@@ -913,6 +918,14 @@ export type CreateApiKeyInput = {
   roleId: Scalars['UUID'];
 };
 
+export type CreateApplicationInput = {
+  description?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+  sourcePath: Scalars['String'];
+  universalIdentifier: Scalars['String'];
+  version: Scalars['String'];
+};
+
 export type CreateApprovedAccessDomainInput = {
   domain: Scalars['String'];
   email: Scalars['String'];
@@ -1016,6 +1029,7 @@ export type CreatePageLayoutWidgetInput = {
   gridPosition: GridPositionInput;
   objectMetadataId?: InputMaybe<Scalars['UUID']>;
   pageLayoutTabId: Scalars['UUID'];
+  position?: InputMaybe<Scalars['JSON']>;
   title: Scalars['String'];
   type: WidgetType;
 };
@@ -1343,6 +1357,56 @@ export type EmailsConfiguration = {
   configurationType: WidgetConfigurationType;
 };
 
+export type EventLogDateRangeInput = {
+  end?: InputMaybe<Scalars['DateTime']>;
+  start?: InputMaybe<Scalars['DateTime']>;
+};
+
+export type EventLogFiltersInput = {
+  dateRange?: InputMaybe<EventLogDateRangeInput>;
+  eventType?: InputMaybe<Scalars['String']>;
+  objectMetadataId?: InputMaybe<Scalars['String']>;
+  recordId?: InputMaybe<Scalars['String']>;
+  userWorkspaceId?: InputMaybe<Scalars['String']>;
+};
+
+export type EventLogPageInfo = {
+  __typename?: 'EventLogPageInfo';
+  endCursor?: Maybe<Scalars['String']>;
+  hasNextPage: Scalars['Boolean'];
+};
+
+export type EventLogQueryInput = {
+  after?: InputMaybe<Scalars['String']>;
+  filters?: InputMaybe<EventLogFiltersInput>;
+  first?: InputMaybe<Scalars['Int']>;
+  table: EventLogTable;
+};
+
+export type EventLogQueryResult = {
+  __typename?: 'EventLogQueryResult';
+  pageInfo: EventLogPageInfo;
+  records: Array<EventLogRecord>;
+  totalCount: Scalars['Int'];
+};
+
+export type EventLogRecord = {
+  __typename?: 'EventLogRecord';
+  event: Scalars['String'];
+  isCustom?: Maybe<Scalars['Boolean']>;
+  objectMetadataId?: Maybe<Scalars['String']>;
+  properties?: Maybe<Scalars['JSON']>;
+  recordId?: Maybe<Scalars['String']>;
+  timestamp: Scalars['DateTime'];
+  userWorkspaceId?: Maybe<Scalars['String']>;
+};
+
+export enum EventLogTable {
+  OBJECT_EVENT = 'OBJECT_EVENT',
+  PAGEVIEW = 'PAGEVIEW',
+  WORKSPACE_EVENT = 'WORKSPACE_EVENT'
+}
+
 export type EventSubscription = {
   __typename?: 'EventSubscription';
   eventStreamId: Scalars['String'];
@@ -1383,17 +1447,18 @@ export enum FeatureFlagKey {
   IS_COMMAND_MENU_ITEM_ENABLED = 'IS_COMMAND_MENU_ITEM_ENABLED',
   IS_DASHBOARD_V2_ENABLED = 'IS_DASHBOARD_V2_ENABLED',
   IS_EMAILING_DOMAIN_ENABLED = 'IS_EMAILING_DOMAIN_ENABLED',
-  IS_FILES_FIELD_ENABLED = 'IS_FILES_FIELD_ENABLED',
   IS_JSON_FILTER_ENABLED = 'IS_JSON_FILTER_ENABLED',
   IS_JUNCTION_RELATIONS_ENABLED = 'IS_JUNCTION_RELATIONS_ENABLED',
   IS_MARKETPLACE_ENABLED = 'IS_MARKETPLACE_ENABLED',
   IS_NAVIGATION_MENU_ITEM_EDITING_ENABLED = 'IS_NAVIGATION_MENU_ITEM_EDITING_ENABLED',
   IS_NAVIGATION_MENU_ITEM_ENABLED = 'IS_NAVIGATION_MENU_ITEM_ENABLED',
+  IS_NOTE_TARGET_MIGRATED = 'IS_NOTE_TARGET_MIGRATED',
   IS_PUBLIC_DOMAIN_ENABLED = 'IS_PUBLIC_DOMAIN_ENABLED',
   IS_RECORD_PAGE_LAYOUT_EDITING_ENABLED = 'IS_RECORD_PAGE_LAYOUT_EDITING_ENABLED',
   IS_RECORD_PAGE_LAYOUT_ENABLED = 'IS_RECORD_PAGE_LAYOUT_ENABLED',
   IS_ROW_LEVEL_PERMISSION_PREDICATES_ENABLED = 'IS_ROW_LEVEL_PERMISSION_PREDICATES_ENABLED',
   IS_SSE_DB_EVENTS_ENABLED = 'IS_SSE_DB_EVENTS_ENABLED',
+  IS_TASK_TARGET_MIGRATED = 'IS_TASK_TARGET_MIGRATED',
   IS_TIMELINE_ACTIVITY_MIGRATED = 'IS_TIMELINE_ACTIVITY_MIGRATED',
   IS_UNIQUE_INDEXES_ENABLED = 'IS_UNIQUE_INDEXES_ENABLED'
 }
@@ -1527,6 +1592,7 @@ export enum FileFolder {
   Attachment = 'Attachment',
   BuiltFrontComponent = 'BuiltFrontComponent',
   BuiltLogicFunction = 'BuiltLogicFunction',
+  Dependencies = 'Dependencies',
   File = 'File',
   FilesField = 'FilesField',
   PersonPicture = 'PersonPicture',
@@ -1925,14 +1991,6 @@ export type LogicFunctionIdInput = {
   id: Scalars['ID'];
 };
 
-export type LogicFunctionLayer = {
-  __typename?: 'LogicFunctionLayer';
-  applicationId?: Maybe<Scalars['UUID']>;
-  createdAt: Scalars['DateTime'];
-  id: Scalars['UUID'];
-  updatedAt: Scalars['DateTime'];
-};
-
 export type LogicFunctionLogs = {
   __typename?: 'LogicFunctionLogs';
   /** Execution Logs */
@@ -2018,9 +2076,9 @@ export type Mutation = {
   createObjectEvent: Analytics;
   createOneAgent: Agent;
   createOneAppToken: AppToken;
+  createOneApplication: Application;
   createOneField: Field;
   createOneLogicFunction: LogicFunction;
-  createOneLogicFunctionLayer: LogicFunctionLayer;
   createOneObject: Object;
   createOneRole: Role;
   createPageLayout: PageLayout;
@@ -2318,6 +2376,11 @@ export type MutationCreateOneAgentArgs = {
 };
 
 
+export type MutationCreateOneApplicationArgs = {
+  input: CreateApplicationInput;
+};
+
+
 export type MutationCreateOneFieldArgs = {
   input: CreateOneFieldMetadataInput;
 };
@@ -2325,12 +2388,6 @@ export type MutationCreateOneFieldArgs = {
 
 export type MutationCreateOneLogicFunctionArgs = {
   input: CreateLogicFunctionInput;
-};
-
-
-export type MutationCreateOneLogicFunctionLayerArgs = {
-  packageJson: Scalars['JSON'];
-  yarnLock: Scalars['String'];
 };
 
 
@@ -2760,8 +2817,6 @@ export type MutationSubmitFormStepArgs = {
 
 export type MutationSyncApplicationArgs = {
   manifest: Scalars['JSON'];
-  packageJson: Scalars['JSON'];
-  yarnLock: Scalars['String'];
 };
 
 
@@ -3313,9 +3368,32 @@ export type PageLayoutWidget = {
   id: Scalars['UUID'];
   objectMetadataId?: Maybe<Scalars['UUID']>;
   pageLayoutTabId: Scalars['UUID'];
+  position?: Maybe<PageLayoutWidgetPosition>;
   title: Scalars['String'];
   type: WidgetType;
   updatedAt: Scalars['DateTime'];
+};
+
+export type PageLayoutWidgetCanvasPosition = {
+  __typename?: 'PageLayoutWidgetCanvasPosition';
+  layoutMode: PageLayoutTabLayoutMode;
+};
+
+export type PageLayoutWidgetGridPosition = {
+  __typename?: 'PageLayoutWidgetGridPosition';
+  column: Scalars['Int'];
+  columnSpan: Scalars['Int'];
+  layoutMode: PageLayoutTabLayoutMode;
+  row: Scalars['Int'];
+  rowSpan: Scalars['Int'];
+};
+
+export type PageLayoutWidgetPosition = PageLayoutWidgetCanvasPosition | PageLayoutWidgetGridPosition | PageLayoutWidgetVerticalListPosition;
+
+export type PageLayoutWidgetVerticalListPosition = {
+  __typename?: 'PageLayoutWidgetVerticalListPosition';
+  index: Scalars['Int'];
+  layoutMode: PageLayoutTabLayoutMode;
 };
 
 export type PermissionFlag = {
@@ -3429,7 +3507,7 @@ export type PublicFeatureFlag = {
 export type PublicFeatureFlagMetadata = {
   __typename?: 'PublicFeatureFlagMetadata';
   description: Scalars['String'];
-  imagePath: Scalars['String'];
+  imagePath?: Maybe<Scalars['String']>;
   label: Scalars['String'];
 };
 
@@ -3449,12 +3527,14 @@ export type Query = {
   apiKeys: Array<ApiKey>;
   barChartData: BarChartDataOutput;
   billingPortalSession: BillingSessionOutput;
+  checkApplicationExist: Scalars['Boolean'];
   checkUserExists: CheckUserExistOutput;
   checkWorkspaceInviteHashIsValid: WorkspaceInviteHashValidOutput;
   commandMenuItem?: Maybe<CommandMenuItem>;
   commandMenuItems: Array<CommandMenuItem>;
   currentUser: User;
   currentWorkspace: Workspace;
+  eventLogs: EventLogQueryResult;
   field: Field;
   fields: FieldConnection;
   findManyAgents: Array<Agent>;
@@ -3542,6 +3622,12 @@ export type QueryBillingPortalSessionArgs = {
 };
 
 
+export type QueryCheckApplicationExistArgs = {
+  id?: InputMaybe<Scalars['UUID']>;
+  universalIdentifier?: InputMaybe<Scalars['UUID']>;
+};
+
+
 export type QueryCheckUserExistsArgs = {
   captchaToken?: InputMaybe<Scalars['String']>;
   email: Scalars['String'];
@@ -3558,13 +3644,19 @@ export type QueryCommandMenuItemArgs = {
 };
 
 
+export type QueryEventLogsArgs = {
+  input: EventLogQueryInput;
+};
+
+
 export type QueryFindOneAgentArgs = {
   input: AgentIdInput;
 };
 
 
 export type QueryFindOneApplicationArgs = {
-  id: Scalars['UUID'];
+  id?: InputMaybe<Scalars['UUID']>;
+  universalIdentifier?: InputMaybe<Scalars['UUID']>;
 };
 
 
@@ -3941,7 +4033,6 @@ export type Role = {
   permissionFlags?: Maybe<Array<PermissionFlag>>;
   rowLevelPermissionPredicateGroups?: Maybe<Array<RowLevelPermissionPredicateGroup>>;
   rowLevelPermissionPredicates?: Maybe<Array<RowLevelPermissionPredicate>>;
-  standardId?: Maybe<Scalars['UUID']>;
   universalIdentifier?: Maybe<Scalars['UUID']>;
   workspaceMembers: Array<WorkspaceMember>;
 };
@@ -4146,7 +4237,6 @@ export type Skill = {
   isCustom: Scalars['Boolean'];
   label: Scalars['String'];
   name: Scalars['String'];
-  standardId?: Maybe<Scalars['UUID']>;
   updatedAt: Scalars['DateTime'];
 };
 
@@ -4517,6 +4607,7 @@ export type UpdatePageLayoutWidgetInput = {
   configuration?: InputMaybe<Scalars['JSON']>;
   gridPosition?: InputMaybe<GridPositionInput>;
   objectMetadataId?: InputMaybe<Scalars['UUID']>;
+  position?: InputMaybe<Scalars['JSON']>;
   title?: InputMaybe<Scalars['String']>;
   type?: InputMaybe<WidgetType>;
 };
@@ -4527,6 +4618,7 @@ export type UpdatePageLayoutWidgetWithIdInput = {
   id: Scalars['UUID'];
   objectMetadataId?: InputMaybe<Scalars['UUID']>;
   pageLayoutTabId: Scalars['UUID'];
+  position?: InputMaybe<Scalars['JSON']>;
   title: Scalars['String'];
   type: WidgetType;
 };
@@ -4677,6 +4769,7 @@ export type UpdateWorkspaceInput = {
   defaultRoleId?: InputMaybe<Scalars['UUID']>;
   displayName?: InputMaybe<Scalars['String']>;
   editableProfileFields?: InputMaybe<Array<Scalars['String']>>;
+  eventLogRetentionDays?: InputMaybe<Scalars['Float']>;
   fastModel?: InputMaybe<Scalars['String']>;
   inviteHash?: InputMaybe<Scalars['String']>;
   isGoogleAuthBypassEnabled?: InputMaybe<Scalars['Boolean']>;
@@ -5070,6 +5163,7 @@ export type Workspace = {
   deletedAt?: Maybe<Scalars['DateTime']>;
   displayName?: Maybe<Scalars['String']>;
   editableProfileFields?: Maybe<Array<Scalars['String']>>;
+  eventLogRetentionDays: Scalars['Float'];
   fastModel: Scalars['String'];
   featureFlags?: Maybe<Array<FeatureFlagDto>>;
   hasValidEnterpriseKey: Scalars['Boolean'];

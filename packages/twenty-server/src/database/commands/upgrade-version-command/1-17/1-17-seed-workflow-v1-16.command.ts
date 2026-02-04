@@ -1,15 +1,14 @@
 import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { v4 as uuidv4 } from 'uuid';
 import { Command } from 'nest-commander';
 import { Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 
 import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
 import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
 import { ApplicationService } from 'src/engine/core-modules/application/services/application.service';
 import { FileStorageService } from 'src/engine/core-modules/file-storage/file-storage.service';
-import { LogicFunctionLayerService } from 'src/engine/core-modules/logic-function/logic-function-layer/services/logic-function-layer.service';
 import { RecordPositionService } from 'src/engine/core-modules/record-position/services/record-position.service';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { DataSourceService } from 'src/engine/metadata-modules/data-source/data-source.service';
@@ -66,7 +65,6 @@ export class SeedWorkflowV1_16Command extends ActiveOrSuspendedWorkspacesMigrati
     protected readonly globalWorkspaceOrmManager: GlobalWorkspaceOrmManager,
     protected readonly dataSourceService: DataSourceService,
     private readonly applicationService: ApplicationService,
-    private readonly logicFunctionLayerService: LogicFunctionLayerService,
     private readonly fileStorageService: FileStorageService,
     private readonly recordPositionService: RecordPositionService,
   ) {
@@ -416,10 +414,6 @@ export class SeedWorkflowV1_16Command extends ActiveOrSuspendedWorkspacesMigrati
     workspaceId: string,
     name: string = 'Seed code step (v1.16)',
   ): Promise<string> {
-    const { id: logicFunctionLayerId } =
-      await this.logicFunctionLayerService.createCommonLayerIfNotExist(
-        workspaceId,
-      );
     const { workspaceCustomFlatApplication } =
       await this.applicationService.findWorkspaceTwentyStandardAndCustomApplicationOrThrow(
         { workspaceId },
@@ -444,7 +438,6 @@ export class SeedWorkflowV1_16Command extends ActiveOrSuspendedWorkspacesMigrati
       checksum: null,
       toolInputSchema: null,
       isTool: false,
-      logicFunctionLayerId,
       cronTriggerSettings: null,
       databaseEventTriggerSettings: null,
       httpRouteTriggerSettings: null,

@@ -5,7 +5,7 @@ import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 
 import { isObject } from '@sniptt/guards';
-import { FileFolder, type Sources } from 'twenty-shared/types';
+import { FileFolder, Sources } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { Repository } from 'typeorm';
 
@@ -29,7 +29,6 @@ import {
   WorkspaceMigrationActionRunnerArgs,
   WorkspaceMigrationActionRunnerContext,
 } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-runner/types/workspace-migration-action-runner-args.type';
-import { fromFlatEntityPropertiesUpdatesToPartialFlatEntity } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-runner/utils/from-flat-entity-properties-updates-to-partial-flat-entity';
 
 @Injectable()
 export class UpdateLogicFunctionActionHandlerService extends WorkspaceMigrationRunnerActionHandler(
@@ -37,11 +36,11 @@ export class UpdateLogicFunctionActionHandlerService extends WorkspaceMigrationR
   'logicFunction',
 ) {
   constructor(
-    private readonly fileStorageService: FileStorageService,
     private readonly logicFunctionExecutorService: LogicFunctionExecutorService,
     private readonly functionBuildService: LogicFunctionBuildService,
     @InjectRepository(ApplicationEntity)
     private readonly applicationRepository: Repository<ApplicationEntity>,
+    private readonly fileStorageService: FileStorageService,
   ) {
     super();
   }
@@ -55,36 +54,31 @@ export class UpdateLogicFunctionActionHandlerService extends WorkspaceMigrationR
   async executeForMetadata(
     context: WorkspaceMigrationActionRunnerContext<FlatUpdateLogicFunctionAction>,
   ): Promise<void> {
-    const { flatAction, queryRunner } = context;
-    const { entityId, code } = flatAction;
+    const { flatAction, queryRunner, workspaceId } = context;
+    const { entityId, code, update } = flatAction;
 
     const logicFunctionRepository =
       queryRunner.manager.getRepository<LogicFunctionEntity>(
         LogicFunctionEntity,
       );
 
-    await logicFunctionRepository.update(
-      entityId,
-      fromFlatEntityPropertiesUpdatesToPartialFlatEntity(flatAction),
-    );
+    await logicFunctionRepository.update({ id: entityId, workspaceId }, update);
 
     const flatLogicFunction = findFlatEntityByIdInFlatEntityMapsOrThrow({
       flatEntityId: entityId,
       flatEntityMaps: context.allFlatEntityMaps.flatLogicFunctionMaps,
     });
 
-    for (const update of flatAction.updates) {
-      if (update.property === 'checksum' && isDefined(code)) {
-        await this.handleChecksumUpdate({
-          flatLogicFunction,
-          code,
-        });
-      }
-      if (update.property === 'deletedAt' && isDefined(update.to)) {
-        await this.handleDeletedAtUpdate({
-          flatLogicFunction,
-        });
-      }
+    if (isDefined(update.checksum) && isDefined(code)) {
+      await this.handleChecksumUpdate({
+        flatLogicFunction,
+        code,
+      });
+    }
+    if (update.deletedAt !== undefined) {
+      await this.handleDeletedAtUpdate({
+        flatLogicFunction,
+      });
     }
   }
 
@@ -93,7 +87,7 @@ export class UpdateLogicFunctionActionHandlerService extends WorkspaceMigrationR
   }: {
     flatLogicFunction: FlatLogicFunction;
   }) {
-    this.logicFunctionExecutorService.delete(flatLogicFunction);
+    await this.logicFunctionExecutorService.delete(flatLogicFunction);
   }
 
   private async getApplicationUniversalIdentifier(
