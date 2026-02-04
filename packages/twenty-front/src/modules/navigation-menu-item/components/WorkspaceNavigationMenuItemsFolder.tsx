@@ -10,6 +10,7 @@ import { NavigationMenuItemIcon } from '@/navigation-menu-item/components/Naviga
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { getNavigationMenuItemSecondaryLabel } from '@/navigation-menu-item/utils/getNavigationMenuItemSecondaryLabel';
+import { ViewKey } from '@/views/types/ViewKey';
 import { isLocationMatchingNavigationMenuItem } from '@/navigation-menu-item/utils/isLocationMatchingNavigationMenuItem';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
@@ -115,11 +116,15 @@ export const WorkspaceNavigationMenuItemsFolder = ({
             {folder.navigationMenuItems.map((navigationMenuItem, index) => (
               <NavigationDrawerSubItem
                 key={navigationMenuItem.id}
-                secondaryLabel={getNavigationMenuItemSecondaryLabel({
-                  objectMetadataItems,
-                  navigationMenuItemObjectNameSingular:
-                    navigationMenuItem.objectNameSingular,
-                })}
+                secondaryLabel={
+                  navigationMenuItem.viewKey === ViewKey.Index
+                    ? undefined
+                    : getNavigationMenuItemSecondaryLabel({
+                        objectMetadataItems,
+                        navigationMenuItemObjectNameSingular:
+                          navigationMenuItem.objectNameSingular,
+                      })
+                }
                 label={navigationMenuItem.labelIdentifier}
                 Icon={() => (
                   <NavigationMenuItemIcon

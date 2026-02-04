@@ -58,9 +58,7 @@ export const sortNavigationMenuItems = (
               { objectNamePlural: namePlural },
               { viewId: navigationMenuItem.viewId },
             ),
-            objectNameSingular: isIndexView
-              ? (objectMetadataItem?.nameSingular ?? 'view')
-              : 'view',
+            objectNameSingular: objectMetadataItem?.nameSingular ?? 'view',
             Icon: icon,
           };
 
