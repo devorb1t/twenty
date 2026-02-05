@@ -5,11 +5,9 @@ import { CommandMenuPageLayoutInfo } from '@/command-menu/components/CommandMenu
 import { CommandMenuRecordInfo } from '@/command-menu/components/CommandMenuRecordInfo';
 import { CommandMenuWorkflowStepInfo } from '@/command-menu/components/CommandMenuWorkflowStepInfo';
 import { CommandMenuPages } from '@/command-menu/types/CommandMenuPages';
-import {
-  type WorkspaceSectionItem,
-  useWorkspaceSectionItems,
-} from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
+import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
+import { getWorkspaceSectionItemId } from '@/navigation-menu-item/utils/getWorkspaceSectionItemId';
 import styled from '@emotion/styled';
 import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
@@ -25,9 +23,6 @@ const StyledPageTitle = styled.div`
 type CommandMenuPageInfoProps = {
   pageChip: CommandMenuContextChipProps | undefined;
 };
-
-const getWorkspaceSectionItemId = (item: WorkspaceSectionItem): string =>
-  item.type === 'folder' ? item.folder.folderId : item.navigationMenuItem.id;
 
 export const CommandMenuPageInfo = ({ pageChip }: CommandMenuPageInfoProps) => {
   const selectedNavigationMenuItemInEditMode = useRecoilValue(

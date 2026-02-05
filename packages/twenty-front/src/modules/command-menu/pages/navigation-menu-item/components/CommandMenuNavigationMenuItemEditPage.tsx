@@ -29,6 +29,7 @@ import {
   useWorkspaceSectionItems,
 } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
+import { getWorkspaceSectionItemId } from '@/navigation-menu-item/utils/getWorkspaceSectionItemId';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
 import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
@@ -111,9 +112,6 @@ const StyledScrollableListWrapper = styled.div`
     min-height: 0;
   }
 `;
-
-const getWorkspaceSectionItemId = (item: WorkspaceSectionItem): string =>
-  item.type === 'folder' ? item.folder.folderId : item.navigationMenuItem.id;
 
 const isObjectNavItem = (item: WorkspaceSectionItem): boolean =>
   item.type === 'objectView' &&
