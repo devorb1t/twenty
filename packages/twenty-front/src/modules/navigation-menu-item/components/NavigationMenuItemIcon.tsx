@@ -1,23 +1,13 @@
 import { useTheme } from '@emotion/react';
-import styled from '@emotion/styled';
 import { isDefined } from 'twenty-shared/utils';
 import { Avatar, useIcons } from 'twenty-ui/display';
 
+import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { isNavigationMenuItemLink } from '@/navigation-menu-item/utils/isNavigationMenuItemLink';
 import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
 import { ViewKey } from '@/views/types/ViewKey';
-
-const StyledIconWithBackground = styled.div<{ backgroundColor: string }>`
-  align-items: center;
-  background-color: ${({ backgroundColor }) => backgroundColor};
-  border-radius: ${({ theme }) => theme.border.radius.xs};
-  display: flex;
-  height: ${({ theme }) => theme.spacing(4)};
-  justify-content: center;
-  width: ${({ theme }) => theme.spacing(4)};
-`;
 
 export const NavigationMenuItemIcon = ({
   navigationMenuItem,
@@ -72,8 +62,10 @@ export const NavigationMenuItemIcon = ({
   }
 
   return (
-    <StyledIconWithBackground backgroundColor={iconBackgroundColor}>
+    <StyledNavigationMenuItemIconContainer
+      $backgroundColor={iconBackgroundColor}
+    >
       {avatar}
-    </StyledIconWithBackground>
+    </StyledNavigationMenuItemIconContainer>
   );
 };

@@ -1,10 +1,13 @@
-import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
+import {
+  StyledCommandMenuPageContainer,
+  StyledCommandMenuPlaceholder,
+} from '@/command-menu/components/CommandMenuSharedStyles';
 import { CommandMenuEditDefaultView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditDefaultView';
 import { CommandMenuEditFolderItemView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderItemView';
 import { CommandMenuEditFolderPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderPickerSubView';
@@ -32,15 +35,6 @@ import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadat
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { type View } from '@/views/types/View';
 import { ViewKey } from '@/views/types/ViewKey';
-
-const StyledContainer = styled.div`
-  padding: ${({ theme }) => theme.spacing(3)};
-`;
-
-const StyledPlaceholder = styled.p`
-  color: ${({ theme }) => theme.font.color.tertiary};
-  font-size: ${({ theme }) => theme.font.size.sm};
-`;
 
 const isObjectNavItem = (item: WorkspaceSectionItem): boolean =>
   item.type === 'objectView' &&
@@ -205,9 +199,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   if (!selectedNavigationMenuItemInEditMode || !selectedItemLabel) {
     return (
-      <StyledContainer>
-        <StyledPlaceholder>{t`Select a navigation item to edit`}</StyledPlaceholder>
-      </StyledContainer>
+      <StyledCommandMenuPageContainer>
+        <StyledCommandMenuPlaceholder>
+          {t`Select a navigation item to edit`}
+        </StyledCommandMenuPlaceholder>
+      </StyledCommandMenuPageContainer>
     );
   }
 

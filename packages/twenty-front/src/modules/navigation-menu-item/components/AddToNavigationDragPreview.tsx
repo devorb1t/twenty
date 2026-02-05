@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import { ThemeContextProvider } from 'twenty-ui/theme';
 import type { IconComponent } from 'twenty-ui/display';
 
+import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 import { getIconBackgroundColorForPayload } from '@/navigation-menu-item/utils/getIconBackgroundColorForPayload';
 
@@ -25,22 +26,13 @@ const StyledPreviewContainer = styled.div`
   min-width: 200px;
 `;
 
-const StyledIcon = styled.div<{ $backgroundColor?: string }>`
+const StyledIconWrapper = styled.div`
   align-items: center;
   display: flex;
   flex-grow: 0;
   flex-shrink: 0;
   justify-content: center;
   margin-right: ${({ theme }) => theme.spacing(2)};
-
-  ${({ theme, $backgroundColor }) =>
-    $backgroundColor &&
-    `
-    background-color: ${$backgroundColor};
-    border-radius: ${theme.border.radius.xs};
-    height: ${theme.spacing(4)};
-    width: ${theme.spacing(4)};
-  `}
 `;
 
 const StyledLabelParent = styled.div`
@@ -89,9 +81,17 @@ export const AddToNavigationDragPreview = ({
     <ThemeProvider theme={theme}>
       <ThemeContextProvider theme={theme}>
         <StyledPreviewContainer>
-          <StyledIcon $backgroundColor={iconBackgroundColor}>
-            {iconContent}
-          </StyledIcon>
+          <StyledIconWrapper>
+            {iconBackgroundColor ? (
+              <StyledNavigationMenuItemIconContainer
+                $backgroundColor={iconBackgroundColor}
+              >
+                {iconContent}
+              </StyledNavigationMenuItemIconContainer>
+            ) : (
+              iconContent
+            )}
+          </StyledIconWrapper>
           <StyledLabelParent>
             <StyledItemLabel>{label}</StyledItemLabel>
           </StyledLabelParent>

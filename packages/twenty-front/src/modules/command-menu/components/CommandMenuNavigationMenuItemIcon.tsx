@@ -1,17 +1,7 @@
-import styled from '@emotion/styled';
+import { useTheme } from '@emotion/react';
 
+import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
-
-const StyledIcon = styled.div<{ $colorKey: 'folder' | 'link' }>`
-  align-items: center;
-  background-color: ${({ theme, $colorKey }) =>
-    getNavigationMenuItemIconColors(theme)[$colorKey]};
-  border-radius: ${({ theme }) => theme.border.radius.xs};
-  display: flex;
-  height: ${({ theme }) => theme.spacing(4)};
-  justify-content: center;
-  width: ${({ theme }) => theme.spacing(4)};
-`;
 
 type CommandMenuNavigationMenuItemIconProps = {
   colorKey: 'folder' | 'link';
@@ -21,6 +11,13 @@ type CommandMenuNavigationMenuItemIconProps = {
 export const CommandMenuNavigationMenuItemIcon = ({
   colorKey,
   children,
-}: CommandMenuNavigationMenuItemIconProps) => (
-  <StyledIcon $colorKey={colorKey}>{children}</StyledIcon>
-);
+}: CommandMenuNavigationMenuItemIconProps) => {
+  const theme = useTheme();
+  const backgroundColor = getNavigationMenuItemIconColors(theme)[colorKey];
+
+  return (
+    <StyledNavigationMenuItemIconContainer $backgroundColor={backgroundColor}>
+      {children}
+    </StyledNavigationMenuItemIconContainer>
+  );
+};

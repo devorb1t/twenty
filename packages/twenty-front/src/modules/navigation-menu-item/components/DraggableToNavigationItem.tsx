@@ -4,6 +4,7 @@ import { useTheme } from '@emotion/react';
 import { IconGripVertical } from 'twenty-ui/display';
 
 import { ADD_TO_NAVIGATION_DRAG_TYPE } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
+import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
 import { type AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 
 const StyledDraggableWrapper = styled.div`
@@ -17,22 +18,9 @@ const StyledDraggableWrapper = styled.div`
   }
 `;
 
-const StyledIconSlot = styled.div<{
-  $iconBackgroundColor?: string;
-  $showDragHandle: boolean;
-}>`
-  align-items: center;
-  background-color: ${({ theme, $iconBackgroundColor, $showDragHandle }) =>
-    $showDragHandle
-      ? theme.background.transparent.lighter
-      : $iconBackgroundColor};
-  border-radius: ${({ theme }) => theme.border.radius.xs};
-  display: flex;
+const StyledIconSlot = styled.div`
   flex-shrink: 0;
-  height: ${({ theme }) => theme.spacing(4)};
-  justify-content: center;
   margin-right: ${({ theme }) => theme.spacing(2)};
-  width: ${({ theme }) => theme.spacing(4)};
 `;
 
 type DraggableToNavigationItemProps = {
@@ -59,6 +47,10 @@ export const DraggableToNavigationItem = ({
     event.dataTransfer.effectAllowed = 'copy';
   };
 
+  const iconSlotBackgroundColor = isHovered
+    ? theme.background.transparent.lighter
+    : iconBackgroundColor;
+
   return (
     <StyledDraggableWrapper
       draggable
@@ -66,19 +58,20 @@ export const DraggableToNavigationItem = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <StyledIconSlot
-        $iconBackgroundColor={iconBackgroundColor}
-        $showDragHandle={isHovered}
-      >
-        {isHovered ? (
-          <IconGripVertical
-            size={theme.spacing(3)}
-            stroke={theme.icon.stroke.md}
-            color={theme.grayScale.gray50}
-          />
-        ) : (
-          icon
-        )}
+      <StyledIconSlot>
+        <StyledNavigationMenuItemIconContainer
+          $backgroundColor={iconSlotBackgroundColor}
+        >
+          {isHovered ? (
+            <IconGripVertical
+              size={theme.spacing(3)}
+              stroke={theme.icon.stroke.md}
+              color={theme.font.color.tertiary}
+            />
+          ) : (
+            icon
+          )}
+        </StyledNavigationMenuItemIconContainer>
       </StyledIconSlot>
       {children}
     </StyledDraggableWrapper>
