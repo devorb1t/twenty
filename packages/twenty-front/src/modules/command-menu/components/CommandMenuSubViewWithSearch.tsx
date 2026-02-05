@@ -1,6 +1,7 @@
 import styled from '@emotion/styled';
 import { type ReactNode } from 'react';
-import { IconChevronLeft } from 'twenty-ui/display';
+
+import { SidePanelSubPageNavigationHeader } from '@/command-menu/pages/common/components/SidePanelSubPageNavigationHeader';
 
 const StyledSubViewContainer = styled.div`
   display: flex;
@@ -8,25 +9,6 @@ const StyledSubViewContainer = styled.div`
   height: 100%;
   min-height: 0;
   overflow: hidden;
-`;
-
-const StyledBackBar = styled.button`
-  align-items: center;
-  background: none;
-  border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.border.color.medium};
-  color: ${({ theme }) => theme.font.color.secondary};
-  cursor: pointer;
-  display: flex;
-  font-size: ${({ theme }) => theme.font.size.sm};
-  gap: ${({ theme }) => theme.spacing(1)};
-  padding: ${({ theme }) => theme.spacing(2, 3)};
-  text-align: left;
-  width: 100%;
-
-  &:hover {
-    color: ${({ theme }) => theme.font.color.primary};
-  }
 `;
 
 const StyledSearchContainer = styled.div`
@@ -84,10 +66,10 @@ export const CommandMenuSubViewWithSearch = ({
   children,
 }: CommandMenuSubViewWithSearchProps) => (
   <StyledSubViewContainer>
-    <StyledBackBar onClick={onBack}>
-      <IconChevronLeft size={16} />
-      {backBarTitle}
-    </StyledBackBar>
+    <SidePanelSubPageNavigationHeader
+      title={backBarTitle}
+      onBackClick={onBack}
+    />
     <StyledSearchContainer>
       <StyledSearchInput
         placeholder={searchPlaceholder}
