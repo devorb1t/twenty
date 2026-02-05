@@ -36,28 +36,19 @@ export const CommandMenuPageInfo = ({ pageChip }: CommandMenuPageInfoProps) => {
 
   const isNavigationMenuItemEditPage =
     pageChip.page?.page === CommandMenuPages.NavigationMenuItemEdit;
-  const selectedFolder = isNavigationMenuItemEditPage
+  const selectedNavItem = isNavigationMenuItemEditPage
     ? workspaceSectionItems.find(
         (item) =>
-          item.type === 'folder' &&
           getWorkspaceSectionItemId(item) ===
-            selectedNavigationMenuItemInEditMode,
-      )
-    : undefined;
-  const selectedLink = isNavigationMenuItemEditPage
-    ? workspaceSectionItems.find(
-        (item) =>
-          item.type === 'link' &&
-          getWorkspaceSectionItemId(item) ===
-            selectedNavigationMenuItemInEditMode,
+          selectedNavigationMenuItemInEditMode,
       )
     : undefined;
 
-  if (isNavigationMenuItemEditPage && selectedFolder?.type === 'folder') {
+  if (isNavigationMenuItemEditPage && selectedNavItem?.type === 'folder') {
     return <CommandMenuFolderInfo />;
   }
 
-  if (isNavigationMenuItemEditPage && selectedLink?.type === 'link') {
+  if (isNavigationMenuItemEditPage && selectedNavItem?.type === 'link') {
     return <CommandMenuLinkInfo />;
   }
 
