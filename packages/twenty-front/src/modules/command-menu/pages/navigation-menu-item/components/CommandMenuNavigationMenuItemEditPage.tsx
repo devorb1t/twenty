@@ -11,7 +11,6 @@ import {
 import { CommandMenuEditDefaultView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditDefaultView';
 import { CommandMenuEditFolderItemView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderItemView';
 import { CommandMenuEditFolderPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderPickerSubView';
-import { CommandMenuEditFolderRenameSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderRenameSubView';
 import { CommandMenuEditLinkItemView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditLinkItemView';
 import { CommandMenuEditObjectItemView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditObjectItemView';
 import { CommandMenuEditObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditObjectPickerSubView';
@@ -55,7 +54,6 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     | 'object-picker-system'
     | 'folder-picker'
     | 'view-picker'
-    | 'folder-rename'
     | null
   >(null);
   const [
@@ -336,19 +334,6 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         onSearchChange={setViewSearchInput}
         onBack={handleBackFromViewPicker}
         onSelectView={handleChangeView}
-      />
-    );
-  }
-
-  if (editSubView === 'folder-rename' && selectedItem?.type === 'folder') {
-    return (
-      <CommandMenuEditFolderRenameSubView
-        folderId={selectedItem.folder.folderId}
-        onBack={() => setEditSubView(null)}
-        onSuccess={() => {
-          setEditSubView(null);
-          closeCommandMenu();
-        }}
       />
     );
   }

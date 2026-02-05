@@ -1,5 +1,4 @@
 import { useLingui } from '@lingui/react/macro';
-import { IconSettings } from 'twenty-ui/display';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
