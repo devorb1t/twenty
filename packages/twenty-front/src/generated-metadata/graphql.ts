@@ -1,5 +1,5 @@
-import * as Apollo from '@apollo/client';
 import { gql } from '@apollo/client';
+import * as Apollo from '@apollo/client';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -5988,7 +5988,6 @@ export type UploadFilesFieldFileMutationVariables = Exact<{
 
 export type UploadFilesFieldFileMutation = { __typename?: 'Mutation', uploadFilesFieldFile: { __typename?: 'File', id: string, path: string, size: number, createdAt: string } };
 
-export type NavigationMenuItemFieldsFragment = { __typename?: 'NavigationMenuItem', id: string, userWorkspaceId?: string | null, targetRecordId?: string | null, targetObjectMetadataId?: string | null, viewId?: string | null, folderId?: string | null, name?: string | null, link?: string | null, position: number, applicationId?: string | null, createdAt: string, updatedAt: string };
 export type ExecuteOneLogicFunctionMutationVariables = Exact<{
   input: ExecuteOneLogicFunctionInput;
 }>;
@@ -6010,7 +6009,7 @@ export type GetLogicFunctionSourceCodeQueryVariables = Exact<{
 
 export type GetLogicFunctionSourceCodeQuery = { __typename?: 'Query', getLogicFunctionSourceCode?: any | null };
 
-export type NavigationMenuItemFieldsFragment = { __typename?: 'NavigationMenuItem', id: string, userWorkspaceId?: string | null, targetRecordId?: string | null, targetObjectMetadataId?: string | null, viewId?: string | null, folderId?: string | null, name?: string | null, position: number, applicationId?: string | null, createdAt: string, updatedAt: string };
+export type NavigationMenuItemFieldsFragment = { __typename?: 'NavigationMenuItem', id: string, userWorkspaceId?: string | null, targetRecordId?: string | null, targetObjectMetadataId?: string | null, viewId?: string | null, folderId?: string | null, name?: string | null, link?: string | null, position: number, applicationId?: string | null, createdAt: string, updatedAt: string };
 
 export type NavigationMenuItemQueryFieldsFragment = { __typename?: 'NavigationMenuItem', id: string, userWorkspaceId?: string | null, targetRecordId?: string | null, targetObjectMetadataId?: string | null, viewId?: string | null, folderId?: string | null, name?: string | null, link?: string | null, position: number, applicationId?: string | null, createdAt: string, updatedAt: string, targetRecordIdentifier?: { __typename?: 'RecordIdentifier', id: string, labelIdentifier: string, imageIdentifier?: string | null } | null };
 
