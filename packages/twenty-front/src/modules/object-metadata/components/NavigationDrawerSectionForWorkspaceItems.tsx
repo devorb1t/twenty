@@ -91,6 +91,8 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
                       ? () => onNavigationMenuItemClick(item)
                       : undefined
                   }
+                  onNavigationMenuItemClick={onNavigationMenuItemClick}
+                  selectedNavigationMenuItemId={selectedNavigationMenuItemId}
                 />
               ) : item.type === 'link' ? (
                 <NavigationDrawerItemForLink

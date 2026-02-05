@@ -22,10 +22,8 @@ import { useNavigationMenuItemsByFolder } from '@/navigation-menu-item/hooks/use
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
-import {
-  type WorkspaceSectionItem,
-  useWorkspaceSectionItems,
-} from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
+import { type WorkspaceSectionItem } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
+import { useFlattenedWorkspaceSectionItemsForLookup } from '@/navigation-menu-item/hooks/useFlattenedWorkspaceSectionItemsForLookup';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { getWorkspaceSectionItemId } from '@/navigation-menu-item/utils/getWorkspaceSectionItemId';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
@@ -71,7 +69,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   const setSelectedNavigationMenuItemInEditMode = useSetRecoilState(
     selectedNavigationMenuItemInEditModeState,
   );
-  const workspaceSectionItems = useWorkspaceSectionItems();
+  const workspaceSectionItems = useFlattenedWorkspaceSectionItemsForLookup();
   const { moveUp, moveDown, remove, moveToFolder } =
     useNavigationMenuItemMoveRemove();
   const { updateObjectInDraft, updateViewInDraft, updateLinkInDraft } =
@@ -118,8 +116,13 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
       )
     : -1;
 
-  const canMoveUp = selectedItemIndex > 0;
+  const isItemInsideFolder =
+    selectedItem?.type !== 'folder' &&
+    isDefined(selectedItem?.navigationMenuItem.folderId);
+  const canMoveUp =
+    !isItemInsideFolder && selectedItemIndex > 0;
   const canMoveDown =
+    !isItemInsideFolder &&
     selectedItemIndex >= 0 &&
     selectedItemIndex < workspaceSectionItems.length - 1;
 

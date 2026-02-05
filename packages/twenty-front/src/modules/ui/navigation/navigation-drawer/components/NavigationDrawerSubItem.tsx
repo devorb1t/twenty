@@ -21,6 +21,7 @@ export const NavigationDrawerSubItem = ({
   subItemState,
   rightOptions,
   isDragging,
+  isSelectedInEditMode,
   triggerEvent,
 }: NavigationDrawerSubItemProps) => {
   return (
@@ -41,6 +42,7 @@ export const NavigationDrawerSubItem = ({
       keyboard={keyboard}
       rightOptions={rightOptions}
       isDragging={isDragging}
+      isSelectedInEditMode={isSelectedInEditMode}
       triggerEvent={triggerEvent}
     />
   );

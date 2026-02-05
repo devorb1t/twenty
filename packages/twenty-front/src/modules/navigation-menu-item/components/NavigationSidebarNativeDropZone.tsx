@@ -1,16 +1,21 @@
-import { type ReactNode, useEffect } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import styled from '@emotion/styled';
 import { t } from '@lingui/core/macro';
 import { isDefined } from 'twenty-shared/utils';
 import { IconFolder, IconLink, useIcons } from 'twenty-ui/display';
 
-import { ADD_TO_NAVIGATION_DRAG_TYPE } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
+import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
+import {
+  ADD_TO_NAVIGATION_DRAG_FOLDER_TYPE,
+  ADD_TO_NAVIGATION_DRAG_TYPE,
+} from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
+import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { type AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 import { coreViewsState } from '@/views/states/coreViewState';
@@ -20,6 +25,7 @@ const DROP_TARGET_ATTR = 'data-navigation-drop-target';
 const DROP_FOLDER_ATTR = 'data-navigation-drop-folder';
 const DROP_INDEX_ATTR = 'data-navigation-drop-index';
 export const DROP_ZONE_ATTR = 'data-navigation-drop-zone';
+
 const StyledDropZone = styled.div`
   height: 100%;
   min-height: 0;
@@ -32,6 +38,12 @@ type NavigationSidebarNativeDropZoneProps = {
 export const NavigationSidebarNativeDropZone = ({
   children,
 }: NavigationSidebarNativeDropZoneProps) => {
+  const [activeDropTargetId, setActiveDropTargetId] = useState<string | null>(
+    null,
+  );
+  const [forbiddenDropTargetId, setForbiddenDropTargetId] = useState<
+    string | null
+  >(null);
   const {
     addFolderToDraftAtPosition,
     addLinkToDraftAtPosition,
@@ -51,6 +63,9 @@ export const NavigationSidebarNativeDropZone = ({
   );
   const setIsNavigationMenuInEditMode = useSetRecoilState(
     isNavigationMenuInEditModeState,
+  );
+  const setOpenNavigationMenuItemFolderIds = useSetRecoilState(
+    openNavigationMenuItemFolderIdsState,
   );
 
   const currentDraft = isDefined(navigationMenuItemsDraft)
@@ -79,7 +94,19 @@ export const NavigationSidebarNativeDropZone = ({
       const indexAttr = dropTargetElement.getAttribute(DROP_INDEX_ATTR);
       folderId = folderAttr === 'orphan' ? null : folderAttr;
       index = indexAttr ? parseInt(indexAttr, 10) : 0;
-    } else {
+    }
+
+    if (payload.type === 'folder' && folderId !== null) {
+      return;
+    }
+
+    if (isDefined(dropTargetElement) && folderId !== null) {
+      setOpenNavigationMenuItemFolderIds((current) =>
+        current.includes(folderId!) ? current : [...current, folderId!],
+      );
+    }
+
+    if (!isDefined(dropTargetElement)) {
       const itemsInFolder = currentDraft.filter(
         (item) => (item.folderId ?? null) === null,
       );
@@ -90,7 +117,7 @@ export const NavigationSidebarNativeDropZone = ({
       const newFolderId = addFolderToDraftAtPosition(
         payload.name,
         currentDraft,
-        folderId,
+        null,
         index,
       );
       setIsNavigationMenuInEditMode(true);
@@ -211,6 +238,8 @@ export const NavigationSidebarNativeDropZone = ({
       event.preventDefault();
       event.stopPropagation();
       processDrop(event, data);
+      setActiveDropTargetId(null);
+      setForbiddenDropTargetId(null);
     };
 
     const handleDocumentDragOver = (event: DragEvent) => {
@@ -223,10 +252,15 @@ export const NavigationSidebarNativeDropZone = ({
         event.clientY,
       ) as HTMLElement | null;
       const isOverSidebar = element?.closest(`[${DROP_ZONE_ATTR}]`);
+      const dropTargetElement = element?.closest(`[${DROP_TARGET_ATTR}]`);
+      const isFolderOverFolder =
+        event.dataTransfer.types.includes(ADD_TO_NAVIGATION_DRAG_FOLDER_TYPE) &&
+        isDefined(dropTargetElement) &&
+        dropTargetElement.getAttribute(DROP_FOLDER_ATTR) !== 'orphan';
 
       if (isDefined(isOverSidebar)) {
         event.preventDefault();
-        event.dataTransfer.dropEffect = 'copy';
+        event.dataTransfer.dropEffect = isFolderOverFolder ? 'none' : 'copy';
       }
     };
 
@@ -253,6 +287,7 @@ export const NavigationSidebarNativeDropZone = ({
     getIcon,
     setSelectedNavigationMenuItemInEditMode,
     setIsNavigationMenuInEditMode,
+    setOpenNavigationMenuItemFolderIds,
   ]);
 
   const handleDragOver = (event: React.DragEvent) => {
@@ -276,17 +311,28 @@ export const NavigationSidebarNativeDropZone = ({
     event.preventDefault();
     event.stopPropagation();
     processDrop(event.nativeEvent, data);
+    setActiveDropTargetId(null);
+    setForbiddenDropTargetId(null);
   };
 
   return (
-    <StyledDropZone
-      {...{ [DROP_ZONE_ATTR]: '' }}
-      onDragOver={handleDragOver}
-      onDragEnter={handleDragEnter}
-      onDrop={handleDrop}
+    <NavigationDropTargetContext.Provider
+      value={{
+        activeDropTargetId,
+        setActiveDropTargetId,
+        forbiddenDropTargetId,
+        setForbiddenDropTargetId,
+      }}
     >
-      {children}
-    </StyledDropZone>
+      <StyledDropZone
+        {...{ [DROP_ZONE_ATTR]: '' }}
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragEnter}
+        onDrop={handleDrop}
+      >
+        {children}
+      </StyledDropZone>
+    </NavigationDropTargetContext.Provider>
   );
 };
 

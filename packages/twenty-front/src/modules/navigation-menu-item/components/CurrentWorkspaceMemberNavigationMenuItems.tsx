@@ -12,6 +12,7 @@ import { LightIconButton } from 'twenty-ui/input';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
 import { useIsMobile } from 'twenty-ui/utilities';
 
+import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
 import { NavigationMenuItemDroppable } from '@/navigation-menu-item/components/NavigationMenuItemDroppable';
 import { NavigationMenuItemFolderNavigationDrawerItemDropdown } from '@/navigation-menu-item/components/NavigationMenuItemFolderNavigationDrawerItemDropdown';
 import { NavigationMenuItemIcon } from '@/navigation-menu-item/components/NavigationMenuItemIcon';
@@ -198,17 +199,19 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
           <NavigationMenuItemDroppable
             droppableId={`folder-header-${folder.folderId}`}
           >
-            <NavigationDrawerItem
-              label={folder.folderName}
-              Icon={isOpen ? IconFolderOpen : IconFolder}
-              iconBackgroundColor={iconColors.folder}
-              onClick={handleToggle}
-              rightOptions={rightOptions}
-              className="navigation-drawer-item"
-              isRightOptionsDropdownOpen={isDropdownOpenComponent}
-              triggerEvent="CLICK"
-              preventCollapseOnMobile={isMobile}
-            />
+            <NavigationItemDropTarget folderId={folder.folderId} index={0}>
+              <NavigationDrawerItem
+                label={folder.folderName}
+                Icon={isOpen ? IconFolderOpen : IconFolder}
+                iconBackgroundColor={iconColors.folder}
+                onClick={handleToggle}
+                rightOptions={rightOptions}
+                className="navigation-drawer-item"
+                isRightOptionsDropdownOpen={isDropdownOpenComponent}
+                triggerEvent="CLICK"
+                preventCollapseOnMobile={isMobile}
+              />
+            </NavigationItemDropTarget>
           </NavigationMenuItemDroppable>
         )}
 
