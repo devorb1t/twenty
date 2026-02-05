@@ -1,8 +1,24 @@
 import { useSetRecoilState } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
+import type { NavigationMenuItem } from '~/generated-metadata/graphql';
 
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
+
+const swapPositionsInDraft = (
+  draft: NavigationMenuItem[],
+  itemA: NavigationMenuItem,
+  itemB: NavigationMenuItem,
+): NavigationMenuItem[] =>
+  draft.map((item) => {
+    if (item.id === itemA.id) {
+      return { ...item, position: itemB.position };
+    }
+    if (item.id === itemB.id) {
+      return { ...item, position: itemA.position };
+    }
+    return item;
+  });
 
 export const useNavigationMenuItemMoveRemove = () => {
   const setNavigationMenuItemsDraft = useSetRecoilState(
@@ -24,17 +40,7 @@ export const useNavigationMenuItemMoveRemove = () => {
 
       const itemAbove = flatItems[currentIndex - 1];
       const currentItem = flatItems[currentIndex];
-      const newDraft = draft.map((item) => {
-        if (item.id === currentItem.id) {
-          return { ...item, position: itemAbove.position };
-        }
-        if (item.id === itemAbove.id) {
-          return { ...item, position: currentItem.position };
-        }
-        return item;
-      });
-
-      return newDraft;
+      return swapPositionsInDraft(draft, currentItem, itemAbove);
     });
   };
 
@@ -55,17 +61,7 @@ export const useNavigationMenuItemMoveRemove = () => {
 
       const itemBelow = flatItems[currentIndex + 1];
       const currentItem = flatItems[currentIndex];
-      const newDraft = draft.map((item) => {
-        if (item.id === currentItem.id) {
-          return { ...item, position: itemBelow.position };
-        }
-        if (item.id === itemBelow.id) {
-          return { ...item, position: currentItem.position };
-        }
-        return item;
-      });
-
-      return newDraft;
+      return swapPositionsInDraft(draft, currentItem, itemBelow);
     });
   };
 
