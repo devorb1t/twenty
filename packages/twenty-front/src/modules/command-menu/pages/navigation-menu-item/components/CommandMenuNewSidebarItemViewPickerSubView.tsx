@@ -32,10 +32,8 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
   const { t } = useLingui();
   const { getIcon } = useIcons();
   const [searchValue, setSearchValue] = useState('');
-  const {
-    views,
-    viewIdsInWorkspace,
-  } = useNavigationMenuObjectMetadataFromDraft(currentDraft);
+  const { views, viewIdsInWorkspace } =
+    useNavigationMenuObjectMetadataFromDraft(currentDraft);
 
   const viewsForSelectedObject = views
     .filter(

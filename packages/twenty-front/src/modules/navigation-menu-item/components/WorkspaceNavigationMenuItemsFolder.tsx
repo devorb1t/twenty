@@ -167,7 +167,9 @@ export const WorkspaceNavigationMenuItemsFolder = ({
                         navigationMenuItem={navigationMenuItem}
                       />
                     )}
-                    to={handleEditModeClick ? undefined : navigationMenuItem.link}
+                    to={
+                      handleEditModeClick ? undefined : navigationMenuItem.link
+                    }
                     onClick={handleEditModeClick}
                     active={index === selectedNavigationMenuItemIndex}
                     isSelectedInEditMode={isSelectedInEditModeForItem}

@@ -54,10 +54,7 @@ export const CommandMenuEditObjectPickerSubView = ({
       searchValue={searchValue}
       onSearchChange={onSearchChange}
     >
-      <CommandMenuList
-        commandGroups={[]}
-        selectableItemIds={selectableItemIds}
-      >
+      <CommandMenuList commandGroups={[]} selectableItemIds={selectableItemIds}>
         <CommandGroup heading={t`Objects`}>
           {filteredObjects.map((objectMetadataItem) =>
             isViewItem ? (

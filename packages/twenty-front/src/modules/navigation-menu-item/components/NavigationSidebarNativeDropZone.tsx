@@ -6,10 +6,7 @@ import { isDefined } from 'twenty-shared/utils';
 import { IconFolder, IconLink, useIcons } from 'twenty-ui/display';
 
 import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
-import {
-  ADD_TO_NAVIGATION_DRAG_FOLDER_TYPE,
-  ADD_TO_NAVIGATION_DRAG_TYPE,
-} from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
+import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
@@ -218,11 +215,11 @@ export const NavigationSidebarNativeDropZone = ({
 
   useEffect(() => {
     const handleDocumentDrop = (event: DragEvent) => {
-      if (!event.dataTransfer?.types.includes(ADD_TO_NAVIGATION_DRAG_TYPE)) {
+      if (!event.dataTransfer?.types.includes(ADD_TO_NAVIGATION_DRAG.TYPE)) {
         return;
       }
 
-      const data = event.dataTransfer.getData(ADD_TO_NAVIGATION_DRAG_TYPE);
+      const data = event.dataTransfer.getData(ADD_TO_NAVIGATION_DRAG.TYPE);
       if (!data) return;
 
       const element = document.elementFromPoint(
@@ -243,7 +240,7 @@ export const NavigationSidebarNativeDropZone = ({
     };
 
     const handleDocumentDragOver = (event: DragEvent) => {
-      if (!event.dataTransfer?.types.includes(ADD_TO_NAVIGATION_DRAG_TYPE)) {
+      if (!event.dataTransfer?.types.includes(ADD_TO_NAVIGATION_DRAG.TYPE)) {
         return;
       }
 
@@ -254,7 +251,7 @@ export const NavigationSidebarNativeDropZone = ({
       const isOverSidebar = element?.closest(`[${DROP_ZONE_ATTR}]`);
       const dropTargetElement = element?.closest(`[${DROP_TARGET_ATTR}]`);
       const isFolderOverFolder =
-        event.dataTransfer.types.includes(ADD_TO_NAVIGATION_DRAG_FOLDER_TYPE) &&
+        event.dataTransfer.types.includes(ADD_TO_NAVIGATION_DRAG.FOLDER_TYPE) &&
         isDefined(dropTargetElement) &&
         dropTargetElement.getAttribute(DROP_FOLDER_ATTR) !== 'orphan';
 
@@ -290,22 +287,15 @@ export const NavigationSidebarNativeDropZone = ({
     setOpenNavigationMenuItemFolderIds,
   ]);
 
-  const handleDragOver = (event: React.DragEvent) => {
-    if (event.dataTransfer.types.includes(ADD_TO_NAVIGATION_DRAG_TYPE)) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = 'copy';
-    }
-  };
-
-  const handleDragEnter = (event: React.DragEvent) => {
-    if (event.dataTransfer.types.includes(ADD_TO_NAVIGATION_DRAG_TYPE)) {
+  const handleDragOverOrEnter = (event: React.DragEvent) => {
+    if (event.dataTransfer.types.includes(ADD_TO_NAVIGATION_DRAG.TYPE)) {
       event.preventDefault();
       event.dataTransfer.dropEffect = 'copy';
     }
   };
 
   const handleDrop = (event: React.DragEvent) => {
-    const data = event.dataTransfer.getData(ADD_TO_NAVIGATION_DRAG_TYPE);
+    const data = event.dataTransfer.getData(ADD_TO_NAVIGATION_DRAG.TYPE);
     if (!data) return;
 
     event.preventDefault();
@@ -326,8 +316,8 @@ export const NavigationSidebarNativeDropZone = ({
     >
       <StyledDropZone
         {...{ [DROP_ZONE_ATTR]: '' }}
-        onDragOver={handleDragOver}
-        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOverOrEnter}
+        onDragEnter={handleDragOverOrEnter}
         onDrop={handleDrop}
       >
         {children}
@@ -341,6 +331,9 @@ export const NavigationDropTargetAttributes = {
   folder: DROP_FOLDER_ATTR,
   index: DROP_INDEX_ATTR,
 };
+
+export const getDropTargetId = (folderId: string | null, index: number) =>
+  `${folderId ?? 'orphan'}-${index}`;
 
 export const getNavigationDropTargetProps = (
   folderId: string | null,

@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import { useTheme } from '@emotion/react';
 import { IconGripVertical } from 'twenty-ui/display';
 
-import { ADD_TO_NAVIGATION_DRAG_TYPE } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
+import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
 import { type AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 
@@ -41,7 +41,7 @@ export const DraggableToNavigationItem = ({
 
   const handleDragStart = (event: React.DragEvent) => {
     event.dataTransfer.setData(
-      ADD_TO_NAVIGATION_DRAG_TYPE,
+      ADD_TO_NAVIGATION_DRAG.TYPE,
       JSON.stringify(payload),
     );
     event.dataTransfer.effectAllowed = 'copy';

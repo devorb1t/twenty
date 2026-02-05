@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import type { ReactNode } from 'react';
 import { IconGripVertical, type IconComponent } from 'twenty-ui/display';
 
-import { ADD_TO_NAVIGATION_DRAG_TYPE } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
+import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 
 const StyledIconSlot = styled.div<{ $isDraggable: boolean }>`
@@ -40,7 +40,7 @@ export const AddToNavigationDragHandle = ({
 
   const handleDragStart = (event: React.DragEvent) => {
     event.dataTransfer.setData(
-      ADD_TO_NAVIGATION_DRAG_TYPE,
+      ADD_TO_NAVIGATION_DRAG.TYPE,
       JSON.stringify(payload),
     );
     event.dataTransfer.effectAllowed = 'copy';

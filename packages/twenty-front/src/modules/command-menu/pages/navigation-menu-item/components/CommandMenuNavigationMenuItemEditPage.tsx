@@ -119,8 +119,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   const isItemInsideFolder =
     selectedItem?.type !== 'folder' &&
     isDefined(selectedItem?.navigationMenuItem.folderId);
-  const canMoveUp =
-    !isItemInsideFolder && selectedItemIndex > 0;
+  const canMoveUp = !isItemInsideFolder && selectedItemIndex > 0;
   const canMoveDown =
     !isItemInsideFolder &&
     selectedItemIndex >= 0 &&

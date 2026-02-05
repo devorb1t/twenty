@@ -50,7 +50,9 @@ export const CommandMenuEditViewPickerSubView = ({
     ),
   );
 
-  const viewPickerObjectMetadataId = isDefined(selectedObjectMetadataIdForViewEdit)
+  const viewPickerObjectMetadataId = isDefined(
+    selectedObjectMetadataIdForViewEdit,
+  )
     ? selectedObjectMetadataIdForViewEdit
     : selectedItem?.type === 'objectView'
       ? selectedItem.objectMetadataItem.id
@@ -67,7 +69,9 @@ export const CommandMenuEditViewPickerSubView = ({
         .sort((a, b) => a.position - b.position)
     : [];
 
-  const selectedObjectForViewEdit = isDefined(selectedObjectMetadataIdForViewEdit)
+  const selectedObjectForViewEdit = isDefined(
+    selectedObjectMetadataIdForViewEdit,
+  )
     ? objectMetadataItems.find(
         (item) => item.id === selectedObjectMetadataIdForViewEdit,
       )

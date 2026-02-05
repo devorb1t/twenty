@@ -1,12 +1,12 @@
 import { type ReactNode, useContext, useRef } from 'react';
 import styled from '@emotion/styled';
 
-import { getNavigationDropTargetProps } from '@/navigation-menu-item/components/NavigationSidebarNativeDropZone';
-import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
 import {
-  ADD_TO_NAVIGATION_DRAG_FOLDER_TYPE,
-  ADD_TO_NAVIGATION_DRAG_TYPE,
-} from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
+  getDropTargetId,
+  getNavigationDropTargetProps,
+} from '@/navigation-menu-item/components/NavigationSidebarNativeDropZone';
+import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
+import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 
 const StyledDropTarget = styled.div<{
   $isDragOver: boolean;
@@ -58,9 +58,6 @@ type NavigationItemDropTargetProps = {
   children?: ReactNode;
 };
 
-const getDropTargetId = (folderId: string | null, index: number) =>
-  `${folderId ?? 'orphan'}-${index}`;
-
 export const NavigationItemDropTarget = ({
   folderId,
   index,
@@ -80,12 +77,12 @@ export const NavigationItemDropTarget = ({
   const isFolderTarget = folderId !== null;
 
   const handleDragOver = (event: React.DragEvent) => {
-    if (!event.dataTransfer.types.includes(ADD_TO_NAVIGATION_DRAG_TYPE)) {
+    if (!event.dataTransfer.types.includes(ADD_TO_NAVIGATION_DRAG.TYPE)) {
       return;
     }
     event.preventDefault();
     const isFolderDrag = event.dataTransfer.types.includes(
-      ADD_TO_NAVIGATION_DRAG_FOLDER_TYPE,
+      ADD_TO_NAVIGATION_DRAG.FOLDER_TYPE,
     );
     const isFolderOverFolder = isFolderTarget && isFolderDrag;
 

@@ -56,6 +56,16 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
         ).canReadObjectRecords),
   );
 
+  const getEditModeProps = (item: WorkspaceSectionItem) => {
+    const itemId = getWorkspaceSectionItemId(item);
+    return {
+      isSelectedInEditMode: selectedNavigationMenuItemId === itemId,
+      onEditModeClick: onNavigationMenuItemClick
+        ? () => onNavigationMenuItemClick(item)
+        : undefined,
+    };
+  };
+
   if (workspaceSectionItems.length === 0) {
     return null;
   }
@@ -71,70 +81,52 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
       </NavigationDrawerAnimatedCollapseWrapper>
       {isNavigationSectionOpen && (
         <>
-          {filteredWorkspaceSectionItems.map((item, index) => (
-            <NavigationItemDropTarget
-              key={getWorkspaceSectionItemId(item)}
-              folderId={null}
-              index={index}
-            >
-              {item.type === 'folder' ? (
-                <WorkspaceNavigationMenuItemsFolder
-                  folder={item.folder}
-                  isGroup={folderCount > 1}
-                  isEditMode={isEditMode}
-                  isSelectedInEditMode={
-                    selectedNavigationMenuItemId ===
-                    getWorkspaceSectionItemId(item)
-                  }
-                  onEditModeClick={
-                    onNavigationMenuItemClick
-                      ? () => onNavigationMenuItemClick(item)
-                      : undefined
-                  }
-                  onNavigationMenuItemClick={onNavigationMenuItemClick}
-                  selectedNavigationMenuItemId={selectedNavigationMenuItemId}
-                />
-              ) : item.type === 'link' ? (
-                <NavigationDrawerItemForLink
-                  navigationMenuItem={item.navigationMenuItem}
-                  isEditMode={isEditMode}
-                  isSelectedInEditMode={
-                    selectedNavigationMenuItemId ===
-                    getWorkspaceSectionItemId(item)
-                  }
-                  onEditModeClick={
-                    onNavigationMenuItemClick
-                      ? () => onNavigationMenuItemClick(item)
-                      : undefined
-                  }
-                />
-              ) : (
-                <NavigationDrawerItemForObjectMetadataItem
-                  objectMetadataItem={item.objectMetadataItem}
-                  navigationMenuItem={item.navigationMenuItem}
-                  isEditMode={isEditMode}
-                  isSelectedInEditMode={
-                    selectedNavigationMenuItemId ===
-                    getWorkspaceSectionItemId(item)
-                  }
-                  onEditModeClick={
-                    onNavigationMenuItemClick
-                      ? () => onNavigationMenuItemClick(item)
-                      : undefined
-                  }
-                  onActiveItemClickWhenNotInEditMode={
-                    onActiveObjectMetadataItemClick
-                      ? () =>
-                          onActiveObjectMetadataItemClick(
-                            item.objectMetadataItem,
-                            item.navigationMenuItem.id,
-                          )
-                      : undefined
-                  }
-                />
-              )}
-            </NavigationItemDropTarget>
-          ))}
+          {filteredWorkspaceSectionItems.map((item, index) => {
+            const editModeProps = getEditModeProps(item);
+            return (
+              <NavigationItemDropTarget
+                key={getWorkspaceSectionItemId(item)}
+                folderId={null}
+                index={index}
+              >
+                {item.type === 'folder' ? (
+                  <WorkspaceNavigationMenuItemsFolder
+                    folder={item.folder}
+                    isGroup={folderCount > 1}
+                    isEditMode={isEditMode}
+                    isSelectedInEditMode={editModeProps.isSelectedInEditMode}
+                    onEditModeClick={editModeProps.onEditModeClick}
+                    onNavigationMenuItemClick={onNavigationMenuItemClick}
+                    selectedNavigationMenuItemId={selectedNavigationMenuItemId}
+                  />
+                ) : item.type === 'link' ? (
+                  <NavigationDrawerItemForLink
+                    navigationMenuItem={item.navigationMenuItem}
+                    isEditMode={isEditMode}
+                    isSelectedInEditMode={editModeProps.isSelectedInEditMode}
+                    onEditModeClick={editModeProps.onEditModeClick}
+                  />
+                ) : (
+                  <NavigationDrawerItemForObjectMetadataItem
+                    objectMetadataItem={item.objectMetadataItem}
+                    navigationMenuItem={item.navigationMenuItem}
+                    isEditMode={isEditMode}
+                    isSelectedInEditMode={editModeProps.isSelectedInEditMode}
+                    onEditModeClick={editModeProps.onEditModeClick}
+                    onActiveItemClickWhenNotInEditMode={
+                      onActiveObjectMetadataItemClick
+                        ? () =>
+                            onActiveObjectMetadataItemClick(
+                              item.objectMetadataItem,
+                              item.navigationMenuItem.id,
+                            )
+                        : undefined
+                    }
+                  />
+                )}
+              </NavigationItemDropTarget>
+            );
+          })}
           <NavigationItemDropTarget
             folderId={null}
             index={filteredWorkspaceSectionItems.length}

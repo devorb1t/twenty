@@ -2,7 +2,7 @@ import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
-import { isNavigationMenuItemLink } from '@/navigation-menu-item/utils/isNavigationMenuItemLink';
+import { processNavigationMenuItemToWorkspaceSectionItem } from '@/navigation-menu-item/utils/processNavigationMenuItemToWorkspaceSectionItem';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
@@ -63,45 +63,19 @@ export const useWorkspaceSectionItems = (): WorkspaceSectionItem[] => {
       if (isDefined(folder)) {
         acc.push({ type: 'folder', folder });
       }
-    } else if (isNavigationMenuItemLink(item)) {
-      const processedItem = processedObjectViewsById.get(item.id);
-      if (isDefined(processedItem)) {
-        acc.push({
-          type: 'link',
-          navigationMenuItem: processedItem,
-        });
-      }
     } else {
       const processedItem = processedObjectViewsById.get(item.id);
       if (!isDefined(processedItem)) {
         return acc;
       }
-
-      let objectMetadataItem: ObjectMetadataItem | undefined;
-
-      if (isDefined(processedItem.viewId)) {
-        const view = views.find((v) => v.id === processedItem.viewId);
-        if (!isDefined(view)) {
-          return acc;
-        }
-        objectMetadataItem = objectMetadataItems.find(
-          (meta) => meta.id === view.objectMetadataId,
-        );
-      } else if (isDefined(processedItem.targetObjectMetadataId)) {
-        objectMetadataItem = objectMetadataItems.find(
-          (meta) => meta.id === processedItem.targetObjectMetadataId,
-        );
+      const workspaceItem = processNavigationMenuItemToWorkspaceSectionItem(
+        processedItem,
+        objectMetadataItems,
+        views,
+      );
+      if (isDefined(workspaceItem)) {
+        acc.push(workspaceItem);
       }
-
-      if (!isDefined(objectMetadataItem)) {
-        return acc;
-      }
-
-      acc.push({
-        type: 'objectView',
-        navigationMenuItem: processedItem,
-        objectMetadataItem,
-      });
     }
     return acc;
   }, []);
