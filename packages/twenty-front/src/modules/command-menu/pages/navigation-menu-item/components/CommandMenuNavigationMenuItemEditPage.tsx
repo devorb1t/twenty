@@ -7,7 +7,6 @@ import { isDefined } from 'twenty-shared/utils';
 import {
   IconApps,
   IconChevronDown,
-  IconChevronLeft,
   IconChevronUp,
   IconFolder,
   IconRefresh,
@@ -19,6 +18,7 @@ import {
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
+import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { useNavigationMenuItemsByFolder } from '@/navigation-menu-item/hooks/useNavigationMenuItemsByFolder';
@@ -50,67 +50,6 @@ const StyledContainer = styled.div`
 const StyledPlaceholder = styled.p`
   color: ${({ theme }) => theme.font.color.tertiary};
   font-size: ${({ theme }) => theme.font.size.sm};
-`;
-
-const StyledBackBar = styled.button`
-  align-items: center;
-  background: none;
-  border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.border.color.medium};
-  color: ${({ theme }) => theme.font.color.secondary};
-  cursor: pointer;
-  display: flex;
-  font-size: ${({ theme }) => theme.font.size.sm};
-  gap: ${({ theme }) => theme.spacing(1)};
-  padding: ${({ theme }) => theme.spacing(2, 3)};
-  text-align: left;
-  width: 100%;
-
-  &:hover {
-    color: ${({ theme }) => theme.font.color.primary};
-  }
-`;
-
-const StyledSearchContainer = styled.div`
-  border-bottom: 1px solid ${({ theme }) => theme.border.color.medium};
-  min-width: 0;
-  padding: ${({ theme }) => theme.spacing(2, 3)};
-`;
-
-const StyledSearchInput = styled.input`
-  background: transparent;
-  border: none;
-  border-radius: ${({ theme }) => theme.border.radius.sm};
-  box-sizing: border-box;
-  color: ${({ theme }) => theme.font.color.primary};
-  font-size: ${({ theme }) => theme.font.size.md};
-  padding: 0;
-  width: 100%;
-  outline: none;
-
-  &::placeholder {
-    color: ${({ theme }) => theme.font.color.tertiary};
-  }
-`;
-const StyledSubViewContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-`;
-
-const StyledScrollableListWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-
-  & > * {
-    flex: 1;
-    min-height: 0;
-  }
 `;
 
 const isObjectNavItem = (item: WorkspaceSectionItem): boolean =>
@@ -589,70 +528,62 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     }
 
     return (
-      <StyledSubViewContainer>
-        <StyledBackBar onClick={() => setEditSubView(null)}>
-          <IconChevronLeft size={16} />
-          {t`Move to a folder`}
-        </StyledBackBar>
-        <StyledSearchContainer>
-          <StyledSearchInput
-            placeholder={t`Search a folder...`}
-            value={folderSearchInput}
-            onChange={(event) => setFolderSearchInput(event.target.value)}
-            autoFocus
-          />
-        </StyledSearchContainer>
-        <StyledScrollableListWrapper>
-          <CommandMenuList
-            commandGroups={[]}
-            selectableItemIds={selectableItemIds}
-          >
-            <CommandGroup heading={t`Folders`}>
-              {foldersForFolderPicker.includeNoFolderOption && (
+      <CommandMenuSubViewWithSearch
+        backBarTitle={t`Move to a folder`}
+        onBack={() => setEditSubView(null)}
+        searchPlaceholder={t`Search a folder...`}
+        searchValue={folderSearchInput}
+        onSearchChange={setFolderSearchInput}
+      >
+        <CommandMenuList
+          commandGroups={[]}
+          selectableItemIds={selectableItemIds}
+        >
+          <CommandGroup heading={t`Folders`}>
+            {foldersForFolderPicker.includeNoFolderOption && (
+              <SelectableListItem
+                itemId="no-folder"
+                onEnter={() => handleMoveToFolder(null)}
+              >
+                <CommandMenuItem
+                  label={t`No folder`}
+                  id="no-folder"
+                  onClick={() => handleMoveToFolder(null)}
+                />
+              </SelectableListItem>
+            )}
+            {filteredFolders.length === 0 &&
+            !foldersForFolderPicker.includeNoFolderOption ? (
+              <SelectableListItem itemId="empty" onEnter={() => {}}>
+                <CommandMenuItem
+                  label={
+                    folderSearchInput.trim().length > 0
+                      ? t`No results found`
+                      : t`No folders available`
+                  }
+                  id="empty"
+                  disabled={true}
+                />
+              </SelectableListItem>
+            ) : (
+              filteredFolders.map((folder) => (
                 <SelectableListItem
-                  itemId="no-folder"
-                  onEnter={() => handleMoveToFolder(null)}
+                  key={folder.id}
+                  itemId={folder.id}
+                  onEnter={() => handleMoveToFolder(folder.id)}
                 >
                   <CommandMenuItem
-                    label={t`No folder`}
-                    id="no-folder"
-                    onClick={() => handleMoveToFolder(null)}
+                    Icon={IconFolder}
+                    label={folder.name}
+                    id={folder.id}
+                    onClick={() => handleMoveToFolder(folder.id)}
                   />
                 </SelectableListItem>
-              )}
-              {filteredFolders.length === 0 &&
-              !foldersForFolderPicker.includeNoFolderOption ? (
-                <SelectableListItem itemId="empty" onEnter={() => {}}>
-                  <CommandMenuItem
-                    label={
-                      folderSearchInput.trim().length > 0
-                        ? t`No results found`
-                        : t`No folders available`
-                    }
-                    id="empty"
-                    disabled={true}
-                  />
-                </SelectableListItem>
-              ) : (
-                filteredFolders.map((folder) => (
-                  <SelectableListItem
-                    key={folder.id}
-                    itemId={folder.id}
-                    onEnter={() => handleMoveToFolder(folder.id)}
-                  >
-                    <CommandMenuItem
-                      Icon={IconFolder}
-                      label={folder.name}
-                      id={folder.id}
-                      onClick={() => handleMoveToFolder(folder.id)}
-                    />
-                  </SelectableListItem>
-                ))
-              )}
-            </CommandGroup>
-          </CommandMenuList>
-        </StyledScrollableListWrapper>
-      </StyledSubViewContainer>
+              ))
+            )}
+          </CommandGroup>
+        </CommandMenuList>
+      </CommandMenuSubViewWithSearch>
     );
   }
 
@@ -671,44 +602,36 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         : ['empty'];
 
     return (
-      <StyledSubViewContainer>
-        <StyledBackBar onClick={() => setEditSubView('object-picker')}>
-          <IconChevronLeft size={16} />
-          {t`System objects`}
-        </StyledBackBar>
-        <StyledSearchContainer>
-          <StyledSearchInput
-            placeholder={t`Search a system object...`}
-            value={systemObjectSearchInput}
-            onChange={(event) => setSystemObjectSearchInput(event.target.value)}
-            autoFocus
-          />
-        </StyledSearchContainer>
-        <StyledScrollableListWrapper>
-          <CommandMenuList
-            commandGroups={[]}
-            selectableItemIds={selectableItemIds}
-          >
-            <CommandGroup heading={t`System objects`}>
-              {filteredSystemObjects.map((objectMetadataItem) =>
-                isViewItem ? (
-                  <CommandMenuSelectObjectForViewEditMenuItem
-                    key={objectMetadataItem.id}
-                    objectMetadataItem={objectMetadataItem}
-                    onSelect={handleSelectObjectForViewEdit}
-                  />
-                ) : (
-                  <CommandMenuSelectObjectForEditMenuItem
-                    key={objectMetadataItem.id}
-                    objectMetadataItem={objectMetadataItem}
-                    onSelect={handleChangeObject}
-                  />
-                ),
-              )}
-            </CommandGroup>
-          </CommandMenuList>
-        </StyledScrollableListWrapper>
-      </StyledSubViewContainer>
+      <CommandMenuSubViewWithSearch
+        backBarTitle={t`System objects`}
+        onBack={() => setEditSubView('object-picker')}
+        searchPlaceholder={t`Search a system object...`}
+        searchValue={systemObjectSearchInput}
+        onSearchChange={setSystemObjectSearchInput}
+      >
+        <CommandMenuList
+          commandGroups={[]}
+          selectableItemIds={selectableItemIds}
+        >
+          <CommandGroup heading={t`System objects`}>
+            {filteredSystemObjects.map((objectMetadataItem) =>
+              isViewItem ? (
+                <CommandMenuSelectObjectForViewEditMenuItem
+                  key={objectMetadataItem.id}
+                  objectMetadataItem={objectMetadataItem}
+                  onSelect={handleSelectObjectForViewEdit}
+                />
+              ) : (
+                <CommandMenuSelectObjectForEditMenuItem
+                  key={objectMetadataItem.id}
+                  objectMetadataItem={objectMetadataItem}
+                  onSelect={handleChangeObject}
+                />
+              ),
+            )}
+          </CommandGroup>
+        </CommandMenuList>
+      </CommandMenuSubViewWithSearch>
     );
   }
 
@@ -727,56 +650,48 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         : ['empty', 'system'];
 
     return (
-      <StyledSubViewContainer>
-        <StyledBackBar onClick={() => setEditSubView(null)}>
-          <IconChevronLeft size={16} />
-          {t`Pick an object`}
-        </StyledBackBar>
-        <StyledSearchContainer>
-          <StyledSearchInput
-            placeholder={t`Search an object...`}
-            value={objectSearchInput}
-            onChange={(event) => setObjectSearchInput(event.target.value)}
-            autoFocus
-          />
-        </StyledSearchContainer>
-        <StyledScrollableListWrapper>
-          <CommandMenuList
-            commandGroups={[]}
-            selectableItemIds={selectableItemIds}
-          >
-            <CommandGroup heading={t`Objects`}>
-              {filteredObjects.map((objectMetadataItem) =>
-                isViewItem ? (
-                  <CommandMenuSelectObjectForViewEditMenuItem
-                    key={objectMetadataItem.id}
-                    objectMetadataItem={objectMetadataItem}
-                    onSelect={handleSelectObjectForViewEdit}
-                  />
-                ) : (
-                  <CommandMenuSelectObjectForEditMenuItem
-                    key={objectMetadataItem.id}
-                    objectMetadataItem={objectMetadataItem}
-                    onSelect={handleChangeObject}
-                  />
-                ),
-              )}
-              <SelectableListItem
-                itemId="system"
-                onEnter={() => setEditSubView('object-picker-system')}
-              >
-                <CommandMenuItem
-                  Icon={IconSettings}
-                  label={t`System objects`}
-                  id="system"
-                  hasSubMenu={true}
-                  onClick={() => setEditSubView('object-picker-system')}
+      <CommandMenuSubViewWithSearch
+        backBarTitle={t`Pick an object`}
+        onBack={() => setEditSubView(null)}
+        searchPlaceholder={t`Search an object...`}
+        searchValue={objectSearchInput}
+        onSearchChange={setObjectSearchInput}
+      >
+        <CommandMenuList
+          commandGroups={[]}
+          selectableItemIds={selectableItemIds}
+        >
+          <CommandGroup heading={t`Objects`}>
+            {filteredObjects.map((objectMetadataItem) =>
+              isViewItem ? (
+                <CommandMenuSelectObjectForViewEditMenuItem
+                  key={objectMetadataItem.id}
+                  objectMetadataItem={objectMetadataItem}
+                  onSelect={handleSelectObjectForViewEdit}
                 />
-              </SelectableListItem>
-            </CommandGroup>
-          </CommandMenuList>
-        </StyledScrollableListWrapper>
-      </StyledSubViewContainer>
+              ) : (
+                <CommandMenuSelectObjectForEditMenuItem
+                  key={objectMetadataItem.id}
+                  objectMetadataItem={objectMetadataItem}
+                  onSelect={handleChangeObject}
+                />
+              ),
+            )}
+            <SelectableListItem
+              itemId="system"
+              onEnter={() => setEditSubView('object-picker-system')}
+            >
+              <CommandMenuItem
+                Icon={IconSettings}
+                label={t`System objects`}
+                id="system"
+                hasSubMenu={true}
+                onClick={() => setEditSubView('object-picker-system')}
+              />
+            </SelectableListItem>
+          </CommandGroup>
+        </CommandMenuList>
+      </CommandMenuSubViewWithSearch>
     );
   }
 
@@ -805,77 +720,59 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         : t`No custom views available`;
 
     return (
-      <StyledSubViewContainer>
-        <StyledBackBar onClick={handleBackFromViewPicker}>
-          <IconChevronLeft size={16} />
-          {backBarLabel}
-        </StyledBackBar>
-        <StyledSearchContainer>
-          <StyledSearchInput
-            placeholder={t`Search a view...`}
-            value={viewSearchInput}
-            onChange={(event) => setViewSearchInput(event.target.value)}
-            autoFocus
-          />
-        </StyledSearchContainer>
-        <StyledScrollableListWrapper>
-          <CommandMenuList
-            commandGroups={[]}
-            selectableItemIds={selectableItemIds}
-            noResults={isEmpty}
-            noResultsText={noResultsText}
-          >
-            <CommandGroup heading={t`Views`}>
-              {filteredViews.map((view) => (
-                <SelectableListItem
-                  key={view.id}
-                  itemId={view.id}
-                  onEnter={() => handleChangeView(view)}
-                >
-                  <CommandMenuItem
-                    Icon={getIcon(view.icon)}
-                    label={view.name}
-                    id={view.id}
-                    onClick={() => handleChangeView(view)}
-                  />
-                </SelectableListItem>
-              ))}
-            </CommandGroup>
-          </CommandMenuList>
-        </StyledScrollableListWrapper>
-      </StyledSubViewContainer>
+      <CommandMenuSubViewWithSearch
+        backBarTitle={backBarLabel}
+        onBack={handleBackFromViewPicker}
+        searchPlaceholder={t`Search a view...`}
+        searchValue={viewSearchInput}
+        onSearchChange={setViewSearchInput}
+      >
+        <CommandMenuList
+          commandGroups={[]}
+          selectableItemIds={selectableItemIds}
+          noResults={isEmpty}
+          noResultsText={noResultsText}
+        >
+          <CommandGroup heading={t`Views`}>
+            {filteredViews.map((view) => (
+              <SelectableListItem
+                key={view.id}
+                itemId={view.id}
+                onEnter={() => handleChangeView(view)}
+              >
+                <CommandMenuItem
+                  Icon={getIcon(view.icon)}
+                  label={view.name}
+                  id={view.id}
+                  onClick={() => handleChangeView(view)}
+                />
+              </SelectableListItem>
+            ))}
+          </CommandGroup>
+        </CommandMenuList>
+      </CommandMenuSubViewWithSearch>
     );
   }
 
   if (editSubView === 'folder-rename') {
     return (
-      <StyledSubViewContainer>
-        <StyledBackBar
-          onClick={() => {
-            setEditSubView(null);
-            setFolderRenameInput('');
-          }}
-        >
-          <IconChevronLeft size={16} />
-          {t`Rename folder`}
-        </StyledBackBar>
-        <StyledSearchContainer>
-          <StyledSearchInput
-            placeholder={t`Folder name`}
-            value={folderRenameInput}
-            onChange={(event) => setFolderRenameInput(event.target.value)}
-            onKeyDown={(event) => {
-              if (
-                event.key === 'Enter' &&
-                folderRenameInput.trim().length > 0
-              ) {
-                handleRenameFolder();
-              }
-            }}
-            autoFocus
-          />
-        </StyledSearchContainer>
-      </StyledSubViewContainer>
+      <CommandMenuSubViewWithSearch
+        backBarTitle={t`Rename folder`}
+        onBack={() => {
+          setEditSubView(null);
+          setFolderRenameInput('');
+        }}
+        searchPlaceholder={t`Folder name`}
+        searchValue={folderRenameInput}
+        onSearchChange={setFolderRenameInput}
+        searchInputProps={{
+          onKeyDown: (event) => {
+            if (event.key === 'Enter' && folderRenameInput.trim().length > 0) {
+              handleRenameFolder();
+            }
+          },
+        }}
+      />
     );
   }
 

@@ -70,7 +70,8 @@ type CommandMenuSubViewWithSearchProps = {
   searchPlaceholder: string;
   searchValue: string;
   onSearchChange: (value: string) => void;
-  children: ReactNode;
+  searchInputProps?: React.InputHTMLAttributes<HTMLInputElement>;
+  children?: ReactNode;
 };
 
 export const CommandMenuSubViewWithSearch = ({
@@ -79,6 +80,7 @@ export const CommandMenuSubViewWithSearch = ({
   searchPlaceholder,
   searchValue,
   onSearchChange,
+  searchInputProps,
   children,
 }: CommandMenuSubViewWithSearchProps) => (
   <StyledSubViewContainer>
@@ -92,8 +94,12 @@ export const CommandMenuSubViewWithSearch = ({
         value={searchValue}
         onChange={(event) => onSearchChange(event.target.value)}
         autoFocus
+        // eslint-disable-next-line react/jsx-props-no-spreading
+        {...searchInputProps}
       />
     </StyledSearchContainer>
-    <StyledScrollableListWrapper>{children}</StyledScrollableListWrapper>
+    {children != null && (
+      <StyledScrollableListWrapper>{children}</StyledScrollableListWrapper>
+    )}
   </StyledSubViewContainer>
 );
