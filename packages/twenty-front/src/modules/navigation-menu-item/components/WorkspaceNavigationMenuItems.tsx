@@ -1,6 +1,5 @@
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
-import { useCallback } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   IconFolder,
@@ -60,36 +59,29 @@ export const WorkspaceNavigationMenuItems = () => {
     enterEditMode();
   };
 
-  const handleNavigationMenuItemClick = useCallback(
-    (item: WorkspaceSectionItem) => {
-      const id =
-        item.type === 'folder'
-          ? item.folder.folderId
-          : item.navigationMenuItem.id;
-      setSelectedNavigationMenuItemInEditMode(id);
-      if (item.type === 'folder') {
-        openNavigationMenuItemInCommandMenu({
-          pageTitle: t`Edit folder`,
-          pageIcon: IconFolder,
-        });
-      } else if (item.type === 'link') {
-        openNavigationMenuItemInCommandMenu({
-          pageTitle: t`Edit link`,
-          pageIcon: IconLink,
-        });
-      } else {
-        openNavigationMenuItemInCommandMenu({
-          pageTitle: item.objectMetadataItem.labelPlural,
-          pageIcon: getIcon(item.objectMetadataItem.icon),
-        });
-      }
-    },
-    [
-      setSelectedNavigationMenuItemInEditMode,
-      openNavigationMenuItemInCommandMenu,
-      getIcon,
-    ],
-  );
+  const handleNavigationMenuItemClick = (item: WorkspaceSectionItem) => {
+    const id =
+      item.type === 'folder'
+        ? item.folder.folderId
+        : item.navigationMenuItem.id;
+    setSelectedNavigationMenuItemInEditMode(id);
+    if (item.type === 'folder') {
+      openNavigationMenuItemInCommandMenu({
+        pageTitle: t`Edit folder`,
+        pageIcon: IconFolder,
+      });
+    } else if (item.type === 'link') {
+      openNavigationMenuItemInCommandMenu({
+        pageTitle: t`Edit link`,
+        pageIcon: IconLink,
+      });
+    } else {
+      openNavigationMenuItemInCommandMenu({
+        pageTitle: item.objectMetadataItem.labelPlural,
+        pageIcon: getIcon(item.objectMetadataItem.icon),
+      });
+    }
+  };
 
   const handleActiveObjectMetadataItemClick = (
     objectMetadataItem: ObjectMetadataItem,

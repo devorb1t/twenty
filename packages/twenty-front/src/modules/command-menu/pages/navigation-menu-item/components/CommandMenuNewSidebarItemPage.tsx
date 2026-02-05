@@ -1,7 +1,6 @@
-import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
-import { type ComponentType, useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import {
@@ -19,10 +18,8 @@ import { useDebounce } from 'use-debounce';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
-import { ADD_TO_NAVIGATION_DRAG_TYPE } from '@/navigation-menu-item/constants/add-to-navigation-drag.constants';
-import { AddToNavigationDragHandle } from '@/navigation-menu-item/components/AddToNavigationDragHandle';
-import { createAddToNavigationDragPreview } from '@/navigation-menu-item/utils/createAddToNavigationDragPreview';
-import { type AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
+import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
+import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { MAX_SEARCH_RESULTS } from '@/command-menu/constants/MaxSearchResults';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
@@ -194,84 +191,6 @@ const CommandMenuSelectObjectForViewMenuItem = ({
         onClick={handleClick}
       />
     </SelectableListItem>
-  );
-};
-
-const StyledDraggableMenuItem = styled.div`
-  cursor: grab;
-  width: 100%;
-
-  &:active {
-    cursor: grabbing;
-  }
-`;
-
-const CommandMenuItemWithAddToNavigationDrag = ({
-  Icon,
-  icon,
-  label,
-  description,
-  id,
-  onClick,
-  payload,
-}: {
-  Icon?: ComponentType<{ size?: number; stroke?: number }>;
-  icon?: React.ReactNode;
-  label: string;
-  description?: string;
-  id: string;
-  onClick: () => void;
-  payload: AddToNavigationDragPayload;
-}) => {
-  const theme = useTheme();
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
-  const handleMouseLeave = useCallback(() => setIsHovered(false), []);
-
-  const handleDragStart = useCallback(
-    (event: React.DragEvent) => {
-      event.dataTransfer.setData(
-        ADD_TO_NAVIGATION_DRAG_TYPE,
-        JSON.stringify(payload),
-      );
-      event.dataTransfer.effectAllowed = 'copy';
-
-      const preview = createAddToNavigationDragPreview({
-        label,
-        Icon,
-        icon,
-        payload,
-        theme,
-      });
-      event.dataTransfer.setDragImage(preview, 0, 0);
-    },
-    [payload, label, Icon, icon, theme],
-  );
-
-  return (
-    <StyledDraggableMenuItem
-      draggable
-      onDragStart={handleDragStart}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <CommandMenuItem
-        label={label}
-        description={description}
-        id={id}
-        onClick={onClick}
-        LeftComponent={
-          <AddToNavigationDragHandle
-            Icon={Icon}
-            icon={icon}
-            payload={payload}
-            isHovered={isHovered}
-            draggable={false}
-          />
-        }
-      />
-    </StyledDraggableMenuItem>
   );
 };
 

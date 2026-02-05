@@ -18,8 +18,12 @@ export const NavigationItemDropTarget = ({
   index,
   children,
 }: NavigationItemDropTargetProps) => {
+  const dropTargetProps = getNavigationDropTargetProps(folderId, index);
   return (
-    <StyledDropTarget {...getNavigationDropTargetProps(folderId, index)}>
+    <StyledDropTarget
+      // eslint-disable-next-line react/jsx-props-no-spreading
+      {...dropTargetProps}
+    >
       {children}
     </StyledDropTarget>
   );

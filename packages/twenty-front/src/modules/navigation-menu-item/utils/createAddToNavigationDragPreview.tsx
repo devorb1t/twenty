@@ -1,12 +1,10 @@
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import type { ComponentType } from 'react';
 import type { Theme } from '@emotion/react';
+import type { IconComponent } from 'twenty-ui/display';
 
 import { AddToNavigationDragPreview } from '@/navigation-menu-item/components/AddToNavigationDragPreview';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
-
-const PREVIEW_CLASS = 'add-to-navigation-drag-preview';
 
 export const createAddToNavigationDragPreview = ({
   label,
@@ -16,13 +14,12 @@ export const createAddToNavigationDragPreview = ({
   theme,
 }: {
   label: string;
-  Icon?: ComponentType<{ size?: number; stroke?: number; color?: string }>;
+  Icon?: IconComponent;
   icon?: React.ReactNode;
   payload: AddToNavigationDragPayload;
   theme: Theme;
 }) => {
   const container = document.createElement('div');
-  container.className = PREVIEW_CLASS;
   Object.assign(container.style, {
     position: 'fixed',
     left: '-9999px',

@@ -1,10 +1,10 @@
 import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
-import { useCallback, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { IconGripVertical, type IconComponent } from 'twenty-ui/display';
 
-import { ADD_TO_NAVIGATION_DRAG_TYPE } from '@/navigation-menu-item/constants/add-to-navigation-drag.constants';
-import { type AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
+import { ADD_TO_NAVIGATION_DRAG_TYPE } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
+import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 
 const StyledIconSlot = styled.div<{ $isDraggable: boolean }>`
   align-items: center;
@@ -38,16 +38,13 @@ export const AddToNavigationDragHandle = ({
 }: AddToNavigationDragHandleProps) => {
   const theme = useTheme();
 
-  const handleDragStart = useCallback(
-    (event: React.DragEvent) => {
-      event.dataTransfer.setData(
-        ADD_TO_NAVIGATION_DRAG_TYPE,
-        JSON.stringify(payload),
-      );
-      event.dataTransfer.effectAllowed = 'copy';
-    },
-    [payload],
-  );
+  const handleDragStart = (event: React.DragEvent) => {
+    event.dataTransfer.setData(
+      ADD_TO_NAVIGATION_DRAG_TYPE,
+      JSON.stringify(payload),
+    );
+    event.dataTransfer.effectAllowed = 'copy';
+  };
 
   return (
     <StyledIconSlot

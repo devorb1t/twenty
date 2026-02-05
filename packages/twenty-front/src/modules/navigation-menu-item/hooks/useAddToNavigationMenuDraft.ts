@@ -8,6 +8,29 @@ import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadat
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { type View } from '@/views/types/View';
 
+const computeInsertIndexAndPosition = (
+  currentDraft: NavigationMenuItem[],
+  targetFolderId: string | null,
+  targetIndex: number,
+) => {
+  const itemsInFolder = currentDraft.filter(
+    (item) =>
+      (item.folderId ?? null) === targetFolderId &&
+      !isDefined(item.userWorkspaceId),
+  );
+  const insertRef = itemsInFolder[targetIndex];
+  const lastInFolder = itemsInFolder[itemsInFolder.length - 1];
+  const flatIndex = insertRef
+    ? currentDraft.indexOf(insertRef)
+    : lastInFolder
+      ? currentDraft.indexOf(lastInFolder) + 1
+      : currentDraft.length;
+  const prevPosition = itemsInFolder[targetIndex - 1]?.position ?? 0;
+  const nextPosition = itemsInFolder[targetIndex]?.position ?? prevPosition + 1;
+  const position = (prevPosition + nextPosition) / 2;
+  return { flatIndex, position };
+};
+
 type SearchRecord = {
   recordId: string;
   objectNameSingular: string;
@@ -108,22 +131,11 @@ export const useAddToNavigationMenuDraft = () => {
     targetFolderId: string | null,
     targetIndex: number,
   ): string => {
-    const itemsInFolder = currentDraft.filter(
-      (item) =>
-        (item.folderId ?? null) === targetFolderId &&
-        !isDefined(item.userWorkspaceId),
+    const { flatIndex, position } = computeInsertIndexAndPosition(
+      currentDraft,
+      targetFolderId,
+      targetIndex,
     );
-    const insertRef = itemsInFolder[targetIndex];
-    const lastInFolder = itemsInFolder[itemsInFolder.length - 1];
-    const flatIndex = insertRef
-      ? currentDraft.indexOf(insertRef)
-      : lastInFolder
-        ? currentDraft.indexOf(lastInFolder) + 1
-        : currentDraft.length;
-    const prevPosition = itemsInFolder[targetIndex - 1]?.position ?? 0;
-    const nextPosition =
-      itemsInFolder[targetIndex]?.position ?? prevPosition + 1;
-    const position = (prevPosition + nextPosition) / 2;
 
     const newItemId = v4();
     const newItem: NavigationMenuItem = {
@@ -163,22 +175,11 @@ export const useAddToNavigationMenuDraft = () => {
         ? trimmedUrl
         : `https://${trimmedUrl}`;
 
-    const itemsInFolder = currentDraft.filter(
-      (item) =>
-        (item.folderId ?? null) === targetFolderId &&
-        !isDefined(item.userWorkspaceId),
+    const { flatIndex, position } = computeInsertIndexAndPosition(
+      currentDraft,
+      targetFolderId,
+      targetIndex,
     );
-    const insertRef = itemsInFolder[targetIndex];
-    const lastInFolder = itemsInFolder[itemsInFolder.length - 1];
-    const flatIndex = insertRef
-      ? currentDraft.indexOf(insertRef)
-      : lastInFolder
-        ? currentDraft.indexOf(lastInFolder) + 1
-        : currentDraft.length;
-    const prevPosition = itemsInFolder[targetIndex - 1]?.position ?? 0;
-    const nextPosition =
-      itemsInFolder[targetIndex]?.position ?? prevPosition + 1;
-    const position = (prevPosition + nextPosition) / 2;
 
     const newItemId = v4();
     const newItem: NavigationMenuItem = {
@@ -295,22 +296,11 @@ export const useAddToNavigationMenuDraft = () => {
     targetIndex: number,
     newItem: NavigationMenuItem,
   ): string => {
-    const itemsInFolder = currentDraft.filter(
-      (item) =>
-        (item.folderId ?? null) === targetFolderId &&
-        !isDefined(item.userWorkspaceId),
+    const { flatIndex, position } = computeInsertIndexAndPosition(
+      currentDraft,
+      targetFolderId,
+      targetIndex,
     );
-    const insertRef = itemsInFolder[targetIndex];
-    const lastInFolder = itemsInFolder[itemsInFolder.length - 1];
-    const flatIndex = insertRef
-      ? currentDraft.indexOf(insertRef)
-      : lastInFolder
-        ? currentDraft.indexOf(lastInFolder) + 1
-        : currentDraft.length;
-    const prevPosition = itemsInFolder[targetIndex - 1]?.position ?? 0;
-    const nextPosition =
-      itemsInFolder[targetIndex]?.position ?? prevPosition + 1;
-    const position = (prevPosition + nextPosition) / 2;
 
     const itemWithPosition = { ...newItem, position };
     const newDraft = [

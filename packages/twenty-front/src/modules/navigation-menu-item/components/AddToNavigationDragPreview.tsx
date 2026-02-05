@@ -1,11 +1,10 @@
+import { type Theme, ThemeProvider } from '@emotion/react';
 import styled from '@emotion/styled';
-import type { ComponentType } from 'react';
-import type { Theme } from '@emotion/react';
-import { ThemeProvider } from '@emotion/react';
 import { ThemeContextProvider } from 'twenty-ui/theme';
+import type { IconComponent } from 'twenty-ui/display';
 
-import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
+import { getIconBackgroundColorForPayload } from '@/navigation-menu-item/utils/getIconBackgroundColorForPayload';
 
 const StyledPreviewContainer = styled.div`
   align-items: center;
@@ -58,30 +57,9 @@ const StyledItemLabel = styled.span`
   font-weight: ${({ theme }) => theme.font.weight.medium};
 `;
 
-const getIconBackgroundColor = (
-  payload: AddToNavigationDragPayload,
-  theme: Theme,
-): string | undefined => {
-  const iconColors = getNavigationMenuItemIconColors(theme);
-  switch (payload.type) {
-    case 'object':
-      return iconColors.object;
-    case 'view':
-      return iconColors.view;
-    case 'folder':
-      return iconColors.folder;
-    case 'link':
-      return iconColors.link;
-    case 'record':
-      return undefined;
-    default:
-      return undefined;
-  }
-};
-
 export type AddToNavigationDragPreviewProps = {
   label: string;
-  Icon?: ComponentType<{ size?: number; stroke?: number; color?: string }>;
+  Icon?: IconComponent;
   icon?: React.ReactNode;
   payload: AddToNavigationDragPayload;
   theme: Theme;
@@ -94,7 +72,7 @@ export const AddToNavigationDragPreview = ({
   payload,
   theme,
 }: AddToNavigationDragPreviewProps) => {
-  const iconBackgroundColor = getIconBackgroundColor(payload, theme);
+  const iconBackgroundColor = getIconBackgroundColorForPayload(payload, theme);
 
   const iconContent =
     icon !== undefined ? (

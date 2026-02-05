@@ -1,9 +1,9 @@
-import { type ReactNode, useCallback, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import styled from '@emotion/styled';
 import { useTheme } from '@emotion/react';
 import { IconGripVertical } from 'twenty-ui/display';
 
-import { ADD_TO_NAVIGATION_DRAG_TYPE } from '@/navigation-menu-item/constants/add-to-navigation-drag.constants';
+import { ADD_TO_NAVIGATION_DRAG_TYPE } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 import { type AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 
 const StyledDraggableWrapper = styled.div`
@@ -23,7 +23,9 @@ const StyledIconSlot = styled.div<{
 }>`
   align-items: center;
   background-color: ${({ theme, $iconBackgroundColor, $showDragHandle }) =>
-    $showDragHandle ? theme.background.transparent.lighter : $iconBackgroundColor};
+    $showDragHandle
+      ? theme.background.transparent.lighter
+      : $iconBackgroundColor};
   border-radius: ${({ theme }) => theme.border.radius.xs};
   display: flex;
   flex-shrink: 0;
@@ -49,16 +51,13 @@ export const DraggableToNavigationItem = ({
   const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
 
-  const handleDragStart = useCallback(
-    (event: React.DragEvent) => {
-      event.dataTransfer.setData(
-        ADD_TO_NAVIGATION_DRAG_TYPE,
-        JSON.stringify(payload),
-      );
-      event.dataTransfer.effectAllowed = 'copy';
-    },
-    [payload],
-  );
+  const handleDragStart = (event: React.DragEvent) => {
+    event.dataTransfer.setData(
+      ADD_TO_NAVIGATION_DRAG_TYPE,
+      JSON.stringify(payload),
+    );
+    event.dataTransfer.effectAllowed = 'copy';
+  };
 
   return (
     <StyledDraggableWrapper
