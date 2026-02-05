@@ -1,14 +1,10 @@
 import { useLingui } from '@lingui/react/macro';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import {
-  Avatar,
-  IconAddressBook,
-  IconCube,
   IconFolder,
   IconLink,
-  IconList,
   IconSettings,
   useIcons,
 } from 'twenty-ui/display';
@@ -21,6 +17,8 @@ import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandM
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuAddObjectMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectMenuItem';
+import { CommandMenuNewSidebarItemMainMenu } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemMainMenu';
+import { CommandMenuNewSidebarItemRecordSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemRecordSubView';
 import { CommandMenuSelectObjectForViewMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSelectObjectForViewMenuItem';
 import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 import { MAX_SEARCH_RESULTS } from '@/command-menu/constants/MaxSearchResults';
@@ -34,7 +32,6 @@ import { useWorkspaceNavigationMenuItems } from '@/navigation-menu-item/hooks/us
 import { useApolloCoreClient } from '@/object-metadata/hooks/useApolloCoreClient';
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
-import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { useObjectPermissions } from '@/object-record/hooks/useObjectPermissions';
 import { getObjectPermissionsFromMapByObjectMetadataId } from '@/settings/roles/role-permissions/objects-permissions/utils/getObjectPermissionsFromMapByObjectMetadataId';
@@ -106,13 +103,9 @@ export const CommandMenuNewSidebarItemPage = () => {
     .filter((item) => !objectMetadataItemsInWorkspaceIds.has(item.id))
     .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
 
-  const activeSystemObjectMetadataItems = useMemo(
-    () =>
-      Object.values(objectMetadataItems)
-        .filter((item) => item.isActive && item.isSystem)
-        .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural)),
-    [objectMetadataItems],
-  );
+  const activeSystemObjectMetadataItems = Object.values(objectMetadataItems)
+    .filter((item) => item.isActive && item.isSystem)
+    .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
   const availableSystemObjectMetadataItems =
     activeSystemObjectMetadataItems.filter(
       (item) =>
@@ -120,43 +113,40 @@ export const CommandMenuNewSidebarItemPage = () => {
         objectMetadataIdsWithIndexView.has(item.id),
     );
 
-  const objectMetadataItemsWithViews = useMemo(() => {
-    const objects = Object.values(objectMetadataItems).filter(
+  const objectMetadataItemsWithViews = Object.values(objectMetadataItems)
+    .filter(
       (item) => item.isActive && objectMetadataIdsWithAnyView.has(item.id),
-    );
-    return objects
-      .filter((item) => !item.isSystem)
-      .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
-  }, [objectMetadataItems, objectMetadataIdsWithAnyView]);
+    )
+    .filter((item) => !item.isSystem)
+    .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
 
   const availableSystemObjectMetadataItemsForView =
     activeSystemObjectMetadataItems.filter((item) =>
       objectMetadataIdsWithAnyView.has(item.id),
     );
 
-  const viewsForSelectedObject = useMemo(() => {
-    if (!selectedObjectMetadataIdForView) return [];
-    return views
-      .filter(
-        (view) =>
-          view.objectMetadataId === selectedObjectMetadataIdForView &&
-          !viewIdsInWorkspace.has(view.id) &&
-          view.key !== ViewKey.Index,
-      )
-      .sort((a, b) => a.position - b.position);
-  }, [views, selectedObjectMetadataIdForView, viewIdsInWorkspace]);
+  const viewsForSelectedObject = selectedObjectMetadataIdForView
+    ? views
+        .filter(
+          (view) =>
+            view.objectMetadataId === selectedObjectMetadataIdForView &&
+            !viewIdsInWorkspace.has(view.id) &&
+            view.key !== ViewKey.Index,
+        )
+        .sort((a, b) => a.position - b.position)
+    : [];
 
-  const nonReadableObjectMetadataItemsNameSingular = useMemo(() => {
-    return Object.values(objectMetadataItems)
-      .filter((objectMetadataItem) => {
-        const objectPermission = getObjectPermissionsFromMapByObjectMetadataId({
-          objectPermissionsByObjectMetadataId,
-          objectMetadataId: objectMetadataItem.id,
-        });
-        return !objectPermission?.canReadObjectRecords;
-      })
-      .map((objectMetadataItem) => objectMetadataItem.nameSingular);
-  }, [objectMetadataItems, objectPermissionsByObjectMetadataId]);
+  const nonReadableObjectMetadataItemsNameSingular = Object.values(
+    objectMetadataItems,
+  )
+    .filter((objectMetadataItem) => {
+      const objectPermission = getObjectPermissionsFromMapByObjectMetadataId({
+        objectPermissionsByObjectMetadataId,
+        objectMetadataId: objectMetadataItem.id,
+      });
+      return !objectPermission?.canReadObjectRecords;
+    })
+    .map((objectMetadataItem) => objectMetadataItem.nameSingular);
 
   const { data: searchData, loading: recordSearchLoading } = useSearchQuery({
     client: coreClient,
@@ -171,14 +161,12 @@ export const CommandMenuNewSidebarItemPage = () => {
     },
   });
 
-  const workspaceRecordIds = useMemo(() => {
-    const items = navigationMenuItemsDraft ?? workspaceNavigationMenuItems;
-    return new Set(
-      items
-        .filter((item) => isDefined(item.targetRecordId))
-        .map((item) => item.targetRecordId as string),
-    );
-  }, [navigationMenuItemsDraft, workspaceNavigationMenuItems]);
+  const draftItems = navigationMenuItemsDraft ?? workspaceNavigationMenuItems;
+  const workspaceRecordIds = new Set(
+    draftItems.flatMap((item) =>
+      isDefined(item.targetRecordId) ? [item.targetRecordId] : [],
+    ),
+  );
 
   const searchRecords = searchData?.search.edges.map((edge) => edge.node) ?? [];
   const availableSearchRecords = searchRecords.filter(
@@ -531,156 +519,27 @@ export const CommandMenuNewSidebarItemPage = () => {
   }
 
   if (selectedOption === 'record') {
-    const isEmpty = availableSearchRecords.length === 0 && !recordSearchLoading;
-    const selectableItemIds = isEmpty
-      ? []
-      : availableSearchRecords.map((record) => record.recordId);
-    const noResultsText =
-      deferredRecordSearchInput.length > 0
-        ? t`No results found`
-        : t`Type to search records`;
-
     return (
-      <CommandMenuSubViewWithSearch
-        backBarTitle={t`Add a record`}
+      <CommandMenuNewSidebarItemRecordSubView
+        availableSearchRecords={availableSearchRecords}
+        recordSearchInput={recordSearchInput}
+        onRecordSearchChange={setRecordSearchInput}
+        recordSearchLoading={recordSearchLoading}
+        deferredRecordSearchInput={deferredRecordSearchInput}
+        objectMetadataItems={objectMetadataItems}
+        onSelectRecord={handleSelectRecord}
         onBack={handleBackToMain}
-        searchPlaceholder={t`Search records...`}
-        searchValue={recordSearchInput}
-        onSearchChange={setRecordSearchInput}
-      >
-        <CommandMenuList
-          commandGroups={[]}
-          selectableItemIds={selectableItemIds}
-          loading={recordSearchLoading}
-          noResults={isEmpty}
-          noResultsText={noResultsText}
-        >
-          <CommandGroup heading={t`Results`}>
-            {availableSearchRecords.map((record) => {
-              const objectMetadataItem = objectMetadataItems.find(
-                (item) => item.nameSingular === record.objectNameSingular,
-              );
-              const recordPayload: AddToNavigationDragPayload = {
-                type: 'record',
-                recordId: record.recordId,
-                objectMetadataId: objectMetadataItem?.id ?? '',
-                objectNameSingular: record.objectNameSingular,
-                label: record.label,
-                imageUrl: record.imageUrl,
-              };
-              const recordIcon = (
-                <Avatar
-                  type={
-                    record.objectNameSingular === CoreObjectNameSingular.Company
-                      ? 'squared'
-                      : 'rounded'
-                  }
-                  avatarUrl={record.imageUrl}
-                  placeholderColorSeed={record.recordId}
-                  placeholder={record.label}
-                />
-              );
-              return (
-                <SelectableListItem
-                  key={record.recordId}
-                  itemId={record.recordId}
-                  onEnter={() => handleSelectRecord(record)}
-                >
-                  <CommandMenuItemWithAddToNavigationDrag
-                    icon={recordIcon}
-                    label={record.label}
-                    description={
-                      objectMetadataItem?.labelSingular ??
-                      record.objectNameSingular
-                    }
-                    id={record.recordId}
-                    onClick={() => handleSelectRecord(record)}
-                    payload={recordPayload}
-                  />
-                </SelectableListItem>
-              );
-            })}
-          </CommandGroup>
-        </CommandMenuList>
-      </CommandMenuSubViewWithSearch>
+      />
     );
   }
 
   return (
-    <CommandMenuList
-      commandGroups={[]}
-      selectableItemIds={['object', 'view', 'record', 'folder', 'link']}
-    >
-      <CommandGroup heading={t`Data`}>
-        <SelectableListItem
-          itemId="object"
-          onEnter={() => setSelectedOption('object')}
-        >
-          <CommandMenuItem
-            Icon={IconCube}
-            label={t`Object`}
-            id="object"
-            hasSubMenu={true}
-            onClick={() => setSelectedOption('object')}
-          />
-        </SelectableListItem>
-        <SelectableListItem
-          itemId="view"
-          onEnter={() => setSelectedOption('view')}
-        >
-          <CommandMenuItem
-            Icon={IconList}
-            label={t`View`}
-            id="view"
-            hasSubMenu={true}
-            onClick={() => setSelectedOption('view')}
-          />
-        </SelectableListItem>
-        <SelectableListItem
-          itemId="record"
-          onEnter={() => setSelectedOption('record')}
-        >
-          <CommandMenuItem
-            Icon={IconAddressBook}
-            label={t`Record`}
-            id="record"
-            hasSubMenu={true}
-            onClick={() => setSelectedOption('record')}
-          />
-        </SelectableListItem>
-      </CommandGroup>
-      <CommandGroup heading={t`Other`}>
-        <SelectableListItem
-          itemId="folder"
-          onEnter={handleAddFolderAndOpenEdit}
-        >
-          <CommandMenuItemWithAddToNavigationDrag
-            Icon={IconFolder}
-            label={t`Folder`}
-            id="folder"
-            onClick={handleAddFolderAndOpenEdit}
-            payload={{
-              type: 'folder',
-              folderId: 'new',
-              name: t`New folder`,
-            }}
-          />
-        </SelectableListItem>
-        <SelectableListItem itemId="link" onEnter={handleAddLinkAndOpenEdit}>
-          <CommandMenuItemWithAddToNavigationDrag
-            Icon={IconLink}
-            label={t`Link`}
-            id="link"
-            onClick={handleAddLinkAndOpenEdit}
-            payload={{
-              type: 'link',
-              linkId: 'new',
-              name: t`Link label`,
-              link: 'https://www.example.com',
-            }}
-          />
-        </SelectableListItem>
-      </CommandGroup>
-    </CommandMenuList>
+    <CommandMenuNewSidebarItemMainMenu
+      onSelectObject={() => setSelectedOption('object')}
+      onSelectView={() => setSelectedOption('view')}
+      onSelectRecord={() => setSelectedOption('record')}
+      onAddFolder={handleAddFolderAndOpenEdit}
+      onAddLink={handleAddLinkAndOpenEdit}
+    />
   );
 };

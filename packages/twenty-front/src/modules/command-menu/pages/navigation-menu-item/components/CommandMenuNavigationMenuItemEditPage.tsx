@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { isNonEmptyString } from '@sniptt/guards';
 import { isDefined } from 'twenty-shared/utils';
@@ -168,49 +168,30 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     selectedItem !== undefined && selectedItem.type === 'folder';
   const isLinkItem = selectedItem !== undefined && selectedItem.type === 'link';
 
-  const objectsForObjectPicker = useMemo(() => {
-    const objects = activeNonSystemObjectMetadataItems.filter((item) =>
-      objectMetadataIdsWithIndexView.has(item.id),
-    );
-    return objects
-      .filter((item) => !objectMetadataItemsInWorkspaceIds.has(item.id))
-      .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
-  }, [
-    activeNonSystemObjectMetadataItems,
-    objectMetadataIdsWithIndexView,
-    objectMetadataItemsInWorkspaceIds,
-  ]);
+  const objectsForObjectPicker = activeNonSystemObjectMetadataItems
+    .filter((item) => objectMetadataIdsWithIndexView.has(item.id))
+    .filter((item) => !objectMetadataItemsInWorkspaceIds.has(item.id))
+    .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
 
   const currentObjectMetadataId =
     selectedItem?.type === 'objectView'
       ? (selectedItem.navigationMenuItem.targetObjectMetadataId ?? undefined)
       : undefined;
-  const objectsForObjectPickerIncludingCurrent = useMemo(() => {
-    const currentObject =
-      currentObjectMetadataId !== undefined
-        ? objectMetadataItems.find(
-            (item) => item.id === currentObjectMetadataId,
-          )
-        : undefined;
-    const baseObjects = objectsForObjectPicker;
-    if (
-      currentObject !== undefined &&
-      !baseObjects.some((o) => o.id === currentObject.id)
-    ) {
-      return [currentObject, ...baseObjects].sort((a, b) =>
-        a.labelPlural.localeCompare(b.labelPlural),
-      );
-    }
-    return baseObjects;
-  }, [objectsForObjectPicker, currentObjectMetadataId, objectMetadataItems]);
+  const currentObject =
+    currentObjectMetadataId !== undefined
+      ? objectMetadataItems.find((item) => item.id === currentObjectMetadataId)
+      : undefined;
+  const objectsForObjectPickerIncludingCurrent =
+    currentObject !== undefined &&
+    !objectsForObjectPicker.some((o) => o.id === currentObject.id)
+      ? [currentObject, ...objectsForObjectPicker].sort((a, b) =>
+          a.labelPlural.localeCompare(b.labelPlural),
+        )
+      : objectsForObjectPicker;
 
-  const activeSystemObjectMetadataItems = useMemo(
-    () =>
-      objectMetadataItems
-        .filter((item) => item.isActive && item.isSystem)
-        .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural)),
-    [objectMetadataItems],
-  );
+  const activeSystemObjectMetadataItems = objectMetadataItems
+    .filter((item) => item.isActive && item.isSystem)
+    .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
 
   const systemObjectsForObjectPicker = activeSystemObjectMetadataItems.filter(
     (item) =>
@@ -220,71 +201,51 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         : true),
   );
 
-  const objectsForViewEditObjectPicker = useMemo(() => {
-    const objects = activeNonSystemObjectMetadataItems.filter((item) =>
-      objectMetadataIdsWithAnyView.has(item.id),
-    );
-    const currentObject =
-      currentObjectMetadataId !== undefined
-        ? objectMetadataItems.find(
-            (item) => item.id === currentObjectMetadataId,
-          )
-        : undefined;
-    if (
-      currentObject !== undefined &&
-      !objects.some((object) => object.id === currentObject.id)
-    ) {
-      return [currentObject, ...objects].sort((a, b) =>
-        a.labelPlural.localeCompare(b.labelPlural),
-      );
-    }
-    return objects.sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
-  }, [
-    activeNonSystemObjectMetadataItems,
-    objectMetadataIdsWithAnyView,
-    currentObjectMetadataId,
-    objectMetadataItems,
-  ]);
+  const objectsForViewEdit = activeNonSystemObjectMetadataItems.filter((item) =>
+    objectMetadataIdsWithAnyView.has(item.id),
+  );
+  const objectsForViewEditObjectPicker =
+    currentObject !== undefined &&
+    !objectsForViewEdit.some((object) => object.id === currentObject.id)
+      ? [currentObject, ...objectsForViewEdit].sort((a, b) =>
+          a.labelPlural.localeCompare(b.labelPlural),
+        )
+      : objectsForViewEdit.sort((a, b) =>
+          a.labelPlural.localeCompare(b.labelPlural),
+        );
 
   const systemObjectsForViewEditObjectPicker =
     activeSystemObjectMetadataItems.filter((item) =>
       objectMetadataIdsWithAnyView.has(item.id),
     );
 
-  const viewIdsInOtherSidebarItems = useMemo(() => {
-    const currentItemId = selectedNavigationMenuItemInEditMode;
-    return new Set(
-      currentDraft
-        .filter(
-          (item) =>
-            isDefined(item.viewId) &&
-            (currentItemId === undefined || item.id !== currentItemId),
-        )
-        .map((item) => item.viewId as string),
-    );
-  }, [currentDraft, selectedNavigationMenuItemInEditMode]);
+  const currentItemId = selectedNavigationMenuItemInEditMode;
+  const viewIdsInOtherSidebarItems = new Set(
+    currentDraft.flatMap((item) =>
+      isDefined(item.viewId) &&
+      (currentItemId === undefined || item.id !== currentItemId)
+        ? [item.viewId]
+        : [],
+    ),
+  );
 
-  const viewsForViewPicker = useMemo(() => {
-    const objectMetadataId = isDefined(selectedObjectMetadataIdForViewEdit)
-      ? selectedObjectMetadataIdForViewEdit
-      : selectedItem?.type === 'objectView'
-        ? selectedItem.objectMetadataItem.id
-        : undefined;
-    if (!objectMetadataId) return [];
-    return views
-      .filter(
-        (view) =>
-          view.objectMetadataId === objectMetadataId &&
-          view.key !== ViewKey.Index &&
-          !viewIdsInOtherSidebarItems.has(view.id),
-      )
-      .sort((a, b) => a.position - b.position);
-  }, [
-    views,
-    selectedItem,
+  const viewPickerObjectMetadataId = isDefined(
     selectedObjectMetadataIdForViewEdit,
-    viewIdsInOtherSidebarItems,
-  ]);
+  )
+    ? selectedObjectMetadataIdForViewEdit
+    : selectedItem?.type === 'objectView'
+      ? selectedItem.objectMetadataItem.id
+      : undefined;
+  const viewsForViewPicker = viewPickerObjectMetadataId
+    ? views
+        .filter(
+          (view) =>
+            view.objectMetadataId === viewPickerObjectMetadataId &&
+            view.key !== ViewKey.Index &&
+            !viewIdsInOtherSidebarItems.has(view.id),
+        )
+        .sort((a, b) => a.position - b.position)
+    : [];
 
   const workspaceFolders = workspaceNavigationMenuItemsByFolder.map(
     (folder) => ({
@@ -293,55 +254,44 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     }),
   );
 
-  const foldersForFolderPicker = useMemo(() => {
-    const folders =
-      currentDraft?.filter(isNavigationMenuItemFolder).map((item) => ({
-        id: item.id,
-        name: item.name ?? 'Folder',
-        folderId: item.folderId ?? undefined,
-      })) ?? [];
+  const allFolders =
+    currentDraft?.filter(isNavigationMenuItemFolder).map((item) => ({
+      id: item.id,
+      name: item.name ?? 'Folder',
+      folderId: item.folderId ?? undefined,
+    })) ?? [];
 
-    if (
-      (!isFolderItem && !isLinkItem) ||
-      !selectedNavigationMenuItemInEditMode
-    ) {
-      return { folders, includeNoFolderOption: false };
-    }
+  const shouldIncludeNoFolderOption =
+    (isFolderItem || isLinkItem) && selectedNavigationMenuItemInEditMode;
 
-    if (isLinkItem) {
-      return {
-        folders,
-        includeNoFolderOption: true,
-      };
-    }
-
-    const currentFolderId = selectedNavigationMenuItemInEditMode;
-    const descendantFolderIds = new Set<string>();
+  const descendantFolderIds = new Set<string>();
+  if (
+    isFolderItem === true &&
+    isDefined(selectedNavigationMenuItemInEditMode)
+  ) {
     const collectDescendants = (folderId: string) => {
-      folders
+      allFolders
         .filter((folder) => folder.folderId === folderId)
         .forEach((folder) => {
           descendantFolderIds.add(folder.id);
           collectDescendants(folder.id);
         });
     };
-    collectDescendants(currentFolderId);
+    collectDescendants(selectedNavigationMenuItemInEditMode);
+  }
 
-    const availableFolders = folders.filter(
-      (folder) =>
-        folder.id !== currentFolderId && !descendantFolderIds.has(folder.id),
-    );
-
-    return {
-      folders: availableFolders,
-      includeNoFolderOption: true,
-    };
-  }, [
-    currentDraft,
-    isFolderItem,
-    isLinkItem,
-    selectedNavigationMenuItemInEditMode,
-  ]);
+  const foldersForFolderPicker = !shouldIncludeNoFolderOption
+    ? { folders: allFolders, includeNoFolderOption: false }
+    : isLinkItem
+      ? { folders: allFolders, includeNoFolderOption: true }
+      : {
+          folders: allFolders.filter(
+            (folder) =>
+              folder.id !== selectedNavigationMenuItemInEditMode &&
+              !descendantFolderIds.has(folder.id),
+          ),
+          includeNoFolderOption: true,
+        };
 
   if (!selectedNavigationMenuItemInEditMode || !selectedItemLabel) {
     return (

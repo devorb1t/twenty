@@ -44,9 +44,9 @@ export const useNavigationMenuObjectMetadataFromDraft = (
   );
 
   const viewIdsInWorkspace = new Set(
-    currentDraft
-      .filter((item) => isDefined(item.viewId))
-      .map((item) => item.viewId as string),
+    currentDraft.flatMap((item) =>
+      isDefined(item.viewId) ? [item.viewId] : [],
+    ),
   );
 
   return {
