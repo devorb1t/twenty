@@ -1,8 +1,8 @@
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
+import { isNonEmptyString } from '@sniptt/guards';
 import { useState } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { isNonEmptyString } from '@sniptt/guards';
 import { isDefined } from 'twenty-shared/utils';
 import {
   IconApps,
@@ -20,11 +20,10 @@ import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { CommandMenuEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuSelectObjectForEditMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSelectObjectForEditMenuItem';
 import { CommandMenuSelectObjectForViewMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSelectObjectForViewMenuItem';
-import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { useNavigationMenuItemsByFolder } from '@/navigation-menu-item/hooks/useNavigationMenuItemsByFolder';
-import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
+import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import {
   type WorkspaceSectionItem,
@@ -41,6 +40,7 @@ import { TextInput } from '@/ui/input/components/TextInput';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { type View } from '@/views/types/View';
 import { ViewKey } from '@/views/types/ViewKey';
+import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 
 const StyledContainer = styled.div`
   padding: ${({ theme }) => theme.spacing(3)};
@@ -448,10 +448,14 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
       searchQuery: systemObjectSearchInput,
       getSearchableValues: (item) => [item.labelPlural],
     });
-    const selectableItemIds =
-      filteredSystemObjects.length > 0
-        ? filteredSystemObjects.map((item) => item.id)
-        : ['empty'];
+    const isEmptySystem = filteredSystemObjects.length === 0;
+    const selectableItemIds = isEmptySystem
+      ? []
+      : filteredSystemObjects.map((item) => item.id);
+    const noResultsTextSystem =
+      systemObjectSearchInput.trim().length > 0
+        ? t`No results found`
+        : t`No system objects available`;
 
     return (
       <CommandMenuSubViewWithSearch
@@ -464,6 +468,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         <CommandMenuList
           commandGroups={[]}
           selectableItemIds={selectableItemIds}
+          noResults={isEmptySystem}
+          noResultsText={noResultsTextSystem}
         >
           <CommandGroup heading={t`System objects`}>
             {filteredSystemObjects.map((objectMetadataItem) =>
@@ -499,7 +505,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     const selectableItemIds =
       filteredObjects.length > 0
         ? [...filteredObjects.map((item) => item.id), 'system']
-        : ['empty', 'system'];
+        : ['system'];
 
     return (
       <CommandMenuSubViewWithSearch
@@ -554,9 +560,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
       getSearchableValues: (view) => [view.name],
     });
     const selectableItemIds =
-      filteredViews.length > 0
-        ? filteredViews.map((view) => view.id)
-        : ['empty'];
+      filteredViews.length > 0 ? filteredViews.map((view) => view.id) : [];
     const selectedObjectForViewEdit = isDefined(
       selectedObjectMetadataIdForViewEdit,
     )
