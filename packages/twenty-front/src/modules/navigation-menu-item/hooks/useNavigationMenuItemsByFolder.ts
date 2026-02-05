@@ -13,7 +13,7 @@ import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
 import { usePrefetchedNavigationMenuItemsData } from './usePrefetchedNavigationMenuItemsData';
 
 type NavigationMenuItemFolder = {
-  folderId: string;
+  id: string;
   folderName: string;
   navigationMenuItems: ReturnType<typeof sortNavigationMenuItems>[number][];
 };
@@ -116,7 +116,7 @@ export const useNavigationMenuItemsByFolder = () => {
       );
 
       acc.push({
-        folderId: folder.id,
+        id: folder.id,
         folderName: folder.name,
         navigationMenuItems: sortedItems,
       });

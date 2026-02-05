@@ -6,9 +6,9 @@ import { IconFolder, IconFolderOpen } from 'twenty-ui/display';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
 import { useIsMobile } from 'twenty-ui/utilities';
 
-import { type WorkspaceSectionItem } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
 import { NavigationMenuItemIcon } from '@/navigation-menu-item/components/NavigationMenuItemIcon';
+import { type WorkspaceSectionItem } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { getNavigationMenuItemSecondaryLabel } from '@/navigation-menu-item/utils/getNavigationMenuItemSecondaryLabel';
@@ -16,15 +16,15 @@ import { isLocationMatchingNavigationMenuItem } from '@/navigation-menu-item/uti
 import { processNavigationMenuItemToWorkspaceSectionItem } from '@/navigation-menu-item/utils/processNavigationMenuItemToWorkspaceSectionItem';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
-import { coreViewsState } from '@/views/states/coreViewState';
-import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
-import { isDefined } from 'twenty-shared/utils';
 import { NavigationDrawerItem } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerItem';
 import { NavigationDrawerItemsCollapsableContainer } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerItemsCollapsableContainer';
 import { NavigationDrawerSubItem } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerSubItem';
 import { currentNavigationMenuItemFolderIdState } from '@/ui/navigation/navigation-drawer/states/currentNavigationMenuItemFolderIdState';
 import { getNavigationSubItemLeftAdornment } from '@/ui/navigation/navigation-drawer/utils/getNavigationSubItemLeftAdornment';
+import { coreViewsState } from '@/views/states/coreViewState';
 import { ViewKey } from '@/views/types/ViewKey';
+import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
+import { isDefined } from 'twenty-shared/utils';
 
 const StyledFolderContainer = styled.div<{ $isSelectedInEditMode: boolean }>`
   border: ${({ theme, $isSelectedInEditMode }) =>
@@ -36,7 +36,7 @@ const StyledFolderContainer = styled.div<{ $isSelectedInEditMode: boolean }>`
 
 type WorkspaceNavigationMenuItemsFolderProps = {
   folder: {
-    folderId: string;
+    id: string;
     folderName: string;
     navigationMenuItems: ProcessedNavigationMenuItem[];
   };
@@ -73,19 +73,17 @@ export const WorkspaceNavigationMenuItemsFolder = ({
     currentNavigationMenuItemFolderIdState,
   );
 
-  const isOpen = openNavigationMenuItemFolderIds.includes(folder.folderId);
+  const isOpen = openNavigationMenuItemFolderIds.includes(folder.id);
 
   const handleToggle = () => {
     if (isMobile) {
-      setCurrentFolderId((prev) =>
-        prev === folder.folderId ? null : folder.folderId,
-      );
+      setCurrentFolderId((prev) => (prev === folder.id ? null : folder.id));
     } else {
       setOpenNavigationMenuItemFolderIds((currentOpenFolders) => {
         if (isOpen) {
-          return currentOpenFolders.filter((id) => id !== folder.folderId);
+          return currentOpenFolders.filter((id) => id !== folder.id);
         } else {
-          return [...currentOpenFolders, folder.folderId];
+          return [...currentOpenFolders, folder.id];
         }
       });
     }
@@ -104,11 +102,11 @@ export const WorkspaceNavigationMenuItemsFolder = ({
 
   return (
     <StyledFolderContainer
-      key={folder.folderId}
+      key={folder.id}
       $isSelectedInEditMode={isSelectedInEditMode}
     >
       <NavigationDrawerItemsCollapsableContainer isGroup={isGroup}>
-        <NavigationItemDropTarget folderId={folder.folderId} index={0}>
+        <NavigationItemDropTarget folderId={folder.id} index={0}>
           <NavigationDrawerItem
             label={folder.folderName}
             Icon={isOpen ? IconFolderOpen : IconFolder}
@@ -127,7 +125,7 @@ export const WorkspaceNavigationMenuItemsFolder = ({
           containAnimation
         >
           <div>
-            <NavigationItemDropTarget folderId={folder.folderId} index={0} />
+            <NavigationItemDropTarget folderId={folder.id} index={0} />
             {folder.navigationMenuItems.map((navigationMenuItem, index) => {
               const workspaceSectionItem =
                 processNavigationMenuItemToWorkspaceSectionItem(
@@ -147,7 +145,7 @@ export const WorkspaceNavigationMenuItemsFolder = ({
               return (
                 <NavigationItemDropTarget
                   key={navigationMenuItem.id}
-                  folderId={folder.folderId}
+                  folderId={folder.id}
                   index={index}
                 >
                   <NavigationDrawerSubItem
@@ -184,7 +182,7 @@ export const WorkspaceNavigationMenuItemsFolder = ({
               );
             })}
             <NavigationItemDropTarget
-              folderId={folder.folderId}
+              folderId={folder.id}
               index={folder.navigationMenuItems.length}
             />
           </div>

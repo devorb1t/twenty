@@ -27,7 +27,6 @@ import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import { type WorkspaceSectionItem } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
-import { getWorkspaceSectionItemId } from '@/navigation-menu-item/utils/getWorkspaceSectionItemId';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
 import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
@@ -97,9 +96,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   const selectedItem = selectedNavigationMenuItemInEditMode
     ? workspaceSectionItems.find(
-        (item) =>
-          getWorkspaceSectionItemId(item) ===
-          selectedNavigationMenuItemInEditMode,
+        (item) => item.id === selectedNavigationMenuItemInEditMode,
       )
     : undefined;
 
@@ -113,9 +110,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   const selectedItemIndex = selectedNavigationMenuItemInEditMode
     ? workspaceSectionItems.findIndex(
-        (item) =>
-          getWorkspaceSectionItemId(item) ===
-          selectedNavigationMenuItemInEditMode,
+        (item) => item.id === selectedNavigationMenuItemInEditMode,
       )
     : -1;
 
@@ -197,7 +192,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   const workspaceFolders = workspaceNavigationMenuItemsByFolder.map(
     (folder) => ({
-      id: folder.folderId,
+      id: folder.id,
       name: folder.folderName,
     }),
   );
@@ -298,7 +293,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   if (editSubView === 'folder-picker') {
     const currentFolderId =
       selectedItem?.type === 'folder'
-        ? selectedItem.folder.folderId
+        ? selectedItem.id
         : (selectedItem?.navigationMenuItem.folderId ?? null);
 
     return (
@@ -453,9 +448,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
       render: () => {
         const folderApplicationId =
           selectedItem?.type === 'folder'
-            ? currentDraft.find(
-                (item) => item.id === selectedItem.folder.folderId,
-              )?.applicationId
+            ? currentDraft.find((item) => item.id === selectedItem.id)
+                ?.applicationId
             : undefined;
         return (
           <CommandMenuEditFolderItemView

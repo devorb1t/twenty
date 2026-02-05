@@ -14,6 +14,7 @@ export const processNavigationMenuItemToWorkspaceSectionItem = (
   if (isNavigationMenuItemLink(navigationMenuItem)) {
     return {
       type: 'link',
+      id: navigationMenuItem.id,
       navigationMenuItem,
     };
   }
@@ -40,6 +41,7 @@ export const processNavigationMenuItemToWorkspaceSectionItem = (
 
   return {
     type: 'objectView',
+    id: navigationMenuItem.id,
     navigationMenuItem,
     objectMetadataItem,
   };

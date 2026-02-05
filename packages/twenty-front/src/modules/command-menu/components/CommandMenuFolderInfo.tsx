@@ -10,7 +10,6 @@ import { commandMenuShouldFocusTitleInputComponentState } from '@/command-menu/s
 import { useFlattenedWorkspaceSectionItemsForLookup } from '@/navigation-menu-item/hooks/useFlattenedWorkspaceSectionItemsForLookup';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
-import { getWorkspaceSectionItemId } from '@/navigation-menu-item/utils/getWorkspaceSectionItemId';
 import { TitleInput } from '@/ui/input/components/TitleInput';
 import { useRecoilComponentState } from '@/ui/utilities/state/component-state/hooks/useRecoilComponentState';
 
@@ -32,7 +31,7 @@ export const CommandMenuFolderInfo = () => {
   const selectedFolder = workspaceSectionItems.find(
     (item) =>
       item.type === 'folder' &&
-      getWorkspaceSectionItemId(item) === selectedNavigationMenuItemInEditMode,
+      item.id === selectedNavigationMenuItemInEditMode,
   );
 
   if (
@@ -44,7 +43,7 @@ export const CommandMenuFolderInfo = () => {
   }
 
   const folderName = selectedFolder.folder.folderName;
-  const folderId = selectedFolder.folder.folderId;
+  const folderId = selectedFolder.id;
 
   const handleChange = (text: string) => {
     updateFolderNameInDraft(folderId, text);

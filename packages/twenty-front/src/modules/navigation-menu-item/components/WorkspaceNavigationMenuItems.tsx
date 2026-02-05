@@ -64,10 +64,7 @@ export const WorkspaceNavigationMenuItems = () => {
   };
 
   const handleNavigationMenuItemClick = (item: WorkspaceSectionItem) => {
-    const id =
-      item.type === 'folder'
-        ? item.folder.folderId
-        : item.navigationMenuItem.id;
+    const id = item.id;
     setSelectedNavigationMenuItemInEditMode(id);
     if (item.type === 'folder') {
       setOpenNavigationMenuItemFolderIds((currentOpenFolders) =>

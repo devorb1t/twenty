@@ -42,7 +42,7 @@ import { useRecoilComponentValue } from '@/ui/utilities/state/component-state/ho
 
 type CurrentWorkspaceMemberNavigationMenuItemsProps = {
   folder: {
-    folderId: string;
+    id: string;
     folderName: string;
     navigationMenuItems: ProcessedNavigationMenuItem[];
   };
@@ -79,19 +79,17 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
     currentNavigationMenuItemFolderIdState,
   );
 
-  const isOpen = openNavigationMenuItemFolderIds.includes(folder.folderId);
+  const isOpen = openNavigationMenuItemFolderIds.includes(folder.id);
 
   const handleToggle = () => {
     if (isMobile) {
-      setCurrentFolderId((prev) =>
-        prev === folder.folderId ? null : folder.folderId,
-      );
+      setCurrentFolderId((prev) => (prev === folder.id ? null : folder.id));
     } else {
       setOpenNavigationMenuItemFolderIds((currentOpenFolders) => {
         if (isOpen) {
-          return currentOpenFolders.filter((id) => id !== folder.folderId);
+          return currentOpenFolders.filter((id) => id !== folder.id);
         } else {
-          return [...currentOpenFolders, folder.folderId];
+          return [...currentOpenFolders, folder.id];
         }
       });
     }
@@ -102,7 +100,7 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
   const { deleteNavigationMenuItemFolder } =
     useDeleteNavigationMenuItemFolder();
 
-  const dropdownId = `navigation-menu-item-folder-edit-${folder.folderId}`;
+  const dropdownId = `navigation-menu-item-folder-edit-${folder.id}`;
 
   const isDropdownOpenComponent = useRecoilComponentValue(
     isDropdownOpenComponentState,
@@ -123,7 +121,7 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
 
   const handleSubmitRename = async (value: string) => {
     if (value === '') return;
-    await renameNavigationMenuItemFolder(folder.folderId, value);
+    await renameNavigationMenuItemFolder(folder.id, value);
     setIsNavigationMenuItemFolderRenaming(false);
     return true;
   };
@@ -142,29 +140,29 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
       return;
     }
 
-    await renameNavigationMenuItemFolder(folder.folderId, value);
+    await renameNavigationMenuItemFolder(folder.id, value);
     setIsNavigationMenuItemFolderRenaming(false);
   };
 
-  const modalId = `${NAVIGATION_MENU_ITEM_FOLDER_DELETE_MODAL_ID}-${folder.folderId}`;
+  const modalId = `${NAVIGATION_MENU_ITEM_FOLDER_DELETE_MODAL_ID}-${folder.id}`;
 
   const handleNavigationMenuItemFolderDelete = async () => {
     if (folder.navigationMenuItems.length > 0) {
       openModal(modalId);
       closeDropdown(dropdownId);
     } else {
-      await deleteNavigationMenuItemFolder(folder.folderId);
+      await deleteNavigationMenuItemFolder(folder.id);
       closeDropdown(dropdownId);
     }
   };
 
   const handleConfirmDelete = async () => {
-    await deleteNavigationMenuItemFolder(folder.folderId);
+    await deleteNavigationMenuItemFolder(folder.id);
   };
 
   const rightOptions = isWorkspaceFolder ? undefined : (
     <NavigationMenuItemFolderNavigationDrawerItemDropdown
-      folderId={folder.folderId}
+      folderId={folder.id}
       onRename={() => setIsNavigationMenuItemFolderRenaming(true)}
       onDelete={handleNavigationMenuItemFolderDelete}
       closeDropdown={() => {
@@ -183,7 +181,7 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
   return (
     <>
       <NavigationDrawerItemsCollapsableContainer
-        key={folder.folderId}
+        key={folder.id}
         isGroup={isGroup}
       >
         {isNavigationMenuItemFolderRenaming ? (
@@ -197,9 +195,9 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
           />
         ) : (
           <NavigationMenuItemDroppable
-            droppableId={`folder-header-${folder.folderId}`}
+            droppableId={`folder-header-${folder.id}`}
           >
-            <NavigationItemDropTarget folderId={folder.folderId} index={0}>
+            <NavigationItemDropTarget folderId={folder.id} index={0}>
               <NavigationDrawerItem
                 label={folder.folderName}
                 Icon={isOpen ? IconFolderOpen : IconFolder}
@@ -221,7 +219,7 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
           mode="fit-content"
           containAnimation
         >
-          <Droppable droppableId={`folder-${folder.folderId}`}>
+          <Droppable droppableId={`folder-${folder.id}`}>
             {(provided) => (
               <div
                 ref={provided.innerRef}

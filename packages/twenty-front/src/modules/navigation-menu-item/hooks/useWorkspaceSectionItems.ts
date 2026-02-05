@@ -14,20 +14,22 @@ import { usePrefetchedNavigationMenuItemsData } from './usePrefetchedNavigationM
 import { useSortedNavigationMenuItems } from './useSortedNavigationMenuItems';
 
 type WorkspaceFolder = {
-  folderId: string;
+  id: string;
   folderName: string;
   navigationMenuItems: ProcessedNavigationMenuItem[];
 };
 
 export type WorkspaceSectionItem =
-  | { type: 'folder'; folder: WorkspaceFolder }
+  | { type: 'folder'; id: string; folder: WorkspaceFolder }
   | {
       type: 'objectView';
+      id: string;
       navigationMenuItem: ProcessedNavigationMenuItem;
       objectMetadataItem: ObjectMetadataItem;
     }
   | {
       type: 'link';
+      id: string;
       navigationMenuItem: ProcessedNavigationMenuItem;
     };
 
@@ -51,17 +53,14 @@ export const useWorkspaceSectionItems = (): WorkspaceSectionItem[] => {
   );
 
   const workspaceFoldersById = new Map(
-    workspaceNavigationMenuItemsByFolder.map((folder) => [
-      folder.folderId,
-      folder,
-    ]),
+    workspaceNavigationMenuItemsByFolder.map((folder) => [folder.id, folder]),
   );
 
   return flatWorkspaceItems.reduce<WorkspaceSectionItem[]>((acc, item) => {
     if (isNavigationMenuItemFolder(item)) {
       const folder = workspaceFoldersById.get(item.id);
       if (isDefined(folder)) {
-        acc.push({ type: 'folder', folder });
+        acc.push({ type: 'folder', id: folder.id, folder });
       }
     } else {
       const processedItem = processedObjectViewsById.get(item.id);

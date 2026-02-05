@@ -81,7 +81,7 @@ export const NavigationMenuItemFolders = ({
       )}
       {userNavigationMenuItemsByFolder.map((folder) => (
         <CurrentWorkspaceMemberNavigationMenuItems
-          key={folder.folderId}
+          key={folder.id}
           folder={folder}
           isGroup={userNavigationMenuItemsByFolder.length > 1}
         />

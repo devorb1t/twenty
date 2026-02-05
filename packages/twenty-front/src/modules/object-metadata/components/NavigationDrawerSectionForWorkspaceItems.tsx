@@ -2,7 +2,6 @@ import { NavigationDrawerItemForLink } from '@/navigation-menu-item/components/N
 import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
 import { WorkspaceNavigationMenuItemsFolder } from '@/navigation-menu-item/components/WorkspaceNavigationMenuItemsFolder';
 import { type WorkspaceSectionItem } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
-import { getWorkspaceSectionItemId } from '@/navigation-menu-item/utils/getWorkspaceSectionItemId';
 import { NavigationDrawerItemForObjectMetadataItem } from '@/object-metadata/components/NavigationDrawerItemForObjectMetadataItem';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { getObjectPermissionsForObject } from '@/object-metadata/utils/getObjectPermissionsForObject';
@@ -57,7 +56,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
   );
 
   const getEditModeProps = (item: WorkspaceSectionItem) => {
-    const itemId = getWorkspaceSectionItemId(item);
+    const itemId = item.id;
     return {
       isSelectedInEditMode: selectedNavigationMenuItemId === itemId,
       onEditModeClick: onNavigationMenuItemClick
@@ -85,7 +84,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
             const editModeProps = getEditModeProps(item);
             return (
               <NavigationItemDropTarget
-                key={getWorkspaceSectionItemId(item)}
+                key={item.id}
                 folderId={null}
                 index={index}
               >

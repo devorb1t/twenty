@@ -32,12 +32,14 @@ export const MainNavigationDrawer = ({ className }: { className?: string }) => {
   );
 
   const openedNavigationMenuItemFolder = navigationMenuItemsByFolder.find(
-    (f) => f.folderId === currentNavigationMenuItemFolderId,
+    (f) => f.id === currentNavigationMenuItemFolderId,
   );
 
   const openedFolder = isNavigationMenuItemEnabled
     ? openedNavigationMenuItemFolder
     : openedFavoriteFolder;
+
+  const openedFolderId = openedNavigationMenuItemFolder?.id ?? '';
 
   return (
     <NavigationDrawer
@@ -54,7 +56,7 @@ export const MainNavigationDrawer = ({ className }: { className?: string }) => {
             {openedFolder ? (
               <NavigationMenuItemFolderContentDispatcherEffect
                 folderName={openedFolder.folderName}
-                folderId={openedFolder.folderId}
+                folderId={openedFolderId}
                 favorites={openedFavoriteFolder?.favorites}
                 navigationMenuItems={
                   openedNavigationMenuItemFolder?.navigationMenuItems
@@ -67,7 +69,7 @@ export const MainNavigationDrawer = ({ className }: { className?: string }) => {
         ) : openedFolder ? (
           <NavigationMenuItemFolderContentDispatcherEffect
             folderName={openedFolder.folderName}
-            folderId={openedFolder.folderId}
+            folderId={openedFolderId}
             favorites={openedFavoriteFolder?.favorites}
             navigationMenuItems={
               openedNavigationMenuItemFolder?.navigationMenuItems

@@ -1,5 +1,4 @@
 import { CommandMenuFolderInfo } from '@/command-menu/components/CommandMenuFolderInfo';
-import { CommandMenuLinkInfo } from './CommandMenuLinkInfo';
 import { CommandMenuMultipleRecordsInfo } from '@/command-menu/components/CommandMenuMultipleRecordsInfo';
 import { CommandMenuPageLayoutInfo } from '@/command-menu/components/CommandMenuPageLayoutInfo';
 import { CommandMenuRecordInfo } from '@/command-menu/components/CommandMenuRecordInfo';
@@ -7,12 +6,12 @@ import { CommandMenuWorkflowStepInfo } from '@/command-menu/components/CommandMe
 import { CommandMenuPages } from '@/command-menu/types/CommandMenuPages';
 import { useFlattenedWorkspaceSectionItemsForLookup } from '@/navigation-menu-item/hooks/useFlattenedWorkspaceSectionItemsForLookup';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
-import { getWorkspaceSectionItemId } from '@/navigation-menu-item/utils/getWorkspaceSectionItemId';
 import styled from '@emotion/styled';
 import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import { OverflowingTextWithTooltip } from 'twenty-ui/display';
 import { type CommandMenuContextChipProps } from './CommandMenuContextChip';
+import { CommandMenuLinkInfo } from './CommandMenuLinkInfo';
 
 const StyledPageTitle = styled.div`
   color: ${({ theme }) => theme.font.color.primary};
@@ -38,9 +37,7 @@ export const CommandMenuPageInfo = ({ pageChip }: CommandMenuPageInfoProps) => {
     pageChip.page?.page === CommandMenuPages.NavigationMenuItemEdit;
   const selectedNavItem = isNavigationMenuItemEditPage
     ? workspaceSectionItems.find(
-        (item) =>
-          getWorkspaceSectionItemId(item) ===
-          selectedNavigationMenuItemInEditMode,
+        (item) => item.id === selectedNavigationMenuItemInEditMode,
       )
     : undefined;
 
