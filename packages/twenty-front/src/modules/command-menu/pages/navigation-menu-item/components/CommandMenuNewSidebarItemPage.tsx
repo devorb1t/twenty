@@ -1,6 +1,6 @@
 import { useLingui } from '@lingui/react/macro';
 import { useMemo, useState } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useSetRecoilState } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import {
   Avatar,
@@ -20,9 +20,13 @@ import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/component
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
+import { CommandMenuAddObjectMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectMenuItem';
+import { CommandMenuSelectObjectForViewMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSelectObjectForViewMenuItem';
+import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 import { MAX_SEARCH_RESULTS } from '@/command-menu/constants/MaxSearchResults';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
+import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
@@ -35,11 +39,8 @@ import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataI
 import { useObjectPermissions } from '@/object-record/hooks/useObjectPermissions';
 import { getObjectPermissionsFromMapByObjectMetadataId } from '@/settings/roles/role-permissions/objects-permissions/utils/getObjectPermissionsFromMapByObjectMetadataId';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
-import { coreViewsState } from '@/views/states/coreViewState';
-import { coreIndexViewIdFromObjectMetadataItemFamilySelector } from '@/views/states/selectors/coreIndexViewIdFromObjectMetadataItemFamilySelector';
 import { type View } from '@/views/types/View';
 import { ViewKey } from '@/views/types/ViewKey';
-import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
 import { useSearchQuery } from '~/generated/graphql';
 
 type SelectedOption =
@@ -49,87 +50,6 @@ type SelectedOption =
   | 'view'
   | 'view-system'
   | null;
-
-const CommandMenuAddObjectMenuItem = ({
-  objectMetadataItem,
-  onSelect,
-}: {
-  objectMetadataItem: ObjectMetadataItem;
-  onSelect: (
-    objectMetadataItem: ObjectMetadataItem,
-    defaultViewId: string,
-  ) => void;
-}) => {
-  const { getIcon } = useIcons();
-  const defaultViewId = useRecoilValue(
-    coreIndexViewIdFromObjectMetadataItemFamilySelector({
-      objectMetadataItemId: objectMetadataItem.id,
-    }),
-  );
-  const Icon = getIcon(objectMetadataItem.icon);
-  const isDisabled = !isDefined(defaultViewId);
-
-  const handleClick = () => {
-    if (!isDisabled && isDefined(defaultViewId)) {
-      onSelect(objectMetadataItem, defaultViewId);
-    }
-  };
-
-  const objectPayload: AddToNavigationDragPayload = {
-    type: 'object',
-    objectMetadataId: objectMetadataItem.id,
-    defaultViewId: defaultViewId ?? '',
-    label: objectMetadataItem.labelPlural,
-  };
-
-  return (
-    <SelectableListItem itemId={objectMetadataItem.id} onEnter={handleClick}>
-      {isDisabled ? (
-        <CommandMenuItem
-          Icon={Icon}
-          label={objectMetadataItem.labelPlural}
-          id={objectMetadataItem.id}
-          onClick={handleClick}
-          disabled={true}
-        />
-      ) : (
-        <CommandMenuItemWithAddToNavigationDrag
-          Icon={Icon}
-          label={objectMetadataItem.labelPlural}
-          id={objectMetadataItem.id}
-          onClick={handleClick}
-          payload={objectPayload}
-        />
-      )}
-    </SelectableListItem>
-  );
-};
-
-const CommandMenuSelectObjectForViewMenuItem = ({
-  objectMetadataItem,
-  onSelect,
-}: {
-  objectMetadataItem: ObjectMetadataItem;
-  onSelect: (objectMetadataItem: ObjectMetadataItem) => void;
-}) => {
-  const { getIcon } = useIcons();
-  const Icon = getIcon(objectMetadataItem.icon);
-
-  const handleClick = () => {
-    onSelect(objectMetadataItem);
-  };
-
-  return (
-    <SelectableListItem itemId={objectMetadataItem.id} onEnter={handleClick}>
-      <CommandMenuItem
-        Icon={Icon}
-        label={objectMetadataItem.labelPlural}
-        id={objectMetadataItem.id}
-        onClick={handleClick}
-      />
-    </SelectableListItem>
-  );
-};
 
 export const CommandMenuNewSidebarItemPage = () => {
   const { t } = useLingui();
@@ -145,7 +65,6 @@ export const CommandMenuNewSidebarItemPage = () => {
   const [deferredRecordSearchInput] = useDebounce(recordSearchInput, 300);
 
   const coreClient = useApolloCoreClient();
-  const coreViews = useRecoilValue(coreViewsState);
   const { objectMetadataItems } = useObjectMetadataItems();
   const { objectPermissionsByObjectMetadataId } = useObjectPermissions();
   const {
@@ -175,35 +94,17 @@ export const CommandMenuNewSidebarItemPage = () => {
     ? navigationMenuItemsDraft
     : workspaceNavigationMenuItems;
 
-  const objectMetadataIdsInWorkspace = useMemo(() => {
-    const views = coreViews.map(convertCoreViewToView);
-    const ids = new Set<string>();
-    for (const item of currentDraft) {
-      if (isDefined(item.viewId)) {
-        const view = views.find((view) => view.id === item.viewId);
-        if (isDefined(view)) {
-          ids.add(view.objectMetadataId);
-        }
-      }
-      if (isDefined(item.targetObjectMetadataId)) {
-        ids.add(item.targetObjectMetadataId);
-      }
-    }
-    return ids;
-  }, [coreViews, currentDraft]);
+  const {
+    views,
+    objectMetadataIdsInWorkspace,
+    objectMetadataIdsWithIndexView,
+    objectMetadataIdsWithAnyView,
+    viewIdsInWorkspace,
+  } = useNavigationMenuObjectMetadataFromDraft(currentDraft);
 
   const availableObjectMetadataItems = activeNonSystemObjectMetadataItems
     .filter((item) => !objectMetadataItemsInWorkspaceIds.has(item.id))
     .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
-
-  const objectMetadataIdsWithIndexView = useMemo(() => {
-    const views = coreViews.map(convertCoreViewToView);
-    return new Set(
-      views
-        .filter((view) => view.key === ViewKey.Index)
-        .map((view) => view.objectMetadataId),
-    );
-  }, [coreViews]);
 
   const activeSystemObjectMetadataItems = useMemo(
     () =>
@@ -218,20 +119,6 @@ export const CommandMenuNewSidebarItemPage = () => {
         !objectMetadataIdsInWorkspace.has(item.id) &&
         objectMetadataIdsWithIndexView.has(item.id),
     );
-
-  const objectMetadataIdsWithAnyView = useMemo(() => {
-    const views = coreViews.map(convertCoreViewToView);
-    return new Set(views.map((view) => view.objectMetadataId));
-  }, [coreViews]);
-
-  const viewIdsInWorkspace = useMemo(() => {
-    const items = navigationMenuItemsDraft ?? workspaceNavigationMenuItems;
-    return new Set(
-      items
-        .filter((item) => isDefined(item.viewId))
-        .map((item) => item.viewId as string),
-    );
-  }, [navigationMenuItemsDraft, workspaceNavigationMenuItems]);
 
   const objectMetadataItemsWithViews = useMemo(() => {
     const objects = Object.values(objectMetadataItems).filter(
@@ -249,7 +136,6 @@ export const CommandMenuNewSidebarItemPage = () => {
 
   const viewsForSelectedObject = useMemo(() => {
     if (!selectedObjectMetadataIdForView) return [];
-    const views = coreViews.map(convertCoreViewToView);
     return views
       .filter(
         (view) =>
@@ -258,7 +144,7 @@ export const CommandMenuNewSidebarItemPage = () => {
           view.key !== ViewKey.Index,
       )
       .sort((a, b) => a.position - b.position);
-  }, [coreViews, selectedObjectMetadataIdForView, viewIdsInWorkspace]);
+  }, [views, selectedObjectMetadataIdForView, viewIdsInWorkspace]);
 
   const nonReadableObjectMetadataItemsNameSingular = useMemo(() => {
     return Object.values(objectMetadataItems)
@@ -389,9 +275,11 @@ export const CommandMenuNewSidebarItemPage = () => {
     const selectedObjectMetadataItem = objectMetadataItems.find(
       (item) => item.id === selectedObjectMetadataIdForView,
     );
-    const filteredViews = viewsForSelectedObject.filter((view) =>
-      view.name.toLowerCase().includes(viewSearchInput.toLowerCase().trim()),
-    );
+    const filteredViews = filterBySearchQuery({
+      items: viewsForSelectedObject,
+      searchQuery: viewSearchInput,
+      getSearchableValues: (view) => [view.name],
+    });
     const selectableItemIds = filteredViews.map((view) => view.id);
     const isEmpty = filteredViews.length === 0;
     const noResultsText =
@@ -444,16 +332,19 @@ export const CommandMenuNewSidebarItemPage = () => {
   }
 
   if (selectedOption === 'view') {
-    const filteredObjectMetadataItems = objectMetadataItemsWithViews.filter(
-      (item) =>
-        item.labelPlural
-          .toLowerCase()
-          .includes(objectSearchInput.toLowerCase().trim()),
-    );
-    const selectableItemIds =
-      filteredObjectMetadataItems.length > 0
-        ? [...filteredObjectMetadataItems.map((item) => item.id), 'system']
-        : ['empty', 'system'];
+    const filteredObjectMetadataItems = filterBySearchQuery({
+      items: objectMetadataItemsWithViews,
+      searchQuery: objectSearchInput,
+      getSearchableValues: (item) => [item.labelPlural],
+    });
+    const isEmpty = filteredObjectMetadataItems.length === 0;
+    const selectableItemIds = isEmpty
+      ? ['system']
+      : [...filteredObjectMetadataItems.map((item) => item.id), 'system'];
+    const noResultsText =
+      objectSearchInput.trim().length > 0
+        ? t`No results found`
+        : t`No objects with views found`;
 
     return (
       <CommandMenuSubViewWithSearch
@@ -466,31 +357,17 @@ export const CommandMenuNewSidebarItemPage = () => {
         <CommandMenuList
           commandGroups={[]}
           selectableItemIds={selectableItemIds}
+          noResults={isEmpty}
+          noResultsText={noResultsText}
         >
           <CommandGroup heading={t`Objects`}>
-            {filteredObjectMetadataItems.length === 0 ? (
-              <SelectableListItem itemId="empty" onEnter={() => {}}>
-                <CommandMenuItem
-                  label={
-                    objectSearchInput.trim().length > 0
-                      ? t`No results found`
-                      : t`No objects with views found`
-                  }
-                  id="empty"
-                  disabled={true}
-                />
-              </SelectableListItem>
-            ) : (
-              filteredObjectMetadataItems.map((objectMetadataItem) => (
-                <CommandMenuSelectObjectForViewMenuItem
-                  key={objectMetadataItem.id}
-                  objectMetadataItem={objectMetadataItem}
-                  onSelect={(item) =>
-                    setSelectedObjectMetadataIdForView(item.id)
-                  }
-                />
-              ))
-            )}
+            {filteredObjectMetadataItems.map((objectMetadataItem) => (
+              <CommandMenuSelectObjectForViewMenuItem
+                key={objectMetadataItem.id}
+                objectMetadataItem={objectMetadataItem}
+                onSelect={(item) => setSelectedObjectMetadataIdForView(item.id)}
+              />
+            ))}
             <SelectableListItem
               itemId="system"
               onEnter={() => setSelectedOption('view-system')}
@@ -510,16 +387,19 @@ export const CommandMenuNewSidebarItemPage = () => {
   }
 
   if (selectedOption === 'view-system') {
-    const filteredSystemObjectMetadataItems =
-      availableSystemObjectMetadataItemsForView.filter((item) =>
-        item.labelPlural
-          .toLowerCase()
-          .includes(systemObjectSearchInput.toLowerCase().trim()),
-      );
-    const selectableItemIds =
-      filteredSystemObjectMetadataItems.length > 0
-        ? filteredSystemObjectMetadataItems.map((item) => item.id)
-        : ['empty'];
+    const filteredSystemObjectMetadataItems = filterBySearchQuery({
+      items: availableSystemObjectMetadataItemsForView,
+      searchQuery: systemObjectSearchInput,
+      getSearchableValues: (item) => [item.labelPlural],
+    });
+    const isEmpty = filteredSystemObjectMetadataItems.length === 0;
+    const selectableItemIds = isEmpty
+      ? []
+      : filteredSystemObjectMetadataItems.map((item) => item.id);
+    const noResultsText =
+      systemObjectSearchInput.trim().length > 0
+        ? t`No results found`
+        : t`No system objects with views found`;
 
     return (
       <CommandMenuSubViewWithSearch
@@ -532,32 +412,20 @@ export const CommandMenuNewSidebarItemPage = () => {
         <CommandMenuList
           commandGroups={[]}
           selectableItemIds={selectableItemIds}
+          noResults={isEmpty}
+          noResultsText={noResultsText}
         >
           <CommandGroup heading={t`System objects`}>
-            {filteredSystemObjectMetadataItems.length === 0 ? (
-              <SelectableListItem itemId="empty" onEnter={() => {}}>
-                <CommandMenuItem
-                  label={
-                    systemObjectSearchInput.trim().length > 0
-                      ? t`No results found`
-                      : t`No system objects with views found`
-                  }
-                  id="empty"
-                  disabled={true}
-                />
-              </SelectableListItem>
-            ) : (
-              filteredSystemObjectMetadataItems.map((objectMetadataItem) => (
-                <CommandMenuSelectObjectForViewMenuItem
-                  key={objectMetadataItem.id}
-                  objectMetadataItem={objectMetadataItem}
-                  onSelect={(item) => {
-                    setSelectedObjectMetadataIdForView(item.id);
-                    setSelectedOption('view');
-                  }}
-                />
-              ))
-            )}
+            {filteredSystemObjectMetadataItems.map((objectMetadataItem) => (
+              <CommandMenuSelectObjectForViewMenuItem
+                key={objectMetadataItem.id}
+                objectMetadataItem={objectMetadataItem}
+                onSelect={(item) => {
+                  setSelectedObjectMetadataIdForView(item.id);
+                  setSelectedOption('view');
+                }}
+              />
+            ))}
           </CommandGroup>
         </CommandMenuList>
       </CommandMenuSubViewWithSearch>
@@ -565,16 +433,19 @@ export const CommandMenuNewSidebarItemPage = () => {
   }
 
   if (selectedOption === 'object') {
-    const filteredObjectMetadataItems = availableObjectMetadataItems.filter(
-      (item) =>
-        item.labelPlural
-          .toLowerCase()
-          .includes(objectSearchInput.toLowerCase().trim()),
-    );
-    const selectableItemIds =
-      filteredObjectMetadataItems.length > 0
-        ? [...filteredObjectMetadataItems.map((item) => item.id), 'system']
-        : ['empty', 'system'];
+    const filteredObjectMetadataItems = filterBySearchQuery({
+      items: availableObjectMetadataItems,
+      searchQuery: objectSearchInput,
+      getSearchableValues: (item) => [item.labelPlural],
+    });
+    const isEmpty = filteredObjectMetadataItems.length === 0;
+    const selectableItemIds = isEmpty
+      ? ['system']
+      : [...filteredObjectMetadataItems.map((item) => item.id), 'system'];
+    const noResultsText =
+      objectSearchInput.trim().length > 0
+        ? t`No results found`
+        : t`All objects are already in the sidebar`;
 
     return (
       <CommandMenuSubViewWithSearch
@@ -587,29 +458,17 @@ export const CommandMenuNewSidebarItemPage = () => {
         <CommandMenuList
           commandGroups={[]}
           selectableItemIds={selectableItemIds}
+          noResults={isEmpty}
+          noResultsText={noResultsText}
         >
           <CommandGroup heading={t`Objects`}>
-            {filteredObjectMetadataItems.length === 0 ? (
-              <SelectableListItem itemId="empty" onEnter={() => {}}>
-                <CommandMenuItem
-                  label={
-                    objectSearchInput.trim().length > 0
-                      ? t`No results found`
-                      : t`All objects are already in the sidebar`
-                  }
-                  id="empty"
-                  disabled={true}
-                />
-              </SelectableListItem>
-            ) : (
-              filteredObjectMetadataItems.map((objectMetadataItem) => (
-                <CommandMenuAddObjectMenuItem
-                  key={objectMetadataItem.id}
-                  objectMetadataItem={objectMetadataItem}
-                  onSelect={handleSelectObject}
-                />
-              ))
-            )}
+            {filteredObjectMetadataItems.map((objectMetadataItem) => (
+              <CommandMenuAddObjectMenuItem
+                key={objectMetadataItem.id}
+                objectMetadataItem={objectMetadataItem}
+                onSelect={handleSelectObject}
+              />
+            ))}
             <SelectableListItem
               itemId="system"
               onEnter={() => setSelectedOption('system')}
@@ -629,16 +488,19 @@ export const CommandMenuNewSidebarItemPage = () => {
   }
 
   if (selectedOption === 'system') {
-    const filteredSystemObjectMetadataItems =
-      availableSystemObjectMetadataItems.filter((item) =>
-        item.labelPlural
-          .toLowerCase()
-          .includes(systemObjectSearchInput.toLowerCase().trim()),
-      );
-    const selectableItemIds =
-      filteredSystemObjectMetadataItems.length > 0
-        ? filteredSystemObjectMetadataItems.map((item) => item.id)
-        : ['empty'];
+    const filteredSystemObjectMetadataItems = filterBySearchQuery({
+      items: availableSystemObjectMetadataItems,
+      searchQuery: systemObjectSearchInput,
+      getSearchableValues: (item) => [item.labelPlural],
+    });
+    const isEmpty = filteredSystemObjectMetadataItems.length === 0;
+    const selectableItemIds = isEmpty
+      ? []
+      : filteredSystemObjectMetadataItems.map((item) => item.id);
+    const noResultsText =
+      systemObjectSearchInput.trim().length > 0
+        ? t`No results found`
+        : t`All system objects are already in the sidebar`;
 
     return (
       <CommandMenuSubViewWithSearch
@@ -651,29 +513,17 @@ export const CommandMenuNewSidebarItemPage = () => {
         <CommandMenuList
           commandGroups={[]}
           selectableItemIds={selectableItemIds}
+          noResults={isEmpty}
+          noResultsText={noResultsText}
         >
           <CommandGroup heading={t`System objects`}>
-            {filteredSystemObjectMetadataItems.length === 0 ? (
-              <SelectableListItem itemId="empty" onEnter={() => {}}>
-                <CommandMenuItem
-                  label={
-                    systemObjectSearchInput.trim().length > 0
-                      ? t`No results found`
-                      : t`All system objects are already in the sidebar`
-                  }
-                  id="empty"
-                  disabled={true}
-                />
-              </SelectableListItem>
-            ) : (
-              filteredSystemObjectMetadataItems.map((objectMetadataItem) => (
-                <CommandMenuAddObjectMenuItem
-                  key={objectMetadataItem.id}
-                  objectMetadataItem={objectMetadataItem}
-                  onSelect={handleSelectObject}
-                />
-              ))
-            )}
+            {filteredSystemObjectMetadataItems.map((objectMetadataItem) => (
+              <CommandMenuAddObjectMenuItem
+                key={objectMetadataItem.id}
+                objectMetadataItem={objectMetadataItem}
+                onSelect={handleSelectObject}
+              />
+            ))}
           </CommandGroup>
         </CommandMenuList>
       </CommandMenuSubViewWithSearch>
@@ -681,10 +531,14 @@ export const CommandMenuNewSidebarItemPage = () => {
   }
 
   if (selectedOption === 'record') {
-    const selectableItemIds =
-      availableSearchRecords.length > 0
-        ? availableSearchRecords.map((record) => record.recordId)
-        : ['empty'];
+    const isEmpty = availableSearchRecords.length === 0 && !recordSearchLoading;
+    const selectableItemIds = isEmpty
+      ? []
+      : availableSearchRecords.map((record) => record.recordId);
+    const noResultsText =
+      deferredRecordSearchInput.length > 0
+        ? t`No results found`
+        : t`Type to search records`;
 
     return (
       <CommandMenuSubViewWithSearch
@@ -698,72 +552,54 @@ export const CommandMenuNewSidebarItemPage = () => {
           commandGroups={[]}
           selectableItemIds={selectableItemIds}
           loading={recordSearchLoading}
-          noResults={
-            !recordSearchLoading &&
-            deferredRecordSearchInput.length > 0 &&
-            !searchRecords.length
-          }
+          noResults={isEmpty}
+          noResultsText={noResultsText}
         >
           <CommandGroup heading={t`Results`}>
-            {availableSearchRecords.length === 0 && !recordSearchLoading ? (
-              <SelectableListItem itemId="empty" onEnter={() => {}}>
-                <CommandMenuItem
-                  label={
-                    deferredRecordSearchInput.length > 0
-                      ? t`No results found`
-                      : t`Type to search records`
+            {availableSearchRecords.map((record) => {
+              const objectMetadataItem = objectMetadataItems.find(
+                (item) => item.nameSingular === record.objectNameSingular,
+              );
+              const recordPayload: AddToNavigationDragPayload = {
+                type: 'record',
+                recordId: record.recordId,
+                objectMetadataId: objectMetadataItem?.id ?? '',
+                objectNameSingular: record.objectNameSingular,
+                label: record.label,
+                imageUrl: record.imageUrl,
+              };
+              const recordIcon = (
+                <Avatar
+                  type={
+                    record.objectNameSingular === CoreObjectNameSingular.Company
+                      ? 'squared'
+                      : 'rounded'
                   }
-                  id="empty"
-                  disabled={true}
+                  avatarUrl={record.imageUrl}
+                  placeholderColorSeed={record.recordId}
+                  placeholder={record.label}
                 />
-              </SelectableListItem>
-            ) : (
-              availableSearchRecords.map((record) => {
-                const objectMetadataItem = objectMetadataItems.find(
-                  (item) => item.nameSingular === record.objectNameSingular,
-                );
-                const recordPayload: AddToNavigationDragPayload = {
-                  type: 'record',
-                  recordId: record.recordId,
-                  objectMetadataId: objectMetadataItem?.id ?? '',
-                  objectNameSingular: record.objectNameSingular,
-                  label: record.label,
-                  imageUrl: record.imageUrl,
-                };
-                const recordIcon = (
-                  <Avatar
-                    type={
-                      record.objectNameSingular ===
-                      CoreObjectNameSingular.Company
-                        ? 'squared'
-                        : 'rounded'
+              );
+              return (
+                <SelectableListItem
+                  key={record.recordId}
+                  itemId={record.recordId}
+                  onEnter={() => handleSelectRecord(record)}
+                >
+                  <CommandMenuItemWithAddToNavigationDrag
+                    icon={recordIcon}
+                    label={record.label}
+                    description={
+                      objectMetadataItem?.labelSingular ??
+                      record.objectNameSingular
                     }
-                    avatarUrl={record.imageUrl}
-                    placeholderColorSeed={record.recordId}
-                    placeholder={record.label}
+                    id={record.recordId}
+                    onClick={() => handleSelectRecord(record)}
+                    payload={recordPayload}
                   />
-                );
-                return (
-                  <SelectableListItem
-                    key={record.recordId}
-                    itemId={record.recordId}
-                    onEnter={() => handleSelectRecord(record)}
-                  >
-                    <CommandMenuItemWithAddToNavigationDrag
-                      icon={recordIcon}
-                      label={record.label}
-                      description={
-                        objectMetadataItem?.labelSingular ??
-                        record.objectNameSingular
-                      }
-                      id={record.recordId}
-                      onClick={() => handleSelectRecord(record)}
-                      payload={recordPayload}
-                    />
-                  </SelectableListItem>
-                );
-              })
-            )}
+                </SelectableListItem>
+              );
+            })}
           </CommandGroup>
         </CommandMenuList>
       </CommandMenuSubViewWithSearch>
