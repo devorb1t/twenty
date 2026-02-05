@@ -6,10 +6,11 @@ import { IconFolder, IconLink } from 'twenty-ui/display';
 
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { CommandMenuNewSidebarItemMainMenu } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemMainMenu';
-import { CommandMenuNewSidebarItemObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemObjectPickerSubView';
+import { CommandMenuObjectMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectMenuItem';
+import { CommandMenuObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerSubView';
 import { CommandMenuNewSidebarItemRecordSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemRecordSubView';
-import { CommandMenuNewSidebarItemSystemPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemSystemPickerSubView';
 import { CommandMenuNewSidebarItemViewObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemViewObjectPickerSubView';
+import { CommandMenuSystemObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSystemObjectPickerSubView';
 import { CommandMenuNewSidebarItemViewPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemViewPickerSubView';
 import { CommandMenuNewSidebarItemViewSystemSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemViewSystemSubView';
 import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
@@ -207,25 +208,38 @@ export const CommandMenuNewSidebarItemPage = () => {
 
   if (selectedOption === 'object') {
     return (
-      <CommandMenuNewSidebarItemObjectPickerSubView
+      <CommandMenuObjectPickerSubView
         objects={availableObjectMetadataItems}
         searchValue={objectSearchInput}
         onSearchChange={setObjectSearchInput}
         onBack={handleBackToMain}
         onOpenSystemPicker={() => setSelectedOption('system')}
-        onSelectObject={handleSelectObject}
+        renderObjectMenuItem={(objectMetadataItem) => (
+          <CommandMenuObjectMenuItem
+            objectMetadataItem={objectMetadataItem}
+            onSelect={handleSelectObject}
+            variant="add"
+          />
+        )}
       />
     );
   }
 
   if (selectedOption === 'system') {
     return (
-      <CommandMenuNewSidebarItemSystemPickerSubView
+      <CommandMenuSystemObjectPickerSubView
         systemObjects={availableSystemObjectMetadataItems}
         searchValue={systemObjectSearchInput}
         onSearchChange={setSystemObjectSearchInput}
         onBack={handleBackToObjectList}
-        onSelectObject={handleSelectObject}
+        renderObjectMenuItem={(objectMetadataItem) => (
+          <CommandMenuObjectMenuItem
+            objectMetadataItem={objectMetadataItem}
+            onSelect={handleSelectObject}
+            variant="add"
+          />
+        )}
+        emptyNoResultsText={t`All system objects are already in the sidebar`}
       />
     );
   }

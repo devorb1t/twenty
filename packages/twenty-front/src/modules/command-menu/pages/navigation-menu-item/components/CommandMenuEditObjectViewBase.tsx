@@ -1,48 +1,49 @@
 import { useLingui } from '@lingui/react/macro';
-import { useIcons } from 'twenty-ui/display';
+import { type IconComponent } from 'twenty-ui/display';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
-import type { WorkspaceSectionItem } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
-import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 
-type ObjectViewItem = WorkspaceSectionItem & { type: 'objectView' };
-
-type CommandMenuEditObjectItemViewProps = {
-  selectedItem: ObjectViewItem;
+type OrganizeActionsProps = {
   canMoveUp: boolean;
   canMoveDown: boolean;
-  onOpenObjectPicker: () => void;
-  onOpenFolderPicker: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove: () => void;
 };
 
-export const CommandMenuEditObjectItemView = ({
-  selectedItem,
-  canMoveUp,
-  canMoveDown,
+type CommandMenuEditObjectViewBaseProps = OrganizeActionsProps & {
+  objectIcon: IconComponent;
+  objectLabel: string;
+  onOpenObjectPicker: () => void;
+  onOpenFolderPicker: () => void;
+  viewRow?: {
+    icon: IconComponent;
+    label: string;
+    onClick: () => void;
+  };
+};
+
+export const CommandMenuEditObjectViewBase = ({
+  objectIcon,
+  objectLabel,
   onOpenObjectPicker,
   onOpenFolderPicker,
+  viewRow,
+  canMoveUp,
+  canMoveDown,
   onMoveUp,
   onMoveDown,
   onRemove,
-}: CommandMenuEditObjectItemViewProps) => {
+}: CommandMenuEditObjectViewBaseProps) => {
   const { t } = useLingui();
-  const { getIcon } = useIcons();
-  const objectNameSingular = selectedItem.objectMetadataItem.nameSingular;
-  const objectIcon = selectedItem.objectMetadataItem.icon ?? 'IconCube';
-  const selectedItemLabel = selectedItem.objectMetadataItem.labelPlural;
-  const { Icon: StandardObjectIcon } =
-    useGetStandardObjectIcon(objectNameSingular);
-  const Icon = StandardObjectIcon ?? getIcon(objectIcon);
 
   const selectableItemIds = [
     'object',
+    ...(viewRow ? ['view'] : []),
     'move-up',
     'move-down',
     'move-to-folder',
@@ -54,15 +55,28 @@ export const CommandMenuEditObjectItemView = ({
       <CommandGroup heading={t`Customize`}>
         <SelectableListItem itemId="object" onEnter={onOpenObjectPicker}>
           <CommandMenuItem
-            Icon={Icon}
+            Icon={objectIcon}
             label={t`Object`}
-            description={selectedItemLabel ?? undefined}
+            description={objectLabel ?? undefined}
             contextualTextPosition="right"
             hasSubMenu={true}
             id="object"
             onClick={onOpenObjectPicker}
           />
         </SelectableListItem>
+        {viewRow && (
+          <SelectableListItem itemId="view" onEnter={viewRow.onClick}>
+            <CommandMenuItem
+              Icon={viewRow.icon}
+              label={t`View`}
+              description={viewRow.label ?? undefined}
+              contextualTextPosition="right"
+              hasSubMenu={true}
+              id="view"
+              onClick={viewRow.onClick}
+            />
+          </SelectableListItem>
+        )}
       </CommandGroup>
       <CommandMenuEditOrganizeActions
         canMoveUp={canMoveUp}

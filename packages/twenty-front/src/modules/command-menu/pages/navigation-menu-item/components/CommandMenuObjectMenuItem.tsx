@@ -4,22 +4,24 @@ import { useIcons } from 'twenty-ui/display';
 
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
-import { coreIndexViewIdFromObjectMetadataItemFamilySelector } from '@/views/states/selectors/coreIndexViewIdFromObjectMetadataItemFamilySelector';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
+import { coreIndexViewIdFromObjectMetadataItemFamilySelector } from '@/views/states/selectors/coreIndexViewIdFromObjectMetadataItemFamilySelector';
 
-type CommandMenuAddObjectMenuItemProps = {
+type CommandMenuObjectMenuItemProps = {
   objectMetadataItem: ObjectMetadataItem;
   onSelect: (
     objectMetadataItem: ObjectMetadataItem,
     defaultViewId: string,
   ) => void;
+  variant: 'add' | 'edit';
 };
 
-export const CommandMenuAddObjectMenuItem = ({
+export const CommandMenuObjectMenuItem = ({
   objectMetadataItem,
   onSelect,
-}: CommandMenuAddObjectMenuItemProps) => {
+  variant,
+}: CommandMenuObjectMenuItemProps) => {
   const { getIcon } = useIcons();
   const defaultViewId = useRecoilValue(
     coreIndexViewIdFromObjectMetadataItemFamilySelector({
@@ -52,13 +54,20 @@ export const CommandMenuAddObjectMenuItem = ({
           onClick={handleClick}
           disabled={true}
         />
-      ) : (
+      ) : variant === 'add' ? (
         <CommandMenuItemWithAddToNavigationDrag
           Icon={Icon}
           label={objectMetadataItem.labelPlural}
           id={objectMetadataItem.id}
           onClick={handleClick}
           payload={payload}
+        />
+      ) : (
+        <CommandMenuItem
+          Icon={Icon}
+          label={objectMetadataItem.labelPlural}
+          id={objectMetadataItem.id}
+          onClick={handleClick}
         />
       )}
     </SelectableListItem>
