@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { msg, t } from '@lingui/core/macro';
+import { isNonEmptyString } from '@sniptt/guards';
 import { ALL_METADATA_NAME } from 'twenty-shared/metadata';
 import { isDefined } from 'twenty-shared/utils';
 
@@ -24,12 +25,14 @@ export class FlatNavigationMenuItemValidatorService {
     hasTargetRecordId,
     hasTargetObjectMetadataId,
     hasViewId,
+    hasLink,
     name,
     isUpdate = false,
   }: {
     hasTargetRecordId: boolean;
     hasTargetObjectMetadataId: boolean;
     hasViewId: boolean;
+    hasLink: boolean;
     name: string | null | undefined;
     isUpdate?: boolean;
   }): FlatEntityValidationError<NavigationMenuItemExceptionCode>[] {
@@ -61,17 +64,25 @@ export class FlatNavigationMenuItemValidatorService {
     }
 
     const isFolder =
-      !hasTargetRecordId && !hasTargetObjectMetadataId && !hasViewId;
+      !hasTargetRecordId &&
+      !hasTargetObjectMetadataId &&
+      !hasViewId &&
+      !hasLink;
     const isViewLink = hasViewId;
     const isRecordLink = hasTargetRecordId && hasTargetObjectMetadataId;
+    const isExternalLink =
+      !hasTargetRecordId && !hasTargetObjectMetadataId && !hasViewId && hasLink;
     const typeCount =
-      (isFolder ? 1 : 0) + (isViewLink ? 1 : 0) + (isRecordLink ? 1 : 0);
+      (isFolder ? 1 : 0) +
+      (isViewLink ? 1 : 0) +
+      (isRecordLink ? 1 : 0) +
+      (isExternalLink ? 1 : 0);
 
     if (typeCount === 0) {
       errors.push({
         code: NavigationMenuItemExceptionCode.INVALID_NAVIGATION_MENU_ITEM_INPUT,
-        message: t`Navigation menu item must be either a folder (with name), a view link (with viewId), or a record link (with targetRecordId and targetObjectMetadataId)`,
-        userFriendlyMessage: msg`Navigation menu item must be either a folder (with name), a view link (with viewId), or a record link (with targetRecordId and targetObjectMetadataId)`,
+        message: t`Navigation menu item must be either a folder (with name), a view link (with viewId), a record link (with targetRecordId and targetObjectMetadataId), or an external link (with link)`,
+        userFriendlyMessage: msg`Navigation menu item must be either a folder (with name), a view link (with viewId), a record link (with targetRecordId and targetObjectMetadataId), or an external link (with link)`,
       });
     }
 
@@ -183,6 +194,9 @@ export class FlatNavigationMenuItemValidatorService {
         flatNavigationMenuItem.targetObjectMetadataId,
       ),
       hasViewId: isDefined(flatNavigationMenuItem.viewId),
+      hasLink:
+        isDefined(flatNavigationMenuItem.link) &&
+        isNonEmptyString(flatNavigationMenuItem.link),
       name: flatNavigationMenuItem.name,
       isUpdate: false,
     });
@@ -318,6 +332,7 @@ export class FlatNavigationMenuItemValidatorService {
         toFlatNavigationMenuItem.targetObjectMetadataId,
       ),
       hasViewId: isDefined(toFlatNavigationMenuItem.viewId),
+      hasLink: isNonEmptyString((toFlatNavigationMenuItem.link ?? '').trim()),
       name: isDefined(nameUpdate) ? nameUpdate : toFlatNavigationMenuItem.name,
       isUpdate: true,
     });

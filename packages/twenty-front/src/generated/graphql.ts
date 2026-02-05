@@ -3104,6 +3104,7 @@ export type NavigationMenuItem = {
   createdAt: Scalars['DateTime'];
   folderId?: Maybe<Scalars['UUID']>;
   id: Scalars['UUID'];
+  link?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
   position: Scalars['Float'];
   targetObjectMetadataId?: Maybe<Scalars['UUID']>;
