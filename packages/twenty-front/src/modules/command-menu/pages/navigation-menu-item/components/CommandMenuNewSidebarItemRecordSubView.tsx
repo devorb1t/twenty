@@ -1,14 +1,24 @@
 import { useLingui } from '@lingui/react/macro';
+import { useState } from 'react';
+import { isDefined } from 'twenty-shared/utils';
 import { Avatar } from 'twenty-ui/display';
+import { useDebounce } from 'use-debounce';
 
+import { MAX_SEARCH_RESULTS } from '@/command-menu/constants/MaxSearchResults';
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
+import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
-import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
-import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
+import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
+import { useApolloCoreClient } from '@/object-metadata/hooks/useApolloCoreClient';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
+import { useObjectPermissions } from '@/object-record/hooks/useObjectPermissions';
+import { getObjectPermissionsFromMapByObjectMetadataId } from '@/settings/roles/role-permissions/objects-permissions/utils/getObjectPermissionsFromMapByObjectMetadataId';
+import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
+import type { NavigationMenuItem } from '~/generated-metadata/graphql';
+import { useSearchQuery } from '~/generated/graphql';
 
 type SearchRecordBase = {
   recordId: string;
@@ -17,30 +27,61 @@ type SearchRecordBase = {
   imageUrl?: string | null;
 };
 
-type CommandMenuNewSidebarItemRecordSubViewProps<T extends SearchRecordBase> = {
-  availableSearchRecords: T[];
-  recordSearchInput: string;
-  onRecordSearchChange: (value: string) => void;
-  recordSearchLoading: boolean;
-  deferredRecordSearchInput: string;
+type CommandMenuNewSidebarItemRecordSubViewProps = {
+  currentDraft: NavigationMenuItem[];
   objectMetadataItems: ObjectMetadataItem[];
-  onSelectRecord: (record: T) => void;
   onBack: () => void;
+  onSuccess: () => void;
 };
 
-export const CommandMenuNewSidebarItemRecordSubView = <
-  T extends SearchRecordBase,
->({
-  availableSearchRecords,
-  recordSearchInput,
-  onRecordSearchChange,
-  recordSearchLoading,
-  deferredRecordSearchInput,
+export const CommandMenuNewSidebarItemRecordSubView = ({
+  currentDraft,
   objectMetadataItems,
-  onSelectRecord,
   onBack,
-}: CommandMenuNewSidebarItemRecordSubViewProps<T>) => {
+  onSuccess,
+}: CommandMenuNewSidebarItemRecordSubViewProps) => {
+  const { addRecordToDraft } = useAddToNavigationMenuDraft();
   const { t } = useLingui();
+  const [recordSearchInput, setRecordSearchInput] = useState('');
+  const [deferredRecordSearchInput] = useDebounce(recordSearchInput, 300);
+  const coreClient = useApolloCoreClient();
+  const { objectPermissionsByObjectMetadataId } = useObjectPermissions();
+
+  const nonReadableObjectMetadataItemsNameSingular = Object.values(
+    objectMetadataItems,
+  )
+    .filter((objectMetadataItem) => {
+      const objectPermission = getObjectPermissionsFromMapByObjectMetadataId({
+        objectPermissionsByObjectMetadataId,
+        objectMetadataId: objectMetadataItem.id,
+      });
+      return !objectPermission?.canReadObjectRecords;
+    })
+    .map((objectMetadataItem) => objectMetadataItem.nameSingular);
+
+  const { data: searchData, loading: recordSearchLoading } = useSearchQuery({
+    client: coreClient,
+    variables: {
+      searchInput: deferredRecordSearchInput ?? '',
+      limit: MAX_SEARCH_RESULTS,
+      excludedObjectNameSingulars: [
+        'workspaceMember',
+        ...nonReadableObjectMetadataItemsNameSingular,
+      ],
+    },
+  });
+
+  const workspaceRecordIds = new Set(
+    currentDraft.flatMap((item) =>
+      isDefined(item.targetRecordId) ? [item.targetRecordId] : [],
+    ),
+  );
+
+  const searchRecords = searchData?.search.edges.map((edge) => edge.node) ?? [];
+  const availableSearchRecords = searchRecords.filter(
+    (record) => !workspaceRecordIds.has(record.recordId),
+  ) as SearchRecordBase[];
+
   const isEmpty = availableSearchRecords.length === 0 && !recordSearchLoading;
   const selectableItemIds = isEmpty
     ? []
@@ -56,7 +97,7 @@ export const CommandMenuNewSidebarItemRecordSubView = <
       onBack={onBack}
       searchPlaceholder={t`Search records...`}
       searchValue={recordSearchInput}
-      onSearchChange={onRecordSearchChange}
+      onSearchChange={setRecordSearchInput}
     >
       <CommandMenuList
         commandGroups={[]}
@@ -90,11 +131,24 @@ export const CommandMenuNewSidebarItemRecordSubView = <
                 placeholder={record.label}
               />
             );
+            const handleSelectRecord = () => {
+              addRecordToDraft(
+                {
+                  recordId: record.recordId,
+                  objectNameSingular: record.objectNameSingular,
+                  label: record.label,
+                  imageUrl: record.imageUrl,
+                },
+                currentDraft,
+              );
+              onSuccess();
+            };
+
             return (
               <SelectableListItem
                 key={record.recordId}
                 itemId={record.recordId}
-                onEnter={() => onSelectRecord(record)}
+                onEnter={handleSelectRecord}
               >
                 <CommandMenuItemWithAddToNavigationDrag
                   icon={recordIcon}
@@ -104,7 +158,7 @@ export const CommandMenuNewSidebarItemRecordSubView = <
                     record.objectNameSingular
                   }
                   id={record.recordId}
-                  onClick={() => onSelectRecord(record)}
+                  onClick={handleSelectRecord}
                   payload={recordPayload}
                 />
               </SelectableListItem>
