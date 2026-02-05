@@ -2,6 +2,7 @@ import { useSetRecoilState } from 'recoil';
 
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
+import { isNavigationMenuItemLink } from '@/navigation-menu-item/utils/isNavigationMenuItemLink';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { type View } from '@/views/types/View';
 
@@ -60,9 +61,32 @@ export const useUpdateNavigationMenuItemsDraft = () => {
     });
   };
 
+  const updateLinkInDraft = (
+    linkId: string,
+    updates: { name?: string; link?: string },
+  ) => {
+    setNavigationMenuItemsDraft((draft) => {
+      if (!draft) return draft;
+
+      return draft.map((item) => {
+        if (item.id !== linkId || !isNavigationMenuItemLink(item)) return item;
+
+        const updated = { ...item };
+        if (updates.name !== undefined) {
+          updated.name = updates.name.trim() || 'Link';
+        }
+        if (updates.link !== undefined && updates.link.trim() !== '') {
+          updated.link = updates.link.trim();
+        }
+        return updated;
+      });
+    });
+  };
+
   return {
     updateObjectInDraft,
     updateViewInDraft,
     updateFolderNameInDraft,
+    updateLinkInDraft,
   };
 };

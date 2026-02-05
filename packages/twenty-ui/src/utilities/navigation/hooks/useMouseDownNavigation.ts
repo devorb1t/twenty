@@ -11,6 +11,7 @@ type UseMouseDownNavigationProps = {
   onBeforeNavigation?: () => void;
   triggerEvent?: TriggerEventType;
   stopPropagation?: boolean;
+  preventDefault?: boolean;
 };
 
 export const useMouseDownNavigation = ({
@@ -19,6 +20,7 @@ export const useMouseDownNavigation = ({
   disabled = false,
   onBeforeNavigation,
   triggerEvent = 'MOUSE_DOWN',
+  preventDefault = true,
 }: UseMouseDownNavigationProps) => {
   const navigate = useNavigate();
 
@@ -44,8 +46,9 @@ export const useMouseDownNavigation = ({
       }
     }
 
-    // For regular clicks, prevent default to avoid double navigation
-    event.preventDefault();
+    if (preventDefault) {
+      event.preventDefault();
+    }
   };
 
   const handleMouseDown = (event: MouseEvent<HTMLElement>) => {

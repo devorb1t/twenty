@@ -11,6 +11,7 @@ import {
   computeNavigationMenuItemDisplayFields,
   type NavigationMenuItemDisplayFields,
 } from './computeNavigationMenuItemDisplayFields';
+import { isNavigationMenuItemLink } from './isNavigationMenuItemLink';
 
 export type ProcessedNavigationMenuItem = NavigationMenuItem &
   NavigationMenuItemDisplayFields & { viewKey?: ViewKey | null };
@@ -70,6 +71,26 @@ export const sortNavigationMenuItems = (
         }
 
         return null;
+      }
+
+      if (isNavigationMenuItemLink(navigationMenuItem)) {
+        const linkUrl = (navigationMenuItem.link ?? '').trim();
+        const normalizedLink =
+          linkUrl.startsWith('http://') || linkUrl.startsWith('https://')
+            ? linkUrl
+            : `https://${linkUrl}`;
+        const displayFields: NavigationMenuItemDisplayFields = {
+          labelIdentifier: (navigationMenuItem.name ?? linkUrl) || 'Link',
+          avatarUrl: '',
+          avatarType: 'icon',
+          link: normalizedLink,
+          objectNameSingular: 'link',
+          Icon: 'IconLink',
+        };
+        return {
+          ...navigationMenuItem,
+          ...displayFields,
+        };
       }
 
       if (!isDefined(navigationMenuItem.targetRecordId)) {

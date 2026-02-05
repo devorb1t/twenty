@@ -192,8 +192,13 @@ export const CommandMenuNewSidebarItemPage = () => {
   const coreViews = useRecoilValue(coreViewsState);
   const { objectMetadataItems } = useObjectMetadataItems();
   const { objectPermissionsByObjectMetadataId } = useObjectPermissions();
-  const { addObjectToDraft, addViewToDraft, addRecordToDraft, addFolderToDraft } =
-    useAddToNavigationMenuDraft();
+  const {
+    addObjectToDraft,
+    addViewToDraft,
+    addRecordToDraft,
+    addFolderToDraft,
+    addLinkToDraft,
+  } = useAddToNavigationMenuDraft();
   const { workspaceNavigationMenuItems, navigationMenuItemsDraft } =
     useNavigationMenuItemsDraftState();
   const setSelectedNavigationMenuItemInEditMode = useSetRecoilState(
@@ -406,6 +411,20 @@ export const CommandMenuNewSidebarItemPage = () => {
     openNavigationMenuItemInCommandMenu({
       pageTitle: t`Edit folder`,
       pageIcon: IconFolder,
+      focusTitleInput: true,
+    });
+  };
+
+  const handleAddLinkAndOpenEdit = () => {
+    const newLinkId = addLinkToDraft(
+      t`Link label`,
+      'www.example.com',
+      currentDraft,
+    );
+    setSelectedNavigationMenuItemInEditMode(newLinkId);
+    openNavigationMenuItemInCommandMenu({
+      pageTitle: t`Edit link`,
+      pageIcon: IconLink,
       focusTitleInput: true,
     });
   };
@@ -879,13 +898,12 @@ export const CommandMenuNewSidebarItemPage = () => {
             onClick={handleAddFolderAndOpenEdit}
           />
         </SelectableListItem>
-        <SelectableListItem itemId="link" onEnter={() => {}}>
+        <SelectableListItem itemId="link" onEnter={handleAddLinkAndOpenEdit}>
           <CommandMenuItem
             Icon={IconLink}
             label={t`Link`}
             id="link"
-            hasSubMenu={true}
-            disabled={true}
+            onClick={handleAddLinkAndOpenEdit}
           />
         </SelectableListItem>
       </CommandGroup>

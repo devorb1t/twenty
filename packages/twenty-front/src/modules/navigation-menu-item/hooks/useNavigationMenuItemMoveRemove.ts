@@ -99,9 +99,7 @@ export const useNavigationMenuItemMoveRemove = () => {
     setNavigationMenuItemsDraft((draft) => {
       if (!draft) return draft;
 
-      const itemToMove = draft.find(
-        (item) => item.id === navigationMenuItemId,
-      );
+      const itemToMove = draft.find((item) => item.id === navigationMenuItemId);
       if (!itemToMove) return draft;
 
       const isFolder = isNavigationMenuItemFolder(itemToMove);
@@ -115,8 +113,7 @@ export const useNavigationMenuItemMoveRemove = () => {
           draft
             ?.filter(
               (item) =>
-                isNavigationMenuItemFolder(item) &&
-                item.folderId === folderId,
+                isNavigationMenuItemFolder(item) && item.folderId === folderId,
             )
             .forEach((item) => {
               descendantFolderIds.add(item.id);

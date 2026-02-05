@@ -2,6 +2,7 @@ import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { useMemo, useState } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { isNonEmptyString } from '@sniptt/guards';
 import { isDefined } from 'twenty-shared/utils';
 import {
   IconApps,
@@ -22,17 +23,18 @@ import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { useNavigationMenuItemsByFolder } from '@/navigation-menu-item/hooks/useNavigationMenuItemsByFolder';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
+import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import {
   type WorkspaceSectionItem,
   useWorkspaceSectionItems,
 } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
-import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
 import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
+import { TextInput } from '@/ui/input/components/TextInput';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { coreViewsState } from '@/views/states/coreViewState';
 import { coreIndexViewIdFromObjectMetadataItemFamilySelector } from '@/views/states/selectors/coreIndexViewIdFromObjectMetadataItemFamilySelector';
@@ -89,7 +91,6 @@ const StyledSearchInput = styled.input`
     color: ${({ theme }) => theme.font.color.tertiary};
   }
 `;
-
 const StyledSubViewContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -201,12 +202,15 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     | 'folder-rename'
     | null
   >(null);
-  const [selectedObjectMetadataIdForViewEdit, setSelectedObjectMetadataIdForViewEdit] =
-    useState<string | null>(null);
+  const [
+    selectedObjectMetadataIdForViewEdit,
+    setSelectedObjectMetadataIdForViewEdit,
+  ] = useState<string | null>(null);
   const [objectSearchInput, setObjectSearchInput] = useState('');
   const [systemObjectSearchInput, setSystemObjectSearchInput] = useState('');
   const [folderSearchInput, setFolderSearchInput] = useState('');
   const [folderRenameInput, setFolderRenameInput] = useState('');
+  const [urlEditInput, setUrlEditInput] = useState('');
   const [viewSearchInput, setViewSearchInput] = useState('');
 
   const selectedNavigationMenuItemInEditMode = useRecoilValue(
@@ -222,6 +226,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     updateObjectInDraft,
     updateViewInDraft,
     updateFolderNameInDraft,
+    updateLinkInDraft,
   } = useUpdateNavigationMenuItemsDraft();
   const { workspaceNavigationMenuItems, navigationMenuItemsDraft } =
     useNavigationMenuItemsDraftState();
@@ -255,7 +260,9 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   const selectedItemLabel = selectedItem
     ? selectedItem.type === 'folder'
       ? selectedItem.folder.folderName
-      : selectedItem.objectMetadataItem.labelPlural
+      : selectedItem.type === 'link'
+        ? (selectedItem.navigationMenuItem.name ?? 'Link')
+        : selectedItem.objectMetadataItem.labelPlural
     : null;
 
   const selectedViewLabel =
@@ -281,6 +288,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   const isViewItem = selectedItem !== undefined && isViewNavItem(selectedItem);
   const isFolderItem =
     selectedItem !== undefined && selectedItem.type === 'folder';
+  const isLinkItem = selectedItem !== undefined && selectedItem.type === 'link';
 
   const objectMetadataIdsWithIndexView = useMemo(() => {
     const views = coreViews.map(convertCoreViewToView);
@@ -381,9 +389,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         a.labelPlural.localeCompare(b.labelPlural),
       );
     }
-    return objects.sort((a, b) =>
-      a.labelPlural.localeCompare(b.labelPlural),
-    );
+    return objects.sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
   }, [
     activeNonSystemObjectMetadataItems,
     objectMetadataIdsWithAnyView,
@@ -447,8 +453,18 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         folderId: item.folderId ?? undefined,
       })) ?? [];
 
-    if (!isFolderItem || !selectedNavigationMenuItemInEditMode) {
+    if (
+      (!isFolderItem && !isLinkItem) ||
+      !selectedNavigationMenuItemInEditMode
+    ) {
       return { folders, includeNoFolderOption: false };
+    }
+
+    if (isLinkItem) {
+      return {
+        folders,
+        includeNoFolderOption: true,
+      };
     }
 
     const currentFolderId = selectedNavigationMenuItemInEditMode;
@@ -475,6 +491,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   }, [
     currentDraft,
     isFolderItem,
+    isLinkItem,
     selectedNavigationMenuItemInEditMode,
   ]);
 
@@ -517,7 +534,9 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     closeCommandMenu();
   };
 
-  const handleSelectObjectForViewEdit = (objectMetadataItem: ObjectMetadataItem) => {
+  const handleSelectObjectForViewEdit = (
+    objectMetadataItem: ObjectMetadataItem,
+  ) => {
     setSelectedObjectMetadataIdForViewEdit(objectMetadataItem.id);
     setEditSubView('view-picker');
   };
@@ -603,7 +622,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
                   />
                 </SelectableListItem>
               )}
-              {filteredFolders.length === 0 && !foldersForFolderPicker.includeNoFolderOption ? (
+              {filteredFolders.length === 0 &&
+              !foldersForFolderPicker.includeNoFolderOption ? (
                 <SelectableListItem itemId="empty" onEnter={() => {}}>
                   <CommandMenuItem
                     label={
@@ -770,7 +790,9 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
       filteredViews.length > 0
         ? filteredViews.map((view) => view.id)
         : ['empty'];
-    const selectedObjectForViewEdit = isDefined(selectedObjectMetadataIdForViewEdit)
+    const selectedObjectForViewEdit = isDefined(
+      selectedObjectMetadataIdForViewEdit,
+    )
       ? objectMetadataItems.find(
           (item) => item.id === selectedObjectMetadataIdForViewEdit,
         )
@@ -962,9 +984,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
             <CommandMenuItem
               Icon={
                 StandardObjectIcon ??
-                getIcon(
-                  selectedItem.objectMetadataItem.icon ?? 'IconCube',
-                )
+                getIcon(selectedItem.objectMetadataItem.icon ?? 'IconCube')
               }
               label={t`Object`}
               description={selectedItemLabel ?? undefined}
@@ -1031,6 +1051,110 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
               label={t`Remove from sidebar`}
               id="remove"
               onClick={handleRemove}
+            />
+          </SelectableListItem>
+        </CommandGroup>
+      </CommandMenuList>
+    );
+  }
+
+  if (isLinkItem && selectedItem?.type === 'link') {
+    const linkUrl = selectedItem.navigationMenuItem.link ?? '';
+    const selectableItemIds = [
+      'move-up',
+      'move-down',
+      'move-to-folder',
+      'remove',
+      'standard-app',
+      'reset-to-default',
+    ];
+
+    return (
+      <CommandMenuList commandGroups={[]} selectableItemIds={selectableItemIds}>
+        <CommandGroup heading={t`Customize`}>
+          <TextInput
+            fullWidth
+            placeholder="www.google.com"
+            value={urlEditInput || linkUrl}
+            onChange={(value) => setUrlEditInput(value)}
+            onBlur={(event) => {
+              const value = event.target.value.trim();
+              if (isNonEmptyString(value)) {
+                const normalizedLink =
+                  value.startsWith('http://') || value.startsWith('https://')
+                    ? value
+                    : `https://${value}`;
+                updateLinkInDraft(selectedItem.navigationMenuItem.id, {
+                  link: normalizedLink,
+                });
+              }
+              setUrlEditInput('');
+            }}
+          />
+        </CommandGroup>
+        <CommandGroup heading={t`Organize`}>
+          <SelectableListItem
+            itemId="move-up"
+            onEnter={canMoveUp ? handleMoveUp : undefined}
+          >
+            <CommandMenuItem
+              Icon={IconChevronUp}
+              label={t`Move up`}
+              id="move-up"
+              onClick={handleMoveUp}
+              disabled={!canMoveUp}
+            />
+          </SelectableListItem>
+          <SelectableListItem
+            itemId="move-down"
+            onEnter={canMoveDown ? handleMoveDown : undefined}
+          >
+            <CommandMenuItem
+              Icon={IconChevronDown}
+              label={t`Move down`}
+              id="move-down"
+              onClick={handleMoveDown}
+              disabled={!canMoveDown}
+            />
+          </SelectableListItem>
+          <SelectableListItem
+            itemId="move-to-folder"
+            onEnter={() => setEditSubView('folder-picker')}
+          >
+            <CommandMenuItem
+              Icon={IconFolder}
+              label={t`Move to folder`}
+              id="move-to-folder"
+              hasSubMenu={true}
+              onClick={() => setEditSubView('folder-picker')}
+            />
+          </SelectableListItem>
+          <SelectableListItem itemId="remove" onEnter={handleRemove}>
+            <CommandMenuItem
+              Icon={IconTrash}
+              label={t`Remove from sidebar`}
+              id="remove"
+              onClick={handleRemove}
+            />
+          </SelectableListItem>
+        </CommandGroup>
+        <CommandGroup heading={t`Owner`}>
+          <SelectableListItem itemId="standard-app" onEnter={() => {}}>
+            <CommandMenuItem
+              Icon={IconApps}
+              label={t`Standard app`}
+              id="standard-app"
+              disabled={true}
+              onClick={() => {}}
+            />
+          </SelectableListItem>
+          <SelectableListItem itemId="reset-to-default" onEnter={() => {}}>
+            <CommandMenuItem
+              Icon={IconRefresh}
+              label={t`Reset to default`}
+              id="reset-to-default"
+              disabled={true}
+              onClick={() => {}}
             />
           </SelectableListItem>
         </CommandGroup>

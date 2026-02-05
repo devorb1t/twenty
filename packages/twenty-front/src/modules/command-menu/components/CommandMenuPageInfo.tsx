@@ -1,4 +1,5 @@
 import { CommandMenuFolderInfo } from '@/command-menu/components/CommandMenuFolderInfo';
+import { CommandMenuLinkInfo } from './CommandMenuLinkInfo';
 import { CommandMenuMultipleRecordsInfo } from '@/command-menu/components/CommandMenuMultipleRecordsInfo';
 import { CommandMenuPageLayoutInfo } from '@/command-menu/components/CommandMenuPageLayoutInfo';
 import { CommandMenuRecordInfo } from '@/command-menu/components/CommandMenuRecordInfo';
@@ -10,8 +11,8 @@ import {
 } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import styled from '@emotion/styled';
-import { isDefined } from 'twenty-shared/utils';
 import { useRecoilValue } from 'recoil';
+import { isDefined } from 'twenty-shared/utils';
 import { OverflowingTextWithTooltip } from 'twenty-ui/display';
 import { type CommandMenuContextChipProps } from './CommandMenuContextChip';
 
@@ -48,9 +49,21 @@ export const CommandMenuPageInfo = ({ pageChip }: CommandMenuPageInfoProps) => {
             selectedNavigationMenuItemInEditMode,
       )
     : undefined;
+  const selectedLink = isNavigationMenuItemEditPage
+    ? workspaceSectionItems.find(
+        (item) =>
+          item.type === 'link' &&
+          getWorkspaceSectionItemId(item) ===
+            selectedNavigationMenuItemInEditMode,
+      )
+    : undefined;
 
   if (isNavigationMenuItemEditPage && selectedFolder?.type === 'folder') {
     return <CommandMenuFolderInfo />;
+  }
+
+  if (isNavigationMenuItemEditPage && selectedLink?.type === 'link') {
+    return <CommandMenuLinkInfo />;
   }
 
   const isRecordPage = pageChip.page?.page === CommandMenuPages.ViewRecord;

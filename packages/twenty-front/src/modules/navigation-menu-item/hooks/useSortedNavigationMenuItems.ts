@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 
+import { isNavigationMenuItemLink } from '@/navigation-menu-item/utils/isNavigationMenuItemLink';
 import { recordIdentifierToObjectRecordIdentifier } from '@/navigation-menu-item/utils/recordIdentifierToObjectRecordIdentifier';
 import { sortNavigationMenuItems } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
@@ -76,6 +77,9 @@ export const useSortedNavigationMenuItems = () => {
 
   const workspaceNavigationMenuItemsSorted = useMemo(() => {
     const filtered = workspaceNavigationMenuItems.filter((item) => {
+      if (isNavigationMenuItemLink(item)) {
+        return true;
+      }
       if (isDefined(item.viewId)) {
         return coreViews.some((view) => view.id === item.viewId);
       }

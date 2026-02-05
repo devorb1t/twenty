@@ -5,6 +5,7 @@ import { Avatar, useIcons } from 'twenty-ui/display';
 
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
+import { isNavigationMenuItemLink } from '@/navigation-menu-item/utils/isNavigationMenuItemLink';
 import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
 import { ViewKey } from '@/views/types/ViewKey';
 
@@ -35,15 +36,18 @@ export const NavigationMenuItemIcon = ({
   const placeholderColorSeed = navigationMenuItem.targetRecordId ?? undefined;
 
   const isRecord = isDefined(navigationMenuItem.targetRecordId);
+  const isLink = isNavigationMenuItemLink(navigationMenuItem);
   const iconColors = getNavigationMenuItemIconColors(theme);
   const isObjectIndexView =
     isDefined(navigationMenuItem.viewId) &&
     navigationMenuItem.viewKey === ViewKey.Index;
   const iconBackgroundColor = isRecord
     ? undefined
-    : isDefined(navigationMenuItem.viewId) && !isObjectIndexView
-      ? iconColors.view
-      : iconColors.object;
+    : isLink
+      ? iconColors.link
+      : isDefined(navigationMenuItem.viewId) && !isObjectIndexView
+        ? iconColors.view
+        : iconColors.object;
 
   const iconColorToUse = iconBackgroundColor
     ? theme.grayScale.gray1

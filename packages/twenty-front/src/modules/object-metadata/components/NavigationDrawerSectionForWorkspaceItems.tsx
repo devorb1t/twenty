@@ -1,3 +1,4 @@
+import { NavigationDrawerItemForLink } from '@/navigation-menu-item/components/NavigationDrawerItemForLink';
 import { WorkspaceNavigationMenuItemsFolder } from '@/navigation-menu-item/components/WorkspaceNavigationMenuItemsFolder';
 import { type WorkspaceSectionItem } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { NavigationDrawerItemForObjectMetadataItem } from '@/object-metadata/components/NavigationDrawerItemForObjectMetadataItem';
@@ -63,6 +64,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
           .filter(
             (item) =>
               item.type === 'folder' ||
+              item.type === 'link' ||
               (item.type === 'objectView' &&
                 getObjectPermissionsForObject(
                   objectPermissionsByObjectMetadataId,
@@ -75,6 +77,21 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
                 key={item.folder.folderId}
                 folder={item.folder}
                 isGroup={folderCount > 1}
+                isEditMode={isEditMode}
+                isSelectedInEditMode={
+                  selectedNavigationMenuItemId ===
+                  getWorkspaceSectionItemId(item)
+                }
+                onEditModeClick={
+                  onNavigationMenuItemClick
+                    ? () => onNavigationMenuItemClick(item)
+                    : undefined
+                }
+              />
+            ) : item.type === 'link' ? (
+              <NavigationDrawerItemForLink
+                key={`navigation-drawer-item-link-${item.navigationMenuItem.id}`}
+                navigationMenuItem={item.navigationMenuItem}
                 isEditMode={isEditMode}
                 isSelectedInEditMode={
                   selectedNavigationMenuItemId ===

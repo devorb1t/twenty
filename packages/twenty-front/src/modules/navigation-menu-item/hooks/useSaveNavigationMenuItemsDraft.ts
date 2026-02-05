@@ -7,6 +7,7 @@ import { useDeleteNavigationMenuItem } from '@/navigation-menu-item/hooks/useDel
 import { useUpdateNavigationMenuItem } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItem';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
+import { isNavigationMenuItemLink } from '@/navigation-menu-item/utils/isNavigationMenuItemLink';
 import { prefetchNavigationMenuItemsState } from '@/prefetch/states/prefetchNavigationMenuItemsState';
 
 export const useSaveNavigationMenuItemsDraft = () => {
@@ -85,6 +86,7 @@ export const useSaveNavigationMenuItemsDraft = () => {
             position: number;
             folderId?: string | null;
             name?: string;
+            link?: string;
             viewId?: string;
             targetObjectMetadataId?: string;
             targetRecordId?: string;
@@ -92,6 +94,15 @@ export const useSaveNavigationMenuItemsDraft = () => {
 
           if (isNavigationMenuItemFolder(draftItem)) {
             input.name = draftItem.name ?? undefined;
+          } else if (isNavigationMenuItemLink(draftItem)) {
+            input.name = draftItem.name ?? 'Link';
+            const linkUrl = (draftItem.link ?? '').trim();
+            input.link =
+              linkUrl.startsWith('http://') || linkUrl.startsWith('https://')
+                ? linkUrl
+                : linkUrl
+                  ? `https://${linkUrl}`
+                  : undefined;
           } else if (isDefined(draftItem.viewId)) {
             input.viewId = draftItem.viewId;
           } else if (isDefined(draftItem.targetRecordId)) {
@@ -120,15 +131,25 @@ export const useSaveNavigationMenuItemsDraft = () => {
           const folderIdChanged =
             (original.folderId ?? null) !== (draftItem.folderId ?? null);
           const nameChanged =
-            isNavigationMenuItemFolder(draftItem) &&
+            (isNavigationMenuItemFolder(draftItem) ||
+              isNavigationMenuItemLink(draftItem)) &&
             (original.name ?? null) !== (draftItem.name ?? null);
+          const linkChanged =
+            isNavigationMenuItemLink(draftItem) &&
+            (original.link ?? null) !== (draftItem.link ?? null);
 
-          if (positionChanged || folderIdChanged || nameChanged) {
+          if (
+            positionChanged ||
+            folderIdChanged ||
+            nameChanged ||
+            linkChanged
+          ) {
             const updateInput: {
               id: string;
               position?: number;
               folderId?: string | null;
               name?: string;
+              link?: string | null;
             } = { id: draftItem.id };
 
             if (positionChanged) {
@@ -139,6 +160,18 @@ export const useSaveNavigationMenuItemsDraft = () => {
             }
             if (nameChanged && isNavigationMenuItemFolder(draftItem)) {
               updateInput.name = draftItem.name ?? undefined;
+            }
+            if (nameChanged && isNavigationMenuItemLink(draftItem)) {
+              updateInput.name = draftItem.name ?? undefined;
+            }
+            if (linkChanged && isNavigationMenuItemLink(draftItem)) {
+              const linkUrl = (draftItem.link ?? '').trim();
+              updateInput.link = linkUrl
+                ? linkUrl.startsWith('http://') ||
+                  linkUrl.startsWith('https://')
+                  ? linkUrl
+                  : `https://${linkUrl}`
+                : null;
             }
 
             await updateNavigationMenuItem(updateInput);

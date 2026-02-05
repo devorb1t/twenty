@@ -2,7 +2,13 @@ import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { useCallback } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { IconFolder, IconPlus, IconTool, useIcons } from 'twenty-ui/display';
+import {
+  IconFolder,
+  IconLink,
+  IconPlus,
+  IconTool,
+  useIcons,
+} from 'twenty-ui/display';
 import { LightIconButton } from 'twenty-ui/input';
 import { FeatureFlagKey } from '~/generated-metadata/graphql';
 
@@ -65,6 +71,11 @@ export const WorkspaceNavigationMenuItems = () => {
         openNavigationMenuItemInCommandMenu({
           pageTitle: t`Edit folder`,
           pageIcon: IconFolder,
+        });
+      } else if (item.type === 'link') {
+        openNavigationMenuItemInCommandMenu({
+          pageTitle: t`Edit link`,
+          pageIcon: IconLink,
         });
       } else {
         openNavigationMenuItemInCommandMenu({

@@ -102,6 +102,49 @@ export const useAddToNavigationMenuDraft = () => {
     return newItemId;
   };
 
+  const addLinkToDraft = (
+    label: string,
+    url: string,
+    currentDraft: NavigationMenuItem[],
+    folderId?: string | null,
+  ): string => {
+    const trimmedUrl = url.trim();
+    const normalizedUrl =
+      trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')
+        ? trimmedUrl
+        : `https://${trimmedUrl}`;
+
+    const itemsInSameContext = currentDraft.filter(
+      (item) =>
+        (item.folderId ?? null) === (folderId ?? null) &&
+        !isDefined(item.userWorkspaceId),
+    );
+    const maxPosition = Math.max(
+      ...itemsInSameContext.map((item) => item.position),
+      0,
+    );
+
+    const newItemId = v4();
+    const newItem: NavigationMenuItem = {
+      __typename: 'NavigationMenuItem',
+      id: newItemId,
+      viewId: undefined,
+      targetObjectMetadataId: undefined,
+      targetRecordId: undefined,
+      folderId: folderId ?? undefined,
+      position: maxPosition + 1,
+      userWorkspaceId: undefined,
+      name: label.trim() || 'Link',
+      link: normalizedUrl,
+      applicationId: undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setNavigationMenuItemsDraft([...currentDraft, newItem]);
+    return newItemId;
+  };
+
   const addRecordToDraft = (
     searchRecord: SearchRecord,
     currentDraft: NavigationMenuItem[],
@@ -147,5 +190,6 @@ export const useAddToNavigationMenuDraft = () => {
     addViewToDraft,
     addRecordToDraft,
     addFolderToDraft,
+    addLinkToDraft,
   };
 };

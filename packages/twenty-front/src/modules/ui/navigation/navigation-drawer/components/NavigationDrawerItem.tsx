@@ -10,6 +10,7 @@ import isPropValid from '@emotion/is-prop-valid';
 import { css, useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { t } from '@lingui/core/macro';
+import { isDefined } from 'twenty-shared/utils';
 import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
@@ -67,7 +68,13 @@ type StyledItemProps = Pick<
   | 'to'
   | 'isDragging'
   | 'isSelectedInEditMode'
-> & { isNavigationDrawerExpanded: boolean; hasRightOptions: boolean };
+> & {
+  isNavigationDrawerExpanded: boolean;
+  hasRightOptions: boolean;
+  href?: string;
+  target?: string;
+  rel?: string;
+};
 
 const StyledItem = styled('button', {
   shouldForwardProp: (prop) =>
@@ -313,12 +320,22 @@ export const NavigationDrawerItem = ({
     }
   };
 
+  const isExternalLink =
+    isDefined(to) && (to.startsWith('http://') || to.startsWith('https://'));
+
+  const handleExternalLinkClick = () => {
+    handleMobileNavigation();
+    if (isDefined(to)) {
+      window.open(to, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   const {
     onClick: handleMouseDownNavigationClickClick,
     onMouseDown: handleMouseDown,
   } = useMouseDownNavigation({
-    to,
-    onClick,
+    to: isExternalLink ? undefined : to,
+    onClick: isExternalLink ? (onClick ?? handleExternalLinkClick) : onClick,
     onBeforeNavigation: handleMobileNavigation,
     triggerEvent,
   });
@@ -336,8 +353,13 @@ export const NavigationDrawerItem = ({
         aria-selected={active}
         danger={danger}
         soon={soon}
-        as={to ? Link : rightOptions ? 'div' : undefined}
-        to={to ? to : undefined}
+        as={
+          to ? (isExternalLink ? 'a' : Link) : rightOptions ? 'div' : undefined
+        }
+        to={isExternalLink ? undefined : to}
+        href={isExternalLink ? to : undefined}
+        target={isExternalLink ? '_blank' : undefined}
+        rel={isExternalLink ? 'noopener noreferrer' : undefined}
         indentationLevel={indentationLevel}
         isNavigationDrawerExpanded={isNavigationDrawerExpanded}
         isDragging={isDragging}

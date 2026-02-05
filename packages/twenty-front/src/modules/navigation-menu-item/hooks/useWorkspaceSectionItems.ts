@@ -2,6 +2,7 @@ import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
+import { isNavigationMenuItemLink } from '@/navigation-menu-item/utils/isNavigationMenuItemLink';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
@@ -24,6 +25,10 @@ export type WorkspaceSectionItem =
       type: 'objectView';
       navigationMenuItem: ProcessedNavigationMenuItem;
       objectMetadataItem: ObjectMetadataItem;
+    }
+  | {
+      type: 'link';
+      navigationMenuItem: ProcessedNavigationMenuItem;
     };
 
 export const useWorkspaceSectionItems = (): WorkspaceSectionItem[] => {
@@ -57,6 +62,14 @@ export const useWorkspaceSectionItems = (): WorkspaceSectionItem[] => {
       const folder = workspaceFoldersById.get(item.id);
       if (isDefined(folder)) {
         acc.push({ type: 'folder', folder });
+      }
+    } else if (isNavigationMenuItemLink(item)) {
+      const processedItem = processedObjectViewsById.get(item.id);
+      if (isDefined(processedItem)) {
+        acc.push({
+          type: 'link',
+          navigationMenuItem: processedItem,
+        });
       }
     } else {
       const processedItem = processedObjectViewsById.get(item.id);
