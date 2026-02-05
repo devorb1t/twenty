@@ -2,7 +2,7 @@ import { useLingui } from '@lingui/react/macro';
 import {
   IconChevronDown,
   IconChevronUp,
-  IconFolder,
+  IconFolderPlus,
   IconTrash,
 } from 'twenty-ui/display';
 
@@ -62,7 +62,7 @@ export const CommandMenuEditOrganizeActions = ({
       {showMoveToFolder && onMoveToFolder && (
         <SelectableListItem itemId="move-to-folder" onEnter={onMoveToFolder}>
           <CommandMenuItem
-            Icon={IconFolder}
+            Icon={IconFolderPlus}
             label={t`Move to folder`}
             id="move-to-folder"
             hasSubMenu={moveToFolderHasSubMenu}

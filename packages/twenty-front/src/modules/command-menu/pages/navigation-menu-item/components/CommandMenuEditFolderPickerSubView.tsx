@@ -1,6 +1,6 @@
 import { useLingui } from '@lingui/react/macro';
 import { isDefined } from 'twenty-shared/utils';
-import { IconFolder } from 'twenty-ui/display';
+import { IconFolderPlus } from 'twenty-ui/display';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
@@ -21,6 +21,7 @@ type CommandMenuEditFolderPickerSubViewProps = {
   isFolderItem: boolean;
   isLinkItem: boolean;
   selectedFolderId: string | null;
+  currentFolderId: string | null;
   searchValue: string;
   onSearchChange: (value: string) => void;
   onBack: () => void;
@@ -33,6 +34,7 @@ export const CommandMenuEditFolderPickerSubView = ({
   isFolderItem,
   isLinkItem,
   selectedFolderId,
+  currentFolderId,
   searchValue,
   onSearchChange,
   onBack,
@@ -54,11 +56,24 @@ export const CommandMenuEditFolderPickerSubView = ({
   }
 
   const shouldIncludeNoFolderOption =
-    (isFolderItem || isLinkItem) && selectedFolderId;
+    (isFolderItem && isDefined(selectedFolderId)) ||
+    (isLinkItem && isDefined(currentFolderId));
   const foldersForFolderPicker = !shouldIncludeNoFolderOption
-    ? { folders: allFolders, includeNoFolderOption: false }
+    ? {
+        folders: allFolders.filter(
+          (folder) =>
+            !isDefined(currentFolderId) || folder.id !== currentFolderId,
+        ),
+        includeNoFolderOption: false,
+      }
     : isLinkItem
-      ? { folders: allFolders, includeNoFolderOption: true }
+      ? {
+          folders: allFolders.filter(
+            (folder) =>
+              !isDefined(currentFolderId) || folder.id !== currentFolderId,
+          ),
+          includeNoFolderOption: true,
+        }
       : {
           folders: allFolders.filter(
             (folder) =>
@@ -70,7 +85,10 @@ export const CommandMenuEditFolderPickerSubView = ({
 
   const foldersToShow = foldersForFolderPicker.includeNoFolderOption
     ? foldersForFolderPicker.folders
-    : workspaceFolders;
+    : workspaceFolders.filter(
+        (folder) =>
+          !isDefined(currentFolderId) || folder.id !== currentFolderId,
+      );
 
   const filteredFolders = filterBySearchQuery({
     items: foldersToShow,
@@ -123,7 +141,7 @@ export const CommandMenuEditFolderPickerSubView = ({
               onEnter={() => onSelectFolder(folder.id)}
             >
               <CommandMenuItem
-                Icon={IconFolder}
+                Icon={IconFolderPlus}
                 label={folder.name}
                 id={folder.id}
                 onClick={() => onSelectFolder(folder.id)}

@@ -268,6 +268,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   };
 
   if (editSubView === 'folder-picker') {
+    const currentFolderId =
+      selectedItem?.type === 'folder'
+        ? selectedItem.folder.folderId
+        : selectedItem?.navigationMenuItem.folderId ?? null;
+
     return (
       <CommandMenuEditFolderPickerSubView
         allFolders={allFolders}
@@ -275,10 +280,9 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         isFolderItem={isFolderItem}
         isLinkItem={isLinkItem}
         selectedFolderId={
-          isFolderItem || isLinkItem
-            ? selectedNavigationMenuItemInEditMode
-            : null
+          isFolderItem ? selectedNavigationMenuItemInEditMode : null
         }
+        currentFolderId={currentFolderId}
         searchValue={folderSearchInput}
         onSearchChange={setFolderSearchInput}
         onBack={() => setEditSubView(null)}

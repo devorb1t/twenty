@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   IconFolder,
   IconLink,
@@ -20,6 +20,7 @@ import {
   useWorkspaceSectionItems,
 } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
+import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { NavigationDrawerSectionForObjectMetadataItemsSkeletonLoader } from '@/object-metadata/components/NavigationDrawerSectionForObjectMetadataItemsSkeletonLoader';
 import { NavigationDrawerSectionForWorkspaceItems } from '@/object-metadata/components/NavigationDrawerSectionForWorkspaceItems';
@@ -46,6 +47,9 @@ export const WorkspaceNavigationMenuItems = () => {
     selectedNavigationMenuItemInEditMode,
     setSelectedNavigationMenuItemInEditMode,
   ] = useRecoilState(selectedNavigationMenuItemInEditModeState);
+  const setOpenNavigationMenuItemFolderIds = useSetRecoilState(
+    openNavigationMenuItemFolderIdsState,
+  );
   const { navigateCommandMenu } = useNavigateCommandMenu();
   const { openNavigationMenuItemInCommandMenu } =
     useOpenNavigationMenuItemInCommandMenu();
@@ -66,6 +70,11 @@ export const WorkspaceNavigationMenuItems = () => {
         : item.navigationMenuItem.id;
     setSelectedNavigationMenuItemInEditMode(id);
     if (item.type === 'folder') {
+      setOpenNavigationMenuItemFolderIds((currentOpenFolders) =>
+        currentOpenFolders.includes(id)
+          ? currentOpenFolders
+          : [...currentOpenFolders, id],
+      );
       openNavigationMenuItemInCommandMenu({
         pageTitle: t`Edit folder`,
         pageIcon: IconFolder,
