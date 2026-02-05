@@ -90,7 +90,7 @@ export const useSaveNavigationMenuItemsDraft = () => {
             viewId?: string;
             targetObjectMetadataId?: string;
             targetRecordId?: string;
-          } = { position: draftItem.position };
+          } = { position: Math.round(draftItem.position) };
 
           if (isNavigationMenuItemFolder(draftItem)) {
             input.name = draftItem.name ?? undefined;
@@ -153,7 +153,7 @@ export const useSaveNavigationMenuItemsDraft = () => {
             } = { id: draftItem.id };
 
             if (positionChanged) {
-              updateInput.position = draftItem.position;
+              updateInput.position = Math.round(draftItem.position);
             }
             if (folderIdChanged) {
               updateInput.folderId = draftItem.folderId ?? null;

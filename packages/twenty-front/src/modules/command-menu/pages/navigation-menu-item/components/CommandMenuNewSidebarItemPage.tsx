@@ -1,6 +1,7 @@
+import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
-import { useMemo, useState } from 'react';
+import { type ComponentType, useCallback, useMemo, useState } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import {
@@ -18,6 +19,10 @@ import { useDebounce } from 'use-debounce';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
+import { ADD_TO_NAVIGATION_DRAG_TYPE } from '@/navigation-menu-item/constants/add-to-navigation-drag.constants';
+import { AddToNavigationDragHandle } from '@/navigation-menu-item/components/AddToNavigationDragHandle';
+import { createAddToNavigationDragPreview } from '@/navigation-menu-item/utils/createAddToNavigationDragPreview';
+import { type AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { MAX_SEARCH_RESULTS } from '@/command-menu/constants/MaxSearchResults';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
@@ -136,15 +141,32 @@ const CommandMenuAddObjectMenuItem = ({
     }
   };
 
+  const objectPayload: AddToNavigationDragPayload = {
+    type: 'object',
+    objectMetadataId: objectMetadataItem.id,
+    defaultViewId: defaultViewId ?? '',
+    label: objectMetadataItem.labelPlural,
+  };
+
   return (
     <SelectableListItem itemId={objectMetadataItem.id} onEnter={handleClick}>
-      <CommandMenuItem
-        Icon={Icon}
-        label={objectMetadataItem.labelPlural}
-        id={objectMetadataItem.id}
-        onClick={handleClick}
-        disabled={isDisabled}
-      />
+      {isDisabled ? (
+        <CommandMenuItem
+          Icon={Icon}
+          label={objectMetadataItem.labelPlural}
+          id={objectMetadataItem.id}
+          onClick={handleClick}
+          disabled={true}
+        />
+      ) : (
+        <CommandMenuItemWithAddToNavigationDrag
+          Icon={Icon}
+          label={objectMetadataItem.labelPlural}
+          id={objectMetadataItem.id}
+          onClick={handleClick}
+          payload={objectPayload}
+        />
+      )}
     </SelectableListItem>
   );
 };
@@ -172,6 +194,84 @@ const CommandMenuSelectObjectForViewMenuItem = ({
         onClick={handleClick}
       />
     </SelectableListItem>
+  );
+};
+
+const StyledDraggableMenuItem = styled.div`
+  cursor: grab;
+  width: 100%;
+
+  &:active {
+    cursor: grabbing;
+  }
+`;
+
+const CommandMenuItemWithAddToNavigationDrag = ({
+  Icon,
+  icon,
+  label,
+  description,
+  id,
+  onClick,
+  payload,
+}: {
+  Icon?: ComponentType<{ size?: number; stroke?: number }>;
+  icon?: React.ReactNode;
+  label: string;
+  description?: string;
+  id: string;
+  onClick: () => void;
+  payload: AddToNavigationDragPayload;
+}) => {
+  const theme = useTheme();
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
+  const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+
+  const handleDragStart = useCallback(
+    (event: React.DragEvent) => {
+      event.dataTransfer.setData(
+        ADD_TO_NAVIGATION_DRAG_TYPE,
+        JSON.stringify(payload),
+      );
+      event.dataTransfer.effectAllowed = 'copy';
+
+      const preview = createAddToNavigationDragPreview({
+        label,
+        Icon,
+        icon,
+        payload,
+        theme,
+      });
+      event.dataTransfer.setDragImage(preview, 0, 0);
+    },
+    [payload, label, Icon, icon, theme],
+  );
+
+  return (
+    <StyledDraggableMenuItem
+      draggable
+      onDragStart={handleDragStart}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <CommandMenuItem
+        label={label}
+        description={description}
+        id={id}
+        onClick={onClick}
+        LeftComponent={
+          <AddToNavigationDragHandle
+            Icon={Icon}
+            icon={icon}
+            payload={payload}
+            isHovered={isHovered}
+            draggable={false}
+          />
+        }
+      />
+    </StyledDraggableMenuItem>
   );
 };
 
@@ -390,7 +490,7 @@ export const CommandMenuNewSidebarItemPage = () => {
 
     setSelectedObjectMetadataIdForView(null);
     setViewSearchInput('');
-    if (cameFromSystemObjects) {
+    if (cameFromSystemObjects === true) {
       setSelectedOption('view-system');
     }
   };
@@ -467,17 +567,23 @@ export const CommandMenuNewSidebarItemPage = () => {
             <CommandGroup heading={t`Views`}>
               {filteredViews.map((view) => {
                 const ViewIcon = getIcon(view.icon);
+                const viewPayload: AddToNavigationDragPayload = {
+                  type: 'view',
+                  viewId: view.id,
+                  label: view.name,
+                };
                 return (
                   <SelectableListItem
                     key={view.id}
                     itemId={view.id}
                     onEnter={() => handleSelectView(view)}
                   >
-                    <CommandMenuItem
+                    <CommandMenuItemWithAddToNavigationDrag
                       Icon={ViewIcon}
                       label={view.name}
                       id={view.id}
                       onClick={() => handleSelectView(view)}
+                      payload={viewPayload}
                     />
                   </SelectableListItem>
                 );
@@ -803,38 +909,51 @@ export const CommandMenuNewSidebarItemPage = () => {
                   />
                 </SelectableListItem>
               ) : (
-                availableSearchRecords.map((record) => (
-                  <SelectableListItem
-                    key={record.recordId}
-                    itemId={record.recordId}
-                    onEnter={() => handleSelectRecord(record)}
-                  >
-                    <CommandMenuItem
-                      Icon={() => (
-                        <Avatar
-                          type={
-                            record.objectNameSingular ===
-                            CoreObjectNameSingular.Company
-                              ? 'squared'
-                              : 'rounded'
-                          }
-                          avatarUrl={record.imageUrl}
-                          placeholderColorSeed={record.recordId}
-                          placeholder={record.label}
-                        />
-                      )}
-                      label={record.label}
-                      id={record.recordId}
-                      description={
-                        objectMetadataItems.find(
-                          (item) =>
-                            item.nameSingular === record.objectNameSingular,
-                        )?.labelSingular ?? record.objectNameSingular
+                availableSearchRecords.map((record) => {
+                  const objectMetadataItem = objectMetadataItems.find(
+                    (item) => item.nameSingular === record.objectNameSingular,
+                  );
+                  const recordPayload: AddToNavigationDragPayload = {
+                    type: 'record',
+                    recordId: record.recordId,
+                    objectMetadataId: objectMetadataItem?.id ?? '',
+                    objectNameSingular: record.objectNameSingular,
+                    label: record.label,
+                    imageUrl: record.imageUrl,
+                  };
+                  const recordIcon = (
+                    <Avatar
+                      type={
+                        record.objectNameSingular ===
+                        CoreObjectNameSingular.Company
+                          ? 'squared'
+                          : 'rounded'
                       }
-                      onClick={() => handleSelectRecord(record)}
+                      avatarUrl={record.imageUrl}
+                      placeholderColorSeed={record.recordId}
+                      placeholder={record.label}
                     />
-                  </SelectableListItem>
-                ))
+                  );
+                  return (
+                    <SelectableListItem
+                      key={record.recordId}
+                      itemId={record.recordId}
+                      onEnter={() => handleSelectRecord(record)}
+                    >
+                      <CommandMenuItemWithAddToNavigationDrag
+                        icon={recordIcon}
+                        label={record.label}
+                        description={
+                          objectMetadataItem?.labelSingular ??
+                          record.objectNameSingular
+                        }
+                        id={record.recordId}
+                        onClick={() => handleSelectRecord(record)}
+                        payload={recordPayload}
+                      />
+                    </SelectableListItem>
+                  );
+                })
               )}
             </CommandGroup>
           </CommandMenuList>
@@ -891,19 +1010,30 @@ export const CommandMenuNewSidebarItemPage = () => {
           itemId="folder"
           onEnter={handleAddFolderAndOpenEdit}
         >
-          <CommandMenuItem
+          <CommandMenuItemWithAddToNavigationDrag
             Icon={IconFolder}
             label={t`Folder`}
             id="folder"
             onClick={handleAddFolderAndOpenEdit}
+            payload={{
+              type: 'folder',
+              folderId: 'new',
+              name: t`New folder`,
+            }}
           />
         </SelectableListItem>
         <SelectableListItem itemId="link" onEnter={handleAddLinkAndOpenEdit}>
-          <CommandMenuItem
+          <CommandMenuItemWithAddToNavigationDrag
             Icon={IconLink}
             label={t`Link`}
             id="link"
             onClick={handleAddLinkAndOpenEdit}
+            payload={{
+              type: 'link',
+              linkId: 'new',
+              name: t`Link label`,
+              link: 'https://www.example.com',
+            }}
           />
         </SelectableListItem>
       </CommandGroup>

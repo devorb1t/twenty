@@ -14,6 +14,7 @@ import { ViewKey } from '@/views/types/ViewKey';
 import { isLocationMatchingNavigationMenuItem } from '@/navigation-menu-item/utils/isLocationMatchingNavigationMenuItem';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
+import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
 import { NavigationDrawerItem } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerItem';
 import { NavigationDrawerItemsCollapsableContainer } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerItemsCollapsableContainer';
 import { NavigationDrawerSubItem } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerSubItem';
@@ -113,34 +114,45 @@ export const WorkspaceNavigationMenuItemsFolder = ({
           containAnimation
         >
           <div>
+            <NavigationItemDropTarget folderId={folder.folderId} index={0} />
             {folder.navigationMenuItems.map((navigationMenuItem, index) => (
-              <NavigationDrawerSubItem
+              <NavigationItemDropTarget
                 key={navigationMenuItem.id}
-                secondaryLabel={
-                  navigationMenuItem.viewKey === ViewKey.Index
-                    ? undefined
-                    : getNavigationMenuItemSecondaryLabel({
-                        objectMetadataItems,
-                        navigationMenuItemObjectNameSingular:
-                          navigationMenuItem.objectNameSingular,
-                      })
-                }
-                label={navigationMenuItem.labelIdentifier}
-                Icon={() => (
-                  <NavigationMenuItemIcon
-                    navigationMenuItem={navigationMenuItem}
-                  />
-                )}
-                to={navigationMenuItem.link}
-                active={index === selectedNavigationMenuItemIndex}
-                subItemState={getNavigationSubItemLeftAdornment({
-                  index,
-                  arrayLength: navigationMenuItemFolderContentLength,
-                  selectedIndex: selectedNavigationMenuItemIndex,
-                })}
-                triggerEvent="CLICK"
-              />
+                folderId={folder.folderId}
+                index={index}
+              >
+                <NavigationDrawerSubItem
+                  key={navigationMenuItem.id}
+                  secondaryLabel={
+                    navigationMenuItem.viewKey === ViewKey.Index
+                      ? undefined
+                      : getNavigationMenuItemSecondaryLabel({
+                          objectMetadataItems,
+                          navigationMenuItemObjectNameSingular:
+                            navigationMenuItem.objectNameSingular,
+                        })
+                  }
+                  label={navigationMenuItem.labelIdentifier}
+                  Icon={() => (
+                    <NavigationMenuItemIcon
+                      navigationMenuItem={navigationMenuItem}
+                    />
+                  )}
+                  to={navigationMenuItem.link}
+                  active={index === selectedNavigationMenuItemIndex}
+                  subItemState={getNavigationSubItemLeftAdornment({
+                    index,
+                    arrayLength: navigationMenuItemFolderContentLength,
+                    selectedIndex: selectedNavigationMenuItemIndex,
+                  })}
+                  triggerEvent="CLICK"
+                />
+              </NavigationItemDropTarget>
             ))}
+            <NavigationItemDropTarget
+              folderId={folder.folderId}
+              index={folder.navigationMenuItems.length}
+            />
           </div>
         </AnimatedExpandableContainer>
       </NavigationDrawerItemsCollapsableContainer>

@@ -102,6 +102,110 @@ export const useAddToNavigationMenuDraft = () => {
     return newItemId;
   };
 
+  const addFolderToDraftAtPosition = (
+    name: string,
+    currentDraft: NavigationMenuItem[],
+    targetFolderId: string | null,
+    targetIndex: number,
+  ): string => {
+    const itemsInFolder = currentDraft.filter(
+      (item) =>
+        (item.folderId ?? null) === targetFolderId &&
+        !isDefined(item.userWorkspaceId),
+    );
+    const insertRef = itemsInFolder[targetIndex];
+    const lastInFolder = itemsInFolder[itemsInFolder.length - 1];
+    const flatIndex = insertRef
+      ? currentDraft.indexOf(insertRef)
+      : lastInFolder
+        ? currentDraft.indexOf(lastInFolder) + 1
+        : currentDraft.length;
+    const prevPosition = itemsInFolder[targetIndex - 1]?.position ?? 0;
+    const nextPosition =
+      itemsInFolder[targetIndex]?.position ?? prevPosition + 1;
+    const position = (prevPosition + nextPosition) / 2;
+
+    const newItemId = v4();
+    const newItem: NavigationMenuItem = {
+      __typename: 'NavigationMenuItem',
+      id: newItemId,
+      viewId: undefined,
+      targetObjectMetadataId: undefined,
+      targetRecordId: undefined,
+      folderId: targetFolderId ?? undefined,
+      position,
+      userWorkspaceId: undefined,
+      name: name.trim(),
+      applicationId: undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const newDraft = [
+      ...currentDraft.slice(0, flatIndex),
+      newItem,
+      ...currentDraft.slice(flatIndex),
+    ];
+    setNavigationMenuItemsDraft(newDraft);
+    return newItemId;
+  };
+
+  const addLinkToDraftAtPosition = (
+    label: string,
+    url: string,
+    currentDraft: NavigationMenuItem[],
+    targetFolderId: string | null,
+    targetIndex: number,
+  ): string => {
+    const trimmedUrl = url.trim();
+    const normalizedUrl =
+      trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')
+        ? trimmedUrl
+        : `https://${trimmedUrl}`;
+
+    const itemsInFolder = currentDraft.filter(
+      (item) =>
+        (item.folderId ?? null) === targetFolderId &&
+        !isDefined(item.userWorkspaceId),
+    );
+    const insertRef = itemsInFolder[targetIndex];
+    const lastInFolder = itemsInFolder[itemsInFolder.length - 1];
+    const flatIndex = insertRef
+      ? currentDraft.indexOf(insertRef)
+      : lastInFolder
+        ? currentDraft.indexOf(lastInFolder) + 1
+        : currentDraft.length;
+    const prevPosition = itemsInFolder[targetIndex - 1]?.position ?? 0;
+    const nextPosition =
+      itemsInFolder[targetIndex]?.position ?? prevPosition + 1;
+    const position = (prevPosition + nextPosition) / 2;
+
+    const newItemId = v4();
+    const newItem: NavigationMenuItem = {
+      __typename: 'NavigationMenuItem',
+      id: newItemId,
+      viewId: undefined,
+      targetObjectMetadataId: undefined,
+      targetRecordId: undefined,
+      folderId: targetFolderId ?? undefined,
+      position,
+      userWorkspaceId: undefined,
+      name: label.trim() || 'Link',
+      link: normalizedUrl,
+      applicationId: undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const newDraft = [
+      ...currentDraft.slice(0, flatIndex),
+      newItem,
+      ...currentDraft.slice(flatIndex),
+    ];
+    setNavigationMenuItemsDraft(newDraft);
+    return newItemId;
+  };
+
   const addLinkToDraft = (
     label: string,
     url: string,
@@ -185,11 +289,139 @@ export const useAddToNavigationMenuDraft = () => {
     setNavigationMenuItemsDraft([...currentDraft, newItem]);
   };
 
+  const insertItemAtPosition = (
+    currentDraft: NavigationMenuItem[],
+    targetFolderId: string | null,
+    targetIndex: number,
+    newItem: NavigationMenuItem,
+  ): string => {
+    const itemsInFolder = currentDraft.filter(
+      (item) =>
+        (item.folderId ?? null) === targetFolderId &&
+        !isDefined(item.userWorkspaceId),
+    );
+    const insertRef = itemsInFolder[targetIndex];
+    const lastInFolder = itemsInFolder[itemsInFolder.length - 1];
+    const flatIndex = insertRef
+      ? currentDraft.indexOf(insertRef)
+      : lastInFolder
+        ? currentDraft.indexOf(lastInFolder) + 1
+        : currentDraft.length;
+    const prevPosition = itemsInFolder[targetIndex - 1]?.position ?? 0;
+    const nextPosition =
+      itemsInFolder[targetIndex]?.position ?? prevPosition + 1;
+    const position = (prevPosition + nextPosition) / 2;
+
+    const itemWithPosition = { ...newItem, position };
+    const newDraft = [
+      ...currentDraft.slice(0, flatIndex),
+      itemWithPosition,
+      ...currentDraft.slice(flatIndex),
+    ];
+    setNavigationMenuItemsDraft(newDraft);
+    return newItem.id;
+  };
+
+  const addObjectToDraftAtPosition = (
+    objectMetadataId: string,
+    defaultViewId: string,
+    currentDraft: NavigationMenuItem[],
+    targetFolderId: string | null,
+    targetIndex: number,
+  ): string => {
+    const newItem: NavigationMenuItem = {
+      __typename: 'NavigationMenuItem',
+      id: v4(),
+      viewId: defaultViewId,
+      targetObjectMetadataId: objectMetadataId,
+      position: 1,
+      userWorkspaceId: undefined,
+      targetRecordId: undefined,
+      folderId: targetFolderId ?? undefined,
+      name: undefined,
+      applicationId: undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    return insertItemAtPosition(
+      currentDraft,
+      targetFolderId,
+      targetIndex,
+      newItem,
+    );
+  };
+
+  const addViewToDraftAtPosition = (
+    viewId: string,
+    currentDraft: NavigationMenuItem[],
+    targetFolderId: string | null,
+    targetIndex: number,
+  ): string => {
+    const newItem: NavigationMenuItem = {
+      __typename: 'NavigationMenuItem',
+      id: v4(),
+      viewId,
+      targetObjectMetadataId: undefined,
+      position: 1,
+      userWorkspaceId: undefined,
+      targetRecordId: undefined,
+      folderId: targetFolderId ?? undefined,
+      name: undefined,
+      applicationId: undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    return insertItemAtPosition(
+      currentDraft,
+      targetFolderId,
+      targetIndex,
+      newItem,
+    );
+  };
+
+  const addRecordToDraftAtPosition = (
+    searchRecord: SearchRecord & { objectMetadataId: string },
+    currentDraft: NavigationMenuItem[],
+    targetFolderId: string | null,
+    targetIndex: number,
+  ): string => {
+    const newItem: NavigationMenuItem = {
+      __typename: 'NavigationMenuItem',
+      id: v4(),
+      viewId: undefined,
+      targetObjectMetadataId: searchRecord.objectMetadataId,
+      targetRecordId: searchRecord.recordId,
+      targetRecordIdentifier: {
+        id: searchRecord.recordId,
+        labelIdentifier: searchRecord.label,
+        imageIdentifier: searchRecord.imageUrl ?? null,
+      },
+      position: 1,
+      userWorkspaceId: undefined,
+      folderId: targetFolderId ?? undefined,
+      name: undefined,
+      applicationId: undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    return insertItemAtPosition(
+      currentDraft,
+      targetFolderId,
+      targetIndex,
+      newItem,
+    );
+  };
+
   return {
     addObjectToDraft,
+    addObjectToDraftAtPosition,
     addViewToDraft,
+    addViewToDraftAtPosition,
     addRecordToDraft,
+    addRecordToDraftAtPosition,
     addFolderToDraft,
+    addFolderToDraftAtPosition,
     addLinkToDraft,
+    addLinkToDraftAtPosition,
   };
 };

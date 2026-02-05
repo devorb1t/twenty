@@ -5,6 +5,7 @@ import { useRecoilValue } from 'recoil';
 import { IconHeartOff } from 'twenty-ui/display';
 import { LightIconButton } from 'twenty-ui/input';
 
+import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
 import { NavigationMenuItemDroppable } from '@/navigation-menu-item/components/NavigationMenuItemDroppable';
 import { NavigationMenuItemIcon } from '@/navigation-menu-item/components/NavigationMenuItemIcon';
 import { ORPHAN_NAVIGATION_MENU_ITEMS_DROPPABLE_ID } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
@@ -42,48 +43,59 @@ export const CurrentWorkspaceMemberOrphanNavigationMenuItems = () => {
       droppableId={ORPHAN_NAVIGATION_MENU_ITEMS_DROPPABLE_ID}
     >
       {orphanNavigationMenuItems.length > 0 ? (
-        orphanNavigationMenuItems.map((navigationMenuItem, index) => (
-          <DraggableItem
-            key={navigationMenuItem.id}
-            draggableId={navigationMenuItem.id}
-            index={index}
-            isInsideScrollableContainer={true}
-            itemComponent={
-              <StyledOrphanNavigationMenuItemsContainer>
-                <NavigationDrawerItem
-                  secondaryLabel={getNavigationMenuItemSecondaryLabel({
-                    objectMetadataItems,
-                    navigationMenuItemObjectNameSingular:
-                      navigationMenuItem.objectNameSingular,
-                  })}
-                  label={navigationMenuItem.labelIdentifier}
-                  Icon={() => (
-                    <NavigationMenuItemIcon
-                      navigationMenuItem={navigationMenuItem}
-                    />
-                  )}
-                  active={isLocationMatchingNavigationMenuItem(
-                    currentPath,
-                    currentViewPath,
-                    navigationMenuItem,
-                  )}
-                  to={isDragging ? undefined : navigationMenuItem.link}
-                  rightOptions={
-                    <LightIconButton
-                      Icon={IconHeartOff}
-                      onClick={() =>
-                        deleteNavigationMenuItem(navigationMenuItem.id)
+        <>
+          {orphanNavigationMenuItems.map((navigationMenuItem, index) => (
+            <NavigationItemDropTarget
+              key={navigationMenuItem.id}
+              folderId={null}
+              index={index}
+            >
+              <DraggableItem
+                draggableId={navigationMenuItem.id}
+                index={index}
+                isInsideScrollableContainer={true}
+                itemComponent={
+                  <StyledOrphanNavigationMenuItemsContainer>
+                    <NavigationDrawerItem
+                      secondaryLabel={getNavigationMenuItemSecondaryLabel({
+                        objectMetadataItems,
+                        navigationMenuItemObjectNameSingular:
+                          navigationMenuItem.objectNameSingular,
+                      })}
+                      label={navigationMenuItem.labelIdentifier}
+                      Icon={() => (
+                        <NavigationMenuItemIcon
+                          navigationMenuItem={navigationMenuItem}
+                        />
+                      )}
+                      active={isLocationMatchingNavigationMenuItem(
+                        currentPath,
+                        currentViewPath,
+                        navigationMenuItem,
+                      )}
+                      to={isDragging ? undefined : navigationMenuItem.link}
+                      rightOptions={
+                        <LightIconButton
+                          Icon={IconHeartOff}
+                          onClick={() =>
+                            deleteNavigationMenuItem(navigationMenuItem.id)
+                          }
+                          accent="tertiary"
+                        />
                       }
-                      accent="tertiary"
+                      isDragging={isDragging}
+                      triggerEvent="CLICK"
                     />
-                  }
-                  isDragging={isDragging}
-                  triggerEvent="CLICK"
-                />
-              </StyledOrphanNavigationMenuItemsContainer>
-            }
+                  </StyledOrphanNavigationMenuItemsContainer>
+                }
+              />
+            </NavigationItemDropTarget>
+          ))}
+          <NavigationItemDropTarget
+            folderId={null}
+            index={orphanNavigationMenuItems.length}
           />
-        ))
+        </>
       ) : (
         <StyledEmptyContainer style={{ height: isDragging ? '24px' : '1px' }} />
       )}

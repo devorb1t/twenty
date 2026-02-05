@@ -3,6 +3,7 @@ import { useRecoilValue } from 'recoil';
 import { currentWorkspaceState } from '@/auth/states/currentWorkspaceState';
 import { useFavoritesByFolder } from '@/favorites/hooks/useFavoritesByFolder';
 import { NavigationMenuItemFolderContentDispatcherEffect } from '@/navigation-menu-item/components/NavigationMenuItemFolderContentDispatcher';
+import { NavigationSidebarNativeDropZone } from '@/navigation-menu-item/components/NavigationSidebarNativeDropZone';
 import { useNavigationMenuItemsByFolder } from '@/navigation-menu-item/hooks/useNavigationMenuItemsByFolder';
 import { MainNavigationDrawerFixedItems } from '@/navigation/components/MainNavigationDrawerFixedItems';
 import { MainNavigationDrawerScrollableItems } from '@/navigation/components/MainNavigationDrawerScrollableItems';
@@ -48,7 +49,22 @@ export const MainNavigationDrawer = ({ className }: { className?: string }) => {
       </NavigationDrawerFixedContent>
 
       <NavigationDrawerScrollableContent>
-        {openedFolder ? (
+        {isNavigationMenuItemEnabled ? (
+          <NavigationSidebarNativeDropZone>
+            {openedFolder ? (
+              <NavigationMenuItemFolderContentDispatcherEffect
+                folderName={openedFolder.folderName}
+                folderId={openedFolder.folderId}
+                favorites={openedFavoriteFolder?.favorites}
+                navigationMenuItems={
+                  openedNavigationMenuItemFolder?.navigationMenuItems
+                }
+              />
+            ) : (
+              <MainNavigationDrawerScrollableItems />
+            )}
+          </NavigationSidebarNativeDropZone>
+        ) : openedFolder ? (
           <NavigationMenuItemFolderContentDispatcherEffect
             folderName={openedFolder.folderName}
             folderId={openedFolder.folderId}

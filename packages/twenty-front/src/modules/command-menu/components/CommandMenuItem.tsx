@@ -15,6 +15,7 @@ export type CommandMenuItemProps = {
   onClick?: () => void;
   Icon?: IconComponent;
   hotKeys?: string[];
+  LeftComponent?: ReactNode;
   RightComponent?: ReactNode;
   contextualTextPosition?: 'left' | 'right';
   hasSubMenu?: boolean;
@@ -31,6 +32,7 @@ export const CommandMenuItem = ({
   onClick,
   Icon,
   hotKeys,
+  LeftComponent,
   RightComponent,
   hasSubMenu = false,
   isSubMenuOpened = false,
@@ -49,8 +51,9 @@ export const CommandMenuItem = ({
 
   return (
     <MenuItem
-      withIconContainer={true}
-      LeftIcon={Icon}
+      withIconContainer={!LeftComponent}
+      LeftIcon={LeftComponent ? undefined : Icon}
+      LeftComponent={LeftComponent}
       text={label}
       contextualText={description}
       contextualTextPosition={contextualTextPosition}
