@@ -42,8 +42,6 @@ export const CommandMenuEditLinkItemView = ({
     'move-down',
     'move-to-folder',
     'remove',
-    'standard-app',
-    'reset-to-default',
   ];
 
   return (
@@ -77,7 +75,9 @@ export const CommandMenuEditLinkItemView = ({
         onMoveToFolder={onOpenFolderPicker}
         moveToFolderHasSubMenu={true}
       />
-      <CommandMenuEditOwnerSection />
+      <CommandMenuEditOwnerSection
+        applicationId={selectedItem.navigationMenuItem.applicationId}
+      />
     </CommandMenuList>
   );
 };

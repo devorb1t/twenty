@@ -450,8 +450,21 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     },
     {
       condition: isFolderItem && selectedItem?.type === 'folder',
-      // eslint-disable-next-line react/jsx-props-no-spreading
-      render: () => <CommandMenuEditFolderItemView {...organizeActionsProps} />,
+      render: () => {
+        const folderApplicationId =
+          selectedItem?.type === 'folder'
+            ? currentDraft.find(
+                (item) => item.id === selectedItem.folder.folderId,
+              )?.applicationId
+            : undefined;
+        return (
+          <CommandMenuEditFolderItemView
+            applicationId={folderApplicationId}
+            // eslint-disable-next-line react/jsx-props-no-spreading
+            {...organizeActionsProps}
+          />
+        );
+      },
     },
   ] as const;
 

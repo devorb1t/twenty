@@ -3,6 +3,7 @@ import { CommandMenuEditOrganizeActions } from '@/command-menu/pages/navigation-
 import { CommandMenuEditOwnerSection } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOwnerSection';
 
 type CommandMenuEditFolderItemViewProps = {
+  applicationId?: string | null;
   canMoveUp: boolean;
   canMoveDown: boolean;
   onMoveUp: () => void;
@@ -11,19 +12,14 @@ type CommandMenuEditFolderItemViewProps = {
 };
 
 export const CommandMenuEditFolderItemView = ({
+  applicationId,
   canMoveUp,
   canMoveDown,
   onMoveUp,
   onMoveDown,
   onRemove,
 }: CommandMenuEditFolderItemViewProps) => {
-  const selectableItemIds = [
-    'move-up',
-    'move-down',
-    'remove',
-    'standard-app',
-    'reset-to-default',
-  ];
+  const selectableItemIds = ['move-up', 'move-down', 'remove'];
 
   return (
     <CommandMenuList commandGroups={[]} selectableItemIds={selectableItemIds}>
@@ -34,7 +30,7 @@ export const CommandMenuEditFolderItemView = ({
         onMoveDown={onMoveDown}
         onRemove={onRemove}
       />
-      <CommandMenuEditOwnerSection />
+      <CommandMenuEditOwnerSection applicationId={applicationId} />
     </CommandMenuList>
   );
 };

@@ -53,6 +53,7 @@ export const CommandMenuFolderInfo = () => {
   const saveFolderName = () => {
     const trimmed = folderName.trim();
     const finalName = trimmed.length > 0 ? trimmed : t`New folder`;
+
     if (finalName !== folderName) {
       updateFolderNameInDraft(folderId, finalName);
     }
