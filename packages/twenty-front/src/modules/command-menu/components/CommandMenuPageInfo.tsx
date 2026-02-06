@@ -3,8 +3,7 @@ import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import { OverflowingTextWithTooltip } from 'twenty-ui/display';
 
-import { CommandMenuFolderInfo } from '@/command-menu/components/CommandMenuFolderInfo';
-import { CommandMenuLinkInfo } from '@/command-menu/components/CommandMenuLinkInfo';
+import { CommandMenuFolderLinkInfo } from '@/command-menu/components/CommandMenuFolderLinkInfo';
 import { CommandMenuMultipleRecordsInfo } from '@/command-menu/components/CommandMenuMultipleRecordsInfo';
 import { CommandMenuPageLayoutInfo } from '@/command-menu/components/CommandMenuPageLayoutInfo';
 import { CommandMenuRecordInfo } from '@/command-menu/components/CommandMenuRecordInfo';
@@ -45,11 +44,8 @@ export const CommandMenuPageInfo = ({ pageChip }: CommandMenuPageInfoProps) => {
   if (isNavigationMenuItemEditPage && isDefined(selectedNavItem)) {
     const selectedType = getNavigationMenuItemType(selectedNavItem);
 
-    if (selectedType === 'folder') {
-      return <CommandMenuFolderInfo />;
-    }
-    if (selectedType === 'link') {
-      return <CommandMenuLinkInfo />;
+    if (selectedType === 'folder' || selectedType === 'link') {
+      return <CommandMenuFolderLinkInfo type={selectedType} />;
     }
   }
 

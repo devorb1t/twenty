@@ -1,7 +1,7 @@
 import { useTheme } from '@emotion/react';
 import { useLingui } from '@lingui/react/macro';
 import { useRecoilValue } from 'recoil';
-import { IconFolder } from 'twenty-ui/display';
+import { IconFolder, IconLink } from 'twenty-ui/display';
 
 import { CommandMenuNavigationMenuItemIcon } from '@/command-menu/components/CommandMenuNavigationMenuItemIcon';
 import { CommandMenuPageInfoLayout } from '@/command-menu/components/CommandMenuPageInfoLayout';
@@ -14,7 +14,16 @@ import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavig
 import { TitleInput } from '@/ui/input/components/TitleInput';
 import { useRecoilComponentState } from '@/ui/utilities/state/component-state/hooks/useRecoilComponentState';
 
-export const CommandMenuFolderInfo = () => {
+const ICON_CONFIG = {
+  folder: { Icon: IconFolder, colorKey: 'folder' },
+  link: { Icon: IconLink, colorKey: 'link' },
+} as const;
+
+export const CommandMenuFolderLinkInfo = ({
+  type,
+}: {
+  type: 'folder' | 'link';
+}) => {
   const theme = useTheme();
   const { t } = useLingui();
   const commandMenuPageInfo = useRecoilValue(commandMenuPageInfoState);
@@ -27,42 +36,53 @@ export const CommandMenuFolderInfo = () => {
     selectedNavigationMenuItemInEditModeState,
   );
   const items = useWorkspaceSectionItems();
-  const { updateFolderNameInDraft } = useUpdateNavigationMenuItemsDraft();
+  const { updateFolderNameInDraft, updateLinkInDraft } =
+    useUpdateNavigationMenuItemsDraft();
 
-  const selectedFolder = selectedNavigationMenuItemInEditMode
+  const defaultLabel = type === 'folder' ? t`New folder` : t`Link label`;
+  const placeholder = type === 'folder' ? t`Folder name` : t`Link label`;
+
+  const selectedItem = selectedNavigationMenuItemInEditMode
     ? items.find(
         (item) =>
-          getNavigationMenuItemType(item) === 'folder' &&
+          getNavigationMenuItemType(item) === type &&
           item.id === selectedNavigationMenuItemInEditMode,
       )
     : undefined;
 
-  if (!selectedFolder) {
-    return null;
-  }
+  if (!selectedItem) return null;
 
-  const folderId = selectedFolder.id;
-  const folderName = selectedFolder.name ?? t`New folder`;
-  const defaultName = t`New folder`;
+  const itemId = selectedItem.id;
+  const itemName = selectedItem.name ?? defaultLabel;
 
   const handleChange = (text: string) => {
-    updateFolderNameInDraft(folderId, text);
+    if (type === 'folder') {
+      updateFolderNameInDraft(itemId, text);
+    } else {
+      updateLinkInDraft(itemId, { name: text });
+    }
   };
 
   const handleSave = () => {
-    const trimmed = folderName.trim();
-    const finalName = trimmed.length > 0 ? trimmed : defaultName;
+    const trimmed = itemName.trim();
+    const finalName = trimmed.length > 0 ? trimmed : defaultLabel;
 
-    if (finalName !== folderName) {
-      updateFolderNameInDraft(folderId, finalName);
+    if (finalName !== itemName) {
+      if (type === 'folder') {
+        updateFolderNameInDraft(itemId, finalName);
+      } else {
+        updateLinkInDraft(itemId, { name: finalName });
+      }
     }
   };
+
+  const { Icon, colorKey } = ICON_CONFIG[type];
 
   return (
     <CommandMenuPageInfoLayout
       icon={
-        <CommandMenuNavigationMenuItemIcon colorKey="folder">
-          <IconFolder
+        <CommandMenuNavigationMenuItemIcon colorKey={colorKey}>
+          <Icon
             size={theme.spacing(3)}
             color={theme.grayScale.gray1}
             stroke={theme.icon.stroke.md}
@@ -71,11 +91,13 @@ export const CommandMenuFolderInfo = () => {
       }
       title={
         <TitleInput
-          instanceId={`folder-name-${folderId}`}
+          instanceId={
+            type === 'folder' ? `folder-name-${itemId}` : `link-label-${itemId}`
+          }
           sizeVariant="sm"
-          value={folderName}
+          value={itemName}
           onChange={handleChange}
-          placeholder={t`Folder name`}
+          placeholder={placeholder}
           onEnter={handleSave}
           onEscape={handleSave}
           onClickOutside={handleSave}
@@ -85,6 +107,7 @@ export const CommandMenuFolderInfo = () => {
           onFocus={() => setShouldFocusTitleInput(false)}
         />
       }
+      label={type === 'link' ? t`link` : undefined}
     />
   );
 };
