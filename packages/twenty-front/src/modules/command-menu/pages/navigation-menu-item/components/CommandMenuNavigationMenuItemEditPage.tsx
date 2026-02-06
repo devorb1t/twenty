@@ -48,6 +48,16 @@ const StyledCommandMenuPageContainer = styled.div`
   padding: ${({ theme }) => theme.spacing(3)};
 `;
 
+const includeCurrentObjectIfMissing = (
+  objects: ObjectMetadataItem[],
+  current: ObjectMetadataItem | undefined,
+): ObjectMetadataItem[] =>
+  current !== undefined && !objects.some((object) => object.id === current.id)
+    ? [current, ...objects].sort((a, b) =>
+        a.labelPlural.localeCompare(b.labelPlural),
+      )
+    : objects;
+
 export const CommandMenuNavigationMenuItemEditPage = () => {
   const { t } = useLingui();
   const { closeCommandMenu } = useCommandMenu();
@@ -157,6 +167,9 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   );
   const isFolderItem = selectedItemType === 'folder';
   const isLinkItem = selectedItemType === 'link';
+  const objectIcon =
+    StandardObjectIconForViewItem ??
+    getIcon(selectedItemObjectMetadata?.icon ?? 'IconCube');
 
   const objectsForObjectPicker = activeNonSystemObjectMetadataItems
     .filter((item) => objectMetadataIdsWithIndexView.has(item.id))
@@ -172,13 +185,10 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     currentObjectMetadataId !== undefined
       ? objectMetadataItems.find((item) => item.id === currentObjectMetadataId)
       : undefined;
-  const objectsForObjectPickerIncludingCurrent =
-    currentObject !== undefined &&
-    !objectsForObjectPicker.some((o) => o.id === currentObject.id)
-      ? [currentObject, ...objectsForObjectPicker].sort((a, b) =>
-          a.labelPlural.localeCompare(b.labelPlural),
-        )
-      : objectsForObjectPicker;
+  const objectsForObjectPickerIncludingCurrent = includeCurrentObjectIfMissing(
+    objectsForObjectPicker,
+    currentObject,
+  );
 
   const activeSystemObjectMetadataItems = objectMetadataItems
     .filter((item) => item.isActive && item.isSystem)
@@ -192,18 +202,13 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         : true),
   );
 
-  const objectsForViewEdit = activeNonSystemObjectMetadataItems.filter((item) =>
-    objectMetadataIdsWithAnyView.has(item.id),
+  const objectsForViewEdit = activeNonSystemObjectMetadataItems
+    .filter((item) => objectMetadataIdsWithAnyView.has(item.id))
+    .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
+  const objectsForViewEditObjectPicker = includeCurrentObjectIfMissing(
+    objectsForViewEdit,
+    currentObject,
   );
-  const objectsForViewEditObjectPicker =
-    currentObject !== undefined &&
-    !objectsForViewEdit.some((object) => object.id === currentObject.id)
-      ? [currentObject, ...objectsForViewEdit].sort((a, b) =>
-          a.labelPlural.localeCompare(b.labelPlural),
-        )
-      : objectsForViewEdit.sort((a, b) =>
-          a.labelPlural.localeCompare(b.labelPlural),
-        );
 
   const systemObjectsForViewEditObjectPicker =
     activeSystemObjectMetadataItems.filter((item) =>
@@ -310,6 +315,20 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     clearSubView: () => setEditSubView(null),
   };
 
+  const renderObjectMenuItem = (objectMetadataItem: ObjectMetadataItem) =>
+    isViewItem ? (
+      <CommandMenuSelectObjectForViewMenuItem
+        objectMetadataItem={objectMetadataItem}
+        onSelect={handleSelectObjectForViewEdit}
+      />
+    ) : (
+      <CommandMenuObjectMenuItem
+        objectMetadataItem={objectMetadataItem}
+        onSelect={handleChangeObject}
+        variant="edit"
+      />
+    );
+
   if (editSubView === 'folder-picker') {
     const currentFolderId =
       selectedItemType === 'folder'
@@ -345,20 +364,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         searchValue={systemObjectSearchInput}
         onSearchChange={setSystemObjectSearchInput}
         onBack={() => setEditSubView('object-picker')}
-        renderObjectMenuItem={(objectMetadataItem) =>
-          isViewItem ? (
-            <CommandMenuSelectObjectForViewMenuItem
-              objectMetadataItem={objectMetadataItem}
-              onSelect={handleSelectObjectForViewEdit}
-            />
-          ) : (
-            <CommandMenuObjectMenuItem
-              objectMetadataItem={objectMetadataItem}
-              onSelect={handleChangeObject}
-              variant="edit"
-            />
-          )
-        }
+        renderObjectMenuItem={renderObjectMenuItem}
       />
     );
   }
@@ -374,20 +380,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         onSearchChange={setObjectSearchInput}
         onBack={subViewHandlers.clearSubView}
         onOpenSystemPicker={subViewHandlers.setObjectPickerSystem}
-        renderObjectMenuItem={(objectMetadataItem) =>
-          isViewItem ? (
-            <CommandMenuSelectObjectForViewMenuItem
-              objectMetadataItem={objectMetadataItem}
-              onSelect={handleSelectObjectForViewEdit}
-            />
-          ) : (
-            <CommandMenuObjectMenuItem
-              objectMetadataItem={objectMetadataItem}
-              onSelect={handleChangeObject}
-              variant="edit"
-            />
-          )
-        }
+        renderObjectMenuItem={renderObjectMenuItem}
         emptyNoResultsText={t`No objects available`}
       />
     );
@@ -417,14 +410,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   const mainViewConfig = [
     {
-      condition: isObjectItem && selectedItemType === 'objectView',
+      condition: isObjectItem,
       render: () =>
-        selectedItemType === 'objectView' && selectedItemObjectMetadata ? (
+        selectedItemObjectMetadata ? (
           <CommandMenuEditObjectViewBase
-            objectIcon={
-              StandardObjectIconForViewItem ??
-              getIcon(selectedItemObjectMetadata.icon ?? 'IconCube')
-            }
+            objectIcon={objectIcon}
             objectLabel={selectedItemObjectMetadata.labelPlural ?? ''}
             onOpenObjectPicker={subViewHandlers.setObjectPicker}
             onOpenFolderPicker={subViewHandlers.setFolderPicker}
@@ -437,27 +427,17 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         ) : null,
     },
     {
-      condition: isViewItem && selectedItemType === 'objectView',
+      condition: isViewItem,
       render: () =>
-        selectedItemType === 'objectView' &&
-        selectedItemObjectMetadata &&
-        selectedItem ? (
+        selectedItemObjectMetadata && processedItem ? (
           <CommandMenuEditObjectViewBase
-            objectIcon={
-              StandardObjectIconForViewItem ??
-              getIcon(selectedItemObjectMetadata.icon ?? 'IconCube')
-            }
+            objectIcon={objectIcon}
             objectLabel={selectedItemObjectMetadata.labelPlural ?? ''}
             onOpenObjectPicker={subViewHandlers.setObjectPicker}
             onOpenFolderPicker={subViewHandlers.setFolderPicker}
             viewRow={{
-              icon: getIcon(
-                (selectedItem as ProcessedNavigationMenuItem).Icon ??
-                  'IconList',
-              ),
-              label:
-                (selectedItem as ProcessedNavigationMenuItem).labelIdentifier ??
-                '',
+              icon: getIcon(processedItem.Icon ?? 'IconList'),
+              label: processedItem.labelIdentifier ?? '',
               onClick: subViewHandlers.setViewPicker,
             }}
             canMoveUp={organizeActionsProps.canMoveUp}
@@ -469,9 +449,9 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         ) : null,
     },
     {
-      condition: isLinkItem && selectedItemType === 'link',
+      condition: isLinkItem,
       render: () =>
-        selectedItemType === 'link' && selectedItem ? (
+        selectedItem ? (
           <CommandMenuEditLinkItemView
             selectedItem={selectedItem as ProcessedNavigationMenuItem}
             onUpdateLink={(linkId, link) => updateLinkInDraft(linkId, { link })}
@@ -485,13 +465,12 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         ) : null,
     },
     {
-      condition: isFolderItem && selectedItemType === 'folder',
+      condition: isFolderItem,
       render: () => {
-        const folderApplicationId =
-          selectedItemType === 'folder' && selectedItem
-            ? currentDraft.find((item) => item.id === selectedItem.id)
-                ?.applicationId
-            : undefined;
+        const folderApplicationId = selectedItem
+          ? currentDraft.find((item) => item.id === selectedItem.id)
+              ?.applicationId
+          : undefined;
         return (
           <CommandMenuList
             commandGroups={[]}
