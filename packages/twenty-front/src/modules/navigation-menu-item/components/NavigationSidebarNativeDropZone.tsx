@@ -1,7 +1,7 @@
-import { type ReactNode, useEffect, useState } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
 import styled from '@emotion/styled';
 import { t } from '@lingui/core/macro';
+import { type ReactNode, useEffect, useState } from 'react';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import { IconFolder, IconLink, useIcons } from 'twenty-ui/display';
 
@@ -295,7 +295,9 @@ export const NavigationSidebarNativeDropZone = ({
 
   const handleDrop = (event: React.DragEvent) => {
     const data = event.dataTransfer.getData(ADD_TO_NAVIGATION_DRAG.TYPE);
-    if (!data) return;
+    if (!data) {
+      return;
+    }
 
     event.preventDefault();
     event.stopPropagation();
