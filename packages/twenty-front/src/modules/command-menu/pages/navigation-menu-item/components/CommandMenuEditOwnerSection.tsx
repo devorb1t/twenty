@@ -22,19 +22,19 @@ export const CommandMenuEditOwnerSection = ({
   });
 
   const applicationName = data?.findOneApplication?.name;
-  const ownerLabel = isDefined(applicationName)
-    ? applicationName
-    : t`Standard app`;
+
+  if (!isDefined(applicationName)) {
+    return null;
+  }
 
   return (
     <CommandGroup heading={t`Owner`}>
       <SelectableListItem itemId="owner-app" onEnter={() => {}}>
         <CommandMenuItem
           Icon={IconApps}
-          label={ownerLabel}
+          label={applicationName}
           id="owner-app"
-          disabled={true}
-          onClick={() => {}}
+          disabled
         />
       </SelectableListItem>
     </CommandGroup>
