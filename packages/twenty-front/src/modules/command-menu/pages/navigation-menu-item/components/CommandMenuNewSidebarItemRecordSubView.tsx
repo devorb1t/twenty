@@ -12,10 +12,10 @@ import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandM
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
 import { useApolloCoreClient } from '@/object-metadata/hooks/useApolloCoreClient';
+import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { useObjectPermissions } from '@/object-record/hooks/useObjectPermissions';
 import { getObjectPermissionsFromMapByObjectMetadataId } from '@/settings/roles/role-permissions/objects-permissions/utils/getObjectPermissionsFromMapByObjectMetadataId';
-import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import type { NavigationMenuItem } from '~/generated-metadata/graphql';
 import { useSearchQuery } from '~/generated/graphql';
@@ -47,16 +47,14 @@ export const CommandMenuNewSidebarItemRecordSubView = ({
   const coreClient = useApolloCoreClient();
   const { objectPermissionsByObjectMetadataId } = useObjectPermissions();
 
-  const nonReadableObjectMetadataItemsNameSingular = Object.values(
-    objectMetadataItems,
-  )
-    .filter((objectMetadataItem) => {
-      const objectPermission = getObjectPermissionsFromMapByObjectMetadataId({
-        objectPermissionsByObjectMetadataId,
-        objectMetadataId: objectMetadataItem.id,
-      });
-      return !objectPermission?.canReadObjectRecords;
-    })
+  const nonReadableObjectMetadataItemsNameSingular = objectMetadataItems
+    .filter(
+      (objectMetadataItem) =>
+        !getObjectPermissionsFromMapByObjectMetadataId({
+          objectPermissionsByObjectMetadataId,
+          objectMetadataId: objectMetadataItem.id,
+        })?.canReadObjectRecords,
+    )
     .map((objectMetadataItem) => objectMetadataItem.nameSingular);
 
   const { data: searchData, loading: recordSearchLoading } = useSearchQuery({
