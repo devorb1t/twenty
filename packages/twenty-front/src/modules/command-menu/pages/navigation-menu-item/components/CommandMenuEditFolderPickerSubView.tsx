@@ -18,16 +18,19 @@ type FolderOption = {
 const getDescendantFolderIds = (
   folderId: string,
   allFolders: FolderOption[],
-): Set<string> =>
-  allFolders.reduce<Set<string>>((acc, folder) => {
+): Set<string> => {
+  const result = new Set<string>();
+  for (const folder of allFolders) {
     if (folder.folderId !== folderId) {
-      return acc;
+      continue;
     }
-
-    acc.add(folder.id);
-    getDescendantFolderIds(folder.id, allFolders).forEach((id) => acc.add(id));
-    return acc;
-  }, new Set());
+    result.add(folder.id);
+    getDescendantFolderIds(folder.id, allFolders).forEach((id) =>
+      result.add(id),
+    );
+  }
+  return result;
+};
 
 const excludeCurrentFolder = <T extends { id: string }>(
   folders: T[],
