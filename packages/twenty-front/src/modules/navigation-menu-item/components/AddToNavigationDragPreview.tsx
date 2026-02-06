@@ -1,7 +1,8 @@
 import { type Theme, ThemeProvider } from '@emotion/react';
 import styled from '@emotion/styled';
-import { ThemeContextProvider } from 'twenty-ui/theme';
 import type { IconComponent } from 'twenty-ui/display';
+import { ThemeContextProvider } from 'twenty-ui/theme';
+import { isDefined } from 'twenty-shared/utils';
 
 import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
@@ -18,10 +19,7 @@ const StyledPreviewContainer = styled.div`
   font-family: ${({ theme }) => theme.font.family};
   font-size: ${({ theme }) => theme.font.size.md};
   height: ${({ theme }) => theme.spacing(7)};
-  padding-bottom: ${({ theme }) => theme.spacing(1)};
-  padding-left: ${({ theme }) => theme.spacing(1)};
-  padding-right: ${({ theme }) => theme.spacing(1)};
-  padding-top: ${({ theme }) => theme.spacing(1)};
+  padding: ${({ theme }) => theme.spacing(1)};
   box-shadow: ${({ theme }) => theme.boxShadow.strong};
   min-width: 200px;
 `;
@@ -66,16 +64,15 @@ export const AddToNavigationDragPreview = ({
 }: AddToNavigationDragPreviewProps) => {
   const iconBackgroundColor = getIconBackgroundColorForPayload(payload, theme);
 
-  const iconContent =
-    icon !== undefined ? (
-      icon
-    ) : Icon != null ? (
-      <Icon
-        size={iconBackgroundColor ? theme.spacing(3) : theme.icon.size.md}
-        stroke={theme.icon.stroke.md}
-        color={iconBackgroundColor ? theme.grayScale.gray1 : 'currentColor'}
-      />
-    ) : null;
+  const iconContent = isDefined(icon) ? (
+    icon
+  ) : Icon ? (
+    <Icon
+      size={iconBackgroundColor ? theme.spacing(3) : theme.icon.size.md}
+      stroke={theme.icon.stroke.md}
+      color={iconBackgroundColor ? theme.grayScale.gray1 : 'currentColor'}
+    />
+  ) : null;
 
   return (
     <ThemeProvider theme={theme}>
