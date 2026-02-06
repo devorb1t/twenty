@@ -1,6 +1,5 @@
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
-import { CommandMenuEditFolderItemView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderItemView';
 import { CommandMenuEditFolderPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderPickerSubView';
 import { CommandMenuEditLinkItemView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditLinkItemView';
 import { CommandMenuEditObjectViewBase } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditObjectViewBase';
@@ -8,6 +7,7 @@ import {
   type OrganizeActionsProps,
   CommandMenuEditOrganizeActions,
 } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
+import { CommandMenuEditOwnerSection } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOwnerSection';
 import { CommandMenuEditViewPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditViewPickerSubView';
 import { CommandMenuObjectMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectMenuItem';
 import { CommandMenuObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerSubView';
@@ -493,14 +493,19 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
                 ?.applicationId
             : undefined;
         return (
-          <CommandMenuEditFolderItemView
-            applicationId={folderApplicationId}
-            canMoveUp={organizeActionsProps.canMoveUp}
-            canMoveDown={organizeActionsProps.canMoveDown}
-            onMoveUp={organizeActionsProps.onMoveUp}
-            onMoveDown={organizeActionsProps.onMoveDown}
-            onRemove={organizeActionsProps.onRemove}
-          />
+          <CommandMenuList
+            commandGroups={[]}
+            selectableItemIds={['move-up', 'move-down', 'remove']}
+          >
+            <CommandMenuEditOrganizeActions
+              canMoveUp={organizeActionsProps.canMoveUp}
+              canMoveDown={organizeActionsProps.canMoveDown}
+              onMoveUp={organizeActionsProps.onMoveUp}
+              onMoveDown={organizeActionsProps.onMoveDown}
+              onRemove={organizeActionsProps.onRemove}
+            />
+            <CommandMenuEditOwnerSection applicationId={folderApplicationId} />
+          </CommandMenuList>
         );
       },
     },
