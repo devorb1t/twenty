@@ -5,16 +5,16 @@ import { t } from '@lingui/core/macro';
 import { isDefined } from 'twenty-shared/utils';
 import { IconFolder, IconLink, useIcons } from 'twenty-ui/display';
 
-import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
 import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
+import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
 import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
-import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { type AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
+import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { coreViewsState } from '@/views/states/coreViewState';
 import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
 
@@ -98,8 +98,9 @@ export const NavigationSidebarNativeDropZone = ({
     }
 
     if (isDefined(dropTargetElement) && folderId !== null) {
+      const folderToOpen = folderId;
       setOpenNavigationMenuItemFolderIds((current) =>
-        current.includes(folderId!) ? current : [...current, folderId!],
+        current.includes(folderToOpen) ? current : [...current, folderToOpen],
       );
     }
 
@@ -110,106 +111,104 @@ export const NavigationSidebarNativeDropZone = ({
       index = itemsInFolder.length;
     }
 
-    if (payload.type === 'folder') {
-      const newFolderId = addFolderToDraftAtPosition(
-        payload.name,
-        currentDraft,
-        null,
-        index,
-      );
-      setIsNavigationMenuInEditMode(true);
-      setSelectedNavigationMenuItemInEditMode(newFolderId);
-      openNavigationMenuItemInCommandMenu({
-        pageTitle: t`Edit folder`,
-        pageIcon: IconFolder,
-        focusTitleInput: true,
-      });
-      return;
-    }
-
-    if (payload.type === 'link') {
-      const newLinkId = addLinkToDraftAtPosition(
-        payload.name || t`Link label`,
-        payload.link,
-        currentDraft,
-        folderId,
-        index,
-      );
-      setIsNavigationMenuInEditMode(true);
-      setSelectedNavigationMenuItemInEditMode(newLinkId);
-      openNavigationMenuItemInCommandMenu({
-        pageTitle: t`Edit link`,
-        pageIcon: IconLink,
-        focusTitleInput: true,
-      });
-      return;
-    }
-
-    if (payload.type === 'object') {
-      const newItemId = addObjectToDraftAtPosition(
-        payload.objectMetadataId,
-        payload.defaultViewId,
-        currentDraft,
-        folderId,
-        index,
-      );
-      setIsNavigationMenuInEditMode(true);
-      setSelectedNavigationMenuItemInEditMode(newItemId);
-      const objectMetadataItem = objectMetadataItems.find(
-        (item) => item.id === payload.objectMetadataId,
-      );
-      openNavigationMenuItemInCommandMenu({
-        pageTitle: objectMetadataItem?.labelPlural ?? payload.label,
-        pageIcon: objectMetadataItem
-          ? getIcon(objectMetadataItem.icon)
-          : IconFolder,
-      });
-      return;
-    }
-
-    if (payload.type === 'view') {
-      const newItemId = addViewToDraftAtPosition(
-        payload.viewId,
-        currentDraft,
-        folderId,
-        index,
-      );
-      setIsNavigationMenuInEditMode(true);
-      setSelectedNavigationMenuItemInEditMode(newItemId);
-      const views = coreViews.map(convertCoreViewToView);
-      const view = views.find((v) => v.id === payload.viewId);
-      openNavigationMenuItemInCommandMenu({
-        pageTitle: view?.name ?? payload.label,
-        pageIcon: view ? getIcon(view.icon) : IconFolder,
-      });
-      return;
-    }
-
-    if (payload.type === 'record') {
-      const newItemId = addRecordToDraftAtPosition(
-        {
-          recordId: payload.recordId,
-          objectMetadataId: payload.objectMetadataId,
-          objectNameSingular: payload.objectNameSingular,
-          label: payload.label,
-          imageUrl: payload.imageUrl,
-        },
-        currentDraft,
-        folderId,
-        index,
-      );
-      setIsNavigationMenuInEditMode(true);
-      setSelectedNavigationMenuItemInEditMode(newItemId);
-      const objectMetadataItem = objectMetadataItems.find(
-        (item) => item.id === payload.objectMetadataId,
-      );
-      openNavigationMenuItemInCommandMenu({
-        pageTitle: payload.label,
-        pageIcon: objectMetadataItem
-          ? getIcon(objectMetadataItem.icon)
-          : IconFolder,
-      });
-      return;
+    switch (payload.type) {
+      case 'folder': {
+        const newFolderId = addFolderToDraftAtPosition(
+          payload.name,
+          currentDraft,
+          null,
+          index,
+        );
+        setIsNavigationMenuInEditMode(true);
+        setSelectedNavigationMenuItemInEditMode(newFolderId);
+        openNavigationMenuItemInCommandMenu({
+          pageTitle: t`Edit folder`,
+          pageIcon: IconFolder,
+          focusTitleInput: true,
+        });
+        return;
+      }
+      case 'link': {
+        const newLinkId = addLinkToDraftAtPosition(
+          payload.name || t`Link label`,
+          payload.link,
+          currentDraft,
+          folderId,
+          index,
+        );
+        setIsNavigationMenuInEditMode(true);
+        setSelectedNavigationMenuItemInEditMode(newLinkId);
+        openNavigationMenuItemInCommandMenu({
+          pageTitle: t`Edit link`,
+          pageIcon: IconLink,
+          focusTitleInput: true,
+        });
+        return;
+      }
+      case 'object': {
+        const newItemId = addObjectToDraftAtPosition(
+          payload.objectMetadataId,
+          payload.defaultViewId,
+          currentDraft,
+          folderId,
+          index,
+        );
+        setIsNavigationMenuInEditMode(true);
+        setSelectedNavigationMenuItemInEditMode(newItemId);
+        const objectMetadataItem = objectMetadataItems.find(
+          (item) => item.id === payload.objectMetadataId,
+        );
+        openNavigationMenuItemInCommandMenu({
+          pageTitle: objectMetadataItem?.labelPlural ?? payload.label,
+          pageIcon: objectMetadataItem
+            ? getIcon(objectMetadataItem.icon)
+            : IconFolder,
+        });
+        return;
+      }
+      case 'view': {
+        const newItemId = addViewToDraftAtPosition(
+          payload.viewId,
+          currentDraft,
+          folderId,
+          index,
+        );
+        setIsNavigationMenuInEditMode(true);
+        setSelectedNavigationMenuItemInEditMode(newItemId);
+        const views = coreViews.map(convertCoreViewToView);
+        const view = views.find((v) => v.id === payload.viewId);
+        openNavigationMenuItemInCommandMenu({
+          pageTitle: view?.name ?? payload.label,
+          pageIcon: view ? getIcon(view.icon) : IconFolder,
+        });
+        return;
+      }
+      case 'record': {
+        const newItemId = addRecordToDraftAtPosition(
+          {
+            recordId: payload.recordId,
+            objectMetadataId: payload.objectMetadataId,
+            objectNameSingular: payload.objectNameSingular,
+            label: payload.label,
+            imageUrl: payload.imageUrl,
+          },
+          currentDraft,
+          folderId,
+          index,
+        );
+        setIsNavigationMenuInEditMode(true);
+        setSelectedNavigationMenuItemInEditMode(newItemId);
+        const objectMetadataItem = objectMetadataItems.find(
+          (item) => item.id === payload.objectMetadataId,
+        );
+        openNavigationMenuItemInCommandMenu({
+          pageTitle: payload.label,
+          pageIcon: objectMetadataItem
+            ? getIcon(objectMetadataItem.icon)
+            : IconFolder,
+        });
+        return;
+      }
     }
   };
 
@@ -315,7 +314,7 @@ export const NavigationSidebarNativeDropZone = ({
       }}
     >
       <StyledDropZone
-        {...{ [DROP_ZONE_ATTR]: '' }}
+        data-navigation-drop-zone=""
         onDragOver={handleDragOverOrEnter}
         onDragEnter={handleDragOverOrEnter}
         onDrop={handleDrop}
