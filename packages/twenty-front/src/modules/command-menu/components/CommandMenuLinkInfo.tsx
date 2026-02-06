@@ -7,8 +7,8 @@ import { CommandMenuNavigationMenuItemIcon } from '@/command-menu/components/Com
 import { CommandMenuPageInfoLayout } from '@/command-menu/components/CommandMenuPageInfoLayout';
 import { commandMenuPageInfoState } from '@/command-menu/states/commandMenuPageInfoState';
 import { commandMenuShouldFocusTitleInputComponentState } from '@/command-menu/states/commandMenuShouldFocusTitleInputComponentState';
-import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
+import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { TitleInput } from '@/ui/input/components/TitleInput';
@@ -23,20 +23,23 @@ export const CommandMenuLinkInfo = () => {
       commandMenuShouldFocusTitleInputComponentState,
       commandMenuPageInfo.instanceId,
     );
-  const selectedId = useRecoilValue(
+  const selectedNavigationMenuItemInEditMode = useRecoilValue(
     selectedNavigationMenuItemInEditModeState,
   );
   const items = useWorkspaceSectionItems();
   const { updateLinkInDraft } = useUpdateNavigationMenuItemsDraft();
 
-  const selectedLink = selectedId
+  const selectedLink = selectedNavigationMenuItemInEditMode
     ? items.find(
         (item) =>
-          getNavigationMenuItemType(item) === 'link' && item.id === selectedId,
+          getNavigationMenuItemType(item) === 'link' &&
+          item.id === selectedNavigationMenuItemInEditMode,
       )
     : undefined;
 
-  if (!selectedLink) return null;
+  if (!selectedLink) {
+    return null;
+  }
 
   const linkId = selectedLink.id;
   const linkLabel = selectedLink.name ?? t`Link label`;
