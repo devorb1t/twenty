@@ -5,10 +5,10 @@ import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
+import { useFilteredPickerItems } from '@/command-menu/hooks/useFilteredPickerItems';
 import { CommandMenuSelectObjectForViewMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSelectObjectForViewMenuItem';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
-import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 
 type CommandMenuNewSidebarItemViewObjectPickerSubViewProps = {
   objects: ObjectMetadataItem[];
@@ -28,19 +28,16 @@ export const CommandMenuNewSidebarItemViewObjectPickerSubView = ({
   onSelectObject,
 }: CommandMenuNewSidebarItemViewObjectPickerSubViewProps) => {
   const { t } = useLingui();
-  const filteredObjectMetadataItems = filterBySearchQuery({
-    items: objects,
-    searchQuery: searchValue,
-    getSearchableValues: (item) => [item.labelPlural],
-  });
-  const isEmpty = filteredObjectMetadataItems.length === 0;
-  const selectableItemIds = isEmpty
-    ? ['system']
-    : [...filteredObjectMetadataItems.map((item) => item.id), 'system'];
-  const noResultsText =
-    searchValue.trim().length > 0
-      ? t`No results found`
-      : t`No objects with views found`;
+  const { filteredItems, selectableItemIds, isEmpty, hasSearchQuery } =
+    useFilteredPickerItems({
+      items: objects,
+      searchQuery: searchValue,
+      getSearchableValues: (item) => [item.labelPlural],
+      appendSelectableIds: ['system'],
+    });
+  const noResultsText = hasSearchQuery
+    ? t`No results found`
+    : t`No objects with views found`;
 
   return (
     <CommandMenuSubViewWithSearch
@@ -57,7 +54,7 @@ export const CommandMenuNewSidebarItemViewObjectPickerSubView = ({
         noResultsText={noResultsText}
       >
         <CommandGroup heading={t`Objects`}>
-          {filteredObjectMetadataItems.map((objectMetadataItem) => (
+          {filteredItems.map((objectMetadataItem) => (
             <CommandMenuSelectObjectForViewMenuItem
               key={objectMetadataItem.id}
               objectMetadataItem={objectMetadataItem}
