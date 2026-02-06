@@ -3,9 +3,9 @@ import { useLingui } from '@lingui/react/macro';
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
+import { useFilteredPickerItems } from '@/command-menu/hooks/useFilteredPickerItems';
 import { CommandMenuSelectObjectForViewMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSelectObjectForViewMenuItem';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
-import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 
 type CommandMenuNewSidebarItemViewSystemSubViewProps = {
   systemObjects: ObjectMetadataItem[];
@@ -23,19 +23,19 @@ export const CommandMenuNewSidebarItemViewSystemSubView = ({
   onSelectObject,
 }: CommandMenuNewSidebarItemViewSystemSubViewProps) => {
   const { t } = useLingui();
-  const filteredSystemObjectMetadataItems = filterBySearchQuery({
+  const {
+    filteredItems: filteredSystemObjectMetadataItems,
+    selectableItemIds,
+    isEmpty,
+    hasSearchQuery,
+  } = useFilteredPickerItems({
     items: systemObjects,
     searchQuery: searchValue,
     getSearchableValues: (item) => [item.labelPlural],
   });
-  const isEmpty = filteredSystemObjectMetadataItems.length === 0;
-  const selectableItemIds = isEmpty
-    ? []
-    : filteredSystemObjectMetadataItems.map((item) => item.id);
-  const noResultsText =
-    searchValue.trim().length > 0
-      ? t`No results found`
-      : t`No system objects with views found`;
+  const noResultsText = hasSearchQuery
+    ? t`No results found`
+    : t`No system objects with views found`;
 
   return (
     <CommandMenuSubViewWithSearch
