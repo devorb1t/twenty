@@ -10,12 +10,15 @@ import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 
-type CommandMenuEditOrganizeActionsProps = {
+export type OrganizeActionsProps = {
   canMoveUp: boolean;
   canMoveDown: boolean;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove: () => void;
+};
+
+type CommandMenuEditOrganizeActionsProps = OrganizeActionsProps & {
   showMoveToFolder?: boolean;
   onMoveToFolder?: () => void;
   moveToFolderHasSubMenu?: boolean;

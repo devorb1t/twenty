@@ -9,6 +9,7 @@ import {
   StyledCommandMenuPlaceholder,
 } from '@/command-menu/components/CommandMenuSharedStyles';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
+import { type OrganizeActionsProps } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuEditDefaultView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditDefaultView';
 import { CommandMenuEditFolderItemView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderItemView';
 import { CommandMenuEditFolderPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderPickerSubView';
@@ -19,10 +20,7 @@ import { CommandMenuObjectMenuItem } from '@/command-menu/pages/navigation-menu-
 import { CommandMenuObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerSubView';
 import { CommandMenuSelectObjectForViewMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSelectObjectForViewMenuItem';
 import { CommandMenuSystemObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSystemObjectPickerSubView';
-import {
-  type FlatWorkspaceItem,
-  useWorkspaceSectionItems,
-} from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
+import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { useNavigationMenuItemsByFolder } from '@/navigation-menu-item/hooks/useNavigationMenuItemsByFolder';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
@@ -41,34 +39,6 @@ import { coreViewsState } from '@/views/states/coreViewState';
 import { type View } from '@/views/types/View';
 import { ViewKey } from '@/views/types/ViewKey';
 import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
-
-const isObjectNavItem = (
-  item: FlatWorkspaceItem,
-  objectMetadataItem: ObjectMetadataItem | null,
-): boolean => {
-  if (getNavigationMenuItemType(item) !== 'objectView' || !objectMetadataItem) {
-    return false;
-  }
-  const processed = item as ProcessedNavigationMenuItem;
-  return (
-    processed.viewKey === ViewKey.Index && !isDefined(processed.targetRecordId)
-  );
-};
-
-const isViewNavItem = (
-  item: FlatWorkspaceItem,
-  objectMetadataItem: ObjectMetadataItem | null,
-): boolean => {
-  if (getNavigationMenuItemType(item) !== 'objectView' || !objectMetadataItem) {
-    return false;
-  }
-  const processed = item as ProcessedNavigationMenuItem;
-  return (
-    processed.viewKey !== ViewKey.Index &&
-    isDefined(processed.viewId) &&
-    !isDefined(processed.targetRecordId)
-  );
-};
 
 export const CommandMenuNavigationMenuItemEditPage = () => {
   const { t } = useLingui();
@@ -156,12 +126,20 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     selectedItemIndex >= 0 &&
     selectedItemIndex < items.length - 1;
 
+  const processedItem = selectedItem as ProcessedNavigationMenuItem | undefined;
   const isObjectItem =
-    selectedItem !== undefined &&
-    isObjectNavItem(selectedItem, selectedItemObjectMetadata);
+    processedItem !== undefined &&
+    selectedItemType === 'objectView' &&
+    selectedItemObjectMetadata !== null &&
+    processedItem.viewKey === ViewKey.Index &&
+    !isDefined(processedItem.targetRecordId);
   const isViewItem =
-    selectedItem !== undefined &&
-    isViewNavItem(selectedItem, selectedItemObjectMetadata);
+    processedItem !== undefined &&
+    selectedItemType === 'objectView' &&
+    selectedItemObjectMetadata !== null &&
+    processedItem.viewKey !== ViewKey.Index &&
+    isDefined(processedItem.viewId) &&
+    !isDefined(processedItem.targetRecordId);
 
   const { getIcon } = useIcons();
   const objectNameSingularForViewItem =
@@ -308,7 +286,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     }
   };
 
-  const organizeActionsProps = {
+  const organizeActionsProps: OrganizeActionsProps = {
     canMoveUp,
     canMoveDown,
     onMoveUp: handleMoveUp,
@@ -442,8 +420,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
             objectLabel={selectedItemObjectMetadata.labelPlural ?? ''}
             onOpenObjectPicker={subViewHandlers.setObjectPicker}
             onOpenFolderPicker={subViewHandlers.setFolderPicker}
-            // eslint-disable-next-line react/jsx-props-no-spreading
-            {...organizeActionsProps}
+            canMoveUp={organizeActionsProps.canMoveUp}
+            canMoveDown={organizeActionsProps.canMoveDown}
+            onMoveUp={organizeActionsProps.onMoveUp}
+            onMoveDown={organizeActionsProps.onMoveDown}
+            onRemove={organizeActionsProps.onRemove}
           />
         ) : null,
     },
@@ -471,8 +452,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
                 '',
               onClick: subViewHandlers.setViewPicker,
             }}
-            // eslint-disable-next-line react/jsx-props-no-spreading
-            {...organizeActionsProps}
+            canMoveUp={organizeActionsProps.canMoveUp}
+            canMoveDown={organizeActionsProps.canMoveDown}
+            onMoveUp={organizeActionsProps.onMoveUp}
+            onMoveDown={organizeActionsProps.onMoveDown}
+            onRemove={organizeActionsProps.onRemove}
           />
         ) : null,
     },
@@ -483,9 +467,12 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
           <CommandMenuEditLinkItemView
             selectedItem={selectedItem as ProcessedNavigationMenuItem}
             onUpdateLink={(linkId, link) => updateLinkInDraft(linkId, { link })}
-            // eslint-disable-next-line react/jsx-props-no-spreading
-            {...organizeActionsProps}
             onOpenFolderPicker={subViewHandlers.setFolderPicker}
+            canMoveUp={organizeActionsProps.canMoveUp}
+            canMoveDown={organizeActionsProps.canMoveDown}
+            onMoveUp={organizeActionsProps.onMoveUp}
+            onMoveDown={organizeActionsProps.onMoveDown}
+            onRemove={organizeActionsProps.onRemove}
           />
         ) : null,
     },
@@ -500,8 +487,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         return (
           <CommandMenuEditFolderItemView
             applicationId={folderApplicationId}
-            // eslint-disable-next-line react/jsx-props-no-spreading
-            {...organizeActionsProps}
+            canMoveUp={organizeActionsProps.canMoveUp}
+            canMoveDown={organizeActionsProps.canMoveDown}
+            onMoveUp={organizeActionsProps.onMoveUp}
+            onMoveDown={organizeActionsProps.onMoveDown}
+            onRemove={organizeActionsProps.onRemove}
           />
         );
       },
@@ -515,8 +505,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   return (
     <CommandMenuEditDefaultView
-      // eslint-disable-next-line react/jsx-props-no-spreading
-      {...organizeActionsProps}
+      canMoveUp={organizeActionsProps.canMoveUp}
+      canMoveDown={organizeActionsProps.canMoveDown}
+      onMoveUp={organizeActionsProps.onMoveUp}
+      onMoveDown={organizeActionsProps.onMoveDown}
+      onRemove={organizeActionsProps.onRemove}
       onOpenFolderPicker={subViewHandlers.setFolderPicker}
     />
   );

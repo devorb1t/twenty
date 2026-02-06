@@ -1,18 +1,20 @@
+import styled from '@emotion/styled';
+import { useRecoilValue } from 'recoil';
+import { isDefined } from 'twenty-shared/utils';
+import { OverflowingTextWithTooltip } from 'twenty-ui/display';
+
 import { CommandMenuFolderInfo } from '@/command-menu/components/CommandMenuFolderInfo';
+import { CommandMenuLinkInfo } from '@/command-menu/components/CommandMenuLinkInfo';
 import { CommandMenuMultipleRecordsInfo } from '@/command-menu/components/CommandMenuMultipleRecordsInfo';
 import { CommandMenuPageLayoutInfo } from '@/command-menu/components/CommandMenuPageLayoutInfo';
 import { CommandMenuRecordInfo } from '@/command-menu/components/CommandMenuRecordInfo';
 import { CommandMenuWorkflowStepInfo } from '@/command-menu/components/CommandMenuWorkflowStepInfo';
 import { CommandMenuPages } from '@/command-menu/types/CommandMenuPages';
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
-import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
-import styled from '@emotion/styled';
-import { useRecoilValue } from 'recoil';
-import { isDefined } from 'twenty-shared/utils';
-import { OverflowingTextWithTooltip } from 'twenty-ui/display';
+import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
+
 import { type CommandMenuContextChipProps } from './CommandMenuContextChip';
-import { CommandMenuLinkInfo } from './CommandMenuLinkInfo';
 
 const StyledPageTitle = styled.div`
   color: ${({ theme }) => theme.font.color.primary};
@@ -40,20 +42,10 @@ export const CommandMenuPageInfo = ({ pageChip }: CommandMenuPageInfoProps) => {
     ? items.find((item) => item.id === selectedNavigationMenuItemInEditMode)
     : undefined;
 
-  if (
-    isNavigationMenuItemEditPage &&
-    isDefined(selectedNavItem) &&
-    getNavigationMenuItemType(selectedNavItem) === 'folder'
-  ) {
-    return <CommandMenuFolderInfo />;
-  }
-
-  if (
-    isNavigationMenuItemEditPage &&
-    isDefined(selectedNavItem) &&
-    getNavigationMenuItemType(selectedNavItem) === 'link'
-  ) {
-    return <CommandMenuLinkInfo />;
+  if (isNavigationMenuItemEditPage && isDefined(selectedNavItem)) {
+    const selectedType = getNavigationMenuItemType(selectedNavItem);
+    if (selectedType === 'folder') return <CommandMenuFolderInfo />;
+    if (selectedType === 'link') return <CommandMenuLinkInfo />;
   }
 
   const isRecordPage = pageChip.page?.page === CommandMenuPages.ViewRecord;

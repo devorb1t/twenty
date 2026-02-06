@@ -4,16 +4,11 @@ import { type IconComponent } from 'twenty-ui/display';
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
-import { CommandMenuEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
+import {
+  type OrganizeActionsProps,
+  CommandMenuEditOrganizeActions,
+} from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
-
-type OrganizeActionsProps = {
-  canMoveUp: boolean;
-  canMoveDown: boolean;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-  onRemove: () => void;
-};
 
 type CommandMenuEditObjectViewBaseProps = OrganizeActionsProps & {
   objectIcon: IconComponent;

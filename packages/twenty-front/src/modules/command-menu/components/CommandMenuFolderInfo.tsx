@@ -8,9 +8,9 @@ import { CommandMenuPageInfoLayout } from '@/command-menu/components/CommandMenu
 import { commandMenuPageInfoState } from '@/command-menu/states/commandMenuPageInfoState';
 import { commandMenuShouldFocusTitleInputComponentState } from '@/command-menu/states/commandMenuShouldFocusTitleInputComponentState';
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
-import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
+import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { TitleInput } from '@/ui/input/components/TitleInput';
 import { useRecoilComponentState } from '@/ui/utilities/state/component-state/hooks/useRecoilComponentState';
 
@@ -23,33 +23,33 @@ export const CommandMenuFolderInfo = () => {
       commandMenuShouldFocusTitleInputComponentState,
       commandMenuPageInfo.instanceId,
     );
-  const selectedNavigationMenuItemInEditMode = useRecoilValue(
+  const selectedId = useRecoilValue(
     selectedNavigationMenuItemInEditModeState,
   );
   const items = useWorkspaceSectionItems();
   const { updateFolderNameInDraft } = useUpdateNavigationMenuItemsDraft();
 
-  const selectedFolderItem = items.find(
-    (item) =>
-      getNavigationMenuItemType(item) === 'folder' &&
-      item.id === selectedNavigationMenuItemInEditMode,
-  );
+  const selectedFolder = selectedId
+    ? items.find(
+        (item) =>
+          getNavigationMenuItemType(item) === 'folder' &&
+          item.id === selectedId,
+      )
+    : undefined;
 
-  if (!selectedFolderItem || !selectedNavigationMenuItemInEditMode) {
-    return null;
-  }
+  if (!selectedFolder) return null;
 
-  const folderName = selectedFolderItem.name ?? t`New folder`;
-  const folderId = selectedFolderItem.id;
+  const folderId = selectedFolder.id;
+  const folderName = selectedFolder.name ?? t`New folder`;
+  const defaultName = t`New folder`;
 
   const handleChange = (text: string) => {
     updateFolderNameInDraft(folderId, text);
   };
 
-  const saveFolderName = () => {
+  const handleSave = () => {
     const trimmed = folderName.trim();
-    const finalName = trimmed.length > 0 ? trimmed : t`New folder`;
-
+    const finalName = trimmed.length > 0 ? trimmed : defaultName;
     if (finalName !== folderName) {
       updateFolderNameInDraft(folderId, finalName);
     }
@@ -73,11 +73,11 @@ export const CommandMenuFolderInfo = () => {
           value={folderName}
           onChange={handleChange}
           placeholder={t`Folder name`}
-          onEnter={saveFolderName}
-          onEscape={saveFolderName}
-          onClickOutside={saveFolderName}
-          onTab={saveFolderName}
-          onShiftTab={saveFolderName}
+          onEnter={handleSave}
+          onEscape={handleSave}
+          onClickOutside={handleSave}
+          onTab={handleSave}
+          onShiftTab={handleSave}
           shouldFocus={shouldFocusTitleInput}
           onFocus={() => setShouldFocusTitleInput(false)}
         />

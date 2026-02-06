@@ -55,15 +55,17 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
   const objectMetadataItems = useRecoilValue(objectMetadataItemsState);
 
   const flatItems = items.filter((item) => !isDefined(item.folderId));
-  const folderChildrenById = new Map<string, ProcessedNavigationMenuItem[]>();
-  for (const item of items) {
+  const folderChildrenById = items.reduce<
+    Map<string, ProcessedNavigationMenuItem[]>
+  >((acc, item) => {
     const folderId = item.folderId;
     if (isDefined(folderId)) {
-      const children = folderChildrenById.get(folderId) ?? [];
+      const children = acc.get(folderId) ?? [];
       children.push(item as ProcessedNavigationMenuItem);
-      folderChildrenById.set(folderId, children);
+      acc.set(folderId, children);
     }
-  }
+    return acc;
+  }, new Map());
 
   const folderCount = flatItems.filter(
     (item) => getNavigationMenuItemType(item) === 'folder',

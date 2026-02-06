@@ -63,8 +63,9 @@ export const WorkspaceNavigationMenuItemsFolder = ({
   const objectMetadataItems = useRecoilValue(objectMetadataItemsState);
   const coreViews = useRecoilValue(coreViewsState);
   const views = coreViews.map(convertCoreViewToView);
-  const currentPath = useLocation().pathname;
-  const currentViewPath = useLocation().pathname + useLocation().search;
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const currentViewPath = location.pathname + location.search;
   const isMobile = useIsMobile();
 
   const [openNavigationMenuItemFolderIds, setOpenNavigationMenuItemFolderIds] =

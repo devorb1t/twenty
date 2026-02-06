@@ -8,9 +8,9 @@ import { CommandMenuPageInfoLayout } from '@/command-menu/components/CommandMenu
 import { commandMenuPageInfoState } from '@/command-menu/states/commandMenuPageInfoState';
 import { commandMenuShouldFocusTitleInputComponentState } from '@/command-menu/states/commandMenuShouldFocusTitleInputComponentState';
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
-import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
+import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { TitleInput } from '@/ui/input/components/TitleInput';
 import { useRecoilComponentState } from '@/ui/utilities/state/component-state/hooks/useRecoilComponentState';
 
@@ -23,32 +23,32 @@ export const CommandMenuLinkInfo = () => {
       commandMenuShouldFocusTitleInputComponentState,
       commandMenuPageInfo.instanceId,
     );
-  const selectedNavigationMenuItemInEditMode = useRecoilValue(
+  const selectedId = useRecoilValue(
     selectedNavigationMenuItemInEditModeState,
   );
   const items = useWorkspaceSectionItems();
   const { updateLinkInDraft } = useUpdateNavigationMenuItemsDraft();
 
-  const selectedLink = items.find(
-    (item) =>
-      getNavigationMenuItemType(item) === 'link' &&
-      item.id === selectedNavigationMenuItemInEditMode,
-  );
+  const selectedLink = selectedId
+    ? items.find(
+        (item) =>
+          getNavigationMenuItemType(item) === 'link' && item.id === selectedId,
+      )
+    : undefined;
 
-  if (!selectedLink || !selectedNavigationMenuItemInEditMode) {
-    return null;
-  }
+  if (!selectedLink) return null;
 
   const linkId = selectedLink.id;
   const linkLabel = selectedLink.name ?? t`Link label`;
+  const defaultLabel = t`Link label`;
 
   const handleChange = (text: string) => {
     updateLinkInDraft(linkId, { name: text });
   };
 
-  const saveLinkLabel = () => {
+  const handleSave = () => {
     const trimmed = linkLabel.trim();
-    const finalLabel = trimmed.length > 0 ? trimmed : t`Link label`;
+    const finalLabel = trimmed.length > 0 ? trimmed : defaultLabel;
     if (finalLabel !== linkLabel) {
       updateLinkInDraft(linkId, { name: finalLabel });
     }
@@ -72,11 +72,11 @@ export const CommandMenuLinkInfo = () => {
           value={linkLabel}
           onChange={handleChange}
           placeholder={t`Link label`}
-          onEnter={saveLinkLabel}
-          onEscape={saveLinkLabel}
-          onClickOutside={saveLinkLabel}
-          onTab={saveLinkLabel}
-          onShiftTab={saveLinkLabel}
+          onEnter={handleSave}
+          onEscape={handleSave}
+          onClickOutside={handleSave}
+          onTab={handleSave}
+          onShiftTab={handleSave}
           shouldFocus={shouldFocusTitleInput}
           onFocus={() => setShouldFocusTitleInput(false)}
         />

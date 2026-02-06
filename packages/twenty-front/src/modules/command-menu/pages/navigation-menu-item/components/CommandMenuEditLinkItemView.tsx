@@ -4,20 +4,18 @@ import { useState } from 'react';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
-import { CommandMenuEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
+import {
+  type OrganizeActionsProps,
+  CommandMenuEditOrganizeActions,
+} from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuEditOwnerSection } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOwnerSection';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { TextInput } from '@/ui/input/components/TextInput';
 
-type CommandMenuEditLinkItemViewProps = {
+type CommandMenuEditLinkItemViewProps = OrganizeActionsProps & {
   selectedItem: ProcessedNavigationMenuItem;
   onUpdateLink: (linkId: string, link: string) => void;
-  canMoveUp: boolean;
-  canMoveDown: boolean;
   onOpenFolderPicker: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-  onRemove: () => void;
 };
 
 export const CommandMenuEditLinkItemView = ({

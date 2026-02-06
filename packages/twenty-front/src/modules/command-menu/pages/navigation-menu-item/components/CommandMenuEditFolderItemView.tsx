@@ -1,14 +1,12 @@
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
-import { CommandMenuEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
+import {
+  type OrganizeActionsProps,
+  CommandMenuEditOrganizeActions,
+} from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuEditOwnerSection } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOwnerSection';
 
-type CommandMenuEditFolderItemViewProps = {
+type CommandMenuEditFolderItemViewProps = OrganizeActionsProps & {
   applicationId?: string | null;
-  canMoveUp: boolean;
-  canMoveDown: boolean;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-  onRemove: () => void;
 };
 
 export const CommandMenuEditFolderItemView = ({
