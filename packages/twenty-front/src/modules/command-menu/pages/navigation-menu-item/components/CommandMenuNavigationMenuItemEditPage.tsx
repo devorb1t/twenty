@@ -1,3 +1,11 @@
+import styled from '@emotion/styled';
+import { useLingui } from '@lingui/react/macro';
+import { useState } from 'react';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { isDefined } from 'twenty-shared/utils';
+import { useIcons } from 'twenty-ui/display';
+
+import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { CommandMenuEditFolderPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderPickerSubView';
@@ -9,7 +17,6 @@ import {
 } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuEditOwnerSection } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOwnerSection';
 import { CommandMenuEditViewPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditViewPickerSubView';
-import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuObjectMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectMenuItem';
 import { CommandMenuObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerSubView';
 import { CommandMenuSystemObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSystemObjectPickerSubView';
@@ -33,12 +40,6 @@ import { coreViewsState } from '@/views/states/coreViewState';
 import { type View } from '@/views/types/View';
 import { ViewKey } from '@/views/types/ViewKey';
 import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
-import styled from '@emotion/styled';
-import { useLingui } from '@lingui/react/macro';
-import { useState } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { isDefined } from 'twenty-shared/utils';
-import { useIcons } from 'twenty-ui/display';
 
 const StyledCommandMenuPlaceholder = styled.p`
   color: ${({ theme }) => theme.font.color.tertiary};
@@ -53,7 +54,7 @@ const includeCurrentObjectIfMissing = (
   objects: ObjectMetadataItem[],
   current: ObjectMetadataItem | undefined,
 ): ObjectMetadataItem[] =>
-  current !== undefined && !objects.some((object) => object.id === current.id)
+  isDefined(current) && !objects.some((object) => object.id === current.id)
     ? [current, ...objects].sort((a, b) =>
         a.labelPlural.localeCompare(b.labelPlural),
       )
@@ -198,9 +199,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   const systemObjectsForObjectPicker = activeSystemObjectMetadataItems.filter(
     (item) =>
       objectMetadataIdsWithIndexView.has(item.id) &&
-      (objectMetadataItemsInWorkspaceIds.has(item.id)
-        ? item.id === currentObjectMetadataId
-        : true),
+      (!objectMetadataItemsInWorkspaceIds.has(item.id) ||
+        item.id === currentObjectMetadataId),
   );
 
   const objectsForViewEdit = activeNonSystemObjectMetadataItems
@@ -416,45 +416,35 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     );
   }
 
+  const isObjectOrViewItem = isObjectItem || isViewItem;
+  const objectViewBaseRender = () =>
+    selectedItemObjectMetadata ? (
+      <CommandMenuEditObjectViewBase
+        objectIcon={objectIcon}
+        objectLabel={selectedItemObjectMetadata.labelPlural ?? ''}
+        onOpenObjectPicker={subViewHandlers.setObjectPicker}
+        onOpenFolderPicker={subViewHandlers.setFolderPicker}
+        viewRow={
+          isViewItem && processedItem
+            ? {
+                icon: getIcon(processedItem.Icon ?? 'IconList'),
+                label: processedItem.labelIdentifier ?? '',
+                onClick: subViewHandlers.setViewPicker,
+              }
+            : undefined
+        }
+        canMoveUp={organizeActionsProps.canMoveUp}
+        canMoveDown={organizeActionsProps.canMoveDown}
+        onMoveUp={organizeActionsProps.onMoveUp}
+        onMoveDown={organizeActionsProps.onMoveDown}
+        onRemove={organizeActionsProps.onRemove}
+      />
+    ) : null;
+
   const mainViewConfig = [
     {
-      condition: isObjectItem,
-      render: () =>
-        selectedItemObjectMetadata ? (
-          <CommandMenuEditObjectViewBase
-            objectIcon={objectIcon}
-            objectLabel={selectedItemObjectMetadata.labelPlural ?? ''}
-            onOpenObjectPicker={subViewHandlers.setObjectPicker}
-            onOpenFolderPicker={subViewHandlers.setFolderPicker}
-            canMoveUp={organizeActionsProps.canMoveUp}
-            canMoveDown={organizeActionsProps.canMoveDown}
-            onMoveUp={organizeActionsProps.onMoveUp}
-            onMoveDown={organizeActionsProps.onMoveDown}
-            onRemove={organizeActionsProps.onRemove}
-          />
-        ) : null,
-    },
-    {
-      condition: isViewItem,
-      render: () =>
-        selectedItemObjectMetadata && processedItem ? (
-          <CommandMenuEditObjectViewBase
-            objectIcon={objectIcon}
-            objectLabel={selectedItemObjectMetadata.labelPlural ?? ''}
-            onOpenObjectPicker={subViewHandlers.setObjectPicker}
-            onOpenFolderPicker={subViewHandlers.setFolderPicker}
-            viewRow={{
-              icon: getIcon(processedItem.Icon ?? 'IconList'),
-              label: processedItem.labelIdentifier ?? '',
-              onClick: subViewHandlers.setViewPicker,
-            }}
-            canMoveUp={organizeActionsProps.canMoveUp}
-            canMoveDown={organizeActionsProps.canMoveDown}
-            onMoveUp={organizeActionsProps.onMoveUp}
-            onMoveDown={organizeActionsProps.onMoveDown}
-            onRemove={organizeActionsProps.onRemove}
-          />
-        ) : null,
+      condition: isObjectOrViewItem,
+      render: objectViewBaseRender,
     },
     {
       condition: isLinkItem,
@@ -514,7 +504,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         onMoveUp={organizeActionsProps.onMoveUp}
         onMoveDown={organizeActionsProps.onMoveDown}
         onRemove={organizeActionsProps.onRemove}
-        showMoveToFolder={true}
+        showMoveToFolder
         onMoveToFolder={subViewHandlers.setFolderPicker}
       />
     </CommandMenuList>
