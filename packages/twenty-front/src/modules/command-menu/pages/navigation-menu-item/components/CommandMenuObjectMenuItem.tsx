@@ -32,35 +32,26 @@ export const CommandMenuObjectMenuItem = ({
   const isDisabled = !isDefined(defaultViewId);
 
   const handleClick = () => {
-    if (!isDisabled && isDefined(defaultViewId)) {
-      onSelect(objectMetadataItem, defaultViewId);
+    if (!defaultViewId) {
+      return;
     }
-  };
-
-  const payload = {
-    type: 'object' as const,
-    objectMetadataId: objectMetadataItem.id,
-    defaultViewId: defaultViewId ?? '',
-    label: objectMetadataItem.labelPlural,
+    onSelect(objectMetadataItem, defaultViewId);
   };
 
   return (
     <SelectableListItem itemId={objectMetadataItem.id} onEnter={handleClick}>
-      {isDisabled ? (
-        <CommandMenuItem
-          Icon={Icon}
-          label={objectMetadataItem.labelPlural}
-          id={objectMetadataItem.id}
-          onClick={handleClick}
-          disabled={true}
-        />
-      ) : variant === 'add' ? (
+      {variant === 'add' && !isDisabled ? (
         <CommandMenuItemWithAddToNavigationDrag
           Icon={Icon}
           label={objectMetadataItem.labelPlural}
           id={objectMetadataItem.id}
           onClick={handleClick}
-          payload={payload}
+          payload={{
+            type: 'object' as const,
+            objectMetadataId: objectMetadataItem.id,
+            defaultViewId: defaultViewId ?? '',
+            label: objectMetadataItem.labelPlural,
+          }}
         />
       ) : (
         <CommandMenuItem
@@ -68,6 +59,7 @@ export const CommandMenuObjectMenuItem = ({
           label={objectMetadataItem.labelPlural}
           id={objectMetadataItem.id}
           onClick={handleClick}
+          disabled={isDisabled}
         />
       )}
     </SelectableListItem>
