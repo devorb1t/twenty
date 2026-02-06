@@ -174,90 +174,82 @@ export const CommandMenuNewSidebarItemPage = () => {
     });
   };
 
-  if (selectedOption === 'view' && isDefined(selectedObjectMetadataIdForView)) {
-    return (
-      <CommandMenuNewSidebarItemViewPickerSubView
-        currentDraft={currentDraft}
-        selectedObjectMetadataIdForView={selectedObjectMetadataIdForView}
-        objectMetadataItems={objectMetadataItems}
-        onBack={handleBackToViewObjectList}
-        onSelectView={handleSelectView}
-      />
-    );
+  switch (selectedOption) {
+    case 'view':
+      if (isDefined(selectedObjectMetadataIdForView)) {
+        return (
+          <CommandMenuNewSidebarItemViewPickerSubView
+            currentDraft={currentDraft}
+            selectedObjectMetadataIdForView={selectedObjectMetadataIdForView}
+            objectMetadataItems={objectMetadataItems}
+            onBack={handleBackToViewObjectList}
+            onSelectView={handleSelectView}
+          />
+        );
+      }
+      return (
+        <CommandMenuNewSidebarItemViewObjectPickerSubView
+          objects={objectMetadataItemsWithViews}
+          searchValue={objectSearchInput}
+          onSearchChange={setObjectSearchInput}
+          onBack={handleBackToMain}
+          onOpenSystemPicker={() => setSelectedOption('view-system')}
+          onSelectObject={(item) => setSelectedObjectMetadataIdForView(item.id)}
+        />
+      );
+    case 'view-system':
+      return (
+        <CommandMenuNewSidebarItemViewSystemSubView
+          systemObjects={availableSystemObjectMetadataItemsForView}
+          searchValue={systemObjectSearchInput}
+          onSearchChange={setSystemObjectSearchInput}
+          onBack={handleBackToViewObjectListFromSystem}
+          onSelectObject={(item) => {
+            setSelectedObjectMetadataIdForView(item.id);
+            setSelectedOption('view');
+          }}
+        />
+      );
+    case 'object':
+      return (
+        <CommandMenuObjectPickerSubView
+          objects={availableObjectMetadataItems}
+          searchValue={objectSearchInput}
+          onSearchChange={setObjectSearchInput}
+          onBack={handleBackToMain}
+          onOpenSystemPicker={() => setSelectedOption('system')}
+          renderObjectMenuItem={renderObjectMenuItem}
+        />
+      );
+    case 'system':
+      return (
+        <CommandMenuSystemObjectPickerSubView
+          systemObjects={availableSystemObjectMetadataItems}
+          searchValue={systemObjectSearchInput}
+          onSearchChange={setSystemObjectSearchInput}
+          onBack={handleBackToObjectList}
+          renderObjectMenuItem={renderObjectMenuItem}
+          emptyNoResultsText={t`All system objects are already in the sidebar`}
+        />
+      );
+    case 'record':
+      return (
+        <CommandMenuNewSidebarItemRecordSubView
+          currentDraft={currentDraft}
+          objectMetadataItems={objectMetadataItems}
+          onBack={handleBackToMain}
+          onSuccess={closeCommandMenu}
+        />
+      );
+    default:
+      return (
+        <CommandMenuNewSidebarItemMainMenu
+          onSelectObject={() => setSelectedOption('object')}
+          onSelectView={() => setSelectedOption('view')}
+          onSelectRecord={() => setSelectedOption('record')}
+          onAddFolder={handleAddFolderAndOpenEdit}
+          onAddLink={handleAddLinkAndOpenEdit}
+        />
+      );
   }
-
-  if (selectedOption === 'view') {
-    return (
-      <CommandMenuNewSidebarItemViewObjectPickerSubView
-        objects={objectMetadataItemsWithViews}
-        searchValue={objectSearchInput}
-        onSearchChange={setObjectSearchInput}
-        onBack={handleBackToMain}
-        onOpenSystemPicker={() => setSelectedOption('view-system')}
-        onSelectObject={(item) => setSelectedObjectMetadataIdForView(item.id)}
-      />
-    );
-  }
-
-  if (selectedOption === 'view-system') {
-    return (
-      <CommandMenuNewSidebarItemViewSystemSubView
-        systemObjects={availableSystemObjectMetadataItemsForView}
-        searchValue={systemObjectSearchInput}
-        onSearchChange={setSystemObjectSearchInput}
-        onBack={handleBackToViewObjectListFromSystem}
-        onSelectObject={(item) => {
-          setSelectedObjectMetadataIdForView(item.id);
-          setSelectedOption('view');
-        }}
-      />
-    );
-  }
-
-  if (selectedOption === 'object') {
-    return (
-      <CommandMenuObjectPickerSubView
-        objects={availableObjectMetadataItems}
-        searchValue={objectSearchInput}
-        onSearchChange={setObjectSearchInput}
-        onBack={handleBackToMain}
-        onOpenSystemPicker={() => setSelectedOption('system')}
-        renderObjectMenuItem={renderObjectMenuItem}
-      />
-    );
-  }
-
-  if (selectedOption === 'system') {
-    return (
-      <CommandMenuSystemObjectPickerSubView
-        systemObjects={availableSystemObjectMetadataItems}
-        searchValue={systemObjectSearchInput}
-        onSearchChange={setSystemObjectSearchInput}
-        onBack={handleBackToObjectList}
-        renderObjectMenuItem={renderObjectMenuItem}
-        emptyNoResultsText={t`All system objects are already in the sidebar`}
-      />
-    );
-  }
-
-  if (selectedOption === 'record') {
-    return (
-      <CommandMenuNewSidebarItemRecordSubView
-        currentDraft={currentDraft}
-        objectMetadataItems={objectMetadataItems}
-        onBack={handleBackToMain}
-        onSuccess={closeCommandMenu}
-      />
-    );
-  }
-
-  return (
-    <CommandMenuNewSidebarItemMainMenu
-      onSelectObject={() => setSelectedOption('object')}
-      onSelectView={() => setSelectedOption('view')}
-      onSelectRecord={() => setSelectedOption('record')}
-      onAddFolder={handleAddFolderAndOpenEdit}
-      onAddLink={handleAddLinkAndOpenEdit}
-    />
-  );
 };
