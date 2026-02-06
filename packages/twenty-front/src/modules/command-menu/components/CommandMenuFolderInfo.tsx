@@ -7,7 +7,8 @@ import { CommandMenuNavigationMenuItemIcon } from '@/command-menu/components/Com
 import { CommandMenuPageInfoLayout } from '@/command-menu/components/CommandMenuPageInfoLayout';
 import { commandMenuPageInfoState } from '@/command-menu/states/commandMenuPageInfoState';
 import { commandMenuShouldFocusTitleInputComponentState } from '@/command-menu/states/commandMenuShouldFocusTitleInputComponentState';
-import { useFlattenedWorkspaceSectionItemsForLookup } from '@/navigation-menu-item/hooks/useFlattenedWorkspaceSectionItemsForLookup';
+import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
+import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { TitleInput } from '@/ui/input/components/TitleInput';
@@ -25,25 +26,21 @@ export const CommandMenuFolderInfo = () => {
   const selectedNavigationMenuItemInEditMode = useRecoilValue(
     selectedNavigationMenuItemInEditModeState,
   );
-  const workspaceSectionItems = useFlattenedWorkspaceSectionItemsForLookup();
+  const items = useWorkspaceSectionItems();
   const { updateFolderNameInDraft } = useUpdateNavigationMenuItemsDraft();
 
-  const selectedFolder = workspaceSectionItems.find(
+  const selectedFolderItem = items.find(
     (item) =>
-      item.type === 'folder' &&
+      getNavigationMenuItemType(item) === 'folder' &&
       item.id === selectedNavigationMenuItemInEditMode,
   );
 
-  if (
-    !selectedFolder ||
-    selectedFolder.type !== 'folder' ||
-    !selectedNavigationMenuItemInEditMode
-  ) {
+  if (!selectedFolderItem || !selectedNavigationMenuItemInEditMode) {
     return null;
   }
 
-  const folderName = selectedFolder.folder.folderName;
-  const folderId = selectedFolder.id;
+  const folderName = selectedFolderItem.name ?? t`New folder`;
+  const folderId = selectedFolderItem.id;
 
   const handleChange = (text: string) => {
     updateFolderNameInDraft(folderId, text);

@@ -6,13 +6,11 @@ import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuEditOwnerSection } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOwnerSection';
-import type { WorkspaceSectionItem } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
+import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { TextInput } from '@/ui/input/components/TextInput';
 
-type LinkItem = WorkspaceSectionItem & { type: 'link' };
-
 type CommandMenuEditLinkItemViewProps = {
-  selectedItem: LinkItem;
+  selectedItem: ProcessedNavigationMenuItem;
   onUpdateLink: (linkId: string, link: string) => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
@@ -34,8 +32,8 @@ export const CommandMenuEditLinkItemView = ({
 }: CommandMenuEditLinkItemViewProps) => {
   const { t } = useLingui();
   const [urlEditInput, setUrlEditInput] = useState('');
-  const linkUrl = selectedItem.navigationMenuItem.link ?? '';
-  const linkId = selectedItem.navigationMenuItem.id;
+  const linkUrl = selectedItem.link ?? '';
+  const linkId = selectedItem.id;
 
   const selectableItemIds = [
     'move-up',
@@ -75,9 +73,7 @@ export const CommandMenuEditLinkItemView = ({
         onMoveToFolder={onOpenFolderPicker}
         moveToFolderHasSubMenu={true}
       />
-      <CommandMenuEditOwnerSection
-        applicationId={selectedItem.navigationMenuItem.applicationId}
-      />
+      <CommandMenuEditOwnerSection applicationId={selectedItem.applicationId} />
     </CommandMenuList>
   );
 };

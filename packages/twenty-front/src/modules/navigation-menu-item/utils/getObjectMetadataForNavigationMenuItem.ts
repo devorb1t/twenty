@@ -1,48 +1,36 @@
 import { isDefined } from 'twenty-shared/utils';
 
-import { type WorkspaceSectionItem } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { isNavigationMenuItemLink } from '@/navigation-menu-item/utils/isNavigationMenuItemLink';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { type View } from '@/views/types/View';
 
-export const processNavigationMenuItemToWorkspaceSectionItem = (
+export const getObjectMetadataForNavigationMenuItem = (
   navigationMenuItem: ProcessedNavigationMenuItem,
   objectMetadataItems: ObjectMetadataItem[],
   views: View[],
-): WorkspaceSectionItem | null => {
+): ObjectMetadataItem | null => {
   if (isNavigationMenuItemLink(navigationMenuItem)) {
-    return {
-      type: 'link',
-      id: navigationMenuItem.id,
-      navigationMenuItem,
-    };
+    return null;
   }
-
-  let objectMetadataItem: ObjectMetadataItem | undefined;
 
   if (isDefined(navigationMenuItem.viewId)) {
     const view = views.find((view) => view.id === navigationMenuItem.viewId);
     if (!isDefined(view)) {
       return null;
     }
-    objectMetadataItem = objectMetadataItems.find(
+    const objectMetadataItem = objectMetadataItems.find(
       (meta) => meta.id === view.objectMetadataId,
     );
-  } else if (isDefined(navigationMenuItem.targetObjectMetadataId)) {
-    objectMetadataItem = objectMetadataItems.find(
+    return objectMetadataItem ?? null;
+  }
+
+  if (isDefined(navigationMenuItem.targetObjectMetadataId)) {
+    const objectMetadataItem = objectMetadataItems.find(
       (meta) => meta.id === navigationMenuItem.targetObjectMetadataId,
     );
+    return objectMetadataItem ?? null;
   }
 
-  if (!isDefined(objectMetadataItem)) {
-    return null;
-  }
-
-  return {
-    type: 'objectView',
-    id: navigationMenuItem.id,
-    navigationMenuItem,
-    objectMetadataItem,
-  };
+  return null;
 };

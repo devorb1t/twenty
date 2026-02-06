@@ -8,12 +8,13 @@ import { useIsMobile } from 'twenty-ui/utilities';
 
 import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
 import { NavigationMenuItemIcon } from '@/navigation-menu-item/components/NavigationMenuItemIcon';
-import { type WorkspaceSectionItem } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
+import { type NavigationMenuItemClickParams } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { getNavigationMenuItemSecondaryLabel } from '@/navigation-menu-item/utils/getNavigationMenuItemSecondaryLabel';
+import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
+import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { isLocationMatchingNavigationMenuItem } from '@/navigation-menu-item/utils/isLocationMatchingNavigationMenuItem';
-import { processNavigationMenuItemToWorkspaceSectionItem } from '@/navigation-menu-item/utils/processNavigationMenuItemToWorkspaceSectionItem';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
 import { NavigationDrawerItem } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerItem';
@@ -35,21 +36,21 @@ const StyledFolderContainer = styled.div<{ $isSelectedInEditMode: boolean }>`
 `;
 
 type WorkspaceNavigationMenuItemsFolderProps = {
-  folder: {
-    id: string;
-    folderName: string;
-    navigationMenuItems: ProcessedNavigationMenuItem[];
-  };
+  folderId: string;
+  folderName: string;
+  navigationMenuItems: ProcessedNavigationMenuItem[];
   isGroup: boolean;
   isEditMode?: boolean;
   isSelectedInEditMode?: boolean;
   onEditModeClick?: () => void;
-  onNavigationMenuItemClick?: (item: WorkspaceSectionItem) => void;
+  onNavigationMenuItemClick?: (params: NavigationMenuItemClickParams) => void;
   selectedNavigationMenuItemId?: string | null;
 };
 
 export const WorkspaceNavigationMenuItemsFolder = ({
-  folder,
+  folderId,
+  folderName,
+  navigationMenuItems,
   isGroup,
   isEditMode = false,
   isSelectedInEditMode = false,
@@ -73,17 +74,17 @@ export const WorkspaceNavigationMenuItemsFolder = ({
     currentNavigationMenuItemFolderIdState,
   );
 
-  const isOpen = openNavigationMenuItemFolderIds.includes(folder.id);
+  const isOpen = openNavigationMenuItemFolderIds.includes(folderId);
 
   const handleToggle = () => {
     if (isMobile) {
-      setCurrentFolderId((prev) => (prev === folder.id ? null : folder.id));
+      setCurrentFolderId((prev) => (prev === folderId ? null : folderId));
     } else {
       setOpenNavigationMenuItemFolderIds((currentOpenFolders) => {
         if (isOpen) {
-          return currentOpenFolders.filter((id) => id !== folder.id);
+          return currentOpenFolders.filter((id) => id !== folderId);
         } else {
-          return [...currentOpenFolders, folder.id];
+          return [...currentOpenFolders, folderId];
         }
       });
     }
@@ -92,23 +93,22 @@ export const WorkspaceNavigationMenuItemsFolder = ({
   const shouldUseEditModeClick = isEditMode && Boolean(onEditModeClick);
   const handleClick = shouldUseEditModeClick ? onEditModeClick : handleToggle;
 
-  const selectedNavigationMenuItemIndex = folder.navigationMenuItems.findIndex(
+  const selectedNavigationMenuItemIndex = navigationMenuItems.findIndex(
     (item) =>
       isLocationMatchingNavigationMenuItem(currentPath, currentViewPath, item),
   );
 
-  const navigationMenuItemFolderContentLength =
-    folder.navigationMenuItems.length;
+  const navigationMenuItemFolderContentLength = navigationMenuItems.length;
 
   return (
     <StyledFolderContainer
-      key={folder.id}
+      key={folderId}
       $isSelectedInEditMode={isSelectedInEditMode}
     >
       <NavigationDrawerItemsCollapsableContainer isGroup={isGroup}>
-        <NavigationItemDropTarget folderId={folder.id} index={0}>
+        <NavigationItemDropTarget folderId={folderId} index={0}>
           <NavigationDrawerItem
-            label={folder.folderName}
+            label={folderName}
             Icon={isOpen ? IconFolderOpen : IconFolder}
             iconBackgroundColor={iconColors.folder}
             onClick={handleClick}
@@ -125,27 +125,34 @@ export const WorkspaceNavigationMenuItemsFolder = ({
           containAnimation
         >
           <div>
-            <NavigationItemDropTarget folderId={folder.id} index={0} />
-            {folder.navigationMenuItems.map((navigationMenuItem, index) => {
-              const workspaceSectionItem =
-                processNavigationMenuItemToWorkspaceSectionItem(
-                  navigationMenuItem,
-                  objectMetadataItems,
-                  views,
-                );
+            <NavigationItemDropTarget folderId={folderId} index={0} />
+            {navigationMenuItems.map((navigationMenuItem, index) => {
+              const type = getNavigationMenuItemType(navigationMenuItem);
+              const objectMetadataItem =
+                type === 'objectView' || type === 'recordView'
+                  ? getObjectMetadataForNavigationMenuItem(
+                      navigationMenuItem,
+                      objectMetadataItems,
+                      views,
+                    )
+                  : null;
               const isSelectedInEditModeForItem =
                 selectedNavigationMenuItemId === navigationMenuItem.id;
               const handleEditModeClick =
                 isEditMode &&
                 isDefined(onNavigationMenuItemClick) &&
-                isDefined(workspaceSectionItem)
-                  ? () => onNavigationMenuItemClick(workspaceSectionItem)
+                (type === 'link' || isDefined(objectMetadataItem))
+                  ? () =>
+                      onNavigationMenuItemClick({
+                        item: navigationMenuItem,
+                        objectMetadataItem: objectMetadataItem ?? undefined,
+                      })
                   : undefined;
 
               return (
                 <NavigationItemDropTarget
                   key={navigationMenuItem.id}
-                  folderId={folder.id}
+                  folderId={folderId}
                   index={index}
                 >
                   <NavigationDrawerSubItem
@@ -182,8 +189,8 @@ export const WorkspaceNavigationMenuItemsFolder = ({
               );
             })}
             <NavigationItemDropTarget
-              folderId={folder.id}
-              index={folder.navigationMenuItems.length}
+              folderId={folderId}
+              index={navigationMenuItems.length}
             />
           </div>
         </AnimatedExpandableContainer>

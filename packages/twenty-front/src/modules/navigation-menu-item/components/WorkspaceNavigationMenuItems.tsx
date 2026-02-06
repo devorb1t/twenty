@@ -16,9 +16,10 @@ import { CommandMenuPages } from '@/command-menu/types/CommandMenuPages';
 import { useNavigationMenuEditModeActions } from '@/navigation-menu-item/hooks/useNavigationMenuEditModeActions';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
 import {
-  type WorkspaceSectionItem,
+  type NavigationMenuItemClickParams,
   useWorkspaceSectionItems,
 } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
+import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
@@ -27,6 +28,7 @@ import { NavigationDrawerSectionForWorkspaceItems } from '@/object-metadata/comp
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { useIsPrefetchLoading } from '@/prefetch/hooks/useIsPrefetchLoading';
 import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
+import { isDefined } from 'twenty-shared/utils';
 
 const StyledRightIconsContainer = styled.div`
   align-items: center;
@@ -35,7 +37,7 @@ const StyledRightIconsContainer = styled.div`
 `;
 
 export const WorkspaceNavigationMenuItems = () => {
-  const workspaceSectionItems = useWorkspaceSectionItems();
+  const items = useWorkspaceSectionItems();
   const { enterEditMode } = useNavigationMenuEditModeActions();
   const isNavigationMenuItemEditingEnabled = useIsFeatureEnabled(
     FeatureFlagKey.IS_NAVIGATION_MENU_ITEM_EDITING_ENABLED,
@@ -63,10 +65,14 @@ export const WorkspaceNavigationMenuItems = () => {
     enterEditMode();
   };
 
-  const handleNavigationMenuItemClick = (item: WorkspaceSectionItem) => {
+  const handleNavigationMenuItemClick = (
+    params: NavigationMenuItemClickParams,
+  ) => {
+    const { item, objectMetadataItem } = params;
     const id = item.id;
     setSelectedNavigationMenuItemInEditMode(id);
-    if (item.type === 'folder') {
+    const type = getNavigationMenuItemType(item);
+    if (type === 'folder') {
       setOpenNavigationMenuItemFolderIds((currentOpenFolders) =>
         currentOpenFolders.includes(id)
           ? currentOpenFolders
@@ -76,15 +82,15 @@ export const WorkspaceNavigationMenuItems = () => {
         pageTitle: t`Edit folder`,
         pageIcon: IconFolder,
       });
-    } else if (item.type === 'link') {
+    } else if (type === 'link') {
       openNavigationMenuItemInCommandMenu({
         pageTitle: t`Edit link`,
         pageIcon: IconLink,
       });
-    } else {
+    } else if (isDefined(objectMetadataItem)) {
       openNavigationMenuItemInCommandMenu({
-        pageTitle: item.objectMetadataItem.labelPlural,
-        pageIcon: getIcon(item.objectMetadataItem.icon),
+        pageTitle: objectMetadataItem.labelPlural,
+        pageIcon: getIcon(objectMetadataItem.icon),
       });
     }
   };
@@ -111,7 +117,7 @@ export const WorkspaceNavigationMenuItems = () => {
   return (
     <NavigationDrawerSectionForWorkspaceItems
       sectionTitle={t`Workspace`}
-      workspaceSectionItems={workspaceSectionItems}
+      items={items}
       rightIcon={
         isNavigationMenuItemEditingEnabled ? (
           <StyledRightIconsContainer>

@@ -4,7 +4,8 @@ import { CommandMenuPageLayoutInfo } from '@/command-menu/components/CommandMenu
 import { CommandMenuRecordInfo } from '@/command-menu/components/CommandMenuRecordInfo';
 import { CommandMenuWorkflowStepInfo } from '@/command-menu/components/CommandMenuWorkflowStepInfo';
 import { CommandMenuPages } from '@/command-menu/types/CommandMenuPages';
-import { useFlattenedWorkspaceSectionItemsForLookup } from '@/navigation-menu-item/hooks/useFlattenedWorkspaceSectionItemsForLookup';
+import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
+import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import styled from '@emotion/styled';
 import { useRecoilValue } from 'recoil';
@@ -27,7 +28,7 @@ export const CommandMenuPageInfo = ({ pageChip }: CommandMenuPageInfoProps) => {
   const selectedNavigationMenuItemInEditMode = useRecoilValue(
     selectedNavigationMenuItemInEditModeState,
   );
-  const workspaceSectionItems = useFlattenedWorkspaceSectionItemsForLookup();
+  const items = useWorkspaceSectionItems();
 
   if (!isDefined(pageChip)) {
     return null;
@@ -36,16 +37,22 @@ export const CommandMenuPageInfo = ({ pageChip }: CommandMenuPageInfoProps) => {
   const isNavigationMenuItemEditPage =
     pageChip.page?.page === CommandMenuPages.NavigationMenuItemEdit;
   const selectedNavItem = isNavigationMenuItemEditPage
-    ? workspaceSectionItems.find(
-        (item) => item.id === selectedNavigationMenuItemInEditMode,
-      )
+    ? items.find((item) => item.id === selectedNavigationMenuItemInEditMode)
     : undefined;
 
-  if (isNavigationMenuItemEditPage && selectedNavItem?.type === 'folder') {
+  if (
+    isNavigationMenuItemEditPage &&
+    isDefined(selectedNavItem) &&
+    getNavigationMenuItemType(selectedNavItem) === 'folder'
+  ) {
     return <CommandMenuFolderInfo />;
   }
 
-  if (isNavigationMenuItemEditPage && selectedNavItem?.type === 'link') {
+  if (
+    isNavigationMenuItemEditPage &&
+    isDefined(selectedNavItem) &&
+    getNavigationMenuItemType(selectedNavItem) === 'link'
+  ) {
     return <CommandMenuLinkInfo />;
   }
 

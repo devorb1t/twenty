@@ -19,32 +19,56 @@ import { CommandMenuObjectMenuItem } from '@/command-menu/pages/navigation-menu-
 import { CommandMenuObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerSubView';
 import { CommandMenuSelectObjectForViewMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSelectObjectForViewMenuItem';
 import { CommandMenuSystemObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSystemObjectPickerSubView';
-import { useFlattenedWorkspaceSectionItemsForLookup } from '@/navigation-menu-item/hooks/useFlattenedWorkspaceSectionItemsForLookup';
+import {
+  type FlatWorkspaceItem,
+  useWorkspaceSectionItems,
+} from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { useNavigationMenuItemsByFolder } from '@/navigation-menu-item/hooks/useNavigationMenuItemsByFolder';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
-import { type WorkspaceSectionItem } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
+import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
+import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
+import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
 import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
+import { coreViewsState } from '@/views/states/coreViewState';
 import { type View } from '@/views/types/View';
 import { ViewKey } from '@/views/types/ViewKey';
+import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
 
-const isObjectNavItem = (item: WorkspaceSectionItem): boolean =>
-  item.type === 'objectView' &&
-  item.navigationMenuItem.viewKey === ViewKey.Index &&
-  !isDefined(item.navigationMenuItem.targetRecordId);
+const isObjectNavItem = (
+  item: FlatWorkspaceItem,
+  objectMetadataItem: ObjectMetadataItem | null,
+): boolean => {
+  if (getNavigationMenuItemType(item) !== 'objectView' || !objectMetadataItem) {
+    return false;
+  }
+  const processed = item as ProcessedNavigationMenuItem;
+  return (
+    processed.viewKey === ViewKey.Index && !isDefined(processed.targetRecordId)
+  );
+};
 
-const isViewNavItem = (item: WorkspaceSectionItem): boolean =>
-  item.type === 'objectView' &&
-  item.navigationMenuItem.viewKey !== ViewKey.Index &&
-  isDefined(item.navigationMenuItem.viewId) &&
-  !isDefined(item.navigationMenuItem.targetRecordId);
+const isViewNavItem = (
+  item: FlatWorkspaceItem,
+  objectMetadataItem: ObjectMetadataItem | null,
+): boolean => {
+  if (getNavigationMenuItemType(item) !== 'objectView' || !objectMetadataItem) {
+    return false;
+  }
+  const processed = item as ProcessedNavigationMenuItem;
+  return (
+    processed.viewKey !== ViewKey.Index &&
+    isDefined(processed.viewId) &&
+    !isDefined(processed.targetRecordId)
+  );
+};
 
 export const CommandMenuNavigationMenuItemEditPage = () => {
   const { t } = useLingui();
@@ -71,7 +95,9 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   const setSelectedNavigationMenuItemInEditMode = useSetRecoilState(
     selectedNavigationMenuItemInEditModeState,
   );
-  const workspaceSectionItems = useFlattenedWorkspaceSectionItemsForLookup();
+  const items = useWorkspaceSectionItems();
+  const coreViews = useRecoilValue(coreViewsState);
+  const views = coreViews.map(convertCoreViewToView);
   const { moveUp, moveDown, remove, moveToFolder } =
     useNavigationMenuItemMoveRemove();
   const { updateObjectInDraft, updateViewInDraft, updateLinkInDraft } =
@@ -95,49 +121,56 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   } = useNavigationMenuObjectMetadataFromDraft(currentDraft);
 
   const selectedItem = selectedNavigationMenuItemInEditMode
-    ? workspaceSectionItems.find(
-        (item) => item.id === selectedNavigationMenuItemInEditMode,
-      )
+    ? items.find((item) => item.id === selectedNavigationMenuItemInEditMode)
     : undefined;
 
+  const selectedItemType = selectedItem
+    ? getNavigationMenuItemType(selectedItem)
+    : null;
+  const selectedItemObjectMetadata = selectedItem
+    ? getObjectMetadataForNavigationMenuItem(
+        selectedItem as ProcessedNavigationMenuItem,
+        objectMetadataItems,
+        views,
+      )
+    : null;
   const selectedItemLabel = selectedItem
-    ? selectedItem.type === 'folder'
-      ? selectedItem.folder.folderName
-      : selectedItem.type === 'link'
-        ? (selectedItem.navigationMenuItem.name ?? 'Link')
-        : selectedItem.objectMetadataItem.labelPlural
+    ? selectedItemType === 'folder'
+      ? (selectedItem.name ?? 'Folder')
+      : selectedItemType === 'link'
+        ? (selectedItem.name ?? 'Link')
+        : (selectedItemObjectMetadata?.labelPlural ?? '')
     : null;
 
   const selectedItemIndex = selectedNavigationMenuItemInEditMode
-    ? workspaceSectionItems.findIndex(
+    ? items.findIndex(
         (item) => item.id === selectedNavigationMenuItemInEditMode,
       )
     : -1;
 
   const isItemInsideFolder =
-    selectedItem?.type !== 'folder' &&
-    isDefined(selectedItem?.navigationMenuItem.folderId);
+    selectedItemType !== 'folder' && isDefined(selectedItem?.folderId);
   const canMoveUp = !isItemInsideFolder && selectedItemIndex > 0;
   const canMoveDown =
     !isItemInsideFolder &&
     selectedItemIndex >= 0 &&
-    selectedItemIndex < workspaceSectionItems.length - 1;
+    selectedItemIndex < items.length - 1;
 
   const isObjectItem =
-    selectedItem !== undefined && isObjectNavItem(selectedItem);
-  const isViewItem = selectedItem !== undefined && isViewNavItem(selectedItem);
+    selectedItem !== undefined &&
+    isObjectNavItem(selectedItem, selectedItemObjectMetadata);
+  const isViewItem =
+    selectedItem !== undefined &&
+    isViewNavItem(selectedItem, selectedItemObjectMetadata);
 
   const { getIcon } = useIcons();
   const objectNameSingularForViewItem =
-    selectedItem?.type === 'objectView'
-      ? selectedItem.objectMetadataItem.nameSingular
-      : '';
+    selectedItemObjectMetadata?.nameSingular ?? '';
   const { Icon: StandardObjectIconForViewItem } = useGetStandardObjectIcon(
     objectNameSingularForViewItem,
   );
-  const isFolderItem =
-    selectedItem !== undefined && selectedItem.type === 'folder';
-  const isLinkItem = selectedItem !== undefined && selectedItem.type === 'link';
+  const isFolderItem = selectedItemType === 'folder';
+  const isLinkItem = selectedItemType === 'link';
 
   const objectsForObjectPicker = activeNonSystemObjectMetadataItems
     .filter((item) => objectMetadataIdsWithIndexView.has(item.id))
@@ -145,9 +178,10 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
 
   const currentObjectMetadataId =
-    selectedItem?.type === 'objectView'
-      ? (selectedItem.navigationMenuItem.targetObjectMetadataId ?? undefined)
-      : undefined;
+    selectedItemObjectMetadata?.id ??
+    (selectedItem as ProcessedNavigationMenuItem | undefined)
+      ?.targetObjectMetadataId ??
+    undefined;
   const currentObject =
     currentObjectMetadataId !== undefined
       ? objectMetadataItems.find((item) => item.id === currentObjectMetadataId)
@@ -292,9 +326,10 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   if (editSubView === 'folder-picker') {
     const currentFolderId =
-      selectedItem?.type === 'folder'
-        ? selectedItem.id
-        : (selectedItem?.navigationMenuItem.folderId ?? null);
+      selectedItemType === 'folder'
+        ? selectedItem!.id
+        : ((selectedItem as ProcessedNavigationMenuItem | undefined)
+            ?.folderId ?? null);
 
     return (
       <CommandMenuEditFolderPickerSubView
@@ -379,7 +414,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         selectedObjectMetadataIdForViewEdit={
           selectedObjectMetadataIdForViewEdit
         }
-        selectedItem={selectedItem}
+        selectedItemObjectMetadataId={
+          selectedItemType === 'objectView'
+            ? selectedItemObjectMetadata?.id
+            : undefined
+        }
         currentItemId={selectedNavigationMenuItemInEditMode}
         objectMetadataItems={objectMetadataItems}
         searchValue={viewSearchInput}
@@ -392,15 +431,15 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   const mainViewConfig = [
     {
-      condition: isObjectItem && selectedItem?.type === 'objectView',
+      condition: isObjectItem && selectedItemType === 'objectView',
       render: () =>
-        selectedItem?.type === 'objectView' ? (
+        selectedItemType === 'objectView' && selectedItemObjectMetadata ? (
           <CommandMenuEditObjectViewBase
             objectIcon={
               StandardObjectIconForViewItem ??
-              getIcon(selectedItem.objectMetadataItem.icon ?? 'IconCube')
+              getIcon(selectedItemObjectMetadata.icon ?? 'IconCube')
             }
-            objectLabel={selectedItem.objectMetadataItem.labelPlural ?? ''}
+            objectLabel={selectedItemObjectMetadata.labelPlural ?? ''}
             onOpenObjectPicker={subViewHandlers.setObjectPicker}
             onOpenFolderPicker={subViewHandlers.setFolderPicker}
             // eslint-disable-next-line react/jsx-props-no-spreading
@@ -409,20 +448,27 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         ) : null,
     },
     {
-      condition: isViewItem && selectedItem?.type === 'objectView',
+      condition: isViewItem && selectedItemType === 'objectView',
       render: () =>
-        selectedItem?.type === 'objectView' ? (
+        selectedItemType === 'objectView' &&
+        selectedItemObjectMetadata &&
+        selectedItem ? (
           <CommandMenuEditObjectViewBase
             objectIcon={
               StandardObjectIconForViewItem ??
-              getIcon(selectedItem.objectMetadataItem.icon ?? 'IconCube')
+              getIcon(selectedItemObjectMetadata.icon ?? 'IconCube')
             }
-            objectLabel={selectedItem.objectMetadataItem.labelPlural ?? ''}
+            objectLabel={selectedItemObjectMetadata.labelPlural ?? ''}
             onOpenObjectPicker={subViewHandlers.setObjectPicker}
             onOpenFolderPicker={subViewHandlers.setFolderPicker}
             viewRow={{
-              icon: getIcon(selectedItem.navigationMenuItem.Icon ?? 'IconList'),
-              label: selectedItem.navigationMenuItem.labelIdentifier ?? '',
+              icon: getIcon(
+                (selectedItem as ProcessedNavigationMenuItem).Icon ??
+                  'IconList',
+              ),
+              label:
+                (selectedItem as ProcessedNavigationMenuItem).labelIdentifier ??
+                '',
               onClick: subViewHandlers.setViewPicker,
             }}
             // eslint-disable-next-line react/jsx-props-no-spreading
@@ -431,11 +477,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         ) : null,
     },
     {
-      condition: isLinkItem && selectedItem?.type === 'link',
+      condition: isLinkItem && selectedItemType === 'link',
       render: () =>
-        selectedItem?.type === 'link' ? (
+        selectedItemType === 'link' && selectedItem ? (
           <CommandMenuEditLinkItemView
-            selectedItem={selectedItem}
+            selectedItem={selectedItem as ProcessedNavigationMenuItem}
             onUpdateLink={(linkId, link) => updateLinkInDraft(linkId, { link })}
             // eslint-disable-next-line react/jsx-props-no-spreading
             {...organizeActionsProps}
@@ -444,10 +490,10 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         ) : null,
     },
     {
-      condition: isFolderItem && selectedItem?.type === 'folder',
+      condition: isFolderItem && selectedItemType === 'folder',
       render: () => {
         const folderApplicationId =
-          selectedItem?.type === 'folder'
+          selectedItemType === 'folder' && selectedItem
             ? currentDraft.find((item) => item.id === selectedItem.id)
                 ?.applicationId
             : undefined;

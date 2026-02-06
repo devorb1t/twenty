@@ -6,7 +6,6 @@ import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
-import type { WorkspaceSectionItem } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
@@ -17,7 +16,7 @@ import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 type CommandMenuEditViewPickerSubViewProps = {
   currentDraft: { id: string; viewId?: string | null }[];
   selectedObjectMetadataIdForViewEdit: string | null;
-  selectedItem: WorkspaceSectionItem | undefined;
+  selectedItemObjectMetadataId: string | undefined;
   currentItemId: string | undefined;
   objectMetadataItems: ObjectMetadataItem[];
   searchValue: string;
@@ -29,7 +28,7 @@ type CommandMenuEditViewPickerSubViewProps = {
 export const CommandMenuEditViewPickerSubView = ({
   currentDraft,
   selectedObjectMetadataIdForViewEdit,
-  selectedItem,
+  selectedItemObjectMetadataId,
   currentItemId,
   objectMetadataItems,
   searchValue,
@@ -54,9 +53,7 @@ export const CommandMenuEditViewPickerSubView = ({
     selectedObjectMetadataIdForViewEdit,
   )
     ? selectedObjectMetadataIdForViewEdit
-    : selectedItem?.type === 'objectView'
-      ? selectedItem.objectMetadataItem.id
-      : undefined;
+    : selectedItemObjectMetadataId;
 
   const viewsForViewPicker = viewPickerObjectMetadataId
     ? views

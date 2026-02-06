@@ -1,39 +1,30 @@
 import { useRecoilValue } from 'recoil';
-import { isDefined } from 'twenty-shared/utils';
+import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
+import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
-import { processNavigationMenuItemToWorkspaceSectionItem } from '@/navigation-menu-item/utils/processNavigationMenuItemToWorkspaceSectionItem';
+import { isNavigationMenuItemLink } from '@/navigation-menu-item/utils/isNavigationMenuItemLink';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
-import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
+import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
 import { coreViewsState } from '@/views/states/coreViewState';
 import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
+import { isDefined } from 'twenty-shared/utils';
 
 import { useNavigationMenuItemsByFolder } from './useNavigationMenuItemsByFolder';
 import { usePrefetchedNavigationMenuItemsData } from './usePrefetchedNavigationMenuItemsData';
 import { useSortedNavigationMenuItems } from './useSortedNavigationMenuItems';
 
-type WorkspaceFolder = {
-  id: string;
-  folderName: string;
-  navigationMenuItems: ProcessedNavigationMenuItem[];
+export type FlatWorkspaceItem =
+  | ProcessedNavigationMenuItem
+  | NavigationMenuItem;
+
+export type NavigationMenuItemClickParams = {
+  item: FlatWorkspaceItem;
+  objectMetadataItem?: ObjectMetadataItem | null;
 };
 
-export type WorkspaceSectionItem =
-  | { type: 'folder'; id: string; folder: WorkspaceFolder }
-  | {
-      type: 'objectView';
-      id: string;
-      navigationMenuItem: ProcessedNavigationMenuItem;
-      objectMetadataItem: ObjectMetadataItem;
-    }
-  | {
-      type: 'link';
-      id: string;
-      navigationMenuItem: ProcessedNavigationMenuItem;
-    };
-
-export const useWorkspaceSectionItems = (): WorkspaceSectionItem[] => {
+export const useWorkspaceSectionItems = (): FlatWorkspaceItem[] => {
   const { workspaceNavigationMenuItems } =
     usePrefetchedNavigationMenuItemsData();
   const { workspaceNavigationMenuItemsSorted } = useSortedNavigationMenuItems();
@@ -52,30 +43,44 @@ export const useWorkspaceSectionItems = (): WorkspaceSectionItem[] => {
     workspaceNavigationMenuItemsSorted.map((item) => [item.id, item]),
   );
 
-  const workspaceFoldersById = new Map(
-    workspaceNavigationMenuItemsByFolder.map((folder) => [folder.id, folder]),
+  const folderChildrenById = new Map(
+    workspaceNavigationMenuItemsByFolder.map((folder) => [
+      folder.id,
+      folder.navigationMenuItems,
+    ]),
   );
 
-  return flatWorkspaceItems.reduce<WorkspaceSectionItem[]>((acc, item) => {
+  const flatItems: FlatWorkspaceItem[] = flatWorkspaceItems.reduce<
+    FlatWorkspaceItem[]
+  >((acc, item) => {
     if (isNavigationMenuItemFolder(item)) {
-      const folder = workspaceFoldersById.get(item.id);
-      if (isDefined(folder)) {
-        acc.push({ type: 'folder', id: folder.id, folder });
+      if (isDefined(folderChildrenById.get(item.id))) {
+        acc.push(item);
       }
     } else {
       const processedItem = processedObjectViewsById.get(item.id);
       if (!isDefined(processedItem)) {
         return acc;
       }
-      const workspaceItem = processNavigationMenuItemToWorkspaceSectionItem(
-        processedItem,
-        objectMetadataItems,
-        views,
-      );
-      if (isDefined(workspaceItem)) {
-        acc.push(workspaceItem);
+      if (isNavigationMenuItemLink(processedItem)) {
+        acc.push(processedItem);
+      } else {
+        const objectMetadataItem = getObjectMetadataForNavigationMenuItem(
+          processedItem,
+          objectMetadataItems,
+          views,
+        );
+        if (isDefined(objectMetadataItem)) {
+          acc.push(processedItem);
+        }
       }
     }
     return acc;
   }, []);
+
+  return flatItems.flatMap((item) =>
+    isNavigationMenuItemFolder(item)
+      ? [item, ...(folderChildrenById.get(item.id) ?? [])]
+      : [item],
+  );
 };

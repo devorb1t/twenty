@@ -7,7 +7,8 @@ import { CommandMenuNavigationMenuItemIcon } from '@/command-menu/components/Com
 import { CommandMenuPageInfoLayout } from '@/command-menu/components/CommandMenuPageInfoLayout';
 import { commandMenuPageInfoState } from '@/command-menu/states/commandMenuPageInfoState';
 import { commandMenuShouldFocusTitleInputComponentState } from '@/command-menu/states/commandMenuShouldFocusTitleInputComponentState';
-import { useFlattenedWorkspaceSectionItemsForLookup } from '@/navigation-menu-item/hooks/useFlattenedWorkspaceSectionItemsForLookup';
+import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
+import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { TitleInput } from '@/ui/input/components/TitleInput';
@@ -25,24 +26,21 @@ export const CommandMenuLinkInfo = () => {
   const selectedNavigationMenuItemInEditMode = useRecoilValue(
     selectedNavigationMenuItemInEditModeState,
   );
-  const workspaceSectionItems = useFlattenedWorkspaceSectionItemsForLookup();
+  const items = useWorkspaceSectionItems();
   const { updateLinkInDraft } = useUpdateNavigationMenuItemsDraft();
 
-  const selectedLink = workspaceSectionItems.find(
+  const selectedLink = items.find(
     (item) =>
-      item.type === 'link' && item.id === selectedNavigationMenuItemInEditMode,
+      getNavigationMenuItemType(item) === 'link' &&
+      item.id === selectedNavigationMenuItemInEditMode,
   );
 
-  if (
-    !selectedLink ||
-    selectedLink.type !== 'link' ||
-    !selectedNavigationMenuItemInEditMode
-  ) {
+  if (!selectedLink || !selectedNavigationMenuItemInEditMode) {
     return null;
   }
 
-  const linkId = selectedLink.navigationMenuItem.id;
-  const linkLabel = selectedLink.navigationMenuItem.name ?? t`Link label`;
+  const linkId = selectedLink.id;
+  const linkLabel = selectedLink.name ?? t`Link label`;
 
   const handleChange = (text: string) => {
     updateLinkInDraft(linkId, { name: text });
