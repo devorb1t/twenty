@@ -1,3 +1,4 @@
+import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
@@ -32,6 +33,7 @@ const StyledTitle = styled.span`
 `;
 
 export const NavigationMenuEditModeBar = () => {
+  const theme = useTheme();
   const { t } = useLingui();
   const { getIcon } = useIcons();
   const [isSaving, setIsSaving] = useState(false);
@@ -77,7 +79,7 @@ export const NavigationMenuEditModeBar = () => {
   return (
     <StyledContainer>
       <StyledTitle>
-        <IconPaint size={16} />
+        <IconPaint size={theme.icon.size.md} />
         {t`Layout customization`}
       </StyledTitle>
       <SaveAndCancelButtons
