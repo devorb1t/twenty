@@ -6,13 +6,12 @@ import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
-import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
+import { useFilteredPickerItems } from '@/command-menu/hooks/useFilteredPickerItems';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { type View } from '@/views/types/View';
 import { ViewKey } from '@/views/types/ViewKey';
-import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 
 type CommandMenuNewSidebarItemViewPickerSubViewProps = {
   currentDraft: { id: string; viewId?: string | null }[];
@@ -50,17 +49,19 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
   const backBarTitle =
     selectedObjectMetadataItem?.labelPlural ?? t`Pick a view`;
 
-  const filteredViews = filterBySearchQuery({
+  const {
+    filteredItems: filteredViews,
+    selectableItemIds,
+    isEmpty,
+    hasSearchQuery,
+  } = useFilteredPickerItems({
     items: viewsForSelectedObject,
     searchQuery: searchValue,
     getSearchableValues: (view) => [view.name],
   });
-  const selectableItemIds = filteredViews.map((view) => view.id);
-  const isEmpty = filteredViews.length === 0;
-  const noResultsText =
-    searchValue.trim().length > 0
-      ? t`No results found`
-      : t`No custom views available`;
+  const noResultsText = hasSearchQuery
+    ? t`No results found`
+    : t`No custom views available`;
 
   return (
     <CommandMenuSubViewWithSearch
@@ -77,29 +78,25 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
         noResultsText={noResultsText}
       >
         <CommandGroup heading={t`Views`}>
-          {filteredViews.map((view) => {
-            const ViewIcon = getIcon(view.icon);
-            const viewPayload: AddToNavigationDragPayload = {
-              type: 'view',
-              viewId: view.id,
-              label: view.name,
-            };
-            return (
-              <SelectableListItem
-                key={view.id}
-                itemId={view.id}
-                onEnter={() => onSelectView(view)}
-              >
-                <CommandMenuItemWithAddToNavigationDrag
-                  Icon={ViewIcon}
-                  label={view.name}
-                  id={view.id}
-                  onClick={() => onSelectView(view)}
-                  payload={viewPayload}
-                />
-              </SelectableListItem>
-            );
-          })}
+          {filteredViews.map((view) => (
+            <SelectableListItem
+              key={view.id}
+              itemId={view.id}
+              onEnter={() => onSelectView(view)}
+            >
+              <CommandMenuItemWithAddToNavigationDrag
+                Icon={getIcon(view.icon)}
+                label={view.name}
+                id={view.id}
+                onClick={() => onSelectView(view)}
+                payload={{
+                  type: 'view',
+                  viewId: view.id,
+                  label: view.name,
+                }}
+              />
+            </SelectableListItem>
+          ))}
         </CommandGroup>
       </CommandMenuList>
     </CommandMenuSubViewWithSearch>
