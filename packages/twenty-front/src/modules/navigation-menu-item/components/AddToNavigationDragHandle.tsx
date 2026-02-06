@@ -2,6 +2,7 @@ import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import type { ReactNode } from 'react';
 import { IconGripVertical, type IconComponent } from 'twenty-ui/display';
+import { isDefined } from 'twenty-shared/utils';
 
 import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
@@ -37,6 +38,8 @@ export const AddToNavigationDragHandle = ({
   draggable: isDraggable = true,
 }: AddToNavigationDragHandleProps) => {
   const theme = useTheme();
+  const iconSize = theme.icon.size.md;
+  const iconStroke = theme.icon.stroke.sm;
 
   const handleDragStart = (event: React.DragEvent) => {
     event.dataTransfer.setData(
@@ -54,17 +57,15 @@ export const AddToNavigationDragHandle = ({
     >
       {isHovered ? (
         <IconGripVertical
-          size={theme.icon.size.md}
-          stroke={theme.icon.stroke.sm}
+          size={iconSize}
+          stroke={iconStroke}
           color={theme.font.color.tertiary}
         />
-      ) : icon !== undefined ? (
+      ) : isDefined(icon) ? (
         icon
-      ) : (
-        Icon != null && (
-          <Icon size={theme.icon.size.md} stroke={theme.icon.stroke.sm} />
-        )
-      )}
+      ) : Icon ? (
+        <Icon size={iconSize} stroke={iconStroke} />
+      ) : null}
     </StyledIconSlot>
   );
 };
