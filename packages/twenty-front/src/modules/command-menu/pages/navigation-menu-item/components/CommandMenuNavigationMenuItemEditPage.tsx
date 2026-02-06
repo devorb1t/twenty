@@ -9,9 +9,9 @@ import {
 } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuEditOwnerSection } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOwnerSection';
 import { CommandMenuEditViewPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditViewPickerSubView';
+import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuObjectMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectMenuItem';
 import { CommandMenuObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerSubView';
-import { CommandMenuSelectObjectForViewMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSelectObjectForViewMenuItem';
 import { CommandMenuSystemObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSystemObjectPickerSubView';
 import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { useNavigationMenuItemsByFolder } from '@/navigation-menu-item/hooks/useNavigationMenuItemsByFolder';
@@ -28,6 +28,7 @@ import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilte
 import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
+import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { coreViewsState } from '@/views/states/coreViewState';
 import { type View } from '@/views/types/View';
 import { ViewKey } from '@/views/types/ViewKey';
@@ -317,10 +318,17 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   const renderObjectMenuItem = (objectMetadataItem: ObjectMetadataItem) =>
     isViewItem ? (
-      <CommandMenuSelectObjectForViewMenuItem
-        objectMetadataItem={objectMetadataItem}
-        onSelect={handleSelectObjectForViewEdit}
-      />
+      <SelectableListItem
+        itemId={objectMetadataItem.id}
+        onEnter={() => handleSelectObjectForViewEdit(objectMetadataItem)}
+      >
+        <CommandMenuItem
+          Icon={getIcon(objectMetadataItem.icon)}
+          label={objectMetadataItem.labelPlural}
+          id={objectMetadataItem.id}
+          onClick={() => handleSelectObjectForViewEdit(objectMetadataItem)}
+        />
+      </SelectableListItem>
     ) : (
       <CommandMenuObjectMenuItem
         objectMetadataItem={objectMetadataItem}

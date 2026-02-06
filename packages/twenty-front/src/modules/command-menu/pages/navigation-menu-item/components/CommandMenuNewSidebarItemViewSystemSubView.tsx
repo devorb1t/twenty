@@ -1,11 +1,13 @@
 import { useLingui } from '@lingui/react/macro';
+import { useIcons } from 'twenty-ui/display';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
+import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
 import { useFilteredPickerItems } from '@/command-menu/hooks/useFilteredPickerItems';
-import { CommandMenuSelectObjectForViewMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSelectObjectForViewMenuItem';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
+import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 
 type CommandMenuNewSidebarItemViewSystemSubViewProps = {
   systemObjects: ObjectMetadataItem[];
@@ -23,6 +25,7 @@ export const CommandMenuNewSidebarItemViewSystemSubView = ({
   onSelectObject,
 }: CommandMenuNewSidebarItemViewSystemSubViewProps) => {
   const { t } = useLingui();
+  const { getIcon } = useIcons();
   const {
     filteredItems: filteredSystemObjectMetadataItems,
     selectableItemIds,
@@ -53,11 +56,18 @@ export const CommandMenuNewSidebarItemViewSystemSubView = ({
       >
         <CommandGroup heading={t`System objects`}>
           {filteredSystemObjectMetadataItems.map((objectMetadataItem) => (
-            <CommandMenuSelectObjectForViewMenuItem
+            <SelectableListItem
               key={objectMetadataItem.id}
-              objectMetadataItem={objectMetadataItem}
-              onSelect={onSelectObject}
-            />
+              itemId={objectMetadataItem.id}
+              onEnter={() => onSelectObject(objectMetadataItem)}
+            >
+              <CommandMenuItem
+                Icon={getIcon(objectMetadataItem.icon)}
+                label={objectMetadataItem.labelPlural}
+                id={objectMetadataItem.id}
+                onClick={() => onSelectObject(objectMetadataItem)}
+              />
+            </SelectableListItem>
           ))}
         </CommandGroup>
       </CommandMenuList>
