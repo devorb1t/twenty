@@ -1,6 +1,7 @@
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
+import { useRecoilValue } from 'recoil';
 import { IconCheck, useIcons } from 'twenty-ui/display';
 
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
@@ -11,7 +12,6 @@ import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/i
 import { SaveAndCancelButtons } from '@/settings/components/SaveAndCancelButtons/SaveAndCancelButtons';
 import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
-import { useRecoilValue } from 'recoil';
 import { FeatureFlagKey } from '~/generated/graphql';
 
 const StyledContainer = styled.div`
@@ -51,10 +51,6 @@ export const NavigationMenuEditModeBar = () => {
   const showNavigationMenuEditModeBar =
     isNavigationMenuItemEditingEnabled && isNavigationMenuInEditMode;
 
-  if (!showNavigationMenuEditModeBar) {
-    return null;
-  }
-
   const handleSave = async () => {
     if (!isDirty) return;
 
@@ -72,12 +68,16 @@ export const NavigationMenuEditModeBar = () => {
     }
   };
 
-  const PaintIcon = getIcon('IconPaint');
+  const IconPaint = getIcon('IconPaint');
+
+  if (!showNavigationMenuEditModeBar) {
+    return null;
+  }
 
   return (
     <StyledContainer>
       <StyledTitle>
-        <PaintIcon size={16} />
+        <IconPaint size={16} />
         {t`Layout customization`}
       </StyledTitle>
       <SaveAndCancelButtons
