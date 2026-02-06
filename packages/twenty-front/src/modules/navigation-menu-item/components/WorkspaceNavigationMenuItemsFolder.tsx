@@ -2,6 +2,7 @@ import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { useLocation } from 'react-router-dom';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { isDefined } from 'twenty-shared/utils';
 import { IconFolder, IconFolderOpen } from 'twenty-ui/display';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
 import { useIsMobile } from 'twenty-ui/utilities';
@@ -25,7 +26,6 @@ import { getNavigationSubItemLeftAdornment } from '@/ui/navigation/navigation-dr
 import { coreViewsState } from '@/views/states/coreViewState';
 import { ViewKey } from '@/views/types/ViewKey';
 import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
-import { isDefined } from 'twenty-shared/utils';
 
 const StyledFolderContainer = styled.div<{ $isSelectedInEditMode: boolean }>`
   border: ${({ theme, $isSelectedInEditMode }) =>
@@ -81,17 +81,15 @@ export const WorkspaceNavigationMenuItemsFolder = ({
     if (isMobile) {
       setCurrentFolderId((prev) => (prev === folderId ? null : folderId));
     } else {
-      setOpenNavigationMenuItemFolderIds((currentOpenFolders) => {
-        if (isOpen) {
-          return currentOpenFolders.filter((id) => id !== folderId);
-        } else {
-          return [...currentOpenFolders, folderId];
-        }
-      });
+      setOpenNavigationMenuItemFolderIds((current) =>
+        isOpen
+          ? current.filter((id) => id !== folderId)
+          : [...current, folderId],
+      );
     }
   };
 
-  const shouldUseEditModeClick = isEditMode && Boolean(onEditModeClick);
+  const shouldUseEditModeClick = isEditMode && isDefined(onEditModeClick);
   const handleClick = shouldUseEditModeClick ? onEditModeClick : handleToggle;
 
   const selectedNavigationMenuItemIndex = navigationMenuItems.findIndex(
@@ -102,10 +100,7 @@ export const WorkspaceNavigationMenuItemsFolder = ({
   const navigationMenuItemFolderContentLength = navigationMenuItems.length;
 
   return (
-    <StyledFolderContainer
-      key={folderId}
-      $isSelectedInEditMode={isSelectedInEditMode}
-    >
+    <StyledFolderContainer $isSelectedInEditMode={isSelectedInEditMode}>
       <NavigationDrawerItemsCollapsableContainer isGroup={isGroup}>
         <NavigationItemDropTarget folderId={folderId} index={0}>
           <NavigationDrawerItem
