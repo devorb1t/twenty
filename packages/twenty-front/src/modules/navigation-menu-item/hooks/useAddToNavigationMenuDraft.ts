@@ -8,6 +8,16 @@ import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadat
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { type View } from '@/views/types/View';
 
+const getMaxPosition = (items: { position: number }[]) =>
+  Math.max(...items.map((item) => item.position), 0);
+
+const normalizeUrl = (url: string) => {
+  const trimmed = url.trim();
+  return trimmed.startsWith('http://') || trimmed.startsWith('https://')
+    ? trimmed
+    : `https://${trimmed}`;
+};
+
 const computeInsertIndexAndPosition = (
   currentDraft: NavigationMenuItem[],
   targetFolderId: string | null,
@@ -49,10 +59,7 @@ export const useAddToNavigationMenuDraft = () => {
     defaultViewId: string,
     currentDraft: NavigationMenuItem[],
   ) => {
-    const maxPosition = Math.max(
-      ...currentDraft.map((item) => item.position),
-      0,
-    );
+    const maxPosition = getMaxPosition(currentDraft);
 
     const newItem: NavigationMenuItem = {
       __typename: 'NavigationMenuItem',
@@ -73,10 +80,7 @@ export const useAddToNavigationMenuDraft = () => {
   };
 
   const addViewToDraft = (view: View, currentDraft: NavigationMenuItem[]) => {
-    const maxPosition = Math.max(
-      ...currentDraft.map((item) => item.position),
-      0,
-    );
+    const maxPosition = getMaxPosition(currentDraft);
 
     const newItem: NavigationMenuItem = {
       __typename: 'NavigationMenuItem',
@@ -100,10 +104,7 @@ export const useAddToNavigationMenuDraft = () => {
     name: string,
     currentDraft: NavigationMenuItem[],
   ): string => {
-    const maxPosition = Math.max(
-      ...currentDraft.map((item) => item.position),
-      0,
-    );
+    const maxPosition = getMaxPosition(currentDraft);
 
     const newItemId = v4();
     const newItem: NavigationMenuItem = {
@@ -169,11 +170,7 @@ export const useAddToNavigationMenuDraft = () => {
     targetFolderId: string | null,
     targetIndex: number,
   ): string => {
-    const trimmedUrl = url.trim();
-    const normalizedUrl =
-      trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')
-        ? trimmedUrl
-        : `https://${trimmedUrl}`;
+    const normalizedUrl = normalizeUrl(url);
 
     const { flatIndex, position } = computeInsertIndexAndPosition(
       currentDraft,
@@ -213,21 +210,14 @@ export const useAddToNavigationMenuDraft = () => {
     currentDraft: NavigationMenuItem[],
     folderId?: string | null,
   ): string => {
-    const trimmedUrl = url.trim();
-    const normalizedUrl =
-      trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')
-        ? trimmedUrl
-        : `https://${trimmedUrl}`;
+    const normalizedUrl = normalizeUrl(url);
 
     const itemsInSameContext = currentDraft.filter(
       (item) =>
         (item.folderId ?? null) === (folderId ?? null) &&
         !isDefined(item.userWorkspaceId),
     );
-    const maxPosition = Math.max(
-      ...itemsInSameContext.map((item) => item.position),
-      0,
-    );
+    const maxPosition = getMaxPosition(itemsInSameContext);
 
     const newItemId = v4();
     const newItem: NavigationMenuItem = {
@@ -262,10 +252,7 @@ export const useAddToNavigationMenuDraft = () => {
       return;
     }
 
-    const maxPosition = Math.max(
-      ...currentDraft.map((item) => item.position),
-      0,
-    );
+    const maxPosition = getMaxPosition(currentDraft);
 
     const newItem: NavigationMenuItem = {
       __typename: 'NavigationMenuItem',
