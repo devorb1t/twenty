@@ -1,13 +1,9 @@
+import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import { useIcons } from 'twenty-ui/display';
-
-import {
-  StyledCommandMenuPageContainer,
-  StyledCommandMenuPlaceholder,
-} from '@/command-menu/components/CommandMenuSharedStyles';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { type OrganizeActionsProps } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuEditDefaultView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditDefaultView';
@@ -39,6 +35,15 @@ import { coreViewsState } from '@/views/states/coreViewState';
 import { type View } from '@/views/types/View';
 import { ViewKey } from '@/views/types/ViewKey';
 import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
+
+const StyledCommandMenuPlaceholder = styled.p`
+  color: ${({ theme }) => theme.font.color.tertiary};
+  font-size: ${({ theme }) => theme.font.size.sm};
+`;
+
+const StyledCommandMenuPageContainer = styled.div`
+  padding: ${({ theme }) => theme.spacing(3)};
+`;
 
 export const CommandMenuNavigationMenuItemEditPage = () => {
   const { t } = useLingui();
