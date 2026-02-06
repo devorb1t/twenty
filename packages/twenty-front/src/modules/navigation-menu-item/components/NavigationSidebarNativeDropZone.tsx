@@ -21,7 +21,7 @@ import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
 const DROP_TARGET_ATTR = 'data-navigation-drop-target';
 const DROP_FOLDER_ATTR = 'data-navigation-drop-folder';
 const DROP_INDEX_ATTR = 'data-navigation-drop-index';
-export const DROP_ZONE_ATTR = 'data-navigation-drop-zone';
+const DROP_ZONE_ATTR = 'data-navigation-drop-zone';
 
 const StyledDropZone = styled.div`
   height: 100%;
@@ -325,21 +325,3 @@ export const NavigationSidebarNativeDropZone = ({
     </NavigationDropTargetContext.Provider>
   );
 };
-
-export const NavigationDropTargetAttributes = {
-  target: DROP_TARGET_ATTR,
-  folder: DROP_FOLDER_ATTR,
-  index: DROP_INDEX_ATTR,
-};
-
-export const getDropTargetId = (folderId: string | null, index: number) =>
-  `${folderId ?? 'orphan'}-${index}`;
-
-export const getNavigationDropTargetProps = (
-  folderId: string | null,
-  index: number,
-) => ({
-  [DROP_TARGET_ATTR]: '',
-  [DROP_FOLDER_ATTR]: folderId ?? 'orphan',
-  [DROP_INDEX_ATTR]: String(index),
-});

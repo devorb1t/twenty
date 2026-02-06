@@ -2,10 +2,6 @@ import styled from '@emotion/styled';
 import { type ReactNode, useContext, useRef } from 'react';
 
 import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
-import {
-  getDropTargetId,
-  getNavigationDropTargetProps,
-} from '@/navigation-menu-item/components/NavigationSidebarNativeDropZone';
 import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
 
 const StyledDropTarget = styled.div<{
@@ -70,8 +66,7 @@ export const NavigationItemDropTarget = ({
     setForbiddenDropTargetId,
   } = useContext(NavigationDropTargetContext);
   const ref = useRef<HTMLDivElement>(null);
-  const dropTargetProps = getNavigationDropTargetProps(folderId, index);
-  const dropTargetId = getDropTargetId(folderId, index);
+  const dropTargetId = `${folderId ?? 'orphan'}-${index}`;
   const isDragOver = activeDropTargetId === dropTargetId;
   const isDropForbidden = forbiddenDropTargetId === dropTargetId;
   const isFolderTarget = folderId !== null;
@@ -112,8 +107,9 @@ export const NavigationItemDropTarget = ({
       $isDropForbidden={isDropForbidden}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
-      // eslint-disable-next-line react/jsx-props-no-spreading
-      {...dropTargetProps}
+      data-navigation-drop-target=""
+      data-navigation-drop-folder={folderId ?? 'orphan'}
+      data-navigation-drop-index={String(index)}
     >
       {children}
     </StyledDropTarget>
