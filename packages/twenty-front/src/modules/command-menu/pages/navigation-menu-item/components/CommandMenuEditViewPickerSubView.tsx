@@ -6,6 +6,7 @@ import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
+import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
@@ -16,7 +17,6 @@ import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 type CommandMenuEditViewPickerSubViewProps = {
   currentDraft: { id: string; viewId?: string | null }[];
   selectedObjectMetadataIdForViewEdit: string | null;
-  selectedItemObjectMetadataId: string | undefined;
   currentItemId: string | undefined;
   objectMetadataItems: ObjectMetadataItem[];
   searchValue: string;
@@ -28,7 +28,6 @@ type CommandMenuEditViewPickerSubViewProps = {
 export const CommandMenuEditViewPickerSubView = ({
   currentDraft,
   selectedObjectMetadataIdForViewEdit,
-  selectedItemObjectMetadataId,
   currentItemId,
   objectMetadataItems,
   searchValue,
@@ -38,7 +37,14 @@ export const CommandMenuEditViewPickerSubView = ({
 }: CommandMenuEditViewPickerSubViewProps) => {
   const { t } = useLingui();
   const { getIcon } = useIcons();
+  const { selectedItemType, selectedItemObjectMetadata } =
+    useSelectedNavigationMenuItemEditData();
   const { views } = useNavigationMenuObjectMetadataFromDraft(currentDraft);
+
+  const selectedItemObjectMetadataId =
+    selectedItemType === 'objectView'
+      ? selectedItemObjectMetadata?.id
+      : undefined;
 
   const viewIdsInOtherSidebarItems = new Set(
     currentDraft.flatMap((item) =>

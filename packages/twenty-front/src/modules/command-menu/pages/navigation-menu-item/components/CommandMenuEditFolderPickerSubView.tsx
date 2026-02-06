@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { isDefined } from 'twenty-shared/utils';
 import { IconFolderPlus } from 'twenty-ui/display';
@@ -6,6 +7,9 @@ import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
+import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
+import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
+import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 
@@ -41,31 +45,35 @@ const excludeCurrentFolder = <T extends { id: string }>(
     : folders.filter((folder) => folder.id !== currentFolderId);
 
 type CommandMenuEditFolderPickerSubViewProps = {
-  allFolders: FolderOption[];
-  workspaceFolders: { id: string; name: string }[];
-  isFolderItem: boolean;
-  isLinkItem: boolean;
-  selectedFolderId: string | null;
-  currentFolderId: string | null;
-  searchValue: string;
-  onSearchChange: (value: string) => void;
   onBack: () => void;
   onSelectFolder: (folderId: string | null) => void;
 };
 
 export const CommandMenuEditFolderPickerSubView = ({
-  allFolders,
-  workspaceFolders,
-  isFolderItem,
-  isLinkItem,
-  selectedFolderId,
-  currentFolderId,
-  searchValue,
-  onSearchChange,
   onBack,
   onSelectFolder,
 }: CommandMenuEditFolderPickerSubViewProps) => {
   const { t } = useLingui();
+  const [searchValue, setSearchValue] = useState('');
+
+  const {
+    selectedNavigationMenuItemInEditMode,
+    selectedItem,
+    selectedItemType,
+    isFolderItem,
+    isLinkItem,
+  } = useSelectedNavigationMenuItemEditData();
+  const { allFolders, workspaceFolders } =
+    useNavigationMenuItemEditFolderData();
+
+  const selectedFolderId = isFolderItem
+    ? selectedNavigationMenuItemInEditMode
+    : null;
+  const currentFolderId =
+    selectedItemType === 'folder'
+      ? (selectedItem?.id ?? null)
+      : ((selectedItem as ProcessedNavigationMenuItem | undefined)?.folderId ??
+        null);
 
   const descendantFolderIds =
     isFolderItem && isDefined(selectedFolderId)
@@ -110,7 +118,7 @@ export const CommandMenuEditFolderPickerSubView = ({
       onBack={onBack}
       searchPlaceholder={t`Search a folder...`}
       searchValue={searchValue}
-      onSearchChange={onSearchChange}
+      onSearchChange={setSearchValue}
     >
       <CommandMenuList
         commandGroups={[]}

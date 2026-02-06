@@ -45,7 +45,6 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     selectedNavigationMenuItemInEditMode,
     selectedItemLabel,
     selectedItem,
-    selectedItemType,
     selectedItemObjectMetadata,
     processedItem,
     isFolderItem,
@@ -58,7 +57,6 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   const [objectSearchInput, setObjectSearchInput] = useState('');
   const [systemObjectSearchInput, setSystemObjectSearchInput] = useState('');
-  const [folderSearchInput, setFolderSearchInput] = useState('');
   const [viewSearchInput, setViewSearchInput] = useState('');
   const [
     selectedObjectMetadataIdForViewEdit,
@@ -76,8 +74,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   const organizeActionsProps = useNavigationMenuItemEditOrganizeActions();
 
-  const { allFolders, workspaceFolders, currentDraft } =
-    useNavigationMenuItemEditFolderData();
+  const { currentDraft } = useNavigationMenuItemEditFolderData();
 
   const {
     objectsForObjectPickerIncludingCurrent,
@@ -175,24 +172,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   }
 
   if (editSubView === 'folder-picker') {
-    const currentFolderId =
-      selectedItemType === 'folder'
-        ? selectedItem!.id
-        : ((selectedItem as ProcessedNavigationMenuItem | undefined)
-            ?.folderId ?? null);
-
     return (
       <CommandMenuEditFolderPickerSubView
-        allFolders={allFolders}
-        workspaceFolders={workspaceFolders}
-        isFolderItem={isFolderItem}
-        isLinkItem={isLinkItem}
-        selectedFolderId={
-          isFolderItem ? selectedNavigationMenuItemInEditMode : null
-        }
-        currentFolderId={currentFolderId}
-        searchValue={folderSearchInput}
-        onSearchChange={setFolderSearchInput}
         onBack={clearSubView}
         onSelectFolder={handleMoveToFolder}
       />
@@ -237,11 +218,6 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         currentDraft={currentDraft ?? []}
         selectedObjectMetadataIdForViewEdit={
           selectedObjectMetadataIdForViewEdit
-        }
-        selectedItemObjectMetadataId={
-          selectedItemType === 'objectView'
-            ? selectedItemObjectMetadata?.id
-            : undefined
         }
         currentItemId={selectedNavigationMenuItemInEditMode}
         objectMetadataItems={objectMetadataItems}
@@ -301,27 +277,21 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     },
     {
       condition: isFolderItem,
-      render: () => {
-        const folderApplicationId = selectedItem
-          ? currentDraft?.find((item) => item.id === selectedItem.id)
-              ?.applicationId
-          : undefined;
-        return (
-          <CommandMenuList
-            commandGroups={[]}
-            selectableItemIds={['move-up', 'move-down', 'remove']}
-          >
-            <CommandMenuEditOrganizeActions
-              canMoveUp={organizeActionsProps.canMoveUp}
-              canMoveDown={organizeActionsProps.canMoveDown}
-              onMoveUp={organizeActionsProps.onMoveUp}
-              onMoveDown={organizeActionsProps.onMoveDown}
-              onRemove={organizeActionsProps.onRemove}
-            />
-            <CommandMenuEditOwnerSection applicationId={folderApplicationId} />
-          </CommandMenuList>
-        );
-      },
+      render: () => (
+        <CommandMenuList
+          commandGroups={[]}
+          selectableItemIds={['move-up', 'move-down', 'remove']}
+        >
+          <CommandMenuEditOrganizeActions
+            canMoveUp={organizeActionsProps.canMoveUp}
+            canMoveDown={organizeActionsProps.canMoveDown}
+            onMoveUp={organizeActionsProps.onMoveUp}
+            onMoveDown={organizeActionsProps.onMoveDown}
+            onRemove={organizeActionsProps.onRemove}
+          />
+          <CommandMenuEditOwnerSection />
+        </CommandMenuList>
+      ),
     },
   ] as const;
 

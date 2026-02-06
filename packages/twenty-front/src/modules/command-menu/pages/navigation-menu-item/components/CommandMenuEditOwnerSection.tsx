@@ -4,6 +4,8 @@ import { IconApps } from 'twenty-ui/display';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
+import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
+import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { useFindOneApplicationQuery } from '~/generated-metadata/graphql';
 
@@ -12,9 +14,19 @@ type CommandMenuEditOwnerSectionProps = {
 };
 
 export const CommandMenuEditOwnerSection = ({
-  applicationId,
+  applicationId: applicationIdProp,
 }: CommandMenuEditOwnerSectionProps) => {
   const { t } = useLingui();
+
+  const { selectedItem } = useSelectedNavigationMenuItemEditData();
+  const { currentDraft } = useNavigationMenuItemEditFolderData();
+
+  const applicationIdFromDraft =
+    selectedItem && currentDraft
+      ? currentDraft.find((item) => item.id === selectedItem.id)?.applicationId
+      : undefined;
+
+  const applicationId = applicationIdProp ?? applicationIdFromDraft;
 
   const { data } = useFindOneApplicationQuery({
     variables: { id: applicationId ?? '' },
