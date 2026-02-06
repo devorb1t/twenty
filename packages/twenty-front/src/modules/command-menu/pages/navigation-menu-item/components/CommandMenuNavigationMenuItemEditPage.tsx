@@ -308,13 +308,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     onRemove: handleRemove,
   };
 
-  const subViewHandlers = {
-    setFolderPicker: () => setEditSubView('folder-picker'),
-    setObjectPicker: () => setEditSubView('object-picker'),
-    setObjectPickerSystem: () => setEditSubView('object-picker-system'),
-    setViewPicker: () => setEditSubView('view-picker'),
-    clearSubView: () => setEditSubView(null),
-  };
+  const setFolderPicker = () => setEditSubView('folder-picker');
+  const setObjectPicker = () => setEditSubView('object-picker');
+  const setObjectPickerSystem = () => setEditSubView('object-picker-system');
+  const setViewPicker = () => setEditSubView('view-picker');
+  const clearSubView = () => setEditSubView(null);
 
   const renderObjectMenuItem = (objectMetadataItem: ObjectMetadataItem) =>
     isViewItem ? (
@@ -356,7 +354,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         currentFolderId={currentFolderId}
         searchValue={folderSearchInput}
         onSearchChange={setFolderSearchInput}
-        onBack={subViewHandlers.clearSubView}
+        onBack={clearSubView}
         onSelectFolder={handleMoveToFolder}
       />
     );
@@ -371,7 +369,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         systemObjects={systemObjects}
         searchValue={systemObjectSearchInput}
         onSearchChange={setSystemObjectSearchInput}
-        onBack={() => setEditSubView('object-picker')}
+        onBack={setObjectPicker}
         renderObjectMenuItem={renderObjectMenuItem}
       />
     );
@@ -386,8 +384,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         objects={objects}
         searchValue={objectSearchInput}
         onSearchChange={setObjectSearchInput}
-        onBack={subViewHandlers.clearSubView}
-        onOpenSystemPicker={subViewHandlers.setObjectPickerSystem}
+        onBack={clearSubView}
+        onOpenSystemPicker={setObjectPickerSystem}
         renderObjectMenuItem={renderObjectMenuItem}
         emptyNoResultsText={t`No objects available`}
       />
@@ -422,14 +420,14 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
       <CommandMenuEditObjectViewBase
         objectIcon={objectIcon}
         objectLabel={selectedItemObjectMetadata.labelPlural ?? ''}
-        onOpenObjectPicker={subViewHandlers.setObjectPicker}
-        onOpenFolderPicker={subViewHandlers.setFolderPicker}
+        onOpenObjectPicker={setObjectPicker}
+        onOpenFolderPicker={setFolderPicker}
         viewRow={
           isViewItem && processedItem
             ? {
                 icon: getIcon(processedItem.Icon ?? 'IconList'),
                 label: processedItem.labelIdentifier ?? '',
-                onClick: subViewHandlers.setViewPicker,
+                onClick: setViewPicker,
               }
             : undefined
         }
@@ -453,7 +451,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
           <CommandMenuEditLinkItemView
             selectedItem={selectedItem as ProcessedNavigationMenuItem}
             onUpdateLink={(linkId, link) => updateLinkInDraft(linkId, { link })}
-            onOpenFolderPicker={subViewHandlers.setFolderPicker}
+            onOpenFolderPicker={setFolderPicker}
             canMoveUp={organizeActionsProps.canMoveUp}
             canMoveDown={organizeActionsProps.canMoveDown}
             onMoveUp={organizeActionsProps.onMoveUp}
@@ -505,7 +503,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         onMoveDown={organizeActionsProps.onMoveDown}
         onRemove={organizeActionsProps.onRemove}
         showMoveToFolder
-        onMoveToFolder={subViewHandlers.setFolderPicker}
+        onMoveToFolder={setFolderPicker}
       />
     </CommandMenuList>
   );
