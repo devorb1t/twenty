@@ -1,22 +1,25 @@
+import { useTheme } from '@emotion/react';
 import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
+import { IconLink } from 'twenty-ui/display';
 
-import { NavigationDrawerItemForLink } from '@/navigation-menu-item/components/NavigationDrawerItemForLink';
 import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
 import { WorkspaceNavigationMenuItemsFolder } from '@/navigation-menu-item/components/WorkspaceNavigationMenuItemsFolder';
 import {
   type FlatWorkspaceItem,
   type NavigationMenuItemClickParams,
 } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
+import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
-import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
 import { NavigationDrawerItemForObjectMetadataItem } from '@/object-metadata/components/NavigationDrawerItemForObjectMetadataItem';
+import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { getObjectPermissionsForObject } from '@/object-metadata/utils/getObjectPermissionsForObject';
 import { useObjectPermissions } from '@/object-record/hooks/useObjectPermissions';
 import { NavigationDrawerAnimatedCollapseWrapper } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerAnimatedCollapseWrapper';
+import { NavigationDrawerItem } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerItem';
 import { NavigationDrawerSection } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerSection';
 import { NavigationDrawerSectionTitle } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerSectionTitle';
 import { useNavigationSection } from '@/ui/navigation/navigation-drawer/hooks/useNavigationSection';
@@ -45,6 +48,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
   onNavigationMenuItemClick,
   onActiveObjectMetadataItemClick,
 }: NavigationDrawerSectionForWorkspaceItemsProps) => {
+  const theme = useTheme();
   const { toggleNavigationSection, isNavigationSectionOpenState } =
     useNavigationSection('Workspace');
   const isNavigationSectionOpen = useRecoilValue(isNavigationSectionOpenState);
@@ -159,17 +163,24 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
             }
 
             if (type === 'link') {
+              const linkItem = item as ProcessedNavigationMenuItem;
+              const iconColors = getNavigationMenuItemIconColors(theme);
               return (
                 <NavigationItemDropTarget
                   key={item.id}
                   folderId={null}
                   index={index}
                 >
-                  <NavigationDrawerItemForLink
-                    navigationMenuItem={item as ProcessedNavigationMenuItem}
-                    isEditMode={isEditMode}
+                  <NavigationDrawerItem
+                    label={linkItem.labelIdentifier}
+                    to={linkItem.link}
+                    onClick={
+                      isEditMode ? editModeProps.onEditModeClick : undefined
+                    }
+                    Icon={IconLink}
+                    iconBackgroundColor={iconColors.link}
+                    active={false}
                     isSelectedInEditMode={editModeProps.isSelectedInEditMode}
-                    onEditModeClick={editModeProps.onEditModeClick}
                   />
                 </NavigationItemDropTarget>
               );
