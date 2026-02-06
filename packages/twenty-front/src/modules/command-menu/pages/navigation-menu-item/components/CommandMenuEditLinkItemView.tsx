@@ -67,9 +67,9 @@ export const CommandMenuEditLinkItemView = ({
         onMoveUp={onMoveUp}
         onMoveDown={onMoveDown}
         onRemove={onRemove}
-        showMoveToFolder={true}
+        showMoveToFolder
         onMoveToFolder={onOpenFolderPicker}
-        moveToFolderHasSubMenu={true}
+        moveToFolderHasSubMenu
       />
       <CommandMenuEditOwnerSection applicationId={selectedItem.applicationId} />
     </CommandMenuList>

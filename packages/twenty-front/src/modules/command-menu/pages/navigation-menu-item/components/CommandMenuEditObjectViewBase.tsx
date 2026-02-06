@@ -54,7 +54,7 @@ export const CommandMenuEditObjectViewBase = ({
             label={t`Object`}
             description={objectLabel ?? undefined}
             contextualTextPosition="right"
-            hasSubMenu={true}
+            hasSubMenu
             id="object"
             onClick={onOpenObjectPicker}
           />
@@ -66,7 +66,7 @@ export const CommandMenuEditObjectViewBase = ({
               label={t`View`}
               description={viewRow.label ?? undefined}
               contextualTextPosition="right"
-              hasSubMenu={true}
+              hasSubMenu
               id="view"
               onClick={viewRow.onClick}
             />
@@ -79,7 +79,7 @@ export const CommandMenuEditObjectViewBase = ({
         onMoveUp={onMoveUp}
         onMoveDown={onMoveDown}
         onRemove={onRemove}
-        showMoveToFolder={true}
+        showMoveToFolder
         onMoveToFolder={onOpenFolderPicker}
       />
     </CommandMenuList>
