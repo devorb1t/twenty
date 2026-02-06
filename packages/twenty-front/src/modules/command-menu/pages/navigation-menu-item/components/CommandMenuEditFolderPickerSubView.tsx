@@ -15,6 +15,28 @@ type FolderOption = {
   folderId?: string;
 };
 
+const getDescendantFolderIds = (
+  folderId: string,
+  allFolders: FolderOption[],
+): Set<string> =>
+  allFolders.reduce<Set<string>>((acc, folder) => {
+    if (folder.folderId !== folderId) {
+      return acc;
+    }
+
+    acc.add(folder.id);
+    getDescendantFolderIds(folder.id, allFolders).forEach((id) => acc.add(id));
+    return acc;
+  }, new Set());
+
+const excludeCurrentFolder = <T extends { id: string }>(
+  folders: T[],
+  currentFolderId: string | null,
+): T[] =>
+  !isDefined(currentFolderId)
+    ? folders
+    : folders.filter((folder) => folder.id !== currentFolderId);
+
 type CommandMenuEditFolderPickerSubViewProps = {
   allFolders: FolderOption[];
   workspaceFolders: { id: string; name: string }[];
@@ -42,64 +64,36 @@ export const CommandMenuEditFolderPickerSubView = ({
 }: CommandMenuEditFolderPickerSubViewProps) => {
   const { t } = useLingui();
 
-  const descendantFolderIds = new Set<string>();
-  if (isFolderItem && isDefined(selectedFolderId)) {
-    const collectDescendants = (folderId: string) => {
-      allFolders
-        .filter((folder) => folder.folderId === folderId)
-        .forEach((folder) => {
-          descendantFolderIds.add(folder.id);
-          collectDescendants(folder.id);
-        });
-    };
-    collectDescendants(selectedFolderId);
-  }
+  const descendantFolderIds =
+    isFolderItem && isDefined(selectedFolderId)
+      ? getDescendantFolderIds(selectedFolderId, allFolders)
+      : new Set<string>();
 
-  const shouldIncludeNoFolderOption =
+  const includeNoFolderOption =
     (isFolderItem && isDefined(selectedFolderId)) ||
     (isLinkItem && isDefined(currentFolderId));
-  const foldersForFolderPicker = !shouldIncludeNoFolderOption
-    ? {
-        folders: allFolders.filter(
-          (folder) =>
-            !isDefined(currentFolderId) || folder.id !== currentFolderId,
-        ),
-        includeNoFolderOption: false,
-      }
-    : isLinkItem
-      ? {
-          folders: allFolders.filter(
-            (folder) =>
-              !isDefined(currentFolderId) || folder.id !== currentFolderId,
-          ),
-          includeNoFolderOption: true,
-        }
-      : {
-          folders: allFolders.filter(
-            (folder) =>
-              folder.id !== selectedFolderId &&
-              !descendantFolderIds.has(folder.id),
-          ),
-          includeNoFolderOption: true,
-        };
 
-  const foldersToShow = foldersForFolderPicker.includeNoFolderOption
-    ? foldersForFolderPicker.folders
-    : workspaceFolders.filter(
-        (folder) =>
-          !isDefined(currentFolderId) || folder.id !== currentFolderId,
-      );
+  const folders =
+    includeNoFolderOption && isFolderItem && isDefined(selectedFolderId)
+      ? allFolders.filter(
+          (folder) =>
+            folder.id !== selectedFolderId &&
+            !descendantFolderIds.has(folder.id),
+        )
+      : excludeCurrentFolder(allFolders, currentFolderId);
+
+  const foldersToShow = includeNoFolderOption
+    ? folders
+    : excludeCurrentFolder(workspaceFolders, currentFolderId);
 
   const filteredFolders = filterBySearchQuery({
     items: foldersToShow,
     searchQuery: searchValue,
     getSearchableValues: (folder) => [folder.name],
   });
-  const isEmpty =
-    filteredFolders.length === 0 &&
-    !foldersForFolderPicker.includeNoFolderOption;
+  const isEmpty = filteredFolders.length === 0 && !includeNoFolderOption;
   const selectableItemIds = [
-    ...(foldersForFolderPicker.includeNoFolderOption ? ['no-folder'] : []),
+    ...(includeNoFolderOption ? ['no-folder'] : []),
     ...(filteredFolders.length > 0 ? filteredFolders.map((f) => f.id) : []),
   ];
   const noResultsText =
@@ -122,7 +116,7 @@ export const CommandMenuEditFolderPickerSubView = ({
         noResultsText={noResultsText}
       >
         <CommandGroup heading={t`Folders`}>
-          {foldersForFolderPicker.includeNoFolderOption && (
+          {includeNoFolderOption && (
             <SelectableListItem
               itemId="no-folder"
               onEnter={() => onSelectFolder(null)}
