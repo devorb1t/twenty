@@ -44,8 +44,13 @@ export const CommandMenuPageInfo = ({ pageChip }: CommandMenuPageInfoProps) => {
 
   if (isNavigationMenuItemEditPage && isDefined(selectedNavItem)) {
     const selectedType = getNavigationMenuItemType(selectedNavItem);
-    if (selectedType === 'folder') return <CommandMenuFolderInfo />;
-    if (selectedType === 'link') return <CommandMenuLinkInfo />;
+
+    if (selectedType === 'folder') {
+      return <CommandMenuFolderInfo />;
+    }
+    if (selectedType === 'link') {
+      return <CommandMenuLinkInfo />;
+    }
   }
 
   const isRecordPage = pageChip.page?.page === CommandMenuPages.ViewRecord;
