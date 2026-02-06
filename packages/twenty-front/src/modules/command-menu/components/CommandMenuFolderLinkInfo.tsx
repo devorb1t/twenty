@@ -3,13 +3,14 @@ import { useLingui } from '@lingui/react/macro';
 import { useRecoilValue } from 'recoil';
 import { IconFolder, IconLink } from 'twenty-ui/display';
 
-import { CommandMenuNavigationMenuItemIcon } from '@/command-menu/components/CommandMenuNavigationMenuItemIcon';
 import { CommandMenuPageInfoLayout } from '@/command-menu/components/CommandMenuPageInfoLayout';
 import { commandMenuPageInfoState } from '@/command-menu/states/commandMenuPageInfoState';
 import { commandMenuShouldFocusTitleInputComponentState } from '@/command-menu/states/commandMenuShouldFocusTitleInputComponentState';
+import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
+import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { TitleInput } from '@/ui/input/components/TitleInput';
 import { useRecoilComponentState } from '@/ui/utilities/state/component-state/hooks/useRecoilComponentState';
@@ -81,13 +82,15 @@ export const CommandMenuFolderLinkInfo = ({
   return (
     <CommandMenuPageInfoLayout
       icon={
-        <CommandMenuNavigationMenuItemIcon colorKey={colorKey}>
+        <StyledNavigationMenuItemIconContainer
+          $backgroundColor={getNavigationMenuItemIconColors(theme)[colorKey]}
+        >
           <Icon
             size={theme.spacing(3)}
             color={theme.grayScale.gray1}
             stroke={theme.icon.stroke.md}
           />
-        </CommandMenuNavigationMenuItemIcon>
+        </StyledNavigationMenuItemIconContainer>
       }
       title={
         <TitleInput
