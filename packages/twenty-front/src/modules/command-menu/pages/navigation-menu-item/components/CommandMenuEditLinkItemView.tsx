@@ -1,6 +1,7 @@
 import { useLingui } from '@lingui/react/macro';
 import { isNonEmptyString } from '@sniptt/guards';
 import { useState } from 'react';
+import { getAbsoluteUrl } from 'twenty-shared/utils';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
@@ -30,8 +31,6 @@ export const CommandMenuEditLinkItemView = ({
 }: CommandMenuEditLinkItemViewProps) => {
   const { t } = useLingui();
   const [urlEditInput, setUrlEditInput] = useState('');
-  const linkUrl = selectedItem.link ?? '';
-  const linkId = selectedItem.id;
 
   const selectableItemIds = [
     'move-up',
@@ -46,16 +45,12 @@ export const CommandMenuEditLinkItemView = ({
         <TextInput
           fullWidth
           placeholder="www.google.com"
-          value={urlEditInput || linkUrl}
+          value={urlEditInput || selectedItem.link}
           onChange={(value) => setUrlEditInput(value)}
           onBlur={(event) => {
             const value = event.target.value.trim();
             if (isNonEmptyString(value)) {
-              const normalizedLink =
-                value.startsWith('http://') || value.startsWith('https://')
-                  ? value
-                  : `https://${value}`;
-              onUpdateLink(linkId, normalizedLink);
+              onUpdateLink(selectedItem.id, getAbsoluteUrl(value));
               setUrlEditInput('');
             }
           }}
