@@ -3,7 +3,6 @@ import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
 import { isDefined } from 'twenty-shared/utils';
 
-import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { CommandMenuEditFolderPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderPickerSubView';
@@ -12,7 +11,6 @@ import { CommandMenuEditObjectViewBase } from '@/command-menu/pages/navigation-m
 import { CommandMenuEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuEditOwnerSection } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOwnerSection';
 import { CommandMenuEditViewPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditViewPickerSubView';
-import { CommandMenuObjectMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectMenuItem';
 import { CommandMenuObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerSubView';
 import { CommandMenuSystemObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSystemObjectPickerSubView';
 import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
@@ -25,7 +23,6 @@ import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
-import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { type View } from '@/views/types/View';
 
 const StyledCommandMenuPlaceholder = styled.p`
@@ -140,27 +137,6 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     }
   };
 
-  const renderObjectMenuItem = (objectMetadataItem: ObjectMetadataItem) =>
-    isViewItem ? (
-      <SelectableListItem
-        itemId={objectMetadataItem.id}
-        onEnter={() => handleSelectObjectForViewEdit(objectMetadataItem)}
-      >
-        <CommandMenuItem
-          Icon={getIcon(objectMetadataItem.icon)}
-          label={objectMetadataItem.labelPlural}
-          id={objectMetadataItem.id}
-          onClick={() => handleSelectObjectForViewEdit(objectMetadataItem)}
-        />
-      </SelectableListItem>
-    ) : (
-      <CommandMenuObjectMenuItem
-        objectMetadataItem={objectMetadataItem}
-        onSelect={handleChangeObject}
-        variant="edit"
-      />
-    );
-
   if (!selectedNavigationMenuItemInEditMode || !selectedItemLabel) {
     return (
       <StyledCommandMenuPageContainer>
@@ -190,7 +166,9 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         searchValue={systemObjectSearchInput}
         onSearchChange={setSystemObjectSearchInput}
         onBack={setObjectPicker}
-        renderObjectMenuItem={renderObjectMenuItem}
+        isViewItem={isViewItem}
+        onSelectObjectForViewEdit={handleSelectObjectForViewEdit}
+        onChangeObject={handleChangeObject}
       />
     );
   }
@@ -206,7 +184,9 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         onSearchChange={setObjectSearchInput}
         onBack={clearSubView}
         onOpenSystemPicker={setObjectPickerSystem}
-        renderObjectMenuItem={renderObjectMenuItem}
+        isViewItem={isViewItem}
+        onSelectObjectForViewEdit={handleSelectObjectForViewEdit}
+        onChangeObject={handleChangeObject}
         emptyNoResultsText={t`No objects available`}
       />
     );

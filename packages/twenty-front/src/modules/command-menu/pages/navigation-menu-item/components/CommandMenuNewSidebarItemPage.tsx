@@ -10,7 +10,6 @@ import { CommandMenuNewSidebarItemRecordSubView } from '@/command-menu/pages/nav
 import { CommandMenuNewSidebarItemViewObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemViewObjectPickerSubView';
 import { CommandMenuNewSidebarItemViewPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemViewPickerSubView';
 import { CommandMenuNewSidebarItemViewSystemSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemViewSystemSubView';
-import { CommandMenuObjectMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectMenuItem';
 import { CommandMenuObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerSubView';
 import { CommandMenuSystemObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSystemObjectPickerSubView';
 import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
@@ -142,14 +141,6 @@ export const CommandMenuNewSidebarItemPage = () => {
     closeCommandMenu();
   };
 
-  const renderObjectMenuItem = (objectMetadataItem: ObjectMetadataItem) => (
-    <CommandMenuObjectMenuItem
-      objectMetadataItem={objectMetadataItem}
-      onSelect={handleSelectObject}
-      variant="add"
-    />
-  );
-
   const handleAddFolderAndOpenEdit = () => {
     const newFolderId = addFolderToDraft(t`New folder`, currentDraft);
     setSelectedNavigationMenuItemInEditMode(newFolderId);
@@ -218,7 +209,9 @@ export const CommandMenuNewSidebarItemPage = () => {
           onSearchChange={setObjectSearchInput}
           onBack={handleBackToMain}
           onOpenSystemPicker={() => setSelectedOption('system')}
-          renderObjectMenuItem={renderObjectMenuItem}
+          isViewItem={false}
+          onChangeObject={handleSelectObject}
+          objectMenuItemVariant="add"
         />
       );
     case 'system':
@@ -228,7 +221,9 @@ export const CommandMenuNewSidebarItemPage = () => {
           searchValue={systemObjectSearchInput}
           onSearchChange={setSystemObjectSearchInput}
           onBack={handleBackToObjectList}
-          renderObjectMenuItem={renderObjectMenuItem}
+          isViewItem={false}
+          onChangeObject={handleSelectObject}
+          objectMenuItemVariant="add"
           emptyNoResultsText={t`All system objects are already in the sidebar`}
         />
       );

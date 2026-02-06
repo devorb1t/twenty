@@ -1,8 +1,8 @@
 import { useLingui } from '@lingui/react/macro';
-import { Fragment, type ReactNode } from 'react';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
+import { CommandMenuObjectPickerItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerItem';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
 import { useFilteredPickerItems } from '@/command-menu/hooks/useFilteredPickerItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
@@ -12,7 +12,13 @@ type CommandMenuSystemObjectPickerSubViewProps = {
   searchValue: string;
   onSearchChange: (value: string) => void;
   onBack: () => void;
-  renderObjectMenuItem: (objectMetadataItem: ObjectMetadataItem) => ReactNode;
+  isViewItem: boolean;
+  onSelectObjectForViewEdit?: (objectMetadataItem: ObjectMetadataItem) => void;
+  onChangeObject: (
+    objectMetadataItem: ObjectMetadataItem,
+    defaultViewId: string,
+  ) => void;
+  objectMenuItemVariant?: 'add' | 'edit';
   emptyNoResultsText?: string;
 };
 
@@ -21,7 +27,10 @@ export const CommandMenuSystemObjectPickerSubView = ({
   searchValue,
   onSearchChange,
   onBack,
-  renderObjectMenuItem,
+  isViewItem,
+  onSelectObjectForViewEdit,
+  onChangeObject,
+  objectMenuItemVariant = 'edit',
   emptyNoResultsText,
 }: CommandMenuSystemObjectPickerSubViewProps) => {
   const { t } = useLingui();
@@ -52,9 +61,14 @@ export const CommandMenuSystemObjectPickerSubView = ({
       >
         <CommandGroup heading={t`System objects`}>
           {filteredItems.map((objectMetadataItem) => (
-            <Fragment key={objectMetadataItem.id}>
-              {renderObjectMenuItem(objectMetadataItem)}
-            </Fragment>
+            <CommandMenuObjectPickerItem
+              key={objectMetadataItem.id}
+              objectMetadataItem={objectMetadataItem}
+              isViewItem={isViewItem}
+              onSelectObjectForViewEdit={onSelectObjectForViewEdit}
+              onChangeObject={onChangeObject}
+              objectMenuItemVariant={objectMenuItemVariant}
+            />
           ))}
         </CommandGroup>
       </CommandMenuList>
