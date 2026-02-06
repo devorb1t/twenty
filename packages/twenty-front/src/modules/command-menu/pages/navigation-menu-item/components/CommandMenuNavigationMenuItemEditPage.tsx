@@ -1,27 +1,24 @@
-import styled from '@emotion/styled';
-import { useLingui } from '@lingui/react/macro';
-import { useState } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { isDefined } from 'twenty-shared/utils';
-import { useIcons } from 'twenty-ui/display';
+import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
-import { type OrganizeActionsProps } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
-import { CommandMenuEditDefaultView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditDefaultView';
 import { CommandMenuEditFolderItemView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderItemView';
 import { CommandMenuEditFolderPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderPickerSubView';
 import { CommandMenuEditLinkItemView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditLinkItemView';
 import { CommandMenuEditObjectViewBase } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditObjectViewBase';
+import {
+  type OrganizeActionsProps,
+  CommandMenuEditOrganizeActions,
+} from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuEditViewPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditViewPickerSubView';
 import { CommandMenuObjectMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectMenuItem';
 import { CommandMenuObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerSubView';
 import { CommandMenuSelectObjectForViewMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSelectObjectForViewMenuItem';
 import { CommandMenuSystemObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSystemObjectPickerSubView';
-import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { useNavigationMenuItemsByFolder } from '@/navigation-menu-item/hooks/useNavigationMenuItemsByFolder';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
+import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
@@ -35,6 +32,12 @@ import { coreViewsState } from '@/views/states/coreViewState';
 import { type View } from '@/views/types/View';
 import { ViewKey } from '@/views/types/ViewKey';
 import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
+import styled from '@emotion/styled';
+import { useLingui } from '@lingui/react/macro';
+import { useState } from 'react';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { isDefined } from 'twenty-shared/utils';
+import { useIcons } from 'twenty-ui/display';
 
 const StyledCommandMenuPlaceholder = styled.p`
   color: ${({ theme }) => theme.font.color.tertiary};
@@ -509,13 +512,19 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   }
 
   return (
-    <CommandMenuEditDefaultView
-      canMoveUp={organizeActionsProps.canMoveUp}
-      canMoveDown={organizeActionsProps.canMoveDown}
-      onMoveUp={organizeActionsProps.onMoveUp}
-      onMoveDown={organizeActionsProps.onMoveDown}
-      onRemove={organizeActionsProps.onRemove}
-      onOpenFolderPicker={subViewHandlers.setFolderPicker}
-    />
+    <CommandMenuList
+      commandGroups={[]}
+      selectableItemIds={['move-up', 'move-down', 'move-to-folder', 'remove']}
+    >
+      <CommandMenuEditOrganizeActions
+        canMoveUp={organizeActionsProps.canMoveUp}
+        canMoveDown={organizeActionsProps.canMoveDown}
+        onMoveUp={organizeActionsProps.onMoveUp}
+        onMoveDown={organizeActionsProps.onMoveDown}
+        onRemove={organizeActionsProps.onRemove}
+        showMoveToFolder={true}
+        onMoveToFolder={subViewHandlers.setFolderPicker}
+      />
+    </CommandMenuList>
   );
 };
