@@ -1,9 +1,9 @@
 import { useRecoilCallback, useSetRecoilState } from 'recoil';
-import { isDefined } from 'twenty-shared/utils';
 
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
+import { filterWorkspaceNavigationMenuItems } from '@/navigation-menu-item/utils/filterWorkspaceNavigationMenuItems';
 import { prefetchNavigationMenuItemsState } from '@/prefetch/states/prefetchNavigationMenuItemsState';
 
 export const useNavigationMenuEditModeActions = () => {
@@ -24,11 +24,11 @@ export const useNavigationMenuEditModeActions = () => {
           .getLoadable(prefetchNavigationMenuItemsState)
           .getValue();
 
-        const workspaceNavigationMenuItems = prefetchNavigationMenuItems.filter(
-          (item) => !isDefined(item.userWorkspaceId),
+        const workspaceNavigationMenuItems = filterWorkspaceNavigationMenuItems(
+          prefetchNavigationMenuItems,
         );
 
-        set(navigationMenuItemsDraftState, [...workspaceNavigationMenuItems]);
+        set(navigationMenuItemsDraftState, workspaceNavigationMenuItems);
         set(isNavigationMenuInEditModeState, true);
       },
     [],

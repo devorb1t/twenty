@@ -1,6 +1,7 @@
 import { currentWorkspaceMemberState } from '@/auth/states/currentWorkspaceMemberState';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
+import { filterWorkspaceNavigationMenuItems } from '@/navigation-menu-item/utils/filterWorkspaceNavigationMenuItems';
 import { prefetchNavigationMenuItemsState } from '@/prefetch/states/prefetchNavigationMenuItemsState';
 import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
@@ -31,9 +32,7 @@ export const usePrefetchedNavigationMenuItemsData =
     );
 
     const workspaceNavigationMenuItemsFromPrefetch =
-      prefetchNavigationMenuItems.filter(
-        (item) => !isDefined(item.userWorkspaceId),
-      );
+      filterWorkspaceNavigationMenuItems(prefetchNavigationMenuItems);
 
     const workspaceNavigationMenuItems =
       isNavigationMenuInEditMode && isDefined(navigationMenuItemsDraft)

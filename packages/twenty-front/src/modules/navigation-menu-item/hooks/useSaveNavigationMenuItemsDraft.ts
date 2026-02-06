@@ -6,6 +6,7 @@ import { useCreateNavigationMenuItemMutation } from '~/generated-metadata/graphq
 import { useDeleteNavigationMenuItem } from '@/navigation-menu-item/hooks/useDeleteNavigationMenuItem';
 import { useUpdateNavigationMenuItem } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItem';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
+import { filterWorkspaceNavigationMenuItems } from '@/navigation-menu-item/utils/filterWorkspaceNavigationMenuItems';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
 import { isNavigationMenuItemLink } from '@/navigation-menu-item/utils/isNavigationMenuItemLink';
 import { prefetchNavigationMenuItemsState } from '@/prefetch/states/prefetchNavigationMenuItemsState';
@@ -30,9 +31,7 @@ export const useSaveNavigationMenuItemsDraft = () => {
 
         if (!draft) return;
 
-        const workspacePrefetch = prefetch.filter(
-          (item) => !isDefined(item.userWorkspaceId),
-        );
+        const workspacePrefetch = filterWorkspaceNavigationMenuItems(prefetch);
         const topLevelWorkspace = workspacePrefetch.filter(
           (item) => !isDefined(item.folderId),
         );
