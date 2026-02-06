@@ -1,12 +1,12 @@
-import { type ReactNode, useContext, useRef } from 'react';
 import styled from '@emotion/styled';
+import { type ReactNode, useContext, useRef } from 'react';
 
+import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 import {
   getDropTargetId,
   getNavigationDropTargetProps,
 } from '@/navigation-menu-item/components/NavigationSidebarNativeDropZone';
 import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
-import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 
 const StyledDropTarget = styled.div<{
   $isDragOver: boolean;
