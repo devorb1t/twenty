@@ -6,13 +6,13 @@ import { IconFolder, IconLink } from 'twenty-ui/display';
 
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { CommandMenuNewSidebarItemMainMenu } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemMainMenu';
-import { CommandMenuObjectMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectMenuItem';
-import { CommandMenuObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerSubView';
 import { CommandMenuNewSidebarItemRecordSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemRecordSubView';
 import { CommandMenuNewSidebarItemViewObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemViewObjectPickerSubView';
-import { CommandMenuSystemObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSystemObjectPickerSubView';
 import { CommandMenuNewSidebarItemViewPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemViewPickerSubView';
 import { CommandMenuNewSidebarItemViewSystemSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemViewSystemSubView';
+import { CommandMenuObjectMenuItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectMenuItem';
+import { CommandMenuObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerSubView';
+import { CommandMenuSystemObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSystemObjectPickerSubView';
 import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
@@ -74,7 +74,7 @@ export const CommandMenuNewSidebarItemPage = () => {
     .filter((item) => !objectMetadataItemsInWorkspaceIds.has(item.id))
     .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
 
-  const activeSystemObjectMetadataItems = Object.values(objectMetadataItems)
+  const activeSystemObjectMetadataItems = objectMetadataItems
     .filter((item) => item.isActive && item.isSystem)
     .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
   const availableSystemObjectMetadataItems =
@@ -84,7 +84,7 @@ export const CommandMenuNewSidebarItemPage = () => {
         objectMetadataIdsWithIndexView.has(item.id),
     );
 
-  const objectMetadataItemsWithViews = Object.values(objectMetadataItems)
+  const objectMetadataItemsWithViews = objectMetadataItems
     .filter(
       (item) => item.isActive && objectMetadataIdsWithAnyView.has(item.id),
     )
@@ -127,7 +127,7 @@ export const CommandMenuNewSidebarItemPage = () => {
     const cameFromSystemObjects = selectedObjectMetadataItem?.isSystem ?? false;
 
     setSelectedObjectMetadataIdForView(null);
-    if (cameFromSystemObjects === true) {
+    if (cameFromSystemObjects) {
       setSelectedOption('view-system');
     }
   };
@@ -141,6 +141,14 @@ export const CommandMenuNewSidebarItemPage = () => {
     addViewToDraft(view, currentDraft);
     closeCommandMenu();
   };
+
+  const renderObjectMenuItem = (objectMetadataItem: ObjectMetadataItem) => (
+    <CommandMenuObjectMenuItem
+      objectMetadataItem={objectMetadataItem}
+      onSelect={handleSelectObject}
+      variant="add"
+    />
+  );
 
   const handleAddFolderAndOpenEdit = () => {
     const newFolderId = addFolderToDraft(t`New folder`, currentDraft);
@@ -214,13 +222,7 @@ export const CommandMenuNewSidebarItemPage = () => {
         onSearchChange={setObjectSearchInput}
         onBack={handleBackToMain}
         onOpenSystemPicker={() => setSelectedOption('system')}
-        renderObjectMenuItem={(objectMetadataItem) => (
-          <CommandMenuObjectMenuItem
-            objectMetadataItem={objectMetadataItem}
-            onSelect={handleSelectObject}
-            variant="add"
-          />
-        )}
+        renderObjectMenuItem={renderObjectMenuItem}
       />
     );
   }
@@ -232,13 +234,7 @@ export const CommandMenuNewSidebarItemPage = () => {
         searchValue={systemObjectSearchInput}
         onSearchChange={setSystemObjectSearchInput}
         onBack={handleBackToObjectList}
-        renderObjectMenuItem={(objectMetadataItem) => (
-          <CommandMenuObjectMenuItem
-            objectMetadataItem={objectMetadataItem}
-            onSelect={handleSelectObject}
-            variant="add"
-          />
-        )}
+        renderObjectMenuItem={renderObjectMenuItem}
         emptyNoResultsText={t`All system objects are already in the sidebar`}
       />
     );
