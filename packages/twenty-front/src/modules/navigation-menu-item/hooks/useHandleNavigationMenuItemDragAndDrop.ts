@@ -108,13 +108,11 @@ export const useHandleNavigationMenuItemDragAndDrop = () => {
             destinationNavigationMenuItems.length - 1
           ].position + 1;
       } else {
-        newPosition = Math.round(
-          calculateNewPosition({
-            destinationIndex: destination.index,
-            sourceIndex: -1,
-            items: destinationNavigationMenuItems,
-          }),
-        );
+        newPosition = calculateNewPosition({
+          destinationIndex: destination.index,
+          sourceIndex: -1,
+          items: destinationNavigationMenuItems,
+        });
       }
 
       await updateNavigationMenuItem({
@@ -129,13 +127,11 @@ export const useHandleNavigationMenuItemDragAndDrop = () => {
       .filter((item) => item.folderId === sourceFolderId)
       .filter((item) => item.id !== draggableId);
 
-    const newPosition = Math.round(
-      calculateNewPosition({
-        destinationIndex: destination.index,
-        sourceIndex: source.index,
-        items: navigationMenuItemsInSameList,
-      }),
-    );
+    const newPosition = calculateNewPosition({
+      destinationIndex: destination.index,
+      sourceIndex: source.index,
+      items: navigationMenuItemsInSameList,
+    });
 
     await updateNavigationMenuItem({
       id: draggableId,
