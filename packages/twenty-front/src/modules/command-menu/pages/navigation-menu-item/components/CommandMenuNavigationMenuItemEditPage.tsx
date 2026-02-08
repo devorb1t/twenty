@@ -1,7 +1,9 @@
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
+import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
+import { useIcons } from 'twenty-ui/display';
 
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
@@ -20,7 +22,9 @@ import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigatio
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
 import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
+import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
+import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { type View } from '@/views/types/View';
@@ -38,8 +42,10 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   const { t } = useLingui();
   const { closeCommandMenu } = useCommandMenu();
 
+  const selectedNavigationMenuItemInEditMode = useRecoilValue(
+    selectedNavigationMenuItemInEditModeState,
+  );
   const {
-    selectedNavigationMenuItemInEditMode,
     selectedItemLabel,
     selectedItem,
     selectedItemObjectMetadata,
@@ -48,9 +54,14 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     isLinkItem,
     isObjectItem,
     isViewItem,
-    objectIcon,
-    getIcon,
   } = useSelectedNavigationMenuItemEditData();
+  const { getIcon } = useIcons();
+  const objectNameSingular = selectedItemObjectMetadata?.nameSingular ?? '';
+  const { Icon: StandardObjectIcon } =
+    useGetStandardObjectIcon(objectNameSingular);
+  const objectIcon =
+    StandardObjectIcon ??
+    getIcon(selectedItemObjectMetadata?.icon ?? 'IconCube');
 
   const [objectSearchInput, setObjectSearchInput] = useState('');
   const [systemObjectSearchInput, setSystemObjectSearchInput] = useState('');

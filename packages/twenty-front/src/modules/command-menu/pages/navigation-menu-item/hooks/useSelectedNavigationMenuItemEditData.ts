@@ -1,13 +1,11 @@
 import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
-import { useIcons } from 'twenty-ui/display';
 
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
-import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { coreViewsState } from '@/views/states/coreViewState';
 import { ViewKey } from '@/views/types/ViewKey';
@@ -21,7 +19,6 @@ export const useSelectedNavigationMenuItemEditData = () => {
   const coreViews = useRecoilValue(coreViewsState);
   const views = coreViews.map(convertCoreViewToView);
   const { objectMetadataItems } = useObjectMetadataItems();
-  const { getIcon } = useIcons();
 
   const selectedItem = selectedNavigationMenuItemInEditMode
     ? items.find((item) => item.id === selectedNavigationMenuItemInEditMode)
@@ -46,11 +43,6 @@ export const useSelectedNavigationMenuItemEditData = () => {
     : null;
 
   const processedItem = selectedItem as ProcessedNavigationMenuItem | undefined;
-  const objectNameSingularForViewItem =
-    selectedItemObjectMetadata?.nameSingular ?? '';
-  const { Icon: StandardObjectIconForViewItem } = useGetStandardObjectIcon(
-    objectNameSingularForViewItem,
-  );
   const isFolderItem = selectedItemType === 'folder';
   const isLinkItem = selectedItemType === 'link';
   const isObjectItem =
@@ -67,12 +59,7 @@ export const useSelectedNavigationMenuItemEditData = () => {
     isDefined(processedItem.viewId) &&
     !isDefined(processedItem.targetRecordId);
 
-  const objectIcon =
-    StandardObjectIconForViewItem ??
-    getIcon(selectedItemObjectMetadata?.icon ?? 'IconCube');
-
   return {
-    selectedNavigationMenuItemInEditMode,
     selectedItem,
     selectedItemType,
     selectedItemObjectMetadata,
@@ -82,8 +69,5 @@ export const useSelectedNavigationMenuItemEditData = () => {
     isLinkItem,
     isObjectItem,
     isViewItem,
-    objectIcon,
-    getIcon,
-    items,
   };
 };

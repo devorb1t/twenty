@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLingui } from '@lingui/react/macro';
+import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import { IconFolderPlus } from 'twenty-ui/display';
 
@@ -9,6 +10,7 @@ import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
 import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
+import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
@@ -56,13 +58,11 @@ export const CommandMenuEditFolderPickerSubView = ({
   const { t } = useLingui();
   const [searchValue, setSearchValue] = useState('');
 
-  const {
-    selectedNavigationMenuItemInEditMode,
-    selectedItem,
-    selectedItemType,
-    isFolderItem,
-    isLinkItem,
-  } = useSelectedNavigationMenuItemEditData();
+  const selectedNavigationMenuItemInEditMode = useRecoilValue(
+    selectedNavigationMenuItemInEditModeState,
+  );
+  const { selectedItem, selectedItemType, isFolderItem, isLinkItem } =
+    useSelectedNavigationMenuItemEditData();
   const { allFolders, workspaceFolders } =
     useNavigationMenuItemEditFolderData();
 
