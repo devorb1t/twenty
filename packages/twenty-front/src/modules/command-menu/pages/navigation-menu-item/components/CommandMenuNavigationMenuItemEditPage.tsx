@@ -24,7 +24,6 @@ import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
-import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 
 const StyledCommandMenuPlaceholder = styled.p`
@@ -91,12 +90,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   } = useNavigationMenuItemEditObjectPickerData(
     selectedItemObjectMetadata,
     selectedItem as ProcessedNavigationMenuItem | undefined,
-    currentDraft ?? [],
+    currentDraft,
   );
 
   const { updateObjectInDraft, updateLinkInDraft } =
     useUpdateNavigationMenuItemsDraft();
-  const { objectMetadataItems } = useObjectMetadataItems();
 
   const handleChangeObject = (
     objectMetadataItem: ObjectMetadataItem,
@@ -182,11 +180,9 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   if (editSubView === 'view-picker') {
     return (
       <CommandMenuEditViewPickerSubView
-        currentDraft={currentDraft ?? []}
         selectedObjectMetadataIdForViewEdit={
           selectedObjectMetadataIdForViewEdit
         }
-        objectMetadataItems={objectMetadataItems}
         searchValue={viewSearchInput}
         onSearchChange={setViewSearchInput}
         onBack={handleBackFromViewPicker}

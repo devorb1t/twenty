@@ -47,7 +47,7 @@ export const CommandMenuNewSidebarItemRecordItem = ({
         label: record.label,
         imageUrl: record.imageUrl,
       },
-      currentDraft ?? [],
+      currentDraft,
     );
     closeCommandMenu();
   };

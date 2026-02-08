@@ -60,7 +60,7 @@ export const CommandMenuNewSidebarItemRecordSubView = ({
   });
 
   const workspaceRecordIds = new Set(
-    (currentDraft ?? []).flatMap((item) =>
+    currentDraft.flatMap((item) =>
       isDefined(item.targetRecordId) ? [item.targetRecordId] : [],
     ),
   );

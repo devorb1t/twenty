@@ -8,21 +8,20 @@ import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
+import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
 import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditSubView';
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
-import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
+import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
-import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
+import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { type View } from '@/views/types/View';
 import { ViewKey } from '@/views/types/ViewKey';
 import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 
 type CommandMenuEditViewPickerSubViewProps = {
-  currentDraft: { id: string; viewId?: string | null }[];
   selectedObjectMetadataIdForViewEdit: string | null;
-  objectMetadataItems: ObjectMetadataItem[];
   searchValue: string;
   onSearchChange: (value: string) => void;
   onBack: () => void;
@@ -30,9 +29,7 @@ type CommandMenuEditViewPickerSubViewProps = {
 };
 
 export const CommandMenuEditViewPickerSubView = ({
-  currentDraft,
   selectedObjectMetadataIdForViewEdit,
-  objectMetadataItems,
   searchValue,
   onSearchChange,
   onBack,
@@ -43,6 +40,8 @@ export const CommandMenuEditViewPickerSubView = ({
   const { closeCommandMenu } = useCommandMenu();
   const { clearSubView } = useNavigationMenuItemEditSubView();
   const { updateViewInDraft } = useUpdateNavigationMenuItemsDraft();
+  const { currentDraft } = useNavigationMenuItemEditFolderData();
+  const { objectMetadataItems } = useObjectMetadataItems();
   const selectedNavigationMenuItemInEditMode = useRecoilValue(
     selectedNavigationMenuItemInEditModeState,
   );

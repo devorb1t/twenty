@@ -22,7 +22,6 @@ import { useWorkspaceNavigationMenuItems } from '@/navigation-menu-item/hooks/us
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
-import { type View } from '@/views/types/View';
 
 type SelectedOption =
   | 'object'
@@ -42,7 +41,7 @@ export const CommandMenuNewSidebarItemPage = () => {
   const [systemObjectSearchInput, setSystemObjectSearchInput] = useState('');
 
   const { objectMetadataItems } = useObjectMetadataItems();
-  const { addObjectToDraft, addViewToDraft, addFolderToDraft, addLinkToDraft } =
+  const { addObjectToDraft, addFolderToDraft, addLinkToDraft } =
     useAddToNavigationMenuDraft();
   const { workspaceNavigationMenuItems } = useNavigationMenuItemsDraftState();
   const navigationMenuItemsDraft = useRecoilValue(
@@ -139,11 +138,6 @@ export const CommandMenuNewSidebarItemPage = () => {
     setSystemObjectSearchInput('');
   };
 
-  const handleSelectView = (view: View) => {
-    addViewToDraft(view, currentDraft);
-    closeCommandMenu();
-  };
-
   const handleAddFolderAndOpenEdit = () => {
     const newFolderId = addFolderToDraft(t`New folder`, currentDraft);
     setSelectedNavigationMenuItemInEditMode(newFolderId);
@@ -173,11 +167,8 @@ export const CommandMenuNewSidebarItemPage = () => {
       if (isDefined(selectedObjectMetadataIdForView)) {
         return (
           <CommandMenuNewSidebarItemViewPickerSubView
-            currentDraft={currentDraft}
             selectedObjectMetadataIdForView={selectedObjectMetadataIdForView}
-            objectMetadataItems={objectMetadataItems}
             onBack={handleBackToViewObjectList}
-            onSelectView={handleSelectView}
           />
         );
       }

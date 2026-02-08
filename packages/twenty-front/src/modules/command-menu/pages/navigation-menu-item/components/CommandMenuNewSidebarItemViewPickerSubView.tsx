@@ -6,31 +6,32 @@ import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
+import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useFilteredPickerItems } from '@/command-menu/hooks/useFilteredPickerItems';
+import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
+import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
-import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
+import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { type View } from '@/views/types/View';
 import { ViewKey } from '@/views/types/ViewKey';
 
 type CommandMenuNewSidebarItemViewPickerSubViewProps = {
-  currentDraft: { id: string; viewId?: string | null }[];
   selectedObjectMetadataIdForView: string;
-  objectMetadataItems: ObjectMetadataItem[];
   onBack: () => void;
-  onSelectView: (view: View) => void;
 };
 
 export const CommandMenuNewSidebarItemViewPickerSubView = ({
-  currentDraft,
   selectedObjectMetadataIdForView,
-  objectMetadataItems,
   onBack,
-  onSelectView,
 }: CommandMenuNewSidebarItemViewPickerSubViewProps) => {
   const { t } = useLingui();
   const { getIcon } = useIcons();
   const [searchValue, setSearchValue] = useState('');
+  const { closeCommandMenu } = useCommandMenu();
+  const { addViewToDraft } = useAddToNavigationMenuDraft();
+  const { currentDraft } = useNavigationMenuItemEditFolderData();
+  const { objectMetadataItems } = useObjectMetadataItems();
   const { views, viewIdsInWorkspace } =
     useNavigationMenuObjectMetadataFromDraft(currentDraft);
 
@@ -63,6 +64,11 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
     ? t`No results found`
     : t`No custom views available`;
 
+  const handleSelectView = (view: View) => {
+    addViewToDraft(view, currentDraft);
+    closeCommandMenu();
+  };
+
   return (
     <CommandMenuSubViewWithSearch
       backBarTitle={backBarTitle}
@@ -82,13 +88,13 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
             <SelectableListItem
               key={view.id}
               itemId={view.id}
-              onEnter={() => onSelectView(view)}
+              onEnter={() => handleSelectView(view)}
             >
               <CommandMenuItemWithAddToNavigationDrag
                 Icon={getIcon(view.icon)}
                 label={view.name}
                 id={view.id}
-                onClick={() => onSelectView(view)}
+                onClick={() => handleSelectView(view)}
                 payload={{
                   type: 'view',
                   viewId: view.id,
