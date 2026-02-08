@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react';
-import type { IconComponent } from 'twenty-ui/display';
 import { isDefined } from 'twenty-shared/utils';
+import type { IconComponent } from 'twenty-ui/display';
 
 const isIconComponent = (
   value: IconComponent | ReactNode,
-): value is IconComponent => typeof value === 'function';
+): value is IconComponent =>
+  typeof value === 'function' ||
+  (isDefined(value) && typeof value === 'object');
 
 type AddToNavigationIconSlotProps = {
   icon?: IconComponent | ReactNode;
@@ -23,8 +25,8 @@ export const AddToNavigationIconSlot = ({
     return null;
   }
   if (isIconComponent(icon)) {
-    const IconComponent = icon;
-    return <IconComponent size={size} stroke={stroke} color={color} />;
+    const Icon = icon;
+    return <Icon size={size} stroke={stroke} color={color} />;
   }
   return <>{icon}</>;
 };
