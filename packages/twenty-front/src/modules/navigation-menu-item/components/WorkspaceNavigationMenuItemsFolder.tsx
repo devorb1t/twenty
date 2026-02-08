@@ -13,7 +13,6 @@ import { type NavigationMenuItemClickParams } from '@/navigation-menu-item/hooks
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { getNavigationMenuItemSecondaryLabel } from '@/navigation-menu-item/utils/getNavigationMenuItemSecondaryLabel';
-import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { isLocationMatchingNavigationMenuItem } from '@/navigation-menu-item/utils/isLocationMatchingNavigationMenuItem';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
@@ -123,9 +122,9 @@ export const WorkspaceNavigationMenuItemsFolder = ({
           <div>
             <NavigationItemDropTarget folderId={folderId} index={0} />
             {navigationMenuItems.map((navigationMenuItem, index) => {
-              const type = getNavigationMenuItemType(navigationMenuItem);
               const objectMetadataItem =
-                type === 'objectView' || type === 'recordView'
+                navigationMenuItem.itemType === 'view' ||
+                navigationMenuItem.itemType === 'record'
                   ? getObjectMetadataForNavigationMenuItem(
                       navigationMenuItem,
                       objectMetadataItems,
@@ -137,7 +136,8 @@ export const WorkspaceNavigationMenuItemsFolder = ({
               const handleEditModeClick =
                 isEditMode &&
                 isDefined(onNavigationMenuItemClick) &&
-                (type === 'link' || isDefined(objectMetadataItem))
+                (navigationMenuItem.itemType === 'link' ||
+                  isDefined(objectMetadataItem))
                   ? () =>
                       onNavigationMenuItemClick({
                         item: navigationMenuItem,

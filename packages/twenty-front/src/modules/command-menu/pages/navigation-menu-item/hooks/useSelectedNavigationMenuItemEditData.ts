@@ -47,17 +47,14 @@ export const useSelectedNavigationMenuItemEditData = () => {
   const isLinkItem = selectedItemType === 'link';
   const isObjectItem =
     processedItem !== undefined &&
-    selectedItemType === 'objectView' &&
+    processedItem.itemType === 'view' &&
     selectedItemObjectMetadata !== null &&
-    processedItem.viewKey === ViewKey.Index &&
-    !isDefined(processedItem.targetRecordId);
+    processedItem.viewKey === ViewKey.Index;
   const isViewItem =
     processedItem !== undefined &&
-    selectedItemType === 'objectView' &&
+    processedItem.itemType === 'view' &&
     selectedItemObjectMetadata !== null &&
-    processedItem.viewKey !== ViewKey.Index &&
-    isDefined(processedItem.viewId) &&
-    !isDefined(processedItem.targetRecordId);
+    processedItem.viewKey !== ViewKey.Index;
 
   return {
     selectedItem,

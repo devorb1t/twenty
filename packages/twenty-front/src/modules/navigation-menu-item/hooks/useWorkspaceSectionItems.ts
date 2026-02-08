@@ -3,7 +3,6 @@ import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
 import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
-import { isNavigationMenuItemLink } from '@/navigation-menu-item/utils/isNavigationMenuItemLink';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
@@ -62,7 +61,7 @@ export const useWorkspaceSectionItems = (): FlatWorkspaceItem[] => {
       if (!isDefined(processedItem)) {
         return acc;
       }
-      if (isNavigationMenuItemLink(processedItem)) {
+      if (processedItem.itemType === 'link') {
         acc.push(processedItem);
       } else {
         const objectMetadataItem = getObjectMetadataForNavigationMenuItem(
