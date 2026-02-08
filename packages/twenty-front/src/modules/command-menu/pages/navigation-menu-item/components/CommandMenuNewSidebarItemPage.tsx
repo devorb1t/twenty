@@ -232,12 +232,7 @@ export const CommandMenuNewSidebarItemPage = () => {
       );
     case 'record':
       return (
-        <CommandMenuNewSidebarItemRecordSubView
-          currentDraft={currentDraft}
-          objectMetadataItems={objectMetadataItems}
-          onBack={handleBackToMain}
-          onSuccess={closeCommandMenu}
-        />
+        <CommandMenuNewSidebarItemRecordSubView onBack={handleBackToMain} />
       );
     default:
       return (

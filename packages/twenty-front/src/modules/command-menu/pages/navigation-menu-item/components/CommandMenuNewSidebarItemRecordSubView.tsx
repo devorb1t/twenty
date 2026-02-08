@@ -1,23 +1,18 @@
 import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
 import { isDefined } from 'twenty-shared/utils';
-import { Avatar } from 'twenty-ui/display';
 import { useDebounce } from 'use-debounce';
 
-import { MAX_SEARCH_RESULTS } from '@/command-menu/constants/MaxSearchResults';
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
-import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
-import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
-import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
+import { MAX_SEARCH_RESULTS } from '@/command-menu/constants/MaxSearchResults';
+import { CommandMenuNewSidebarItemRecordItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemRecordItem';
+import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
 import { useApolloCoreClient } from '@/object-metadata/hooks/useApolloCoreClient';
-import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
-import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
+import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { useObjectPermissions } from '@/object-record/hooks/useObjectPermissions';
 import { getObjectPermissionsFromMapByObjectMetadataId } from '@/settings/roles/role-permissions/objects-permissions/utils/getObjectPermissionsFromMapByObjectMetadataId';
-import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
-import type { NavigationMenuItem } from '~/generated-metadata/graphql';
 import { useSearchQuery } from '~/generated/graphql';
 
 type SearchRecordBase = {
@@ -28,20 +23,15 @@ type SearchRecordBase = {
 };
 
 type CommandMenuNewSidebarItemRecordSubViewProps = {
-  currentDraft: NavigationMenuItem[];
-  objectMetadataItems: ObjectMetadataItem[];
   onBack: () => void;
-  onSuccess: () => void;
 };
 
 export const CommandMenuNewSidebarItemRecordSubView = ({
-  currentDraft,
-  objectMetadataItems,
   onBack,
-  onSuccess,
 }: CommandMenuNewSidebarItemRecordSubViewProps) => {
-  const { addRecordToDraft } = useAddToNavigationMenuDraft();
   const { t } = useLingui();
+  const { currentDraft } = useNavigationMenuItemEditFolderData();
+  const { objectMetadataItems } = useObjectMetadataItems();
   const [recordSearchInput, setRecordSearchInput] = useState('');
   const [deferredRecordSearchInput] = useDebounce(recordSearchInput, 300);
   const coreClient = useApolloCoreClient();
@@ -70,7 +60,7 @@ export const CommandMenuNewSidebarItemRecordSubView = ({
   });
 
   const workspaceRecordIds = new Set(
-    currentDraft.flatMap((item) =>
+    (currentDraft ?? []).flatMap((item) =>
       isDefined(item.targetRecordId) ? [item.targetRecordId] : [],
     ),
   );
@@ -105,63 +95,12 @@ export const CommandMenuNewSidebarItemRecordSubView = ({
         noResultsText={noResultsText}
       >
         <CommandGroup heading={t`Results`}>
-          {availableSearchRecords.map((record) => {
-            const objectMetadataItem = objectMetadataItems.find(
-              (item) => item.nameSingular === record.objectNameSingular,
-            );
-            const recordPayload: AddToNavigationDragPayload = {
-              type: 'record',
-              recordId: record.recordId,
-              objectMetadataId: objectMetadataItem?.id ?? '',
-              objectNameSingular: record.objectNameSingular,
-              label: record.label,
-              imageUrl: record.imageUrl,
-            };
-            const recordIcon = (
-              <Avatar
-                type={
-                  record.objectNameSingular === CoreObjectNameSingular.Company
-                    ? 'squared'
-                    : 'rounded'
-                }
-                avatarUrl={record.imageUrl}
-                placeholderColorSeed={record.recordId}
-                placeholder={record.label}
-              />
-            );
-            const handleSelectRecord = () => {
-              addRecordToDraft(
-                {
-                  recordId: record.recordId,
-                  objectNameSingular: record.objectNameSingular,
-                  label: record.label,
-                  imageUrl: record.imageUrl,
-                },
-                currentDraft,
-              );
-              onSuccess();
-            };
-
-            return (
-              <SelectableListItem
-                key={record.recordId}
-                itemId={record.recordId}
-                onEnter={handleSelectRecord}
-              >
-                <CommandMenuItemWithAddToNavigationDrag
-                  icon={recordIcon}
-                  label={record.label}
-                  description={
-                    objectMetadataItem?.labelSingular ??
-                    record.objectNameSingular
-                  }
-                  id={record.recordId}
-                  onClick={handleSelectRecord}
-                  payload={recordPayload}
-                />
-              </SelectableListItem>
-            );
-          })}
+          {availableSearchRecords.map((record) => (
+            <CommandMenuNewSidebarItemRecordItem
+              key={record.recordId}
+              record={record}
+            />
+          ))}
         </CommandGroup>
       </CommandMenuList>
     </CommandMenuSubViewWithSearch>
