@@ -226,12 +226,12 @@ const StyledIcon = styled.div<{ $backgroundColor?: string }>`
 
   ${({ theme, $backgroundColor }) =>
     $backgroundColor &&
-    `
-    background-color: ${$backgroundColor};
-    border-radius: ${theme.border.radius.xs};
-    height: ${theme.spacing(4)};
-    width: ${theme.spacing(4)};
-  `}
+    css`
+      background-color: ${$backgroundColor};
+      border-radius: ${theme.border.radius.xs};
+      height: ${theme.spacing(4)};
+      width: ${theme.spacing(4)};
+    `}
 `;
 
 const StyledRightOptionsContainer = styled.div`
