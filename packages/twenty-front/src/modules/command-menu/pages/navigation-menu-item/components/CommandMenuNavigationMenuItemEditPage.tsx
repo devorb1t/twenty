@@ -193,72 +193,71 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     );
   }
 
-  const mainViewConfig = [
-    {
-      condition: isObjectItem || isViewItem,
-      render: () =>
-        selectedItemObjectMetadata ? (
-          <CommandMenuEditObjectViewBase
-            objectIcon={objectIcon}
-            objectLabel={selectedItemObjectMetadata.labelPlural ?? ''}
-            onOpenObjectPicker={setObjectPicker}
-            onOpenFolderPicker={setFolderPicker}
-            viewRow={
-              isViewItem && processedItem
-                ? {
-                    icon: getIcon(processedItem.Icon ?? 'IconList'),
-                    label: processedItem.labelIdentifier ?? '',
-                    onClick: setViewPicker,
-                  }
-                : undefined
-            }
-            canMoveUp={canMoveUp}
-            canMoveDown={canMoveDown}
-            onMoveUp={onMoveUp}
-            onMoveDown={onMoveDown}
-            onRemove={onRemove}
-          />
-        ) : null,
-    },
-    {
-      condition: isLinkItem,
-      render: () =>
-        selectedItem ? (
-          <CommandMenuEditLinkItemView
-            selectedItem={selectedItem as ProcessedNavigationMenuItem}
-            onUpdateLink={(linkId, link) => updateLinkInDraft(linkId, { link })}
-            onOpenFolderPicker={setFolderPicker}
-            canMoveUp={canMoveUp}
-            canMoveDown={canMoveDown}
-            onMoveUp={onMoveUp}
-            onMoveDown={onMoveDown}
-            onRemove={onRemove}
-          />
-        ) : null,
-    },
-    {
-      condition: isFolderItem,
-      render: () => (
-        <CommandMenuList
-          commandGroups={[]}
-          selectableItemIds={['move-up', 'move-down', 'remove']}
-        >
-          <CommandMenuEditOrganizeActions
-            canMoveUp={canMoveUp}
-            canMoveDown={canMoveDown}
-            onMoveUp={onMoveUp}
-            onMoveDown={onMoveDown}
-            onRemove={onRemove}
-          />
-          <CommandMenuEditOwnerSection />
-        </CommandMenuList>
-      ),
-    },
-  ] as const;
+  if ((isObjectItem || isViewItem) && !selectedItemObjectMetadata) {
+    return null;
+  }
 
-  const matchingView = mainViewConfig.find((config) => config.condition);
-  if (isDefined(matchingView)) {
-    return matchingView.render();
+  if (isObjectItem || isViewItem) {
+    const objectMetadata = selectedItemObjectMetadata!;
+    return (
+      <CommandMenuEditObjectViewBase
+        objectIcon={objectIcon}
+        objectLabel={objectMetadata.labelPlural ?? ''}
+        onOpenObjectPicker={setObjectPicker}
+        onOpenFolderPicker={setFolderPicker}
+        viewRow={
+          isViewItem && processedItem
+            ? {
+                icon: getIcon(processedItem.Icon ?? 'IconList'),
+                label: processedItem.labelIdentifier ?? '',
+                onClick: setViewPicker,
+              }
+            : undefined
+        }
+        canMoveUp={canMoveUp}
+        canMoveDown={canMoveDown}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+        onRemove={onRemove}
+      />
+    );
+  }
+
+  if (isLinkItem && !selectedItem) {
+    return null;
+  }
+
+  if (isLinkItem) {
+    return (
+      <CommandMenuEditLinkItemView
+        selectedItem={selectedItem as ProcessedNavigationMenuItem}
+        onUpdateLink={(linkId, link) => updateLinkInDraft(linkId, { link })}
+        onOpenFolderPicker={setFolderPicker}
+        canMoveUp={canMoveUp}
+        canMoveDown={canMoveDown}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+        onRemove={onRemove}
+      />
+    );
+  }
+
+  if (isFolderItem) {
+    return (
+      <CommandMenuList
+        commandGroups={[]}
+        selectableItemIds={['move-up', 'move-down', 'remove']}
+      >
+        <CommandMenuEditOrganizeActions
+          canMoveUp={canMoveUp}
+          canMoveDown={canMoveDown}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
+          onRemove={onRemove}
+        />
+        <CommandMenuEditOwnerSection />
+      </CommandMenuList>
+    );
   }
 
   return (
