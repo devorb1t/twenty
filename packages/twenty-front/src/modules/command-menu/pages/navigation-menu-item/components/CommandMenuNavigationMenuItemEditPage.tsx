@@ -69,7 +69,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     clearSubView,
   } = useNavigationMenuItemEditSubView();
 
-  const organizeActionsProps = useNavigationMenuItemEditOrganizeActions();
+  const { canMoveUp, canMoveDown, onMoveUp, onMoveDown, onRemove } =
+    useNavigationMenuItemEditOrganizeActions();
 
   const { currentDraft } = useNavigationMenuItemEditFolderData();
 
@@ -226,11 +227,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
               }
             : undefined
         }
-        canMoveUp={organizeActionsProps.canMoveUp}
-        canMoveDown={organizeActionsProps.canMoveDown}
-        onMoveUp={organizeActionsProps.onMoveUp}
-        onMoveDown={organizeActionsProps.onMoveDown}
-        onRemove={organizeActionsProps.onRemove}
+        canMoveUp={canMoveUp}
+        canMoveDown={canMoveDown}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+        onRemove={onRemove}
       />
     ) : null;
 
@@ -247,11 +248,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
             selectedItem={selectedItem as ProcessedNavigationMenuItem}
             onUpdateLink={(linkId, link) => updateLinkInDraft(linkId, { link })}
             onOpenFolderPicker={setFolderPicker}
-            canMoveUp={organizeActionsProps.canMoveUp}
-            canMoveDown={organizeActionsProps.canMoveDown}
-            onMoveUp={organizeActionsProps.onMoveUp}
-            onMoveDown={organizeActionsProps.onMoveDown}
-            onRemove={organizeActionsProps.onRemove}
+            canMoveUp={canMoveUp}
+            canMoveDown={canMoveDown}
+            onMoveUp={onMoveUp}
+            onMoveDown={onMoveDown}
+            onRemove={onRemove}
           />
         ) : null,
     },
@@ -263,11 +264,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
           selectableItemIds={['move-up', 'move-down', 'remove']}
         >
           <CommandMenuEditOrganizeActions
-            canMoveUp={organizeActionsProps.canMoveUp}
-            canMoveDown={organizeActionsProps.canMoveDown}
-            onMoveUp={organizeActionsProps.onMoveUp}
-            onMoveDown={organizeActionsProps.onMoveDown}
-            onRemove={organizeActionsProps.onRemove}
+            canMoveUp={canMoveUp}
+            canMoveDown={canMoveDown}
+            onMoveUp={onMoveUp}
+            onMoveDown={onMoveDown}
+            onRemove={onRemove}
           />
           <CommandMenuEditOwnerSection />
         </CommandMenuList>
@@ -286,11 +287,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
       selectableItemIds={['move-up', 'move-down', 'move-to-folder', 'remove']}
     >
       <CommandMenuEditOrganizeActions
-        canMoveUp={organizeActionsProps.canMoveUp}
-        canMoveDown={organizeActionsProps.canMoveDown}
-        onMoveUp={organizeActionsProps.onMoveUp}
-        onMoveDown={organizeActionsProps.onMoveDown}
-        onRemove={organizeActionsProps.onRemove}
+        canMoveUp={canMoveUp}
+        canMoveDown={canMoveDown}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+        onRemove={onRemove}
         showMoveToFolder
         onMoveToFolder={setFolderPicker}
       />
