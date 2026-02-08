@@ -2,14 +2,15 @@ import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { IconCheck, useIcons } from 'twenty-ui/display';
 
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
-import { useNavigationMenuEditModeActions } from '@/navigation-menu-item/hooks/useNavigationMenuEditModeActions';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useSaveNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useSaveNavigationMenuItemsDraft';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
+import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
+import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { SaveAndCancelButtons } from '@/settings/components/SaveAndCancelButtons/SaveAndCancelButtons';
 import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
@@ -39,9 +40,23 @@ export const NavigationMenuEditModeBar = () => {
   const [isSaving, setIsSaving] = useState(false);
   const { closeCommandMenu } = useCommandMenu();
   const { enqueueErrorSnackBar } = useSnackBar();
-  const { cancelEditMode } = useNavigationMenuEditModeActions();
+  const setNavigationMenuItemsDraft = useSetRecoilState(
+    navigationMenuItemsDraftState,
+  );
+  const setSelectedNavigationMenuItemInEditMode = useSetRecoilState(
+    selectedNavigationMenuItemInEditModeState,
+  );
+  const setIsNavigationMenuInEditMode = useSetRecoilState(
+    isNavigationMenuInEditModeState,
+  );
   const { saveDraft } = useSaveNavigationMenuItemsDraft();
   const { isDirty } = useNavigationMenuItemsDraftState();
+
+  const cancelEditMode = () => {
+    setNavigationMenuItemsDraft(null);
+    setSelectedNavigationMenuItemInEditMode(null);
+    setIsNavigationMenuInEditMode(false);
+  };
 
   const isNavigationMenuInEditMode = useRecoilValue(
     isNavigationMenuInEditModeState,
