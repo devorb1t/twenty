@@ -42,7 +42,7 @@ export const CommandMenuObjectMenuItem = ({
     <SelectableListItem itemId={objectMetadataItem.id} onEnter={handleClick}>
       {variant === 'add' && !isDisabled ? (
         <CommandMenuItemWithAddToNavigationDrag
-          Icon={Icon}
+          icon={Icon}
           label={objectMetadataItem.labelPlural}
           id={objectMetadataItem.id}
           onClick={handleClick}

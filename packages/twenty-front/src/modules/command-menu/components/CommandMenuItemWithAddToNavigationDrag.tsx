@@ -19,8 +19,7 @@ const StyledDraggableMenuItem = styled.div`
 `;
 
 type CommandMenuItemWithAddToNavigationDragProps = {
-  Icon?: IconComponent;
-  icon?: React.ReactNode;
+  icon?: IconComponent | React.ReactNode;
   label: string;
   description?: string;
   id: string;
@@ -29,7 +28,6 @@ type CommandMenuItemWithAddToNavigationDragProps = {
 };
 
 export const CommandMenuItemWithAddToNavigationDrag = ({
-  Icon,
   icon,
   label,
   description,
@@ -52,7 +50,6 @@ export const CommandMenuItemWithAddToNavigationDrag = ({
 
     const preview = createAddToNavigationDragPreview({
       label,
-      Icon,
       icon,
       payload,
       theme,
@@ -74,7 +71,6 @@ export const CommandMenuItemWithAddToNavigationDrag = ({
         onClick={onClick}
         LeftComponent={
           <AddToNavigationDragHandle
-            Icon={Icon}
             icon={icon}
             payload={payload}
             isHovered={isHovered}

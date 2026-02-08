@@ -67,7 +67,7 @@ export const CommandMenuNewSidebarItemMainMenu = ({
       <CommandGroup heading={t`Other`}>
         <SelectableListItem itemId="folder" onEnter={onAddFolder}>
           <CommandMenuItemWithAddToNavigationDrag
-            Icon={IconFolder}
+            icon={IconFolder}
             label={t`Folder`}
             id="folder"
             onClick={onAddFolder}
@@ -80,7 +80,7 @@ export const CommandMenuNewSidebarItemMainMenu = ({
         </SelectableListItem>
         <SelectableListItem itemId="link" onEnter={onAddLink}>
           <CommandMenuItemWithAddToNavigationDrag
-            Icon={IconLink}
+            icon={IconLink}
             label={t`Link`}
             id="link"
             onClick={onAddLink}

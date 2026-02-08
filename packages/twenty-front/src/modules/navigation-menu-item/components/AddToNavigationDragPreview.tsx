@@ -2,8 +2,8 @@ import { type Theme, ThemeProvider } from '@emotion/react';
 import styled from '@emotion/styled';
 import type { IconComponent } from 'twenty-ui/display';
 import { ThemeContextProvider } from 'twenty-ui/theme';
-import { isDefined } from 'twenty-shared/utils';
 
+import { AddToNavigationIconSlot } from '@/navigation-menu-item/components/AddToNavigationIconSlot';
 import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 import { getIconBackgroundColorForPayload } from '@/navigation-menu-item/utils/getIconBackgroundColorForPayload';
@@ -49,30 +49,32 @@ const StyledItemLabel = styled.span`
 
 export type AddToNavigationDragPreviewProps = {
   label: string;
-  Icon?: IconComponent;
-  icon?: React.ReactNode;
+  icon?: IconComponent | React.ReactNode;
   payload: AddToNavigationDragPayload;
   theme: Theme;
 };
 
 export const AddToNavigationDragPreview = ({
   label,
-  Icon,
   icon,
   payload,
   theme,
 }: AddToNavigationDragPreviewProps) => {
   const iconBackgroundColor = getIconBackgroundColorForPayload(payload, theme);
+  const iconSize = iconBackgroundColor ? theme.spacing(3) : theme.icon.size.md;
+  const iconStroke = theme.icon.stroke.md;
+  const iconColor = iconBackgroundColor
+    ? theme.grayScale.gray1
+    : 'currentColor';
 
-  const iconContent = isDefined(icon) ? (
-    icon
-  ) : Icon ? (
-    <Icon
-      size={iconBackgroundColor ? theme.spacing(3) : theme.icon.size.md}
-      stroke={theme.icon.stroke.md}
-      color={iconBackgroundColor ? theme.grayScale.gray1 : 'currentColor'}
+  const iconSlot = (
+    <AddToNavigationIconSlot
+      icon={icon}
+      size={iconSize}
+      stroke={iconStroke}
+      color={iconColor}
     />
-  ) : null;
+  );
 
   return (
     <ThemeProvider theme={theme}>
@@ -83,10 +85,10 @@ export const AddToNavigationDragPreview = ({
               <StyledNavigationMenuItemIconContainer
                 $backgroundColor={iconBackgroundColor}
               >
-                {iconContent}
+                {iconSlot}
               </StyledNavigationMenuItemIconContainer>
             ) : (
-              iconContent
+              iconSlot
             )}
           </StyledIconWrapper>
           <StyledLabelParent>

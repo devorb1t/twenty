@@ -91,7 +91,7 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
               onEnter={() => handleSelectView(view)}
             >
               <CommandMenuItemWithAddToNavigationDrag
-                Icon={getIcon(view.icon)}
+                icon={getIcon(view.icon)}
                 label={view.name}
                 id={view.id}
                 onClick={() => handleSelectView(view)}

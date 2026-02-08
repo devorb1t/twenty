@@ -8,14 +8,12 @@ import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/ad
 
 export const createAddToNavigationDragPreview = ({
   label,
-  Icon,
   icon,
   payload,
   theme,
 }: {
   label: string;
-  Icon?: IconComponent;
-  icon?: React.ReactNode;
+  icon?: IconComponent | React.ReactNode;
   payload: AddToNavigationDragPayload;
   theme: Theme;
 }) => {
@@ -34,7 +32,6 @@ export const createAddToNavigationDragPreview = ({
     root.render(
       <AddToNavigationDragPreview
         label={label}
-        Icon={Icon}
         icon={icon}
         payload={payload}
         theme={theme}
