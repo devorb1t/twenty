@@ -1,10 +1,15 @@
+import { useRecoilValue } from 'recoil';
+
 import { useNavigationMenuItemsByFolder } from '@/navigation-menu-item/hooks/useNavigationMenuItemsByFolder';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
+import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
 
 export const useNavigationMenuItemEditFolderData = () => {
-  const { workspaceNavigationMenuItems, navigationMenuItemsDraft } =
-    useNavigationMenuItemsDraftState();
+  const { workspaceNavigationMenuItems } = useNavigationMenuItemsDraftState();
+  const navigationMenuItemsDraft = useRecoilValue(
+    navigationMenuItemsDraftState,
+  );
   const { workspaceNavigationMenuItemsByFolder } =
     useNavigationMenuItemsByFolder();
 

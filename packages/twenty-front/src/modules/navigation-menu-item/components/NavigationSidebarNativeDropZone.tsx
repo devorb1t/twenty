@@ -9,6 +9,7 @@ import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNa
 import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
 import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
+import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
@@ -48,8 +49,10 @@ export const NavigationSidebarNativeDropZone = ({
     addViewToDraftAtPosition,
     addRecordToDraftAtPosition,
   } = useAddToNavigationMenuDraft();
-  const { workspaceNavigationMenuItems, navigationMenuItemsDraft } =
-    useNavigationMenuItemsDraftState();
+  const { workspaceNavigationMenuItems } = useNavigationMenuItemsDraftState();
+  const navigationMenuItemsDraft = useRecoilValue(
+    navigationMenuItemsDraftState,
+  );
   const { openNavigationMenuItemInCommandMenu } =
     useOpenNavigationMenuItemInCommandMenu();
   const { objectMetadataItems } = useObjectMetadataItems();

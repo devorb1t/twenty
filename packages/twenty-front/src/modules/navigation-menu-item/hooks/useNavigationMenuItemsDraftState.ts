@@ -1,4 +1,4 @@
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import { isDeeplyEqual } from '~/utils/isDeeplyEqual';
 
@@ -14,8 +14,9 @@ export const useNavigationMenuItemsDraftState = () => {
   const prefetchNavigationMenuItems = useRecoilValue(
     prefetchNavigationMenuItemsState,
   );
-  const [navigationMenuItemsDraft, setNavigationMenuItemsDraft] =
-    useRecoilState(navigationMenuItemsDraftState);
+  const navigationMenuItemsDraft = useRecoilValue(
+    navigationMenuItemsDraftState,
+  );
 
   const workspaceNavigationMenuItemsFromPrefetch =
     filterWorkspaceNavigationMenuItems(prefetchNavigationMenuItems);
@@ -35,8 +36,6 @@ export const useNavigationMenuItemsDraftState = () => {
 
   return {
     workspaceNavigationMenuItems,
-    navigationMenuItemsDraft,
-    setNavigationMenuItemsDraft,
     isDirty,
   };
 };

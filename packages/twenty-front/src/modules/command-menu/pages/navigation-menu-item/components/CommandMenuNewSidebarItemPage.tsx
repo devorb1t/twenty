@@ -1,6 +1,6 @@
 import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import { IconFolder, IconLink } from 'twenty-ui/display';
 
@@ -16,6 +16,7 @@ import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAdd
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
+import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { useWorkspaceNavigationMenuItems } from '@/navigation-menu-item/hooks/useWorkspaceNavigationMenuItems';
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
@@ -43,8 +44,10 @@ export const CommandMenuNewSidebarItemPage = () => {
   const { objectMetadataItems } = useObjectMetadataItems();
   const { addObjectToDraft, addViewToDraft, addFolderToDraft, addLinkToDraft } =
     useAddToNavigationMenuDraft();
-  const { workspaceNavigationMenuItems, navigationMenuItemsDraft } =
-    useNavigationMenuItemsDraftState();
+  const { workspaceNavigationMenuItems } = useNavigationMenuItemsDraftState();
+  const navigationMenuItemsDraft = useRecoilValue(
+    navigationMenuItemsDraftState,
+  );
   const setSelectedNavigationMenuItemInEditMode = useSetRecoilState(
     selectedNavigationMenuItemInEditModeState,
   );
