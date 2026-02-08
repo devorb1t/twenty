@@ -20,7 +20,8 @@ import { useNavigationMenuItemEditObjectPickerData } from '@/command-menu/pages/
 import { useNavigationMenuItemEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditOrganizeActions';
 import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditSubView';
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
-import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
+import { useUpdateLinkInDraft } from '@/navigation-menu-item/hooks/useUpdateLinkInDraft';
+import { useUpdateObjectInDraft } from '@/navigation-menu-item/hooks/useUpdateObjectInDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
@@ -93,8 +94,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     currentDraft,
   );
 
-  const { updateObjectInDraft, updateLinkInDraft } =
-    useUpdateNavigationMenuItemsDraft();
+  const { updateObjectInDraft } = useUpdateObjectInDraft();
+  const { updateLinkInDraft } = useUpdateLinkInDraft();
 
   const handleChangeObject = (
     objectMetadataItem: ObjectMetadataItem,

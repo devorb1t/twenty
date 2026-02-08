@@ -7,7 +7,8 @@ import { CommandMenuPageInfoLayout } from '@/command-menu/components/CommandMenu
 import { commandMenuPageInfoState } from '@/command-menu/states/commandMenuPageInfoState';
 import { commandMenuShouldFocusTitleInputComponentState } from '@/command-menu/states/commandMenuShouldFocusTitleInputComponentState';
 import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
-import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
+import { useUpdateFolderNameInDraft } from '@/navigation-menu-item/hooks/useUpdateFolderNameInDraft';
+import { useUpdateLinkInDraft } from '@/navigation-menu-item/hooks/useUpdateLinkInDraft';
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
@@ -37,8 +38,8 @@ export const CommandMenuFolderLinkInfo = ({
     selectedNavigationMenuItemInEditModeState,
   );
   const items = useWorkspaceSectionItems();
-  const { updateFolderNameInDraft, updateLinkInDraft } =
-    useUpdateNavigationMenuItemsDraft();
+  const { updateFolderNameInDraft } = useUpdateFolderNameInDraft();
+  const { updateLinkInDraft } = useUpdateLinkInDraft();
 
   const defaultLabel = type === 'folder' ? t`New folder` : t`Link label`;
   const placeholder = type === 'folder' ? t`Folder name` : t`Link label`;

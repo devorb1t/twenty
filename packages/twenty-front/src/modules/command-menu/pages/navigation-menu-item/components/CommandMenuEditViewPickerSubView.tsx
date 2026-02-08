@@ -12,7 +12,7 @@ import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/naviga
 import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditSubView';
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
-import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
+import { useUpdateViewInDraft } from '@/navigation-menu-item/hooks/useUpdateViewInDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
@@ -39,7 +39,7 @@ export const CommandMenuEditViewPickerSubView = ({
   const { getIcon } = useIcons();
   const { closeCommandMenu } = useCommandMenu();
   const { clearSubView } = useNavigationMenuItemEditSubView();
-  const { updateViewInDraft } = useUpdateNavigationMenuItemsDraft();
+  const { updateViewInDraft } = useUpdateViewInDraft();
   const { currentDraft } = useNavigationMenuItemEditFolderData();
   const { objectMetadataItems } = useObjectMetadataItems();
   const selectedNavigationMenuItemInEditMode = useRecoilValue(

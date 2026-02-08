@@ -3,7 +3,7 @@ import { Avatar } from 'twenty-ui/display';
 import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
-import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
+import { useAddRecordToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddRecordToNavigationMenuDraft';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
@@ -24,7 +24,7 @@ export const CommandMenuNewSidebarItemRecordItem = ({
   record,
 }: CommandMenuNewSidebarItemRecordItemProps) => {
   const { closeCommandMenu } = useCommandMenu();
-  const { addRecordToDraft } = useAddToNavigationMenuDraft();
+  const { addRecordToDraft } = useAddRecordToNavigationMenuDraft();
   const { currentDraft } = useNavigationMenuItemEditFolderData();
   const { objectMetadataItems } = useObjectMetadataItems();
   const objectMetadataItem = objectMetadataItems.find(

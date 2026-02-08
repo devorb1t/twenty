@@ -12,7 +12,9 @@ import { CommandMenuNewSidebarItemViewPickerSubView } from '@/command-menu/pages
 import { CommandMenuNewSidebarItemViewSystemSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemViewSystemSubView';
 import { CommandMenuObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerSubView';
 import { CommandMenuSystemObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSystemObjectPickerSubView';
-import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
+import { useAddFolderToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddFolderToNavigationMenuDraft';
+import { useAddLinkToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddLinkToNavigationMenuDraft';
+import { useAddObjectToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddObjectToNavigationMenuDraft';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
@@ -41,8 +43,9 @@ export const CommandMenuNewSidebarItemPage = () => {
   const [systemObjectSearchInput, setSystemObjectSearchInput] = useState('');
 
   const { objectMetadataItems } = useObjectMetadataItems();
-  const { addObjectToDraft, addFolderToDraft, addLinkToDraft } =
-    useAddToNavigationMenuDraft();
+  const { addObjectToDraft } = useAddObjectToNavigationMenuDraft();
+  const { addFolderToDraft } = useAddFolderToNavigationMenuDraft();
+  const { addLinkToDraft } = useAddLinkToNavigationMenuDraft();
   const { workspaceNavigationMenuItems } = useNavigationMenuItemsDraftState();
   const navigationMenuItemsDraft = useRecoilValue(
     navigationMenuItemsDraftState,
@@ -101,7 +104,7 @@ export const CommandMenuNewSidebarItemPage = () => {
     objectMetadataItem: ObjectMetadataItem,
     defaultViewId: string,
   ) => {
-    addObjectToDraft(objectMetadataItem, defaultViewId, currentDraft);
+    addObjectToDraft(objectMetadataItem.id, defaultViewId, currentDraft);
     closeCommandMenu();
   };
 

@@ -9,7 +9,7 @@ import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandM
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useFilteredPickerItems } from '@/command-menu/hooks/useFilteredPickerItems';
 import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
-import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
+import { useAddViewToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddViewToNavigationMenuDraft';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
@@ -29,7 +29,7 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
   const { getIcon } = useIcons();
   const [searchValue, setSearchValue] = useState('');
   const { closeCommandMenu } = useCommandMenu();
-  const { addViewToDraft } = useAddToNavigationMenuDraft();
+  const { addViewToDraft } = useAddViewToNavigationMenuDraft();
   const { currentDraft } = useNavigationMenuItemEditFolderData();
   const { objectMetadataItems } = useObjectMetadataItems();
   const { views, viewIdsInWorkspace } =
@@ -65,7 +65,7 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
     : t`No custom views available`;
 
   const handleSelectView = (view: View) => {
-    addViewToDraft(view, currentDraft);
+    addViewToDraft(view.id, currentDraft);
     closeCommandMenu();
   };
 

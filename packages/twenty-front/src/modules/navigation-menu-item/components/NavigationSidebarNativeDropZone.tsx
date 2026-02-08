@@ -7,7 +7,11 @@ import { IconFolder, IconLink, useIcons } from 'twenty-ui/display';
 
 import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
-import { useAddToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddToNavigationMenuDraft';
+import { useAddFolderToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddFolderToNavigationMenuDraft';
+import { useAddLinkToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddLinkToNavigationMenuDraft';
+import { useAddObjectToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddObjectToNavigationMenuDraft';
+import { useAddRecordToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddRecordToNavigationMenuDraft';
+import { useAddViewToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddViewToNavigationMenuDraft';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
@@ -42,13 +46,11 @@ export const NavigationSidebarNativeDropZone = ({
   const [forbiddenDropTargetId, setForbiddenDropTargetId] = useState<
     string | null
   >(null);
-  const {
-    addFolderToDraftAtPosition,
-    addLinkToDraftAtPosition,
-    addObjectToDraftAtPosition,
-    addViewToDraftAtPosition,
-    addRecordToDraftAtPosition,
-  } = useAddToNavigationMenuDraft();
+  const { addObjectToDraft } = useAddObjectToNavigationMenuDraft();
+  const { addViewToDraft } = useAddViewToNavigationMenuDraft();
+  const { addRecordToDraft } = useAddRecordToNavigationMenuDraft();
+  const { addFolderToDraft } = useAddFolderToNavigationMenuDraft();
+  const { addLinkToDraft } = useAddLinkToNavigationMenuDraft();
   const { workspaceNavigationMenuItems } = useNavigationMenuItemsDraftState();
   const navigationMenuItemsDraft = useRecoilValue(
     navigationMenuItemsDraftState,
@@ -116,7 +118,7 @@ export const NavigationSidebarNativeDropZone = ({
 
     switch (payload.type) {
       case 'folder': {
-        const newFolderId = addFolderToDraftAtPosition(
+        const newFolderId = addFolderToDraft(
           payload.name,
           currentDraft,
           null,
@@ -132,7 +134,7 @@ export const NavigationSidebarNativeDropZone = ({
         return;
       }
       case 'link': {
-        const newLinkId = addLinkToDraftAtPosition(
+        const newLinkId = addLinkToDraft(
           payload.name || t`Link label`,
           payload.link,
           currentDraft,
@@ -149,7 +151,7 @@ export const NavigationSidebarNativeDropZone = ({
         return;
       }
       case 'object': {
-        const newItemId = addObjectToDraftAtPosition(
+        const newItemId = addObjectToDraft(
           payload.objectMetadataId,
           payload.defaultViewId,
           currentDraft,
@@ -170,7 +172,7 @@ export const NavigationSidebarNativeDropZone = ({
         return;
       }
       case 'view': {
-        const newItemId = addViewToDraftAtPosition(
+        const newItemId = addViewToDraft(
           payload.viewId,
           currentDraft,
           folderId,
@@ -187,7 +189,7 @@ export const NavigationSidebarNativeDropZone = ({
         return;
       }
       case 'record': {
-        const newItemId = addRecordToDraftAtPosition(
+        const newItemId = addRecordToDraft(
           {
             recordId: payload.recordId,
             objectMetadataId: payload.objectMetadataId,
@@ -199,6 +201,7 @@ export const NavigationSidebarNativeDropZone = ({
           folderId,
           index,
         );
+        if (!isDefined(newItemId)) return;
         setIsNavigationMenuInEditMode(true);
         setSelectedNavigationMenuItemInEditMode(newItemId);
         const objectMetadataItem = objectMetadataItems.find(
@@ -275,11 +278,11 @@ export const NavigationSidebarNativeDropZone = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     currentDraft,
-    addFolderToDraftAtPosition,
-    addLinkToDraftAtPosition,
-    addObjectToDraftAtPosition,
-    addViewToDraftAtPosition,
-    addRecordToDraftAtPosition,
+    addFolderToDraft,
+    addLinkToDraft,
+    addObjectToDraft,
+    addViewToDraft,
+    addRecordToDraft,
     openNavigationMenuItemInCommandMenu,
     objectMetadataItems,
     coreViews,
