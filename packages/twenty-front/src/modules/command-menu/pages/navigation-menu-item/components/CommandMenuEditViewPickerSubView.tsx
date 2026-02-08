@@ -1,4 +1,5 @@
 import { useLingui } from '@lingui/react/macro';
+import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import { useIcons } from 'twenty-ui/display';
 
@@ -6,8 +7,12 @@ import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
+import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
+import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditSubView';
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
+import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
+import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { type View } from '@/views/types/View';
@@ -17,26 +22,30 @@ import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 type CommandMenuEditViewPickerSubViewProps = {
   currentDraft: { id: string; viewId?: string | null }[];
   selectedObjectMetadataIdForViewEdit: string | null;
-  currentItemId: string | undefined;
   objectMetadataItems: ObjectMetadataItem[];
   searchValue: string;
   onSearchChange: (value: string) => void;
   onBack: () => void;
-  onSelectView: (view: View) => void;
+  onClearObjectMetadataForViewEdit: () => void;
 };
 
 export const CommandMenuEditViewPickerSubView = ({
   currentDraft,
   selectedObjectMetadataIdForViewEdit,
-  currentItemId,
   objectMetadataItems,
   searchValue,
   onSearchChange,
   onBack,
-  onSelectView,
+  onClearObjectMetadataForViewEdit,
 }: CommandMenuEditViewPickerSubViewProps) => {
   const { t } = useLingui();
   const { getIcon } = useIcons();
+  const { closeCommandMenu } = useCommandMenu();
+  const { clearSubView } = useNavigationMenuItemEditSubView();
+  const { updateViewInDraft } = useUpdateNavigationMenuItemsDraft();
+  const selectedNavigationMenuItemInEditMode = useRecoilValue(
+    selectedNavigationMenuItemInEditModeState,
+  );
   const { selectedItemType, selectedItemObjectMetadata } =
     useSelectedNavigationMenuItemEditData();
   const { views } = useNavigationMenuObjectMetadataFromDraft(currentDraft);
@@ -49,7 +58,8 @@ export const CommandMenuEditViewPickerSubView = ({
   const viewIdsInOtherSidebarItems = new Set(
     currentDraft.flatMap((item) =>
       isDefined(item.viewId) &&
-      (currentItemId === undefined || item.id !== currentItemId)
+      (selectedNavigationMenuItemInEditMode === undefined ||
+        item.id !== selectedNavigationMenuItemInEditMode)
         ? [item.viewId]
         : [],
     ),
@@ -96,6 +106,15 @@ export const CommandMenuEditViewPickerSubView = ({
       ? t`No results found`
       : t`No custom views available`;
 
+  const handleSelectView = (view: View) => {
+    if (isDefined(selectedNavigationMenuItemInEditMode)) {
+      updateViewInDraft(selectedNavigationMenuItemInEditMode, view);
+      onClearObjectMetadataForViewEdit();
+      clearSubView();
+      closeCommandMenu();
+    }
+  };
+
   return (
     <CommandMenuSubViewWithSearch
       backBarTitle={backBarTitle}
@@ -115,13 +134,13 @@ export const CommandMenuEditViewPickerSubView = ({
             <SelectableListItem
               key={view.id}
               itemId={view.id}
-              onEnter={() => onSelectView(view)}
+              onEnter={() => handleSelectView(view)}
             >
               <CommandMenuItem
                 Icon={getIcon(view.icon)}
                 label={view.name}
                 id={view.id}
-                onClick={() => onSelectView(view)}
+                onClick={() => handleSelectView(view)}
               />
             </SelectableListItem>
           ))}

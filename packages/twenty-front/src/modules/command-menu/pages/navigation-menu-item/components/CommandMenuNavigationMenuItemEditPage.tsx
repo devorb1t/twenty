@@ -26,7 +26,6 @@ import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/s
 import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
-import { type View } from '@/views/types/View';
 
 const StyledCommandMenuPlaceholder = styled.p`
   color: ${({ theme }) => theme.font.color.tertiary};
@@ -95,7 +94,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     currentDraft ?? [],
   );
 
-  const { updateObjectInDraft, updateViewInDraft, updateLinkInDraft } =
+  const { updateObjectInDraft, updateLinkInDraft } =
     useUpdateNavigationMenuItemsDraft();
   const { objectMetadataItems } = useObjectMetadataItems();
 
@@ -119,15 +118,6 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   ) => {
     setSelectedObjectMetadataIdForViewEdit(objectMetadataItem.id);
     setViewPicker();
-  };
-
-  const handleChangeView = (view: View) => {
-    if (isDefined(selectedNavigationMenuItemInEditMode)) {
-      updateViewInDraft(selectedNavigationMenuItemInEditMode, view);
-      setSelectedObjectMetadataIdForViewEdit(null);
-      clearSubView();
-      closeCommandMenu();
-    }
   };
 
   const handleBackFromViewPicker = () => {
@@ -196,12 +186,13 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         selectedObjectMetadataIdForViewEdit={
           selectedObjectMetadataIdForViewEdit
         }
-        currentItemId={selectedNavigationMenuItemInEditMode}
         objectMetadataItems={objectMetadataItems}
         searchValue={viewSearchInput}
         onSearchChange={setViewSearchInput}
         onBack={handleBackFromViewPicker}
-        onSelectView={handleChangeView}
+        onClearObjectMetadataForViewEdit={() =>
+          setSelectedObjectMetadataIdForViewEdit(null)
+        }
       />
     );
   }
