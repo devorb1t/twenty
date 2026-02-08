@@ -43,16 +43,8 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
   const currentPath = location.pathname;
   const currentPathWithSearch = `${location.pathname}${location.search}`;
 
-  const isRecord =
-    isDefined(navigationMenuItem?.targetRecordId) &&
-    isDefined(navigationMenuItem?.link) &&
-    isDefined(navigationMenuItem?.labelIdentifier);
-
-  const isView =
-    isDefined(navigationMenuItem?.viewId) &&
-    isDefined(navigationMenuItem?.link) &&
-    isDefined(navigationMenuItem?.labelIdentifier);
-
+  const isRecord = navigationMenuItem?.itemType === 'record';
+  const isView = navigationMenuItem?.itemType === 'view';
   const hasCustomLink = isRecord || isView;
 
   const navigationPath = hasCustomLink

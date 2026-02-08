@@ -13,8 +13,18 @@ import {
 } from './computeNavigationMenuItemDisplayFields';
 import { isNavigationMenuItemLink } from './isNavigationMenuItemLink';
 
+export type NavigationMenuItemType =
+  | 'folder'
+  | 'link'
+  | 'object'
+  | 'record'
+  | 'view';
+
 export type ProcessedNavigationMenuItem = NavigationMenuItem &
-  NavigationMenuItemDisplayFields & { viewKey?: ViewKey | null };
+  NavigationMenuItemDisplayFields & {
+    viewKey?: ViewKey | null;
+    itemType: NavigationMenuItemType;
+  };
 
 export const sortNavigationMenuItems = (
   navigationMenuItems: NavigationMenuItem[],
@@ -67,6 +77,7 @@ export const sortNavigationMenuItems = (
             ...navigationMenuItem,
             ...displayFields,
             viewKey: view.key,
+            itemType: 'view' as const,
           };
         }
 
@@ -90,6 +101,7 @@ export const sortNavigationMenuItems = (
         return {
           ...navigationMenuItem,
           ...displayFields,
+          itemType: 'link' as const,
         };
       }
 
@@ -126,6 +138,7 @@ export const sortNavigationMenuItems = (
         ...navigationMenuItem,
         ...displayFields,
         link: hasLinkToShowPage ? displayFields.link : '',
+        itemType: 'record' as const,
       };
     })
     .filter(isDefined)
