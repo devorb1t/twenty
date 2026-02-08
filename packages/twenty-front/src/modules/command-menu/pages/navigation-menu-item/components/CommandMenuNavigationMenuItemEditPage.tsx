@@ -20,7 +20,6 @@ import { useNavigationMenuItemEditObjectPickerData } from '@/command-menu/pages/
 import { useNavigationMenuItemEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditOrganizeActions';
 import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditSubView';
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
-import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { useUpdateNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItemsDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
@@ -98,7 +97,6 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   const { updateObjectInDraft, updateViewInDraft, updateLinkInDraft } =
     useUpdateNavigationMenuItemsDraft();
-  const { moveToFolder } = useNavigationMenuItemMoveRemove();
   const { objectMetadataItems } = useObjectMetadataItems();
 
   const handleChangeObject = (
@@ -121,14 +119,6 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   ) => {
     setSelectedObjectMetadataIdForViewEdit(objectMetadataItem.id);
     setViewPicker();
-  };
-
-  const handleMoveToFolder = (folderId: string | null) => {
-    if (isDefined(selectedNavigationMenuItemInEditMode)) {
-      moveToFolder(selectedNavigationMenuItemInEditMode, folderId);
-      clearSubView();
-      closeCommandMenu();
-    }
   };
 
   const handleChangeView = (view: View) => {
@@ -160,12 +150,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   }
 
   if (editSubView === 'folder-picker') {
-    return (
-      <CommandMenuEditFolderPickerSubView
-        onBack={clearSubView}
-        onSelectFolder={handleMoveToFolder}
-      />
-    );
+    return <CommandMenuEditFolderPickerSubView onBack={clearSubView} />;
   }
 
   if (editSubView === 'object-picker-system') {

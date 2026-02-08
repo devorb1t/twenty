@@ -8,8 +8,11 @@ import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
+import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
+import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditSubView';
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
+import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
@@ -48,16 +51,17 @@ const excludeCurrentFolder = <T extends { id: string }>(
 
 type CommandMenuEditFolderPickerSubViewProps = {
   onBack: () => void;
-  onSelectFolder: (folderId: string | null) => void;
 };
 
 export const CommandMenuEditFolderPickerSubView = ({
   onBack,
-  onSelectFolder,
 }: CommandMenuEditFolderPickerSubViewProps) => {
   const { t } = useLingui();
   const [searchValue, setSearchValue] = useState('');
 
+  const { closeCommandMenu } = useCommandMenu();
+  const { clearSubView } = useNavigationMenuItemEditSubView();
+  const { moveToFolder } = useNavigationMenuItemMoveRemove();
   const selectedNavigationMenuItemInEditMode = useRecoilValue(
     selectedNavigationMenuItemInEditModeState,
   );
@@ -103,6 +107,14 @@ export const CommandMenuEditFolderPickerSubView = ({
     getSearchableValues: (folder) => [folder.name],
   });
   const isEmpty = filteredFolders.length === 0 && !includeNoFolderOption;
+
+  const handleSelectFolder = (folderId: string | null) => {
+    if (isDefined(selectedNavigationMenuItemInEditMode)) {
+      moveToFolder(selectedNavigationMenuItemInEditMode, folderId);
+      clearSubView();
+      closeCommandMenu();
+    }
+  };
   const selectableItemIds = [
     ...(includeNoFolderOption ? ['no-folder'] : []),
     ...(filteredFolders.length > 0 ? filteredFolders.map((f) => f.id) : []),
@@ -130,12 +142,12 @@ export const CommandMenuEditFolderPickerSubView = ({
           {includeNoFolderOption && (
             <SelectableListItem
               itemId="no-folder"
-              onEnter={() => onSelectFolder(null)}
+              onEnter={() => handleSelectFolder(null)}
             >
               <CommandMenuItem
                 label={t`No folder`}
                 id="no-folder"
-                onClick={() => onSelectFolder(null)}
+                onClick={() => handleSelectFolder(null)}
               />
             </SelectableListItem>
           )}
@@ -143,13 +155,13 @@ export const CommandMenuEditFolderPickerSubView = ({
             <SelectableListItem
               key={folder.id}
               itemId={folder.id}
-              onEnter={() => onSelectFolder(folder.id)}
+              onEnter={() => handleSelectFolder(folder.id)}
             >
               <CommandMenuItem
                 Icon={IconFolderPlus}
                 label={folder.name}
                 id={folder.id}
-                onClick={() => onSelectFolder(folder.id)}
+                onClick={() => handleSelectFolder(folder.id)}
               />
             </SelectableListItem>
           ))}
