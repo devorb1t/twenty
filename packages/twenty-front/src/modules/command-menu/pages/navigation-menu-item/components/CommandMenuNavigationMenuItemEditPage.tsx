@@ -197,35 +197,32 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     );
   }
 
-  const isObjectOrViewItem = isObjectItem || isViewItem;
-  const objectViewBaseRender = () =>
-    selectedItemObjectMetadata ? (
-      <CommandMenuEditObjectViewBase
-        objectIcon={objectIcon}
-        objectLabel={selectedItemObjectMetadata.labelPlural ?? ''}
-        onOpenObjectPicker={setObjectPicker}
-        onOpenFolderPicker={setFolderPicker}
-        viewRow={
-          isViewItem && processedItem
-            ? {
-                icon: getIcon(processedItem.Icon ?? 'IconList'),
-                label: processedItem.labelIdentifier ?? '',
-                onClick: setViewPicker,
-              }
-            : undefined
-        }
-        canMoveUp={canMoveUp}
-        canMoveDown={canMoveDown}
-        onMoveUp={onMoveUp}
-        onMoveDown={onMoveDown}
-        onRemove={onRemove}
-      />
-    ) : null;
-
   const mainViewConfig = [
     {
-      condition: isObjectOrViewItem,
-      render: objectViewBaseRender,
+      condition: isObjectItem || isViewItem,
+      render: () =>
+        selectedItemObjectMetadata ? (
+          <CommandMenuEditObjectViewBase
+            objectIcon={objectIcon}
+            objectLabel={selectedItemObjectMetadata.labelPlural ?? ''}
+            onOpenObjectPicker={setObjectPicker}
+            onOpenFolderPicker={setFolderPicker}
+            viewRow={
+              isViewItem && processedItem
+                ? {
+                    icon: getIcon(processedItem.Icon ?? 'IconList'),
+                    label: processedItem.labelIdentifier ?? '',
+                    onClick: setViewPicker,
+                  }
+                : undefined
+            }
+            canMoveUp={canMoveUp}
+            canMoveDown={canMoveDown}
+            onMoveUp={onMoveUp}
+            onMoveDown={onMoveDown}
+            onRemove={onRemove}
+          />
+        ) : null,
     },
     {
       condition: isLinkItem,
