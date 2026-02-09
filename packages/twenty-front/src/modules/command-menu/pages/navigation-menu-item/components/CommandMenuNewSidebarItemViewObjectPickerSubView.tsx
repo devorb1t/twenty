@@ -6,9 +6,9 @@ import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
+import { useFilteredPickerItems } from '@/command-menu/hooks/useFilteredPickerItems';
 import { IconWithBackground } from '@/navigation-menu-item/components/IconWithBackground';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
-import { useFilteredPickerItems } from '@/command-menu/hooks/useFilteredPickerItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 
@@ -78,6 +78,7 @@ export const CommandMenuNewSidebarItemViewObjectPickerSubView = ({
                 )}
                 label={objectMetadataItem.labelPlural}
                 id={objectMetadataItem.id}
+                hasSubMenu
                 onClick={() => onSelectObject(objectMetadataItem)}
               />
             </SelectableListItem>
