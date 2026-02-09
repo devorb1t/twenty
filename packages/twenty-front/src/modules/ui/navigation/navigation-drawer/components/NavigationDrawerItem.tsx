@@ -10,10 +10,10 @@ import isPropValid from '@emotion/is-prop-valid';
 import { css, useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { t } from '@lingui/core/macro';
-import { isDefined } from 'twenty-shared/utils';
 import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
+import { isDefined } from 'twenty-shared/utils';
 import { Pill } from 'twenty-ui/components';
 import {
   AppTooltip,
@@ -229,8 +229,8 @@ const StyledIcon = styled.div<{ $backgroundColor?: string }>`
     css`
       background-color: ${$backgroundColor};
       border-radius: ${theme.border.radius.xs};
-      height: ${theme.spacing(4)};
-      width: ${theme.spacing(4)};
+      height: ${theme.spacing(4.5)};
+      width: ${theme.spacing(4.5)};
     `}
 `;
 
@@ -378,11 +378,11 @@ export const NavigationDrawerItem = ({
               <Icon
                 style={{
                   minWidth: iconBackgroundColor
-                    ? theme.spacing(3)
+                    ? theme.spacing(3.5)
                     : theme.icon.size.md,
                 }}
                 size={
-                  iconBackgroundColor ? theme.spacing(3) : theme.icon.size.md
+                  iconBackgroundColor ? theme.spacing(3.5) : theme.icon.size.md
                 }
                 stroke={theme.icon.stroke.md}
                 color={

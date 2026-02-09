@@ -45,7 +45,7 @@ export const NavigationMenuItemIcon = ({
 
   const avatar = (
     <Avatar
-      size={iconBackgroundColor ? 'xs' : 'md'}
+      size={iconBackgroundColor ? 'sm' : 'md'}
       type={navigationMenuItem.avatarType}
       Icon={IconToUse}
       iconColor={iconColorToUse}

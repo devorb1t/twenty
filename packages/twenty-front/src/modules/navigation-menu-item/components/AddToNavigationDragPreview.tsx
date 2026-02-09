@@ -61,7 +61,9 @@ export const AddToNavigationDragPreview = ({
   theme,
 }: AddToNavigationDragPreviewProps) => {
   const iconBackgroundColor = getIconBackgroundColorForPayload(payload, theme);
-  const iconSize = iconBackgroundColor ? theme.spacing(3) : theme.icon.size.md;
+  const iconSize = iconBackgroundColor
+    ? theme.spacing(3.5)
+    : theme.icon.size.md;
   const iconStroke = theme.icon.stroke.md;
   const iconColor = iconBackgroundColor
     ? theme.grayScale.gray1

@@ -86,7 +86,7 @@ export const CommandMenuFolderLinkInfo = ({
           $backgroundColor={getNavigationMenuItemIconColors(theme)[colorKey]}
         >
           <Icon
-            size={theme.spacing(3)}
+            size={theme.spacing(3.5)}
             color={theme.grayScale.gray1}
             stroke={theme.icon.stroke.md}
           />

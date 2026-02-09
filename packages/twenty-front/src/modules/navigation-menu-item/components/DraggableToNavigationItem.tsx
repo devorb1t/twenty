@@ -64,7 +64,7 @@ export const DraggableToNavigationItem = ({
         >
           {isHovered ? (
             <IconGripVertical
-              size={theme.spacing(3)}
+              size={theme.spacing(3.5)}
               stroke={theme.icon.stroke.md}
               color={theme.font.color.tertiary}
             />
