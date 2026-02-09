@@ -29,7 +29,7 @@ export const NavbarDragProvider = ({ children }: NavbarDragProviderProps) => {
     useHandleWorkspaceNavigationMenuItemDragAndDrop();
   const { handleFavoriteDragAndDrop } = useHandleFavoriteDragAndDrop();
 
-  const handleDragStart = (_: DragStart) => {
+  const handleDragStart = (_dragStart: DragStart) => {
     setIsDragging(true);
   };
 
