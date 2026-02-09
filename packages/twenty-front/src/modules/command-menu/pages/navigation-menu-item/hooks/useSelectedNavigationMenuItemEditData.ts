@@ -54,6 +54,8 @@ export const useSelectedNavigationMenuItemEditData = () => {
     processedItem.itemType === 'view' &&
     selectedItemObjectMetadata !== null &&
     processedItem.viewKey !== ViewKey.Index;
+  const isRecordItem =
+    processedItem !== undefined && processedItem.itemType === 'record';
 
   return {
     selectedItem,
@@ -65,5 +67,6 @@ export const useSelectedNavigationMenuItemEditData = () => {
     isLinkItem,
     isObjectItem,
     isViewItem,
+    isRecordItem,
   };
 };
