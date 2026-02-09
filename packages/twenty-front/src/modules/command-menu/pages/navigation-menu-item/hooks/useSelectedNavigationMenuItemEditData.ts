@@ -1,5 +1,4 @@
 import { useRecoilValue } from 'recoil';
-import { isDefined } from 'twenty-shared/utils';
 
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
