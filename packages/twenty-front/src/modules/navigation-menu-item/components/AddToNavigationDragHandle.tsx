@@ -3,22 +3,22 @@ import styled from '@emotion/styled';
 import type { ReactNode } from 'react';
 import { IconGripVertical, type IconComponent } from 'twenty-ui/display';
 
-import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 import { AddToNavigationIconSlot } from '@/navigation-menu-item/components/AddToNavigationIconSlot';
+import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 
-const StyledIconSlot = styled.div<{ $isDraggable: boolean }>`
+const StyledIconSlot = styled.div`
   align-items: center;
   background: ${({ theme }) => theme.background.transparent.light};
   border-radius: ${({ theme }) => theme.border.radius.sm};
-  cursor: ${({ $isDraggable }) => ($isDraggable ? 'grab' : 'default')};
+  cursor: grab;
   display: flex;
   flex-shrink: 0;
   justify-content: center;
   padding: ${({ theme }) => theme.spacing(1)};
 
   &:active {
-    cursor: ${({ $isDraggable }) => ($isDraggable ? 'grabbing' : 'default')};
+    cursor: grabbing;
   }
 `;
 
@@ -51,7 +51,6 @@ export const AddToNavigationDragHandle = ({
     <StyledIconSlot
       draggable={isDraggable}
       onDragStart={isDraggable ? handleDragStart : undefined}
-      $isDraggable={isDraggable}
     >
       {isHovered ? (
         <IconGripVertical
