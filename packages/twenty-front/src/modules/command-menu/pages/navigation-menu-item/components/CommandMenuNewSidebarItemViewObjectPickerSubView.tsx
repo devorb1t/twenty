@@ -1,3 +1,4 @@
+import { useTheme } from '@emotion/react';
 import { useLingui } from '@lingui/react/macro';
 import { IconSettings, useIcons } from 'twenty-ui/display';
 
@@ -5,6 +6,8 @@ import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
+import { IconWithBackground } from '@/navigation-menu-item/components/IconWithBackground';
+import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { useFilteredPickerItems } from '@/command-menu/hooks/useFilteredPickerItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
@@ -27,7 +30,9 @@ export const CommandMenuNewSidebarItemViewObjectPickerSubView = ({
   onSelectObject,
 }: CommandMenuNewSidebarItemViewObjectPickerSubViewProps) => {
   const { t } = useLingui();
+  const theme = useTheme();
   const { getIcon } = useIcons();
+  const iconColors = getNavigationMenuItemIconColors(theme);
   const { filteredItems, selectableItemIds, isEmpty, hasSearchQuery } =
     useFilteredPickerItems({
       items: objects,
@@ -61,7 +66,14 @@ export const CommandMenuNewSidebarItemViewObjectPickerSubView = ({
               onEnter={() => onSelectObject(objectMetadataItem)}
             >
               <CommandMenuItem
-                Icon={getIcon(objectMetadataItem.icon)}
+                Icon={({ size, stroke }) => (
+                  <IconWithBackground
+                    Icon={getIcon(objectMetadataItem.icon)}
+                    backgroundColor={iconColors.object}
+                    size={size}
+                    stroke={stroke}
+                  />
+                )}
                 label={objectMetadataItem.labelPlural}
                 id={objectMetadataItem.id}
                 onClick={() => onSelectObject(objectMetadataItem)}

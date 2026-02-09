@@ -62,6 +62,15 @@ export const CommandMenuItemWithAddToNavigationDrag = ({
     event.dataTransfer.setDragImage(preview, 0, 0);
   };
 
+  const DragHandleIcon = () => (
+    <AddToNavigationDragHandle
+      icon={icon}
+      payload={payload}
+      isHovered={isHovered}
+      draggable={false}
+    />
+  );
+
   return (
     <StyledDraggableMenuItem
       draggable
@@ -70,18 +79,11 @@ export const CommandMenuItemWithAddToNavigationDrag = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       <CommandMenuItem
+        Icon={DragHandleIcon}
         label={label}
         description={contextualDescription}
         id={id}
         onClick={onClick}
-        LeftComponent={
-          <AddToNavigationDragHandle
-            icon={icon}
-            payload={payload}
-            isHovered={isHovered}
-            draggable={false}
-          />
-        }
       />
     </StyledDraggableMenuItem>
   );

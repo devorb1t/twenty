@@ -1,11 +1,11 @@
 import { isNonEmptyString } from '@sniptt/guards';
+import { type ReactNode } from 'react';
+import { IconArrowUpRight, type IconComponent } from 'twenty-ui/display';
+import { MenuItem } from 'twenty-ui/navigation';
 
 import { useCommandMenuOnItemClick } from '@/command-menu/hooks/useCommandMenuOnItemClick';
 import { isSelectedItemIdComponentFamilySelector } from '@/ui/layout/selectable-list/states/selectors/isSelectedItemIdComponentFamilySelector';
 import { useRecoilComponentFamilyValue } from '@/ui/utilities/state/component-state/hooks/useRecoilComponentFamilyValue';
-import { type ReactNode } from 'react';
-import { IconArrowUpRight, type IconComponent } from 'twenty-ui/display';
-import { MenuItem } from 'twenty-ui/navigation';
 
 export type CommandMenuItemProps = {
   label: string;
