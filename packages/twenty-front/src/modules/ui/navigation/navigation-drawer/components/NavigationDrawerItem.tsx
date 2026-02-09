@@ -360,6 +360,7 @@ export const NavigationDrawerItem = ({
         href={isExternalLink ? to : undefined}
         target={isExternalLink ? '_blank' : undefined}
         rel={isExternalLink ? 'noopener noreferrer' : undefined}
+        draggable={to && !isExternalLink ? false : undefined}
         indentationLevel={indentationLevel}
         isNavigationDrawerExpanded={isNavigationDrawerExpanded}
         isDragging={isDragging}

@@ -19,6 +19,7 @@ export type NavigationDrawerItemForObjectMetadataItemProps = {
   isSelectedInEditMode?: boolean;
   onEditModeClick?: () => void;
   onActiveItemClickWhenNotInEditMode?: () => void;
+  isDragging?: boolean;
 };
 
 export const NavigationDrawerItemForObjectMetadataItem = ({
@@ -28,6 +29,7 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
   isSelectedInEditMode = false,
   onEditModeClick,
   onActiveItemClickWhenNotInEditMode,
+  isDragging = false,
 }: NavigationDrawerItemForObjectMetadataItemProps) => {
   const theme = useTheme();
   const iconColors = getNavigationMenuItemIconColors(theme);
@@ -125,12 +127,20 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
     <NavigationDrawerItem
       label={label}
       secondaryLabel={secondaryLabel}
-      to={shouldNavigate ? navigationPath : undefined}
+      to={
+        isEditMode || isDragging
+          ? undefined
+          : shouldNavigate
+            ? navigationPath
+            : undefined
+      }
       onClick={handleClick}
       Icon={Icon}
       iconBackgroundColor={iconBackgroundColor}
       active={isActive}
       isSelectedInEditMode={isSelectedInEditMode}
+      isDragging={isDragging}
+      triggerEvent={isEditMode ? 'CLICK' : undefined}
     />
   );
 };

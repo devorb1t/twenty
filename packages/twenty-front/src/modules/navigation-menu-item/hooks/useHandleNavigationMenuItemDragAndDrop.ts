@@ -1,7 +1,7 @@
 import { type OnDragEndResponder } from '@hello-pangea/dnd';
 import { useSetRecoilState } from 'recoil';
 
-import { ORPHAN_NAVIGATION_MENU_ITEMS_DROPPABLE_ID } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
+import { NAVIGATION_MENU_ITEM_DROPPABLE_IDS } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
 import { useSortedNavigationMenuItems } from '@/navigation-menu-item/hooks/useSortedNavigationMenuItems';
 import { useUpdateNavigationMenuItem } from '@/navigation-menu-item/hooks/useUpdateNavigationMenuItem';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
@@ -57,11 +57,13 @@ export const useHandleNavigationMenuItemDragAndDrop = () => {
 
     const destinationFolderId = validateAndExtractFolderId({
       droppableId: destination.droppableId,
-      orphanDroppableId: ORPHAN_NAVIGATION_MENU_ITEMS_DROPPABLE_ID,
+      orphanDroppableId:
+        NAVIGATION_MENU_ITEM_DROPPABLE_IDS.ORPHAN_NAVIGATION_MENU_ITEMS,
     });
     const sourceFolderId = validateAndExtractFolderId({
       droppableId: source.droppableId,
-      orphanDroppableId: ORPHAN_NAVIGATION_MENU_ITEMS_DROPPABLE_ID,
+      orphanDroppableId:
+        NAVIGATION_MENU_ITEM_DROPPABLE_IDS.ORPHAN_NAVIGATION_MENU_ITEMS,
     });
 
     if (

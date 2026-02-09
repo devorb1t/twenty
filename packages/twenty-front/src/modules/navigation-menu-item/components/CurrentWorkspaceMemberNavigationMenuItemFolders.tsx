@@ -6,7 +6,6 @@ import { LightIconButton } from 'twenty-ui/input';
 
 import { currentWorkspaceMemberState } from '@/auth/states/currentWorkspaceMemberState';
 import { CurrentWorkspaceMemberOrphanNavigationMenuItems } from '@/navigation-menu-item/components/CurrentWorkspaceMemberOrphanNavigationMenuItems';
-import { NavigationMenuItemDragProvider } from '@/navigation-menu-item/components/NavigationMenuItemDragProvider';
 import { NavigationMenuItemFolders } from '@/navigation-menu-item/components/NavigationMenuItemFolders';
 import { NavigationMenuItemSkeletonLoader } from '@/navigation-menu-item/components/NavigationMenuItemSkeletonLoader';
 import { useNavigationMenuItemsByFolder } from '@/navigation-menu-item/hooks/useNavigationMenuItemsByFolder';
@@ -73,12 +72,12 @@ export const CurrentWorkspaceMemberNavigationMenuItemFolders = () => {
         />
       </NavigationDrawerAnimatedCollapseWrapper>
       {isNavigationSectionOpen && (
-        <NavigationMenuItemDragProvider>
+        <>
           <NavigationMenuItemFolders
             isNavigationSectionOpen={isNavigationSectionOpen}
           />
           <CurrentWorkspaceMemberOrphanNavigationMenuItems />
-        </NavigationMenuItemDragProvider>
+        </>
       )}
     </NavigationDrawerSection>
   );

@@ -8,7 +8,7 @@ import { LightIconButton } from 'twenty-ui/input';
 import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
 import { NavigationMenuItemDroppable } from '@/navigation-menu-item/components/NavigationMenuItemDroppable';
 import { NavigationMenuItemIcon } from '@/navigation-menu-item/components/NavigationMenuItemIcon';
-import { ORPHAN_NAVIGATION_MENU_ITEMS_DROPPABLE_ID } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
+import { NAVIGATION_MENU_ITEM_DROPPABLE_IDS } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
 import { NavigationMenuItemDragContext } from '@/navigation-menu-item/contexts/NavigationMenuItemDragContext';
 import { useDeleteNavigationMenuItem } from '@/navigation-menu-item/hooks/useDeleteNavigationMenuItem';
 import { useSortedNavigationMenuItems } from '@/navigation-menu-item/hooks/useSortedNavigationMenuItems';
@@ -40,7 +40,9 @@ export const CurrentWorkspaceMemberOrphanNavigationMenuItems = () => {
 
   return (
     <NavigationMenuItemDroppable
-      droppableId={ORPHAN_NAVIGATION_MENU_ITEMS_DROPPABLE_ID}
+      droppableId={
+        NAVIGATION_MENU_ITEM_DROPPABLE_IDS.ORPHAN_NAVIGATION_MENU_ITEMS
+      }
     >
       {orphanNavigationMenuItems.length > 0 ? (
         <>
