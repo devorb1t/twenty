@@ -1,8 +1,8 @@
 import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { Droppable } from '@hello-pangea/dnd';
-import { useContext } from 'react';
 import { isNonEmptyString } from '@sniptt/guards';
+import { useContext } from 'react';
 import { isDefined } from 'twenty-shared/utils';
 
 import { useIsDropDisabledForSection } from '@/navigation-menu-item/hooks/useIsDropDisabledForSection';
@@ -43,8 +43,12 @@ const StyledFolderContainer = styled.div<{ $isSelectedInEditMode: boolean }>`
   border-radius: ${({ theme }) => theme.border.radius.sm};
 `;
 
-const StyledFolderDroppableContent = styled.div`
-  padding-bottom: ${({ theme }) => theme.spacing(2)};
+const StyledFolderDroppableContent = styled.div<{
+  $isEditMode: boolean;
+  $isEmpty: boolean;
+}>`
+  padding-bottom: ${({ theme, $isEditMode, $isEmpty }) =>
+    $isEditMode || $isEmpty ? 0 : theme.spacing(2)};
 `;
 
 const StyledFolderExpandableWrapper = styled.div`
@@ -182,6 +186,8 @@ export const WorkspaceNavigationMenuItemsFolder = ({
               {(provided) => (
                 <StyledFolderDroppableContent
                   ref={provided.innerRef}
+                  $isEditMode={isEditMode}
+                  $isEmpty={navigationMenuItems.length === 0}
                   // eslint-disable-next-line react/jsx-props-no-spreading
                   {...provided.droppableProps}
                 >
