@@ -12,7 +12,6 @@ import { useUpdateLinkInDraft } from '@/navigation-menu-item/hooks/useUpdateLink
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
-import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { TitleInput } from '@/ui/input/components/TitleInput';
 import { useRecoilComponentState } from '@/ui/utilities/state/component-state/hooks/useRecoilComponentState';
 
@@ -47,7 +46,7 @@ export const CommandMenuFolderLinkInfo = ({
   const selectedItem = selectedNavigationMenuItemInEditMode
     ? items.find(
         (item) =>
-          getNavigationMenuItemType(item) === type &&
+          item.itemType === type &&
           item.id === selectedNavigationMenuItemInEditMode,
       )
     : undefined;

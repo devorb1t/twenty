@@ -10,7 +10,6 @@ import {
   type NavigationMenuItemClickParams,
 } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
-import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { NavigationDrawerItemForObjectMetadataItem } from '@/object-metadata/components/NavigationDrawerItemForObjectMetadataItem';
@@ -72,15 +71,15 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
   }, new Map());
 
   const folderCount = flatItems.filter(
-    (item) => getNavigationMenuItemType(item) === 'folder',
+    (item) => item.itemType === 'folder',
   ).length;
 
   const filteredItems = flatItems.filter((item) => {
-    const type = getNavigationMenuItemType(item);
+    const type = item.itemType;
     if (type === 'folder' || type === 'link') {
       return true;
     }
-    if (type === 'objectView' || type === 'recordView') {
+    if (type === 'view' || type === 'record') {
       const objectMetadataItem = getObjectMetadataForNavigationMenuItem(
         item as ProcessedNavigationMenuItem,
         objectMetadataItems,
@@ -103,9 +102,9 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
       isSelectedInEditMode: selectedNavigationMenuItemId === itemId,
       onEditModeClick: onNavigationMenuItemClick
         ? () => {
-            const type = getNavigationMenuItemType(item);
+            const type = item.itemType;
             const objectMetadataItem =
-              type === 'objectView' || type === 'recordView'
+              type === 'view' || type === 'record'
                 ? getObjectMetadataForNavigationMenuItem(
                     item as ProcessedNavigationMenuItem,
                     objectMetadataItems,
@@ -137,7 +136,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
       {isNavigationSectionOpen && (
         <>
           {filteredItems.map((item, index) => {
-            const type = getNavigationMenuItemType(item);
+            const type = item.itemType;
             const editModeProps = getEditModeProps(item);
 
             if (type === 'folder') {

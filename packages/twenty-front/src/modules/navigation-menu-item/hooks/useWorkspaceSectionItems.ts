@@ -16,7 +16,7 @@ import { useSortedNavigationMenuItems } from './useSortedNavigationMenuItems';
 
 export type FlatWorkspaceItem =
   | ProcessedNavigationMenuItem
-  | NavigationMenuItem;
+  | (NavigationMenuItem & { itemType: 'folder' });
 
 export type NavigationMenuItemClickParams = {
   item: FlatWorkspaceItem;
@@ -54,7 +54,7 @@ export const useWorkspaceSectionItems = (): FlatWorkspaceItem[] => {
   >((acc, item) => {
     if (isNavigationMenuItemFolder(item)) {
       if (isDefined(folderChildrenById.get(item.id))) {
-        acc.push(item);
+        acc.push({ ...item, itemType: 'folder' as const });
       }
     } else {
       const processedItem = processedObjectViewsById.get(item.id);
@@ -78,7 +78,7 @@ export const useWorkspaceSectionItems = (): FlatWorkspaceItem[] => {
   }, []);
 
   return flatItems.flatMap((item) =>
-    isNavigationMenuItemFolder(item)
+    item.itemType === 'folder'
       ? [item, ...(folderChildrenById.get(item.id) ?? [])]
       : [item],
   );
