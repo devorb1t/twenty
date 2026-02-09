@@ -12,7 +12,7 @@ const StyledSubViewContainer = styled.div`
 `;
 
 const StyledSearchContainer = styled.div`
-  border-bottom: 1px solid ${({ theme }) => theme.border.color.medium};
+  border-bottom: 1px solid ${({ theme }) => theme.border.color.light};
   min-width: 0;
   padding: ${({ theme }) => theme.spacing(2, 3)};
 `;
