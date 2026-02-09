@@ -15,12 +15,11 @@ import { CommandMenuSystemObjectPickerSubView } from '@/command-menu/pages/navig
 import { useAddFolderToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddFolderToNavigationMenuDraft';
 import { useAddLinkToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddLinkToNavigationMenuDraft';
 import { useAddObjectToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddObjectToNavigationMenuDraft';
+import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
-import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
-import { useWorkspaceNavigationMenuItems } from '@/navigation-menu-item/hooks/useWorkspaceNavigationMenuItems';
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
@@ -56,47 +55,32 @@ export const CommandMenuNewSidebarItemPage = () => {
   );
   const { openNavigationMenuItemInCommandMenu } =
     useOpenNavigationMenuItemInCommandMenu();
-  const { workspaceNavigationMenuItemsObjectMetadataItems } =
-    useWorkspaceNavigationMenuItems();
   const { activeNonSystemObjectMetadataItems } =
     useFilteredObjectMetadataItems();
-
-  const objectMetadataItemsInWorkspaceIds = new Set(
-    workspaceNavigationMenuItemsObjectMetadataItems.map((item) => item.id),
-  );
 
   const currentDraft = isDefined(navigationMenuItemsDraft)
     ? navigationMenuItemsDraft
     : workspaceNavigationMenuItems;
 
-  const {
-    views,
-    objectMetadataIdsInWorkspace,
-    objectMetadataIdsWithIndexView,
-    viewIdsInWorkspace,
-  } = useNavigationMenuObjectMetadataFromDraft(currentDraft);
+  const { views, objectMetadataIdsWithIndexView } =
+    useNavigationMenuObjectMetadataFromDraft(currentDraft);
 
   const objectMetadataIdsWithDisplayableViews = new Set(
     views
-      .filter(
-        (view) =>
-          view.key !== ViewKey.Index && !viewIdsInWorkspace.has(view.id),
-      )
+      .filter((view) => view.key !== ViewKey.Index)
       .map((view) => view.objectMetadataId),
   );
 
-  const availableObjectMetadataItems = activeNonSystemObjectMetadataItems
-    .filter((item) => !objectMetadataItemsInWorkspaceIds.has(item.id))
-    .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
+  const availableObjectMetadataItems = activeNonSystemObjectMetadataItems.sort(
+    (a, b) => a.labelPlural.localeCompare(b.labelPlural),
+  );
 
   const activeSystemObjectMetadataItems = objectMetadataItems
     .filter((item) => item.isActive && item.isSystem)
     .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
   const availableSystemObjectMetadataItems =
-    activeSystemObjectMetadataItems.filter(
-      (item) =>
-        !objectMetadataIdsInWorkspace.has(item.id) &&
-        objectMetadataIdsWithIndexView.has(item.id),
+    activeSystemObjectMetadataItems.filter((item) =>
+      objectMetadataIdsWithIndexView.has(item.id),
     );
 
   const objectMetadataItemsWithViews = objectMetadataItems

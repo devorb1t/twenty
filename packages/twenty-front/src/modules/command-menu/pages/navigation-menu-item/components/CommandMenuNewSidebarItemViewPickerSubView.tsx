@@ -32,14 +32,12 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
   const { addViewToDraft } = useAddViewToNavigationMenuDraft();
   const { currentDraft } = useNavigationMenuItemEditFolderData();
   const { objectMetadataItems } = useObjectMetadataItems();
-  const { views, viewIdsInWorkspace } =
-    useNavigationMenuObjectMetadataFromDraft(currentDraft);
+  const { views } = useNavigationMenuObjectMetadataFromDraft(currentDraft);
 
   const viewsForSelectedObject = views
     .filter(
       (view) =>
         view.objectMetadataId === selectedObjectMetadataIdForView &&
-        !viewIdsInWorkspace.has(view.id) &&
         view.key !== ViewKey.Index,
     )
     .sort((a, b) => a.position - b.position);
