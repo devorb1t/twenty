@@ -13,9 +13,9 @@ import { useAddObjectToNavigationMenuDraft } from '@/navigation-menu-item/hooks/
 import { useAddRecordToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddRecordToNavigationMenuDraft';
 import { useAddViewToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddViewToNavigationMenuDraft';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
-import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
+import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { type AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
@@ -219,6 +219,21 @@ export const NavigationSidebarNativeDropZone = ({
   };
 
   useEffect(() => {
+    const handleDocumentDragStart = (event: DragEvent) => {
+      if (!event.dataTransfer?.types.includes(ADD_TO_NAVIGATION_DRAG.TYPE)) {
+        return;
+      }
+      const itemsInFolder = currentDraft.filter(
+        (item) => (item.folderId ?? null) === null,
+      );
+      setActiveDropTargetId(`orphan-${itemsInFolder.length}`);
+    };
+
+    const handleDocumentDragEnd = () => {
+      setActiveDropTargetId(null);
+      setForbiddenDropTargetId(null);
+    };
+
     const handleDocumentDrop = (event: DragEvent) => {
       if (!event.dataTransfer?.types.includes(ADD_TO_NAVIGATION_DRAG.TYPE)) {
         return;
@@ -226,16 +241,6 @@ export const NavigationSidebarNativeDropZone = ({
 
       const data = event.dataTransfer.getData(ADD_TO_NAVIGATION_DRAG.TYPE);
       if (!data) return;
-
-      const element = document.elementFromPoint(
-        event.clientX,
-        event.clientY,
-      ) as HTMLElement | null;
-      const isDropInSidebar = element?.closest(`[${DROP_ZONE_ATTR}]`);
-
-      if (!isDropInSidebar) {
-        return;
-      }
 
       event.preventDefault();
       event.stopPropagation();
@@ -260,16 +265,25 @@ export const NavigationSidebarNativeDropZone = ({
         isDefined(dropTargetElement) &&
         dropTargetElement.getAttribute(DROP_FOLDER_ATTR) !== 'orphan';
 
-      if (isDefined(isOverSidebar)) {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = isFolderOverFolder ? 'none' : 'copy';
+      if (!isOverSidebar) {
+        const itemsInFolder = currentDraft.filter(
+          (item) => (item.folderId ?? null) === null,
+        );
+        setActiveDropTargetId(`orphan-${itemsInFolder.length}`);
       }
+
+      event.preventDefault();
+      event.dataTransfer.dropEffect = isFolderOverFolder ? 'none' : 'copy';
     };
 
+    document.addEventListener('dragstart', handleDocumentDragStart, false);
+    document.addEventListener('dragend', handleDocumentDragEnd, false);
     document.addEventListener('drop', handleDocumentDrop, true);
     document.addEventListener('dragover', handleDocumentDragOver, true);
 
     return () => {
+      document.removeEventListener('dragstart', handleDocumentDragStart, false);
+      document.removeEventListener('dragend', handleDocumentDragEnd, false);
       document.removeEventListener('drop', handleDocumentDrop, true);
       document.removeEventListener('dragover', handleDocumentDragOver, true);
     };
