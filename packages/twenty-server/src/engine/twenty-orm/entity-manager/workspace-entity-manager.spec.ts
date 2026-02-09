@@ -235,7 +235,6 @@ describe('WorkspaceEntityManager', () => {
         IS_TASK_TARGET_MIGRATED: false,
         IS_TIMELINE_ACTIVITY_MIGRATED: false,
         IS_GLOBAL_WORKSPACE_DATASOURCE_ENABLED: false,
-        IS_ROW_LEVEL_PERMISSION_PREDICATES_ENABLED: false,
         IS_JUNCTION_RELATIONS_ENABLED: false,
         IS_SSE_DB_EVENTS_ENABLED: false,
         IS_COMMAND_MENU_ITEM_ENABLED: false,
@@ -243,6 +242,7 @@ describe('WorkspaceEntityManager', () => {
         IS_APPLICATION_INSTALLATION_FROM_TARBALL_ENABLED: false,
         IS_RECORD_PAGE_LAYOUT_EDITING_ENABLED: false,
         IS_MARKETPLACE_ENABLED: false,
+        IS_FILES_FIELD_MIGRATED: false,
       },
       userWorkspaceRoleMap: {},
       eventEmitterService: {
@@ -268,7 +268,6 @@ describe('WorkspaceEntityManager', () => {
         IS_PUBLIC_DOMAIN_ENABLED: false,
         IS_EMAILING_DOMAIN_ENABLED: false,
         IS_DASHBOARD_V2_ENABLED: false,
-        IS_ROW_LEVEL_PERMISSION_PREDICATES_ENABLED: false,
       },
       permissionsPerRoleId: {},
       eventEmitterService: mockInternalContext.eventEmitterService,
