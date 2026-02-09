@@ -7,6 +7,7 @@ import { IconFolder, IconLink, useIcons } from 'twenty-ui/display';
 
 import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
+import { NAVIGATION_SECTIONS } from '@/navigation-menu-item/constants/NavigationSections.constants';
 import { useAddFolderToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddFolderToNavigationMenuDraft';
 import { useAddLinkToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddLinkToNavigationMenuDraft';
 import { useAddObjectToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddObjectToNavigationMenuDraft';
@@ -23,6 +24,8 @@ import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadat
 import { coreViewsState } from '@/views/states/coreViewState';
 import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
 
+const COMMAND_MENU_PANEL_ATTR = 'data-command-menu-panel';
+const DROP_SECTION_ATTR = 'data-navigation-drop-section';
 const DROP_TARGET_ATTR = 'data-navigation-drop-target';
 const DROP_FOLDER_ATTR = 'data-navigation-drop-folder';
 const DROP_INDEX_ATTR = 'data-navigation-drop-index';
@@ -86,7 +89,21 @@ export const NavigationSidebarNativeDropZone = ({
       event.clientX,
       event.clientY,
     ) as HTMLElement | null;
+    const isInsideCommandMenu = Boolean(
+      element?.closest(`[${COMMAND_MENU_PANEL_ATTR}]`),
+    );
+    if (isInsideCommandMenu) {
+      return;
+    }
     const dropTargetElement = element?.closest(`[${DROP_TARGET_ATTR}]`);
+    const dropSection = dropTargetElement?.getAttribute(DROP_SECTION_ATTR);
+    if (
+      isDefined(dropTargetElement) &&
+      isDefined(dropSection) &&
+      dropSection !== NAVIGATION_SECTIONS.WORKSPACE
+    ) {
+      return;
+    }
 
     let folderId: string | null = null;
     let index = 0;
@@ -226,7 +243,9 @@ export const NavigationSidebarNativeDropZone = ({
       const itemsInFolder = currentDraft.filter(
         (item) => (item.folderId ?? null) === null,
       );
-      setActiveDropTargetId(`orphan-${itemsInFolder.length}`);
+      setActiveDropTargetId(
+        `${NAVIGATION_SECTIONS.WORKSPACE}-orphan-${itemsInFolder.length}`,
+      );
     };
 
     const handleDocumentDragEnd = () => {
@@ -269,7 +288,9 @@ export const NavigationSidebarNativeDropZone = ({
         const itemsInFolder = currentDraft.filter(
           (item) => (item.folderId ?? null) === null,
         );
-        setActiveDropTargetId(`orphan-${itemsInFolder.length}`);
+        setActiveDropTargetId(
+          `${NAVIGATION_SECTIONS.WORKSPACE}-orphan-${itemsInFolder.length}`,
+        );
       }
 
       event.preventDefault();

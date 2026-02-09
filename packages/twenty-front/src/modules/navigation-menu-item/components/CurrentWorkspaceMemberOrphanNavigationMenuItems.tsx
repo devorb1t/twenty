@@ -6,6 +6,7 @@ import { IconHeartOff } from 'twenty-ui/display';
 import { LightIconButton } from 'twenty-ui/input';
 
 import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
+import { NAVIGATION_SECTIONS } from '@/navigation-menu-item/constants/NavigationSections.constants';
 import { NavigationMenuItemDroppable } from '@/navigation-menu-item/components/NavigationMenuItemDroppable';
 import { NavigationMenuItemIcon } from '@/navigation-menu-item/components/NavigationMenuItemIcon';
 import { NAVIGATION_MENU_ITEM_DROPPABLE_IDS } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
@@ -43,6 +44,7 @@ export const CurrentWorkspaceMemberOrphanNavigationMenuItems = () => {
       droppableId={
         NAVIGATION_MENU_ITEM_DROPPABLE_IDS.ORPHAN_NAVIGATION_MENU_ITEMS
       }
+      isWorkspaceSection={false}
     >
       {orphanNavigationMenuItems.length > 0 ? (
         <>
@@ -51,6 +53,7 @@ export const CurrentWorkspaceMemberOrphanNavigationMenuItems = () => {
               key={navigationMenuItem.id}
               folderId={null}
               index={index}
+              sectionId={NAVIGATION_SECTIONS.FAVORITES}
             >
               <DraggableItem
                 draggableId={navigationMenuItem.id}
@@ -96,6 +99,7 @@ export const CurrentWorkspaceMemberOrphanNavigationMenuItems = () => {
           <NavigationItemDropTarget
             folderId={null}
             index={orphanNavigationMenuItems.length}
+            sectionId={NAVIGATION_SECTIONS.FAVORITES}
           />
         </>
       ) : (

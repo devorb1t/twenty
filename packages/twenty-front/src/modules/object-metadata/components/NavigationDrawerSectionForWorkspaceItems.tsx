@@ -3,6 +3,9 @@ import { Droppable } from '@hello-pangea/dnd';
 import { useContext } from 'react';
 import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
+
+import { useIsDropDisabledForSection } from '@/navigation-menu-item/hooks/useIsDropDisabledForSection';
+import { NAVIGATION_SECTIONS } from '@/navigation-menu-item/constants/NavigationSections.constants';
 import { IconLink } from 'twenty-ui/display';
 
 import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
@@ -53,6 +56,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
   onActiveObjectMetadataItemClick,
 }: NavigationDrawerSectionForWorkspaceItemsProps) => {
   const theme = useTheme();
+  const workspaceDropDisabled = useIsDropDisabledForSection(true);
   const { toggleNavigationSection, isNavigationSectionOpenState } =
     useNavigationSection('Workspace');
   const isNavigationSectionOpen = useRecoilValue(isNavigationSectionOpenState);
@@ -145,6 +149,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
           droppableId={
             NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_ORPHAN_NAVIGATION_MENU_ITEMS
           }
+          isDropDisabled={workspaceDropDisabled}
         >
           {(provided) => (
             <div
@@ -162,6 +167,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
                       key={item.id}
                       folderId={null}
                       index={index}
+                      sectionId={NAVIGATION_SECTIONS.WORKSPACE}
                     >
                       <DraggableItem
                         draggableId={item.id}
@@ -204,6 +210,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
                       key={item.id}
                       folderId={null}
                       index={index}
+                      sectionId={NAVIGATION_SECTIONS.WORKSPACE}
                     >
                       <DraggableItem
                         draggableId={item.id}
@@ -252,6 +259,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
                     key={item.id}
                     folderId={null}
                     index={index}
+                    sectionId={NAVIGATION_SECTIONS.WORKSPACE}
                   >
                     <DraggableItem
                       draggableId={item.id}
@@ -290,6 +298,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
               <NavigationItemDropTarget
                 folderId={null}
                 index={filteredItems.length}
+                sectionId={NAVIGATION_SECTIONS.WORKSPACE}
               />
             </div>
           )}

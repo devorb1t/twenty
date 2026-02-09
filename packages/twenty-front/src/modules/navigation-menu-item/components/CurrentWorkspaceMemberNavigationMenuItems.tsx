@@ -2,6 +2,9 @@ import { useTheme } from '@emotion/react';
 import { Droppable } from '@hello-pangea/dnd';
 import { useLingui } from '@lingui/react/macro';
 import { useContext, useState } from 'react';
+
+import { useIsDropDisabledForSection } from '@/navigation-menu-item/hooks/useIsDropDisabledForSection';
+import { NAVIGATION_SECTIONS } from '@/navigation-menu-item/constants/NavigationSections.constants';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
@@ -115,6 +118,7 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
   );
 
   const { deleteNavigationMenuItem } = useDeleteNavigationMenuItem();
+  const folderContentDropDisabled = useIsDropDisabledForSection(false);
 
   const navigationMenuItemFolderContentLength =
     folder.navigationMenuItems.length;
@@ -196,8 +200,17 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
         ) : (
           <NavigationMenuItemDroppable
             droppableId={`folder-header-${folder.id}`}
+            isWorkspaceSection={isWorkspaceFolder}
           >
-            <NavigationItemDropTarget folderId={folder.id} index={0}>
+            <NavigationItemDropTarget
+              folderId={folder.id}
+              index={0}
+              sectionId={
+                isWorkspaceFolder
+                  ? NAVIGATION_SECTIONS.WORKSPACE
+                  : NAVIGATION_SECTIONS.FAVORITES
+              }
+            >
               <NavigationDrawerItem
                 label={folder.folderName}
                 Icon={isOpen ? IconFolderOpen : IconFolder}
@@ -219,7 +232,10 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
           mode="fit-content"
           containAnimation
         >
-          <Droppable droppableId={`folder-${folder.id}`}>
+          <Droppable
+            droppableId={`folder-${folder.id}`}
+            isDropDisabled={folderContentDropDisabled}
+          >
             {(provided) => (
               <div
                 ref={provided.innerRef}

@@ -2,9 +2,11 @@ import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { Droppable } from '@hello-pangea/dnd';
 import { useContext } from 'react';
+import { isDefined } from 'twenty-shared/utils';
+
+import { useIsDropDisabledForSection } from '@/navigation-menu-item/hooks/useIsDropDisabledForSection';
 import { useLocation } from 'react-router-dom';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { isDefined } from 'twenty-shared/utils';
 import { IconFolder, IconFolderOpen } from 'twenty-ui/display';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
 import { useIsMobile } from 'twenty-ui/utilities';
@@ -118,12 +120,14 @@ export const WorkspaceNavigationMenuItemsFolder = ({
   const { isDragging: isContextDragging } = useContext(
     NavigationMenuItemDragContext,
   );
+  const folderContentDropDisabled = useIsDropDisabledForSection(true);
 
   return (
     <StyledFolderContainer $isSelectedInEditMode={isSelectedInEditMode}>
       <NavigationDrawerItemsCollapsableContainer isGroup={isGroup}>
         <NavigationMenuItemDroppable
           droppableId={`${NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_FOLDER_HEADER_PREFIX}${folderId}`}
+          isWorkspaceSection={true}
         >
           <NavigationDrawerItem
             label={folderName}
@@ -146,6 +150,7 @@ export const WorkspaceNavigationMenuItemsFolder = ({
           >
             <Droppable
               droppableId={`${NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_FOLDER_PREFIX}${folderId}`}
+              isDropDisabled={folderContentDropDisabled}
               ignoreContainerClipping
               renderClone={(provided, snapshot, rubric) => (
                 <WorkspaceNavigationMenuItemFolderDragClone

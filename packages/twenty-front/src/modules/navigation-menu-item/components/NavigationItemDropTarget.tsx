@@ -3,6 +3,8 @@ import { type ReactNode, useContext, useRef } from 'react';
 
 import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
 import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
+import { NAVIGATION_SECTIONS } from '@/navigation-menu-item/constants/NavigationSections.constants';
+import type { NavigationSectionId } from '@/navigation-menu-item/types/NavigationSectionId';
 
 const StyledDropTarget = styled.div<{
   $isDragOver: boolean;
@@ -48,15 +50,19 @@ const StyledDropTarget = styled.div<{
   `}
 `;
 
+export type NavigationItemDropTargetSectionId = NavigationSectionId;
+
 type NavigationItemDropTargetProps = {
   folderId: string | null;
   index: number;
+  sectionId: NavigationItemDropTargetSectionId;
   children?: ReactNode;
 };
 
 export const NavigationItemDropTarget = ({
   folderId,
   index,
+  sectionId,
   children,
 }: NavigationItemDropTargetProps) => {
   const {
@@ -66,7 +72,7 @@ export const NavigationItemDropTarget = ({
     setForbiddenDropTargetId,
   } = useContext(NavigationDropTargetContext);
   const ref = useRef<HTMLDivElement>(null);
-  const dropTargetId = `${folderId ?? 'orphan'}-${index}`;
+  const dropTargetId = `${sectionId}-${folderId ?? 'orphan'}-${index}`;
   const isDragOver = activeDropTargetId === dropTargetId;
   const isDropForbidden = forbiddenDropTargetId === dropTargetId;
   const isFolderTarget = folderId !== null;
@@ -76,6 +82,12 @@ export const NavigationItemDropTarget = ({
       return;
     }
     event.preventDefault();
+    if (sectionId === NAVIGATION_SECTIONS.FAVORITES) {
+      event.dataTransfer.dropEffect = 'none';
+      setForbiddenDropTargetId(dropTargetId);
+      setActiveDropTargetId(null);
+      return;
+    }
     const isFolderDrag = event.dataTransfer.types.includes(
       ADD_TO_NAVIGATION_DRAG.FOLDER_TYPE,
     );
@@ -108,6 +120,7 @@ export const NavigationItemDropTarget = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       data-navigation-drop-target=""
+      data-navigation-drop-section={sectionId}
       data-navigation-drop-folder={folderId ?? 'orphan'}
       data-navigation-drop-index={String(index)}
     >

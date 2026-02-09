@@ -9,6 +9,7 @@ import { FeatureFlagKey } from '~/generated-metadata/graphql';
 
 import { FavoritesDragContext } from '@/favorites/contexts/FavoritesDragContext';
 import { useHandleFavoriteDragAndDrop } from '@/favorites/hooks/useHandleFavoriteDragAndDrop';
+import { NavigationDragSourceContext } from '@/navigation-menu-item/contexts/NavigationDragSourceContext';
 import { NavigationMenuItemDragContext } from '@/navigation-menu-item/contexts/NavigationMenuItemDragContext';
 import { useHandleNavigationMenuItemDragAndDrop } from '@/navigation-menu-item/hooks/useHandleNavigationMenuItemDragAndDrop';
 import { useHandleWorkspaceNavigationMenuItemDragAndDrop } from '@/navigation-menu-item/hooks/useHandleWorkspaceNavigationMenuItemDragAndDrop';
@@ -23,18 +24,23 @@ export const NavbarDragProvider = ({ children }: NavbarDragProviderProps) => {
     FeatureFlagKey.IS_NAVIGATION_MENU_ITEM_ENABLED,
   );
   const [isDragging, setIsDragging] = useState(false);
+  const [sourceDroppableId, setSourceDroppableId] = useState<string | null>(
+    null,
+  );
   const { handleNavigationMenuItemDragAndDrop } =
     useHandleNavigationMenuItemDragAndDrop();
   const { handleWorkspaceNavigationMenuItemDragAndDrop } =
     useHandleWorkspaceNavigationMenuItemDragAndDrop();
   const { handleFavoriteDragAndDrop } = useHandleFavoriteDragAndDrop();
 
-  const handleDragStart = (_dragStart: DragStart) => {
+  const handleDragStart = (dragStart: DragStart) => {
     setIsDragging(true);
+    setSourceDroppableId(dragStart.source.droppableId);
   };
 
   const handleDragEnd = (result: DropResult, provided: ResponderProvided) => {
     setIsDragging(false);
+    setSourceDroppableId(null);
 
     if (isNavigationMenuItemEnabled) {
       const isWorkspaceDrop =
@@ -51,15 +57,17 @@ export const NavbarDragProvider = ({ children }: NavbarDragProviderProps) => {
   };
 
   return (
-    <NavigationMenuItemDragContext.Provider value={{ isDragging }}>
-      <FavoritesDragContext.Provider value={{ isDragging }}>
-        <DragDropContext
-          onDragEnd={handleDragEnd}
-          onDragStart={handleDragStart}
-        >
-          {children}
-        </DragDropContext>
-      </FavoritesDragContext.Provider>
-    </NavigationMenuItemDragContext.Provider>
+    <NavigationDragSourceContext.Provider value={{ sourceDroppableId }}>
+      <NavigationMenuItemDragContext.Provider value={{ isDragging }}>
+        <FavoritesDragContext.Provider value={{ isDragging }}>
+          <DragDropContext
+            onDragEnd={handleDragEnd}
+            onDragStart={handleDragStart}
+          >
+            {children}
+          </DragDropContext>
+        </FavoritesDragContext.Provider>
+      </NavigationMenuItemDragContext.Provider>
+    </NavigationDragSourceContext.Provider>
   );
 };
