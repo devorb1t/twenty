@@ -3,7 +3,6 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
 import { NAVIGATION_MENU_ITEM_DROPPABLE_IDS } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
-import { useSortedNavigationMenuItems } from '@/navigation-menu-item/hooks/useSortedNavigationMenuItems';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
@@ -18,7 +17,6 @@ import { usePrefetchedNavigationMenuItemsData } from './usePrefetchedNavigationM
 export const useHandleWorkspaceNavigationMenuItemDragAndDrop = () => {
   const { workspaceNavigationMenuItems } =
     usePrefetchedNavigationMenuItemsData();
-  const { workspaceNavigationMenuItemsSorted } = useSortedNavigationMenuItems();
   const isNavigationMenuInEditMode = useRecoilValue(
     isNavigationMenuInEditModeState,
   );
@@ -96,11 +94,11 @@ export const useHandleWorkspaceNavigationMenuItemDragAndDrop = () => {
       openDestinationFolder(destinationFolderId);
     }
 
-    const sourceList = workspaceNavigationMenuItemsSorted
+    const sourceList = (navigationMenuItemsDraft ?? [])
       .filter((item) => matchesWorkspaceFolderId(item, sourceFolderId))
       .sort((a, b) => a.position - b.position);
 
-    const destinationList = workspaceNavigationMenuItemsSorted
+    const destinationList = (navigationMenuItemsDraft ?? [])
       .filter((item) => matchesWorkspaceFolderId(item, destinationFolderId))
       .sort((a, b) => a.position - b.position);
 
