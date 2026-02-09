@@ -9,7 +9,6 @@ import { IconFolder, IconFolderOpen } from 'twenty-ui/display';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
 import { useIsMobile } from 'twenty-ui/utilities';
 
-import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
 import { NAVIGATION_MENU_ITEM_DROPPABLE_IDS } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
 import { NavigationMenuItemDragContext } from '@/navigation-menu-item/contexts/NavigationMenuItemDragContext';
 import { NavigationMenuItemDroppable } from '@/navigation-menu-item/components/NavigationMenuItemDroppable';
@@ -38,6 +37,10 @@ const StyledFolderContainer = styled.div<{ $isSelectedInEditMode: boolean }>`
       ? `1px solid ${theme.color.blue}`
       : '1px solid transparent'};
   border-radius: ${({ theme }) => theme.border.radius.sm};
+`;
+
+const StyledFolderDroppableContent = styled.div`
+  padding-bottom: ${({ theme }) => theme.spacing(2)};
 `;
 
 type WorkspaceNavigationMenuItemsFolderProps = {
@@ -115,18 +118,16 @@ export const WorkspaceNavigationMenuItemsFolder = ({
         <NavigationMenuItemDroppable
           droppableId={`${NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_FOLDER_HEADER_PREFIX}${folderId}`}
         >
-          <NavigationItemDropTarget folderId={folderId} index={0}>
-            <NavigationDrawerItem
-              label={folderName}
-              Icon={isOpen ? IconFolderOpen : IconFolder}
-              iconBackgroundColor={iconColors.folder}
-              onClick={handleClick}
-              className="navigation-drawer-item"
-              triggerEvent="CLICK"
-              preventCollapseOnMobile={isMobile}
-              isDragging={isDragging}
-            />
-          </NavigationItemDropTarget>
+          <NavigationDrawerItem
+            label={folderName}
+            Icon={isOpen ? IconFolderOpen : IconFolder}
+            iconBackgroundColor={iconColors.folder}
+            onClick={handleClick}
+            className="navigation-drawer-item"
+            triggerEvent="CLICK"
+            preventCollapseOnMobile={isMobile}
+            isDragging={isDragging}
+          />
         </NavigationMenuItemDroppable>
 
         <AnimatedExpandableContainer
@@ -139,12 +140,11 @@ export const WorkspaceNavigationMenuItemsFolder = ({
             droppableId={`${NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_FOLDER_PREFIX}${folderId}`}
           >
             {(provided) => (
-              <div
+              <StyledFolderDroppableContent
                 ref={provided.innerRef}
                 // eslint-disable-next-line react/jsx-props-no-spreading
                 {...provided.droppableProps}
               >
-                <NavigationItemDropTarget folderId={folderId} index={0} />
                 {navigationMenuItems.map((navigationMenuItem, index) => {
                   const objectMetadataItem =
                     navigationMenuItem.itemType === 'view' ||
@@ -155,8 +155,6 @@ export const WorkspaceNavigationMenuItemsFolder = ({
                           views,
                         )
                       : null;
-                  const isSelectedInEditModeForItem =
-                    selectedNavigationMenuItemId === navigationMenuItem.id;
                   const handleEditModeClick =
                     isEditMode &&
                     isDefined(onNavigationMenuItemClick) &&
@@ -170,62 +168,55 @@ export const WorkspaceNavigationMenuItemsFolder = ({
                       : undefined;
 
                   return (
-                    <NavigationItemDropTarget
+                    <DraggableItem
                       key={navigationMenuItem.id}
-                      folderId={folderId}
+                      draggableId={navigationMenuItem.id}
                       index={index}
-                    >
-                      <DraggableItem
-                        draggableId={navigationMenuItem.id}
-                        index={index}
-                        isInsideScrollableContainer
-                        isDragDisabled={!isEditMode}
-                        disableInteractiveElementBlocking={isEditMode}
-                        itemComponent={
-                          <NavigationDrawerSubItem
-                            secondaryLabel={
-                              navigationMenuItem.viewKey === ViewKey.Index
-                                ? undefined
-                                : getNavigationMenuItemSecondaryLabel({
-                                    objectMetadataItems,
-                                    navigationMenuItemObjectNameSingular:
-                                      navigationMenuItem.objectNameSingular,
-                                  })
-                            }
-                            label={navigationMenuItem.labelIdentifier}
-                            Icon={() => (
-                              <NavigationMenuItemIcon
-                                navigationMenuItem={navigationMenuItem}
-                              />
-                            )}
-                            to={
-                              isContextDragging || handleEditModeClick
-                                ? undefined
-                                : navigationMenuItem.link
-                            }
-                            onClick={handleEditModeClick}
-                            active={index === selectedNavigationMenuItemIndex}
-                            isSelectedInEditMode={isSelectedInEditModeForItem}
-                            subItemState={getNavigationSubItemLeftAdornment({
-                              index,
-                              arrayLength:
-                                navigationMenuItemFolderContentLength,
-                              selectedIndex: selectedNavigationMenuItemIndex,
-                            })}
-                            isDragging={isContextDragging}
-                            triggerEvent="CLICK"
-                          />
-                        }
-                      />
-                    </NavigationItemDropTarget>
+                      isInsideScrollableContainer
+                      isDragDisabled={!isEditMode}
+                      disableInteractiveElementBlocking={isEditMode}
+                      itemComponent={
+                        <NavigationDrawerSubItem
+                          secondaryLabel={
+                            navigationMenuItem.viewKey === ViewKey.Index
+                              ? undefined
+                              : getNavigationMenuItemSecondaryLabel({
+                                  objectMetadataItems,
+                                  navigationMenuItemObjectNameSingular:
+                                    navigationMenuItem.objectNameSingular,
+                                })
+                          }
+                          label={navigationMenuItem.labelIdentifier}
+                          Icon={() => (
+                            <NavigationMenuItemIcon
+                              navigationMenuItem={navigationMenuItem}
+                            />
+                          )}
+                          to={
+                            isContextDragging || handleEditModeClick
+                              ? undefined
+                              : navigationMenuItem.link
+                          }
+                          onClick={handleEditModeClick}
+                          active={index === selectedNavigationMenuItemIndex}
+                          isSelectedInEditMode={
+                            selectedNavigationMenuItemId ===
+                            navigationMenuItem.id
+                          }
+                          subItemState={getNavigationSubItemLeftAdornment({
+                            index,
+                            arrayLength: navigationMenuItemFolderContentLength,
+                            selectedIndex: selectedNavigationMenuItemIndex,
+                          })}
+                          isDragging={isContextDragging}
+                          triggerEvent="CLICK"
+                        />
+                      }
+                    />
                   );
                 })}
                 {provided.placeholder}
-                <NavigationItemDropTarget
-                  folderId={folderId}
-                  index={navigationMenuItems.length}
-                />
-              </div>
+              </StyledFolderDroppableContent>
             )}
           </Droppable>
         </AnimatedExpandableContainer>
