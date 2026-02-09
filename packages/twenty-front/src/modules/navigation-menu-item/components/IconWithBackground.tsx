@@ -20,7 +20,7 @@ export const IconWithBackground = ({
   return (
     <StyledNavigationMenuItemIconContainer $backgroundColor={backgroundColor}>
       <Icon
-        size={size ?? theme.spacing(3.5)}
+        size={size ?? theme.icon.size.md}
         stroke={stroke ?? theme.icon.stroke.md}
         color={theme.grayScale.gray1}
       />

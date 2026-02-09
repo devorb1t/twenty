@@ -9,15 +9,15 @@ import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/ad
 import { getIconBackgroundColorForPayload } from '@/navigation-menu-item/utils/getIconBackgroundColorForPayload';
 import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
 
-const StyledIconSlot = styled.div<{ $hasBackgroundColor: boolean }>`
+const StyledIconSlot = styled.div<{ $hasFixedSize: boolean }>`
   align-items: center;
   cursor: grab;
   display: flex;
   flex-shrink: 0;
   justify-content: center;
 
-  ${({ theme, $hasBackgroundColor }) =>
-    $hasBackgroundColor &&
+  ${({ theme, $hasFixedSize }) =>
+    $hasFixedSize &&
     css`
       height: ${theme.spacing(4.5)};
       width: ${theme.spacing(4.5)};
@@ -44,7 +44,8 @@ export const AddToNavigationDragHandle = ({
   const theme = useTheme();
   const iconBackgroundColor = getIconBackgroundColorForPayload(payload, theme);
   const hasBackgroundColor = !!iconBackgroundColor && !isHovered;
-  const iconSize = hasBackgroundColor ? theme.spacing(3.5) : theme.icon.size.md;
+  const payloadHasBackgroundColor = !!iconBackgroundColor;
+  const iconSize = theme.icon.size.md;
   const iconStroke = theme.icon.stroke.sm;
 
   const handleDragStart = (event: React.DragEvent) => {
@@ -59,7 +60,7 @@ export const AddToNavigationDragHandle = ({
     <StyledIconSlot
       draggable={isDraggable}
       onDragStart={isDraggable ? handleDragStart : undefined}
-      $hasBackgroundColor={hasBackgroundColor}
+      $hasFixedSize={payloadHasBackgroundColor}
     >
       {isHovered ? (
         <IconGripVertical
