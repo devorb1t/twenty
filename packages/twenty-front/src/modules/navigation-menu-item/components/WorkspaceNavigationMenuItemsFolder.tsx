@@ -2,10 +2,11 @@ import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { Droppable } from '@hello-pangea/dnd';
 import { useContext } from 'react';
+import { isNonEmptyString } from '@sniptt/guards';
 import { isDefined } from 'twenty-shared/utils';
 
 import { useIsDropDisabledForSection } from '@/navigation-menu-item/hooks/useIsDropDisabledForSection';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { IconFolder, IconFolderOpen } from 'twenty-ui/display';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
@@ -83,6 +84,7 @@ export const WorkspaceNavigationMenuItemsFolder = ({
   const coreViews = useRecoilValue(coreViewsState);
   const views = coreViews.map(convertCoreViewToView);
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
   const currentViewPath = location.pathname + location.search;
   const isMobile = useIsMobile();
@@ -105,6 +107,15 @@ export const WorkspaceNavigationMenuItemsFolder = ({
           ? current.filter((id) => id !== folderId)
           : [...current, folderId],
       );
+    }
+
+    if (!isOpen) {
+      const firstNonLinkItem = navigationMenuItems.find(
+        (item) => item.itemType !== 'link' && isNonEmptyString(item.link),
+      );
+      if (isDefined(firstNonLinkItem?.link)) {
+        navigate(firstNonLinkItem.link);
+      }
     }
   };
 

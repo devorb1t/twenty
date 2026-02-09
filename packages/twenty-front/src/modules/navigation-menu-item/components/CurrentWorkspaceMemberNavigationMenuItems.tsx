@@ -6,7 +6,7 @@ import { useContext, useState } from 'react';
 import { useIsDropDisabledForSection } from '@/navigation-menu-item/hooks/useIsDropDisabledForSection';
 import { NAVIGATION_SECTIONS } from '@/navigation-menu-item/constants/NavigationSections.constants';
 import { createPortal } from 'react-dom';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { IconFolder, IconFolderOpen, IconHeartOff } from 'twenty-ui/display';
 
@@ -42,6 +42,8 @@ import { NavigationDrawerSubItem } from '@/ui/navigation/navigation-drawer/compo
 import { currentNavigationMenuItemFolderIdState } from '@/ui/navigation/navigation-drawer/states/currentNavigationMenuItemFolderIdState';
 import { getNavigationSubItemLeftAdornment } from '@/ui/navigation/navigation-drawer/utils/getNavigationSubItemLeftAdornment';
 import { useRecoilComponentValue } from '@/ui/utilities/state/component-state/hooks/useRecoilComponentValue';
+import { isNonEmptyString } from '@sniptt/guards';
+import { isDefined } from 'twenty-shared/utils';
 
 type CurrentWorkspaceMemberNavigationMenuItemsProps = {
   folder: {
@@ -62,8 +64,10 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
   const theme = useTheme();
   const iconColors = getNavigationMenuItemIconColors(theme);
   const objectMetadataItems = useRecoilValue(objectMetadataItemsState);
-  const currentPath = useLocation().pathname;
-  const currentViewPath = useLocation().pathname + useLocation().search;
+  const location = useLocation();
+  const navigate = useNavigate();
+  const currentPath = location.pathname;
+  const currentViewPath = location.pathname + location.search;
   const { isDragging } = useContext(NavigationMenuItemDragContext);
   const [
     isNavigationMenuItemFolderRenaming,
@@ -95,6 +99,15 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
           return [...currentOpenFolders, folder.id];
         }
       });
+    }
+
+    if (!isOpen) {
+      const firstNonLinkItem = folder.navigationMenuItems.find(
+        (item) => item.itemType !== 'link' && isNonEmptyString(item.link),
+      );
+      if (isDefined(firstNonLinkItem?.link)) {
+        navigate(firstNonLinkItem.link);
+      }
     }
   };
 
