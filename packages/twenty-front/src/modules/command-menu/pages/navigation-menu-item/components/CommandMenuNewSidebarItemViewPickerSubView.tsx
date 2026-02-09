@@ -1,5 +1,6 @@
 import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { useIcons } from 'twenty-ui/display';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
@@ -10,6 +11,7 @@ import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useFilteredPickerItems } from '@/command-menu/hooks/useFilteredPickerItems';
 import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
 import { useAddViewToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddViewToNavigationMenuDraft';
+import { addMenuItemInsertionContextState } from '@/navigation-menu-item/states/addMenuItemInsertionContextState';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
@@ -31,6 +33,12 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
   const { closeCommandMenu } = useCommandMenu();
   const { addViewToDraft } = useAddViewToNavigationMenuDraft();
   const { currentDraft } = useNavigationMenuItemEditFolderData();
+  const addMenuItemInsertionContext = useRecoilValue(
+    addMenuItemInsertionContextState,
+  );
+  const setAddMenuItemInsertionContext = useSetRecoilState(
+    addMenuItemInsertionContextState,
+  );
   const { objectMetadataItems } = useObjectMetadataItems();
   const { views } = useNavigationMenuObjectMetadataFromDraft(currentDraft);
 
@@ -63,7 +71,13 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
     : t`No custom views available`;
 
   const handleSelectView = (view: View) => {
-    addViewToDraft(view.id, currentDraft);
+    addViewToDraft(
+      view.id,
+      currentDraft,
+      addMenuItemInsertionContext?.targetFolderId ?? null,
+      addMenuItemInsertionContext?.targetIndex,
+    );
+    setAddMenuItemInsertionContext(null);
     closeCommandMenu();
   };
 

@@ -1,9 +1,11 @@
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { Avatar } from 'twenty-ui/display';
 
 import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
 import { useAddRecordToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddRecordToNavigationMenuDraft';
+import { addMenuItemInsertionContextState } from '@/navigation-menu-item/states/addMenuItemInsertionContextState';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
@@ -26,6 +28,12 @@ export const CommandMenuNewSidebarItemRecordItem = ({
   const { closeCommandMenu } = useCommandMenu();
   const { addRecordToDraft } = useAddRecordToNavigationMenuDraft();
   const { currentDraft } = useNavigationMenuItemEditFolderData();
+  const addMenuItemInsertionContext = useRecoilValue(
+    addMenuItemInsertionContextState,
+  );
+  const setAddMenuItemInsertionContext = useSetRecoilState(
+    addMenuItemInsertionContextState,
+  );
   const { objectMetadataItems } = useObjectMetadataItems();
   const objectMetadataItem = objectMetadataItems.find(
     (item) => item.nameSingular === record.objectNameSingular,
@@ -48,7 +56,10 @@ export const CommandMenuNewSidebarItemRecordItem = ({
         imageUrl: record.imageUrl,
       },
       currentDraft,
+      addMenuItemInsertionContext?.targetFolderId ?? null,
+      addMenuItemInsertionContext?.targetIndex,
     );
+    setAddMenuItemInsertionContext(null);
     closeCommandMenu();
   };
 

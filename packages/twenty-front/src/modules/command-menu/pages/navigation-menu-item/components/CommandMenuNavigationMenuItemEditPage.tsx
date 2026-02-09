@@ -42,8 +42,15 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   const { editSubView, setFolderPicker, clearSubView } =
     useNavigationMenuItemEditSubView();
 
-  const { canMoveUp, canMoveDown, onMoveUp, onMoveDown, onRemove } =
-    useNavigationMenuItemEditOrganizeActions();
+  const {
+    canMoveUp,
+    canMoveDown,
+    onMoveUp,
+    onMoveDown,
+    onRemove,
+    onAddBefore,
+    onAddAfter,
+  } = useNavigationMenuItemEditOrganizeActions();
 
   const { updateLinkInDraft } = useUpdateLinkInDraft();
 
@@ -74,6 +81,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         onMoveUp={onMoveUp}
         onMoveDown={onMoveDown}
         onRemove={onRemove}
+        onAddBefore={onAddBefore}
+        onAddAfter={onAddAfter}
       />
     );
   }
@@ -93,6 +102,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         onMoveUp={onMoveUp}
         onMoveDown={onMoveDown}
         onRemove={onRemove}
+        onAddBefore={onAddBefore}
+        onAddAfter={onAddAfter}
       />
     );
   }
@@ -101,7 +112,13 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     return (
       <CommandMenuList
         commandGroups={[]}
-        selectableItemIds={['move-up', 'move-down', 'remove']}
+        selectableItemIds={[
+          'move-up',
+          'move-down',
+          'add-before',
+          'add-after',
+          'remove',
+        ]}
       >
         <CommandMenuEditOrganizeActions
           canMoveUp={canMoveUp}
@@ -109,6 +126,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
           onMoveUp={onMoveUp}
           onMoveDown={onMoveDown}
           onRemove={onRemove}
+          onAddBefore={onAddBefore}
+          onAddAfter={onAddAfter}
         />
         <CommandMenuEditOwnerSection />
       </CommandMenuList>
@@ -118,7 +137,14 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   return (
     <CommandMenuList
       commandGroups={[]}
-      selectableItemIds={['move-up', 'move-down', 'move-to-folder', 'remove']}
+      selectableItemIds={[
+        'move-up',
+        'move-down',
+        'move-to-folder',
+        'add-before',
+        'add-after',
+        'remove',
+      ]}
     >
       <CommandMenuEditOrganizeActions
         canMoveUp={canMoveUp}
@@ -126,6 +152,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         onMoveUp={onMoveUp}
         onMoveDown={onMoveDown}
         onRemove={onRemove}
+        onAddBefore={onAddBefore}
+        onAddAfter={onAddAfter}
         showMoveToFolder
         onMoveToFolder={setFolderPicker}
       />

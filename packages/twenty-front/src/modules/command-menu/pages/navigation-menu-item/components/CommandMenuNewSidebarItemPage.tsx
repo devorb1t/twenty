@@ -18,6 +18,7 @@ import { useAddObjectToNavigationMenuDraft } from '@/navigation-menu-item/hooks/
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useOpenNavigationMenuItemInCommandMenu } from '@/navigation-menu-item/hooks/useOpenNavigationMenuItemInCommandMenu';
+import { addMenuItemInsertionContextState } from '@/navigation-menu-item/states/addMenuItemInsertionContextState';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
@@ -62,6 +63,13 @@ export const CommandMenuNewSidebarItemPage = () => {
     ? navigationMenuItemsDraft
     : workspaceNavigationMenuItems;
 
+  const addMenuItemInsertionContext = useRecoilValue(
+    addMenuItemInsertionContextState,
+  );
+  const setAddMenuItemInsertionContext = useSetRecoilState(
+    addMenuItemInsertionContextState,
+  );
+
   const { views, objectMetadataIdsWithIndexView } =
     useNavigationMenuObjectMetadataFromDraft(currentDraft);
 
@@ -100,7 +108,14 @@ export const CommandMenuNewSidebarItemPage = () => {
     objectMetadataItem: ObjectMetadataItem,
     defaultViewId: string,
   ) => {
-    addObjectToDraft(objectMetadataItem.id, defaultViewId, currentDraft);
+    addObjectToDraft(
+      objectMetadataItem.id,
+      defaultViewId,
+      currentDraft,
+      addMenuItemInsertionContext?.targetFolderId,
+      addMenuItemInsertionContext?.targetIndex,
+    );
+    setAddMenuItemInsertionContext(null);
     closeCommandMenu();
   };
 
@@ -138,7 +153,13 @@ export const CommandMenuNewSidebarItemPage = () => {
   };
 
   const handleAddFolderAndOpenEdit = () => {
-    const newFolderId = addFolderToDraft(t`New folder`, currentDraft);
+    const newFolderId = addFolderToDraft(
+      t`New folder`,
+      currentDraft,
+      addMenuItemInsertionContext?.targetFolderId ?? null,
+      addMenuItemInsertionContext?.targetIndex,
+    );
+    setAddMenuItemInsertionContext(null);
     setSelectedNavigationMenuItemInEditMode(newFolderId);
     openNavigationMenuItemInCommandMenu({
       pageTitle: t`Edit folder`,
@@ -152,7 +173,10 @@ export const CommandMenuNewSidebarItemPage = () => {
       t`Link label`,
       'www.example.com',
       currentDraft,
+      addMenuItemInsertionContext?.targetFolderId ?? null,
+      addMenuItemInsertionContext?.targetIndex,
     );
+    setAddMenuItemInsertionContext(null);
     setSelectedNavigationMenuItemInEditMode(newLinkId);
     openNavigationMenuItemInCommandMenu({
       pageTitle: t`Edit link`,

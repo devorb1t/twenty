@@ -15,11 +15,15 @@ export const CommandMenuEditObjectViewBase = ({
   onMoveUp,
   onMoveDown,
   onRemove,
+  onAddBefore,
+  onAddAfter,
 }: CommandMenuEditObjectViewBaseProps) => {
   const selectableItemIds = [
     'move-up',
     'move-down',
     'move-to-folder',
+    'add-before',
+    'add-after',
     'remove',
   ];
 
@@ -31,6 +35,8 @@ export const CommandMenuEditObjectViewBase = ({
         onMoveUp={onMoveUp}
         onMoveDown={onMoveDown}
         onRemove={onRemove}
+        onAddBefore={onAddBefore}
+        onAddAfter={onAddAfter}
         showMoveToFolder
         onMoveToFolder={onOpenFolderPicker}
       />

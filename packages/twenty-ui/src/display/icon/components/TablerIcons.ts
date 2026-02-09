@@ -308,6 +308,8 @@ export {
   IconReload,
   IconReorder,
   IconRepeat,
+  IconRowInsertBottom,
+  IconRowInsertTop,
   IconRestore,
   IconRobot,
   IconRocket,

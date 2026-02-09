@@ -28,6 +28,8 @@ export const CommandMenuEditLinkItemView = ({
   onMoveUp,
   onMoveDown,
   onRemove,
+  onAddBefore,
+  onAddAfter,
 }: CommandMenuEditLinkItemViewProps) => {
   const { t } = useLingui();
   const [urlEditInput, setUrlEditInput] = useState('');
@@ -36,6 +38,8 @@ export const CommandMenuEditLinkItemView = ({
     'move-up',
     'move-down',
     'move-to-folder',
+    'add-before',
+    'add-after',
     'remove',
   ];
 
@@ -62,6 +66,8 @@ export const CommandMenuEditLinkItemView = ({
         onMoveUp={onMoveUp}
         onMoveDown={onMoveDown}
         onRemove={onRemove}
+        onAddBefore={onAddBefore}
+        onAddAfter={onAddAfter}
         showMoveToFolder
         onMoveToFolder={onOpenFolderPicker}
         moveToFolderHasSubMenu

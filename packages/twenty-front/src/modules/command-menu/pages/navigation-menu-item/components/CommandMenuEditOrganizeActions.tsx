@@ -3,6 +3,8 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconFolderSymlink,
+  IconRowInsertBottom,
+  IconRowInsertTop,
   IconTrash,
 } from 'twenty-ui/display';
 
@@ -16,6 +18,8 @@ export type OrganizeActionsProps = {
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove: () => void;
+  onAddBefore?: () => void;
+  onAddAfter?: () => void;
 };
 
 type CommandMenuEditOrganizeActionsProps = OrganizeActionsProps & {
@@ -30,6 +34,8 @@ export const CommandMenuEditOrganizeActions = ({
   onMoveUp,
   onMoveDown,
   onRemove,
+  onAddBefore,
+  onAddAfter,
   showMoveToFolder = false,
   onMoveToFolder,
   moveToFolderHasSubMenu = false,
@@ -70,6 +76,26 @@ export const CommandMenuEditOrganizeActions = ({
             id="move-to-folder"
             hasSubMenu={moveToFolderHasSubMenu}
             onClick={onMoveToFolder}
+          />
+        </SelectableListItem>
+      )}
+      {onAddBefore && (
+        <SelectableListItem itemId="add-before" onEnter={onAddBefore}>
+          <CommandMenuItem
+            Icon={IconRowInsertTop}
+            label={t`Add menu item before`}
+            id="add-before"
+            onClick={onAddBefore}
+          />
+        </SelectableListItem>
+      )}
+      {onAddAfter && (
+        <SelectableListItem itemId="add-after" onEnter={onAddAfter}>
+          <CommandMenuItem
+            Icon={IconRowInsertBottom}
+            label={t`Add menu item after`}
+            id="add-after"
+            onClick={onAddAfter}
           />
         </SelectableListItem>
       )}
