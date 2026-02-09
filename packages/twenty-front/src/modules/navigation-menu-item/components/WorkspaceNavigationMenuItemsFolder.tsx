@@ -44,11 +44,9 @@ const StyledFolderContainer = styled.div<{ $isSelectedInEditMode: boolean }>`
 `;
 
 const StyledFolderDroppableContent = styled.div<{
-  $isEditMode: boolean;
-  $isEmpty: boolean;
+  $compact: boolean;
 }>`
-  padding-bottom: ${({ theme, $isEditMode, $isEmpty }) =>
-    $isEditMode || $isEmpty ? 0 : theme.spacing(2)};
+  padding-bottom: ${({ theme, $compact }) => ($compact ? 0 : theme.spacing(2))};
 `;
 
 const StyledFolderExpandableWrapper = styled.div`
@@ -186,8 +184,7 @@ export const WorkspaceNavigationMenuItemsFolder = ({
               {(provided) => (
                 <StyledFolderDroppableContent
                   ref={provided.innerRef}
-                  $isEditMode={isEditMode}
-                  $isEmpty={navigationMenuItems.length === 0}
+                  $compact={isEditMode || navigationMenuItems.length === 0}
                   // eslint-disable-next-line react/jsx-props-no-spreading
                   {...provided.droppableProps}
                 >
