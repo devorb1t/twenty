@@ -1,31 +1,18 @@
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
-import { useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import { isDefined } from 'twenty-shared/utils';
-import { useIcons } from 'twenty-ui/display';
-
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
-import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { CommandMenuEditFolderPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderPickerSubView';
 import { CommandMenuEditLinkItemView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditLinkItemView';
 import { CommandMenuEditObjectViewBase } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditObjectViewBase';
 import { CommandMenuEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuEditOwnerSection } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOwnerSection';
-import { CommandMenuEditViewPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditViewPickerSubView';
-import { CommandMenuObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuObjectPickerSubView';
-import { CommandMenuSystemObjectPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuSystemObjectPickerSubView';
-import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
-import { useNavigationMenuItemEditObjectPickerData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditObjectPickerData';
 import { useNavigationMenuItemEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditOrganizeActions';
 import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditSubView';
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
 import { useUpdateLinkInDraft } from '@/navigation-menu-item/hooks/useUpdateLinkInDraft';
-import { useUpdateObjectInDraft } from '@/navigation-menu-item/hooks/useUpdateObjectInDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
-import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
-import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 
 const StyledCommandMenuPlaceholder = styled.p`
   color: ${({ theme }) => theme.font.color.tertiary};
@@ -38,7 +25,6 @@ const StyledCommandMenuPageContainer = styled.div`
 
 export const CommandMenuNavigationMenuItemEditPage = () => {
   const { t } = useLingui();
-  const { closeCommandMenu } = useCommandMenu();
 
   const selectedNavigationMenuItemInEditMode = useRecoilValue(
     selectedNavigationMenuItemInEditModeState,
@@ -47,86 +33,19 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     selectedItemLabel,
     selectedItem,
     selectedItemObjectMetadata,
-    processedItem,
     isFolderItem,
     isLinkItem,
     isObjectItem,
     isViewItem,
   } = useSelectedNavigationMenuItemEditData();
-  const { getIcon } = useIcons();
-  const objectNameSingular = selectedItemObjectMetadata?.nameSingular ?? '';
-  const { Icon: StandardObjectIcon } =
-    useGetStandardObjectIcon(objectNameSingular);
-  const objectIcon =
-    StandardObjectIcon ??
-    getIcon(selectedItemObjectMetadata?.icon ?? 'IconCube');
 
-  const [objectSearchInput, setObjectSearchInput] = useState('');
-  const [systemObjectSearchInput, setSystemObjectSearchInput] = useState('');
-  const [viewSearchInput, setViewSearchInput] = useState('');
-  const [
-    selectedObjectMetadataIdForViewEdit,
-    setSelectedObjectMetadataIdForViewEdit,
-  ] = useState<string | null>(null);
-
-  const {
-    editSubView,
-    setFolderPicker,
-    setObjectPicker,
-    setObjectPickerSystem,
-    setViewPicker,
-    clearSubView,
-  } = useNavigationMenuItemEditSubView();
+  const { editSubView, setFolderPicker, clearSubView } =
+    useNavigationMenuItemEditSubView();
 
   const { canMoveUp, canMoveDown, onMoveUp, onMoveDown, onRemove } =
     useNavigationMenuItemEditOrganizeActions();
 
-  const { currentDraft } = useNavigationMenuItemEditFolderData();
-
-  const {
-    objectsForObjectPickerIncludingCurrent,
-    objectsForViewEditObjectPicker,
-    systemObjectsForObjectPicker,
-    systemObjectsForViewEditObjectPicker,
-  } = useNavigationMenuItemEditObjectPickerData(
-    selectedItemObjectMetadata,
-    selectedItem as ProcessedNavigationMenuItem | undefined,
-    currentDraft,
-  );
-
-  const { updateObjectInDraft } = useUpdateObjectInDraft();
   const { updateLinkInDraft } = useUpdateLinkInDraft();
-
-  const handleChangeObject = (
-    objectMetadataItem: ObjectMetadataItem,
-    defaultViewId: string,
-  ) => {
-    if (isDefined(selectedNavigationMenuItemInEditMode)) {
-      updateObjectInDraft(
-        selectedNavigationMenuItemInEditMode,
-        objectMetadataItem,
-        defaultViewId,
-      );
-      clearSubView();
-      closeCommandMenu();
-    }
-  };
-
-  const handleSelectObjectForViewEdit = (
-    objectMetadataItem: ObjectMetadataItem,
-  ) => {
-    setSelectedObjectMetadataIdForViewEdit(objectMetadataItem.id);
-    setViewPicker();
-  };
-
-  const handleBackFromViewPicker = () => {
-    if (isDefined(selectedObjectMetadataIdForViewEdit)) {
-      setSelectedObjectMetadataIdForViewEdit(null);
-      setObjectPicker();
-    } else {
-      clearSubView();
-    }
-  };
 
   if (!selectedNavigationMenuItemInEditMode || !selectedItemLabel) {
     return (
@@ -142,79 +61,14 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     return <CommandMenuEditFolderPickerSubView onBack={clearSubView} />;
   }
 
-  if (editSubView === 'object-picker-system') {
-    const systemObjects = isViewItem
-      ? systemObjectsForViewEditObjectPicker
-      : systemObjectsForObjectPicker;
-    return (
-      <CommandMenuSystemObjectPickerSubView
-        systemObjects={systemObjects}
-        searchValue={systemObjectSearchInput}
-        onSearchChange={setSystemObjectSearchInput}
-        onBack={setObjectPicker}
-        isViewItem={isViewItem}
-        onSelectObjectForViewEdit={handleSelectObjectForViewEdit}
-        onChangeObject={handleChangeObject}
-      />
-    );
-  }
-
-  if (editSubView === 'object-picker') {
-    const objects = isViewItem
-      ? objectsForViewEditObjectPicker
-      : objectsForObjectPickerIncludingCurrent;
-    return (
-      <CommandMenuObjectPickerSubView
-        objects={objects}
-        searchValue={objectSearchInput}
-        onSearchChange={setObjectSearchInput}
-        onBack={clearSubView}
-        onOpenSystemPicker={setObjectPickerSystem}
-        isViewItem={isViewItem}
-        onSelectObjectForViewEdit={handleSelectObjectForViewEdit}
-        onChangeObject={handleChangeObject}
-        emptyNoResultsText={t`No objects available`}
-      />
-    );
-  }
-
-  if (editSubView === 'view-picker') {
-    return (
-      <CommandMenuEditViewPickerSubView
-        selectedObjectMetadataIdForViewEdit={
-          selectedObjectMetadataIdForViewEdit
-        }
-        searchValue={viewSearchInput}
-        onSearchChange={setViewSearchInput}
-        onBack={handleBackFromViewPicker}
-        onClearObjectMetadataForViewEdit={() =>
-          setSelectedObjectMetadataIdForViewEdit(null)
-        }
-      />
-    );
-  }
-
   if ((isObjectItem || isViewItem) && !selectedItemObjectMetadata) {
     return null;
   }
 
   if (isObjectItem || isViewItem) {
-    const objectMetadata = selectedItemObjectMetadata!;
     return (
       <CommandMenuEditObjectViewBase
-        objectIcon={objectIcon}
-        objectLabel={objectMetadata.labelPlural ?? ''}
-        onOpenObjectPicker={setObjectPicker}
         onOpenFolderPicker={setFolderPicker}
-        viewRow={
-          isViewItem && processedItem
-            ? {
-                icon: getIcon(processedItem.Icon ?? 'IconList'),
-                label: processedItem.labelIdentifier ?? '',
-                onClick: setViewPicker,
-              }
-            : undefined
-        }
         canMoveUp={canMoveUp}
         canMoveDown={canMoveDown}
         onMoveUp={onMoveUp}
