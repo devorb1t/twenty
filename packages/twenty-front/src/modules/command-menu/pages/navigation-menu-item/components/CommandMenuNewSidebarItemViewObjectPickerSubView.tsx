@@ -19,6 +19,7 @@ type CommandMenuNewSidebarItemViewObjectPickerSubViewProps = {
   onBack: () => void;
   onOpenSystemPicker: () => void;
   onSelectObject: (objectMetadataItem: ObjectMetadataItem) => void;
+  showSystemObjectsOption?: boolean;
 };
 
 export const CommandMenuNewSidebarItemViewObjectPickerSubView = ({
@@ -28,6 +29,7 @@ export const CommandMenuNewSidebarItemViewObjectPickerSubView = ({
   onBack,
   onOpenSystemPicker,
   onSelectObject,
+  showSystemObjectsOption = true,
 }: CommandMenuNewSidebarItemViewObjectPickerSubViewProps) => {
   const { t } = useLingui();
   const theme = useTheme();
@@ -38,7 +40,7 @@ export const CommandMenuNewSidebarItemViewObjectPickerSubView = ({
       items: objects,
       searchQuery: searchValue,
       getSearchableValues: (item) => [item.labelPlural],
-      appendSelectableIds: ['system'],
+      appendSelectableIds: showSystemObjectsOption ? ['system'] : [],
     });
   const noResultsText = hasSearchQuery
     ? t`No results found`
@@ -80,15 +82,17 @@ export const CommandMenuNewSidebarItemViewObjectPickerSubView = ({
               />
             </SelectableListItem>
           ))}
-          <SelectableListItem itemId="system" onEnter={onOpenSystemPicker}>
-            <CommandMenuItem
-              Icon={IconSettings}
-              label={t`System objects`}
-              id="system"
-              hasSubMenu={true}
-              onClick={onOpenSystemPicker}
-            />
-          </SelectableListItem>
+          {showSystemObjectsOption && (
+            <SelectableListItem itemId="system" onEnter={onOpenSystemPicker}>
+              <CommandMenuItem
+                Icon={IconSettings}
+                label={t`System objects`}
+                id="system"
+                hasSubMenu={true}
+                onClick={onOpenSystemPicker}
+              />
+            </SelectableListItem>
+          )}
         </CommandGroup>
       </CommandMenuList>
     </CommandMenuSubViewWithSearch>

@@ -24,6 +24,7 @@ import { useWorkspaceNavigationMenuItems } from '@/navigation-menu-item/hooks/us
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
+import { ViewKey } from '@/views/types/ViewKey';
 
 type SelectedOption =
   | 'object'
@@ -69,10 +70,20 @@ export const CommandMenuNewSidebarItemPage = () => {
     : workspaceNavigationMenuItems;
 
   const {
+    views,
     objectMetadataIdsInWorkspace,
     objectMetadataIdsWithIndexView,
-    objectMetadataIdsWithAnyView,
+    viewIdsInWorkspace,
   } = useNavigationMenuObjectMetadataFromDraft(currentDraft);
+
+  const objectMetadataIdsWithDisplayableViews = new Set(
+    views
+      .filter(
+        (view) =>
+          view.key !== ViewKey.Index && !viewIdsInWorkspace.has(view.id),
+      )
+      .map((view) => view.objectMetadataId),
+  );
 
   const availableObjectMetadataItems = activeNonSystemObjectMetadataItems
     .filter((item) => !objectMetadataItemsInWorkspaceIds.has(item.id))
@@ -90,14 +101,15 @@ export const CommandMenuNewSidebarItemPage = () => {
 
   const objectMetadataItemsWithViews = objectMetadataItems
     .filter(
-      (item) => item.isActive && objectMetadataIdsWithAnyView.has(item.id),
+      (item) =>
+        item.isActive && objectMetadataIdsWithDisplayableViews.has(item.id),
     )
     .filter((item) => !item.isSystem)
     .sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
 
   const availableSystemObjectMetadataItemsForView =
     activeSystemObjectMetadataItems.filter((item) =>
-      objectMetadataIdsWithAnyView.has(item.id),
+      objectMetadataIdsWithDisplayableViews.has(item.id),
     );
 
   const handleSelectObject = (
@@ -183,6 +195,9 @@ export const CommandMenuNewSidebarItemPage = () => {
           onBack={handleBackToMain}
           onOpenSystemPicker={() => setSelectedOption('view-system')}
           onSelectObject={(item) => setSelectedObjectMetadataIdForView(item.id)}
+          showSystemObjectsOption={
+            availableSystemObjectMetadataItemsForView.length > 0
+          }
         />
       );
     case 'view-system':
