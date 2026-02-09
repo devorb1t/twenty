@@ -1,3 +1,4 @@
+import { useLingui } from '@lingui/react/macro';
 import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { useState } from 'react';
@@ -35,8 +36,12 @@ export const CommandMenuItemWithAddToNavigationDrag = ({
   onClick,
   payload,
 }: CommandMenuItemWithAddToNavigationDragProps) => {
+  const { t } = useLingui();
   const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
+  const contextualDescription = isHovered
+    ? (description ?? t`Drag to add to navbar`)
+    : undefined;
 
   const handleDragStart = (event: React.DragEvent) => {
     event.dataTransfer.setData(
@@ -66,7 +71,7 @@ export const CommandMenuItemWithAddToNavigationDrag = ({
     >
       <CommandMenuItem
         label={label}
-        description={description}
+        description={contextualDescription}
         id={id}
         onClick={onClick}
         LeftComponent={
