@@ -127,6 +127,15 @@ export const WorkspaceNavigationMenuItems = () => {
     });
   };
 
+  const handleAddMenuItem = () => {
+    navigateCommandMenu({
+      page: CommandMenuPages.NavigationMenuAddItem,
+      pageTitle: t`New sidebar item`,
+      pageIcon: IconPlus,
+      resetNavigationStack: true,
+    });
+  };
+
   const isEditMode =
     isNavigationMenuItemEditingEnabled && isNavigationMenuInEditMode;
 
@@ -166,6 +175,11 @@ export const WorkspaceNavigationMenuItems = () => {
             )}
           </StyledRightIconsContainer>
         ) : undefined
+      }
+      onAddMenuItem={
+        isNavigationMenuItemEditingEnabled && isEditMode
+          ? handleAddMenuItem
+          : undefined
       }
       isEditMode={isEditMode}
       selectedNavigationMenuItemId={selectedNavigationMenuItemInEditMode}

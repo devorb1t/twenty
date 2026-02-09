@@ -1,12 +1,13 @@
 import { useTheme } from '@emotion/react';
 import { Droppable } from '@hello-pangea/dnd';
+import { useLingui } from '@lingui/react/macro';
 import { useContext } from 'react';
 import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
+import { IconLink, IconPlus } from 'twenty-ui/display';
 
 import { useIsDropDisabledForSection } from '@/navigation-menu-item/hooks/useIsDropDisabledForSection';
 import { NAVIGATION_SECTIONS } from '@/navigation-menu-item/constants/NavigationSections.constants';
-import { IconLink } from 'twenty-ui/display';
 
 import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
 import { WorkspaceNavigationMenuItemsFolder } from '@/navigation-menu-item/components/WorkspaceNavigationMenuItemsFolder';
@@ -37,6 +38,7 @@ type NavigationDrawerSectionForWorkspaceItemsProps = {
   sectionTitle: string;
   items: FlatWorkspaceItem[];
   rightIcon?: React.ReactNode;
+  onAddMenuItem?: () => void;
   isEditMode?: boolean;
   selectedNavigationMenuItemId?: string | null;
   onNavigationMenuItemClick?: (params: NavigationMenuItemClickParams) => void;
@@ -50,11 +52,13 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
   sectionTitle,
   items,
   rightIcon,
+  onAddMenuItem,
   isEditMode = false,
   selectedNavigationMenuItemId = null,
   onNavigationMenuItemClick,
   onActiveObjectMetadataItemClick,
 }: NavigationDrawerSectionForWorkspaceItemsProps) => {
+  const { t } = useLingui();
   const theme = useTheme();
   const workspaceDropDisabled = useIsDropDisabledForSection(true);
   const { toggleNavigationSection, isNavigationSectionOpenState } =
@@ -294,12 +298,22 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
                   </NavigationItemDropTarget>
                 );
               })}
-              {provided.placeholder}
               <NavigationItemDropTarget
                 folderId={null}
                 index={filteredItems.length}
                 sectionId={NAVIGATION_SECTIONS.WORKSPACE}
-              />
+                compact={!!(isEditMode && onAddMenuItem)}
+              >
+                {isEditMode && onAddMenuItem && (
+                  <NavigationDrawerItem
+                    Icon={IconPlus}
+                    label={t`Add menu item`}
+                    onClick={onAddMenuItem}
+                    triggerEvent="CLICK"
+                  />
+                )}
+              </NavigationItemDropTarget>
+              {provided.placeholder}
             </div>
           )}
         </Droppable>

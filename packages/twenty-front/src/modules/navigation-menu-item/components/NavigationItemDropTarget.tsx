@@ -2,15 +2,16 @@ import styled from '@emotion/styled';
 import { type ReactNode, useContext, useRef } from 'react';
 
 import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
-import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
 import { NAVIGATION_SECTIONS } from '@/navigation-menu-item/constants/NavigationSections.constants';
+import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
 import type { NavigationSectionId } from '@/navigation-menu-item/types/NavigationSectionId';
 
 const StyledDropTarget = styled.div<{
   $isDragOver: boolean;
   $isDropForbidden: boolean;
+  $compact?: boolean;
 }>`
-  min-height: ${({ theme }) => theme.spacing(2)};
+  min-height: ${({ theme, $compact }) => ($compact ? 0 : theme.spacing(2))};
   position: relative;
   transition: all 150ms ease-in-out;
 
@@ -57,6 +58,7 @@ type NavigationItemDropTargetProps = {
   index: number;
   sectionId: NavigationItemDropTargetSectionId;
   children?: ReactNode;
+  compact?: boolean;
 };
 
 export const NavigationItemDropTarget = ({
@@ -64,6 +66,7 @@ export const NavigationItemDropTarget = ({
   index,
   sectionId,
   children,
+  compact = false,
 }: NavigationItemDropTargetProps) => {
   const {
     activeDropTargetId,
@@ -117,6 +120,7 @@ export const NavigationItemDropTarget = ({
       ref={ref}
       $isDragOver={isDragOver}
       $isDropForbidden={isDropForbidden}
+      $compact={compact}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       data-navigation-drop-target=""
