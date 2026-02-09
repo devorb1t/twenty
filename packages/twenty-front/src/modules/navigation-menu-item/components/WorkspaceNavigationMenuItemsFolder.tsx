@@ -9,10 +9,11 @@ import { IconFolder, IconFolderOpen } from 'twenty-ui/display';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
 import { useIsMobile } from 'twenty-ui/utilities';
 
-import { NAVIGATION_MENU_ITEM_DROPPABLE_IDS } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
-import { NavigationMenuItemDragContext } from '@/navigation-menu-item/contexts/NavigationMenuItemDragContext';
 import { NavigationMenuItemDroppable } from '@/navigation-menu-item/components/NavigationMenuItemDroppable';
 import { NavigationMenuItemIcon } from '@/navigation-menu-item/components/NavigationMenuItemIcon';
+import { WorkspaceNavigationMenuItemFolderDragClone } from '@/navigation-menu-item/components/WorkspaceNavigationMenuItemFolderDragClone';
+import { NAVIGATION_MENU_ITEM_DROPPABLE_IDS } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
+import { NavigationMenuItemDragContext } from '@/navigation-menu-item/contexts/NavigationMenuItemDragContext';
 import { type NavigationMenuItemClickParams } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
@@ -138,6 +139,22 @@ export const WorkspaceNavigationMenuItemsFolder = ({
         >
           <Droppable
             droppableId={`${NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_FOLDER_PREFIX}${folderId}`}
+            ignoreContainerClipping
+            renderClone={(provided, snapshot, rubric) => (
+              <WorkspaceNavigationMenuItemFolderDragClone
+                draggableProvided={provided}
+                draggableSnapshot={snapshot}
+                rubric={rubric}
+                navigationMenuItems={navigationMenuItems}
+                navigationMenuItemFolderContentLength={
+                  navigationMenuItemFolderContentLength
+                }
+                selectedNavigationMenuItemIndex={
+                  selectedNavigationMenuItemIndex
+                }
+              />
+            )}
+            getContainerForClone={() => document.body}
           >
             {(provided) => (
               <StyledFolderDroppableContent
