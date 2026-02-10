@@ -95,6 +95,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   ) {
     return (
       <CommandMenuEditLinkItemView
+        key={selectedItem.id}
         selectedItem={selectedItem}
         onUpdateLink={(linkId, link) => updateLinkInDraft(linkId, { link })}
         onOpenFolderPicker={setFolderPicker}
