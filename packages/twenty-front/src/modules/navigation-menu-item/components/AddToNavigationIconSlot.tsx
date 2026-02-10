@@ -21,7 +21,7 @@ export const AddToNavigationIconSlot = ({
   if (isValidElement(icon)) {
     return <>{icon}</>;
   }
-  if (typeof icon !== 'function') {
+  if (['string', 'number', 'boolean'].includes(typeof icon)) {
     return null;
   }
   const Icon = icon as IconComponent;
