@@ -7,7 +7,6 @@ import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/u
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { coreViewsState } from '@/views/states/coreViewState';
-import { ViewKey } from '@/views/types/ViewKey';
 import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
 
 export const useSelectedNavigationMenuItemEditData = () => {
@@ -42,20 +41,6 @@ export const useSelectedNavigationMenuItemEditData = () => {
     : null;
 
   const processedItem = selectedItem as ProcessedNavigationMenuItem | undefined;
-  const isFolderItem = selectedItemType === 'folder';
-  const isLinkItem = selectedItemType === 'link';
-  const isObjectItem =
-    processedItem !== undefined &&
-    processedItem.itemType === 'view' &&
-    selectedItemObjectMetadata !== null &&
-    processedItem.viewKey === ViewKey.Index;
-  const isViewItem =
-    processedItem !== undefined &&
-    processedItem.itemType === 'view' &&
-    selectedItemObjectMetadata !== null &&
-    processedItem.viewKey !== ViewKey.Index;
-  const isRecordItem =
-    processedItem !== undefined && processedItem.itemType === 'record';
 
   return {
     selectedItem,
@@ -63,10 +48,5 @@ export const useSelectedNavigationMenuItemEditData = () => {
     selectedItemObjectMetadata,
     selectedItemLabel,
     processedItem,
-    isFolderItem,
-    isLinkItem,
-    isObjectItem,
-    isViewItem,
-    isRecordItem,
   };
 };

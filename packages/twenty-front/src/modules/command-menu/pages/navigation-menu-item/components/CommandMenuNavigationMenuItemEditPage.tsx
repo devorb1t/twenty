@@ -33,10 +33,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     selectedItemLabel,
     selectedItem,
     selectedItemObjectMetadata,
-    isFolderItem,
-    isLinkItem,
-    isObjectItem,
-    isViewItem,
+    selectedItemType,
   } = useSelectedNavigationMenuItemEditData();
 
   const { editSubView, setFolderPicker, clearSubView } =
@@ -68,11 +65,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     return <CommandMenuEditFolderPickerSubView onBack={clearSubView} />;
   }
 
-  if ((isObjectItem || isViewItem) && !selectedItemObjectMetadata) {
+  if (selectedItemType === 'objectView' && !selectedItemObjectMetadata) {
     return null;
   }
 
-  if (isObjectItem || isViewItem) {
+  if (selectedItemType === 'objectView') {
     return (
       <CommandMenuEditObjectViewBase
         onOpenFolderPicker={setFolderPicker}
@@ -87,11 +84,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     );
   }
 
-  if (isLinkItem && !selectedItem) {
+  if (selectedItemType === 'link' && !selectedItem) {
     return null;
   }
 
-  if (isLinkItem) {
+  if (selectedItemType === 'link') {
     return (
       <CommandMenuEditLinkItemView
         selectedItem={selectedItem as ProcessedNavigationMenuItem}
@@ -108,7 +105,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     );
   }
 
-  if (isFolderItem) {
+  if (selectedItemType === 'folder') {
     return (
       <CommandMenuList
         commandGroups={[]}

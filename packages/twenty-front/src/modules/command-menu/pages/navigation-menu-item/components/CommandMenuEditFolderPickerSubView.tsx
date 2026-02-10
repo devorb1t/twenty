@@ -65,14 +65,13 @@ export const CommandMenuEditFolderPickerSubView = ({
   const selectedNavigationMenuItemInEditMode = useRecoilValue(
     selectedNavigationMenuItemInEditModeState,
   );
-  const { selectedItem, selectedItemType, isFolderItem, isLinkItem } =
+  const { selectedItem, selectedItemType } =
     useSelectedNavigationMenuItemEditData();
   const { allFolders, workspaceFolders } =
     useNavigationMenuItemEditFolderData();
 
-  const selectedFolderId = isFolderItem
-    ? selectedNavigationMenuItemInEditMode
-    : null;
+  const selectedFolderId =
+    selectedItemType === 'folder' ? selectedNavigationMenuItemInEditMode : null;
   const currentFolderId =
     selectedItemType === 'folder'
       ? (selectedItem?.id ?? null)
@@ -80,16 +79,18 @@ export const CommandMenuEditFolderPickerSubView = ({
         null);
 
   const descendantFolderIds =
-    isFolderItem && isDefined(selectedFolderId)
+    selectedItemType === 'folder' && isDefined(selectedFolderId)
       ? getDescendantFolderIds(selectedFolderId, allFolders)
       : new Set<string>();
 
   const includeNoFolderOption =
-    (isFolderItem && isDefined(selectedFolderId)) ||
-    (isLinkItem && isDefined(currentFolderId));
+    (selectedItemType === 'folder' && isDefined(selectedFolderId)) ||
+    (selectedItemType === 'link' && isDefined(currentFolderId));
 
   const folders =
-    includeNoFolderOption && isFolderItem && isDefined(selectedFolderId)
+    includeNoFolderOption &&
+    selectedItemType === 'folder' &&
+    isDefined(selectedFolderId)
       ? allFolders.filter(
           (folder) =>
             folder.id !== selectedFolderId &&
