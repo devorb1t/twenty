@@ -61,20 +61,30 @@ export const useNavigationMenuItemEditOrganizeActions =
     const items = useWorkspaceSectionItems();
     const { moveUp, moveDown, remove } = useNavigationMenuItemMoveRemove();
 
-    const selectedItemIndex = selectedNavigationMenuItemInEditMode
-      ? items.findIndex(
-          (item) => item.id === selectedNavigationMenuItemInEditMode,
-        )
-      : -1;
     const selectedItem = selectedNavigationMenuItemInEditMode
       ? items.find((item) => item.id === selectedNavigationMenuItemInEditMode)
       : undefined;
-    const isItemInsideFolder = isDefined(selectedItem?.folderId);
-    const canMoveUp = !isItemInsideFolder && selectedItemIndex > 0;
+
+    const folderId = selectedItem?.folderId ?? null;
+    const siblings = items
+      .filter(
+        (item) =>
+          ('folderId' in item ? (item.folderId ?? null) : null) === folderId,
+      )
+      .sort((a, b) => a.position - b.position);
+    const selectedIndexInSiblings = selectedItem
+      ? siblings.findIndex((item) => item.id === selectedItem.id)
+      : -1;
+
+    const canMoveUp =
+      selectedIndexInSiblings > 0 &&
+      selectedItem != null &&
+      isDefined(selectedNavigationMenuItemInEditMode);
     const canMoveDown =
-      !isItemInsideFolder &&
-      selectedItemIndex >= 0 &&
-      selectedItemIndex < items.length - 1;
+      selectedIndexInSiblings >= 0 &&
+      selectedIndexInSiblings < siblings.length - 1 &&
+      selectedItem != null &&
+      isDefined(selectedNavigationMenuItemInEditMode);
 
     const handleMoveUp = () => {
       if (canMoveUp && isDefined(selectedNavigationMenuItemInEditMode)) {
