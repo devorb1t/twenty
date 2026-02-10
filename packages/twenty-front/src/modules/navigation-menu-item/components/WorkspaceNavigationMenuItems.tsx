@@ -24,6 +24,7 @@ import {
   useWorkspaceSectionItems,
 } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
+import { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { filterWorkspaceNavigationMenuItems } from '@/navigation-menu-item/utils/filterWorkspaceNavigationMenuItems';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
@@ -90,7 +91,7 @@ export const WorkspaceNavigationMenuItems = () => {
     const { item, objectMetadataItem } = params;
     const id = item.id;
     setSelectedNavigationMenuItemInEditMode(id);
-    if (item.itemType === 'folder') {
+    if (item.itemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER) {
       setOpenNavigationMenuItemFolderIds((currentOpenFolders) =>
         currentOpenFolders.includes(id)
           ? currentOpenFolders
@@ -100,7 +101,7 @@ export const WorkspaceNavigationMenuItems = () => {
         pageTitle: t`Edit folder`,
         pageIcon: IconFolder,
       });
-    } else if (item.itemType === 'link') {
+    } else if (item.itemType === NAVIGATION_MENU_ITEM_TYPE.LINK) {
       openNavigationMenuItemInCommandMenu({
         pageTitle: t`Edit link`,
         pageIcon: IconLink,

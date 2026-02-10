@@ -12,7 +12,10 @@ import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigatio
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
 import { useUpdateLinkInDraft } from '@/navigation-menu-item/hooks/useUpdateLinkInDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
-import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
+import {
+  NAVIGATION_MENU_ITEM_TYPE,
+  type ProcessedNavigationMenuItem,
+} from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 
 const StyledCommandMenuPlaceholder = styled.p`
   color: ${({ theme }) => theme.font.color.tertiary};
@@ -65,11 +68,14 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     return <CommandMenuEditFolderPickerSubView onBack={clearSubView} />;
   }
 
-  if (selectedItemType === 'view' && !selectedItemObjectMetadata) {
+  if (
+    selectedItemType === NAVIGATION_MENU_ITEM_TYPE.VIEW &&
+    !selectedItemObjectMetadata
+  ) {
     return null;
   }
 
-  if (selectedItemType === 'view') {
+  if (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.VIEW) {
     return (
       <CommandMenuEditObjectViewBase
         onOpenFolderPicker={setFolderPicker}
@@ -84,11 +90,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     );
   }
 
-  if (selectedItemType === 'link' && !selectedItem) {
+  if (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.LINK && !selectedItem) {
     return null;
   }
 
-  if (selectedItemType === 'link') {
+  if (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.LINK) {
     return (
       <CommandMenuEditLinkItemView
         selectedItem={selectedItem as ProcessedNavigationMenuItem}
@@ -105,7 +111,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     );
   }
 
-  if (selectedItemType === 'folder') {
+  if (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER) {
     return (
       <CommandMenuList
         commandGroups={[]}

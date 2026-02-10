@@ -14,7 +14,10 @@ import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigatio
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
 import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
-import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
+import {
+  NAVIGATION_MENU_ITEM_TYPE,
+  type ProcessedNavigationMenuItem,
+} from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 
@@ -71,25 +74,30 @@ export const CommandMenuEditFolderPickerSubView = ({
     useNavigationMenuItemEditFolderData();
 
   const selectedFolderId =
-    selectedItemType === 'folder' ? selectedNavigationMenuItemInEditMode : null;
+    selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER
+      ? selectedNavigationMenuItemInEditMode
+      : null;
   const currentFolderId =
-    selectedItemType === 'folder'
+    selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER
       ? (selectedItem?.id ?? null)
       : ((selectedItem as ProcessedNavigationMenuItem | undefined)?.folderId ??
         null);
 
   const descendantFolderIds =
-    selectedItemType === 'folder' && isDefined(selectedFolderId)
+    selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER &&
+    isDefined(selectedFolderId)
       ? getDescendantFolderIds(selectedFolderId, allFolders)
       : new Set<string>();
 
   const includeNoFolderOption =
-    (selectedItemType === 'folder' && isDefined(selectedFolderId)) ||
-    (selectedItemType === 'link' && isDefined(currentFolderId));
+    (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER &&
+      isDefined(selectedFolderId)) ||
+    (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.LINK &&
+      isDefined(currentFolderId));
 
   const folders =
     includeNoFolderOption &&
-    selectedItemType === 'folder' &&
+    selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER &&
     isDefined(selectedFolderId)
       ? allFolders.filter(
           (folder) =>

@@ -3,7 +3,10 @@ import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
 import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
-import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
+import {
+  NAVIGATION_MENU_ITEM_TYPE,
+  type ProcessedNavigationMenuItem,
+} from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
 import { coreViewsState } from '@/views/states/coreViewState';
@@ -16,7 +19,9 @@ import { useSortedNavigationMenuItems } from './useSortedNavigationMenuItems';
 
 export type FlatWorkspaceItem =
   | ProcessedNavigationMenuItem
-  | (NavigationMenuItem & { itemType: 'folder' });
+  | (NavigationMenuItem & {
+      itemType: typeof NAVIGATION_MENU_ITEM_TYPE.FOLDER;
+    });
 
 export type NavigationMenuItemClickParams = {
   item: FlatWorkspaceItem;
@@ -54,14 +59,14 @@ export const useWorkspaceSectionItems = (): FlatWorkspaceItem[] => {
   >((acc, item) => {
     if (isNavigationMenuItemFolder(item)) {
       if (isDefined(folderChildrenById.get(item.id))) {
-        acc.push({ ...item, itemType: 'folder' as const });
+        acc.push({ ...item, itemType: NAVIGATION_MENU_ITEM_TYPE.FOLDER });
       }
     } else {
       const processedItem = processedObjectViewsById.get(item.id);
       if (!isDefined(processedItem)) {
         return acc;
       }
-      if (processedItem.itemType === 'link') {
+      if (processedItem.itemType === NAVIGATION_MENU_ITEM_TYPE.LINK) {
         acc.push(processedItem);
       } else {
         const objectMetadataItem = getObjectMetadataForNavigationMenuItem(
@@ -78,7 +83,7 @@ export const useWorkspaceSectionItems = (): FlatWorkspaceItem[] => {
   }, []);
 
   return flatItems.flatMap((item) =>
-    item.itemType === 'folder'
+    item.itemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER
       ? [item, ...(folderChildrenById.get(item.id) ?? [])]
       : [item],
   );

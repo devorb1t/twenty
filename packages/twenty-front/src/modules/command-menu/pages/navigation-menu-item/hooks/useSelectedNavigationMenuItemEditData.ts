@@ -3,7 +3,10 @@ import { useRecoilValue } from 'recoil';
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
-import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
+import {
+  NAVIGATION_MENU_ITEM_TYPE,
+  type ProcessedNavigationMenuItem,
+} from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { coreViewsState } from '@/views/states/coreViewState';
 import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
@@ -30,9 +33,9 @@ export const useSelectedNavigationMenuItemEditData = () => {
       )
     : null;
   const selectedItemLabel = selectedItem
-    ? selectedItemType === 'folder'
+    ? selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER
       ? (selectedItem.name ?? 'Folder')
-      : selectedItemType === 'link'
+      : selectedItemType === NAVIGATION_MENU_ITEM_TYPE.LINK
         ? (selectedItem.name ?? 'Link')
         : (selectedItemObjectMetadata?.labelPlural ?? '')
     : null;

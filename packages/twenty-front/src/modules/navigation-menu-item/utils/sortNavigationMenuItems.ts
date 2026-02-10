@@ -7,24 +7,17 @@ import { getAppPath, isDefined } from 'twenty-shared/utils';
 import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
 import { getObjectMetadataNamePluralFromViewId } from '@/favorites/utils/getObjectMetadataNamePluralFromViewId';
+import { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/types/navigation-menu-item-type';
+import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/types/processed-navigation-menu-item';
 import {
   computeNavigationMenuItemDisplayFields,
   type NavigationMenuItemDisplayFields,
 } from './computeNavigationMenuItemDisplayFields';
 import { isNavigationMenuItemLink } from './isNavigationMenuItemLink';
 
-export type NavigationMenuItemType =
-  | 'folder'
-  | 'link'
-  | 'object'
-  | 'record'
-  | 'view';
-
-export type ProcessedNavigationMenuItem = NavigationMenuItem &
-  NavigationMenuItemDisplayFields & {
-    viewKey?: ViewKey | null;
-    itemType: NavigationMenuItemType;
-  };
+export { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/types/navigation-menu-item-type';
+export type { NavigationMenuItemType } from '@/navigation-menu-item/types/navigation-menu-item-type';
+export type { ProcessedNavigationMenuItem } from '@/navigation-menu-item/types/processed-navigation-menu-item';
 
 export const sortNavigationMenuItems = (
   navigationMenuItems: NavigationMenuItem[],
@@ -77,7 +70,7 @@ export const sortNavigationMenuItems = (
             ...navigationMenuItem,
             ...displayFields,
             viewKey: view.key,
-            itemType: 'view' as const,
+            itemType: NAVIGATION_MENU_ITEM_TYPE.VIEW,
           };
         }
 
@@ -101,7 +94,7 @@ export const sortNavigationMenuItems = (
         return {
           ...navigationMenuItem,
           ...displayFields,
-          itemType: 'link' as const,
+          itemType: NAVIGATION_MENU_ITEM_TYPE.LINK,
         };
       }
 
@@ -138,7 +131,7 @@ export const sortNavigationMenuItems = (
         ...navigationMenuItem,
         ...displayFields,
         link: hasLinkToShowPage ? displayFields.link : '',
-        itemType: 'record' as const,
+        itemType: NAVIGATION_MENU_ITEM_TYPE.RECORD,
       };
     })
     .filter(isDefined)
