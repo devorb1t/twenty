@@ -1,20 +1,20 @@
-import styled from '@emotion/styled';
-import { useLingui } from '@lingui/react/macro';
-import { useRecoilValue } from 'recoil';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuEditFolderPickerSubView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditFolderPickerSubView';
-import { CommandMenuEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
-import { getOrganizeActionsSelectableItemIds } from '@/command-menu/pages/navigation-menu-item/utils/getOrganizeActionsSelectableItemIds';
 import { CommandMenuEditLinkItemView } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditLinkItemView';
 import { CommandMenuEditObjectViewBase } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditObjectViewBase';
+import { CommandMenuEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuEditOwnerSection } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOwnerSection';
 import { useNavigationMenuItemEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditOrganizeActions';
 import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditSubView';
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
+import { getOrganizeActionsSelectableItemIds } from '@/command-menu/pages/navigation-menu-item/utils/getOrganizeActionsSelectableItemIds';
 import { useUpdateLinkInDraft } from '@/navigation-menu-item/hooks/useUpdateLinkInDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/types/navigation-menu-item-type';
-import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/types/processed-navigation-menu-item';
+import styled from '@emotion/styled';
+import { useLingui } from '@lingui/react/macro';
+import { useRecoilValue } from 'recoil';
+import { isDefined } from 'twenty-shared/utils';
 
 const StyledCommandMenuPlaceholder = styled.p`
   color: ${({ theme }) => theme.font.color.tertiary};
@@ -89,14 +89,13 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     );
   }
 
-  if (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.LINK && !selectedItem) {
-    return null;
-  }
-
-  if (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.LINK) {
+  if (
+    isDefined(selectedItem) &&
+    selectedItem.itemType === NAVIGATION_MENU_ITEM_TYPE.LINK
+  ) {
     return (
       <CommandMenuEditLinkItemView
-        selectedItem={selectedItem as ProcessedNavigationMenuItem}
+        selectedItem={selectedItem}
         onUpdateLink={(linkId, link) => updateLinkInDraft(linkId, { link })}
         onOpenFolderPicker={setFolderPicker}
         canMoveUp={canMoveUp}
@@ -108,6 +107,10 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
         onAddAfter={onAddAfter}
       />
     );
+  }
+
+  if (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.LINK) {
+    return null;
   }
 
   if (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER) {

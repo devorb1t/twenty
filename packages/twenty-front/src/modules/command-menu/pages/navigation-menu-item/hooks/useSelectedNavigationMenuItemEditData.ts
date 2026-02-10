@@ -2,9 +2,8 @@ import { useRecoilValue } from 'recoil';
 
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
-import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/types/navigation-menu-item-type';
-import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/types/processed-navigation-menu-item';
+import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { coreViewsState } from '@/views/states/coreViewState';
 import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
@@ -25,7 +24,7 @@ export const useSelectedNavigationMenuItemEditData = () => {
   const selectedItemType = selectedItem?.itemType ?? null;
   const selectedItemObjectMetadata = selectedItem
     ? getObjectMetadataForNavigationMenuItem(
-        selectedItem as ProcessedNavigationMenuItem,
+        selectedItem,
         objectMetadataItems,
         views,
       )
@@ -38,7 +37,10 @@ export const useSelectedNavigationMenuItemEditData = () => {
         : (selectedItemObjectMetadata?.labelPlural ?? '')
     : null;
 
-  const processedItem = selectedItem as ProcessedNavigationMenuItem | undefined;
+  const processedItem =
+    selectedItem && selectedItem.itemType !== NAVIGATION_MENU_ITEM_TYPE.FOLDER
+      ? selectedItem
+      : undefined;
 
   return {
     selectedItem,

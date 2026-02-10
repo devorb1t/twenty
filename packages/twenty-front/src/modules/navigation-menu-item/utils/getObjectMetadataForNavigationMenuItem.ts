@@ -1,11 +1,16 @@
 import { isDefined } from 'twenty-shared/utils';
 
-import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
+import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/types/processed-navigation-menu-item';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { type View } from '@/views/types/View';
 
+type NavigationMenuItemWithItemType = Pick<
+  ProcessedNavigationMenuItem,
+  'itemType' | 'viewId' | 'targetObjectMetadataId'
+>;
+
 export const getObjectMetadataForNavigationMenuItem = (
-  navigationMenuItem: ProcessedNavigationMenuItem,
+  navigationMenuItem: NavigationMenuItemWithItemType,
   objectMetadataItems: ObjectMetadataItem[],
   views: View[],
 ): ObjectMetadataItem | null => {
