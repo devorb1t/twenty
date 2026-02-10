@@ -284,6 +284,8 @@ export class MigrateFavoritesToNavigationMenuItemsCommand extends ActiveOrSuspen
           folderId: null,
           folderUniversalIdentifier: null,
           name: favoriteFolder.name,
+          link: null,
+          icon: null,
           position: favoriteFolder.position,
           workspaceId,
           applicationId: workspaceCustomApplicationId,
@@ -316,6 +318,8 @@ export class MigrateFavoritesToNavigationMenuItemsCommand extends ActiveOrSuspen
           folderId: null,
           folderUniversalIdentifier: null,
           name: favoriteFolder.name,
+          link: null,
+          icon: null,
           position: favoriteFolder.position,
           workspaceId,
           applicationId: workspaceCustomApplicationId,
@@ -521,6 +525,8 @@ export class MigrateFavoritesToNavigationMenuItemsCommand extends ActiveOrSuspen
           folderId,
           folderUniversalIdentifier: folderId,
           name: null,
+          link: null,
+          icon: null,
           position: favorite.position,
           workspaceId,
           applicationId,
@@ -566,6 +572,8 @@ export class MigrateFavoritesToNavigationMenuItemsCommand extends ActiveOrSuspen
         folderId,
         folderUniversalIdentifier: folderId,
         name: null,
+        link: null,
+        icon: null,
         position: favorite.position,
         workspaceId,
         applicationId: workspaceCustomApplicationId,
@@ -615,7 +623,9 @@ export class MigrateFavoritesToNavigationMenuItemsCommand extends ActiveOrSuspen
     const matchingStandardItem = Object.values(
       STANDARD_NAVIGATION_MENU_ITEMS,
     ).find(
-      (item) => item.viewUniversalIdentifier === flatView.universalIdentifier,
+      (item) =>
+        'viewUniversalIdentifier' in item &&
+        item.viewUniversalIdentifier === flatView.universalIdentifier,
     );
 
     return !isDefined(matchingStandardItem)
