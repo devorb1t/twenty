@@ -21,6 +21,9 @@ export const AddToNavigationIconSlot = ({
   if (isValidElement(icon)) {
     return <>{icon}</>;
   }
+  if (typeof icon !== 'function') {
+    return null;
+  }
   const Icon = icon as IconComponent;
   return <Icon size={size} stroke={stroke} color={color} />;
 };
