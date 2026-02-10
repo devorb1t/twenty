@@ -2,12 +2,13 @@ import styled from '@emotion/styled';
 import { Draggable } from '@hello-pangea/dnd';
 import { useLingui } from '@lingui/react/macro';
 import { useState } from 'react';
+import { useSetRecoilState } from 'recoil';
 import { type IconComponent } from 'twenty-ui/display';
 
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { AddToNavigationDragHandle } from '@/navigation-menu-item/components/AddToNavigationDragHandle';
+import { addToNavPayloadRegistryState } from '@/navigation-menu-item/states/addToNavPayloadRegistryState';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
-import { getAddToNavDraggableId } from '@/navigation-menu-item/utils/addToNavDraggableId';
 
 const StyledDraggableMenuItem = styled.div`
   cursor: grab;
@@ -38,7 +39,9 @@ export const CommandMenuItemWithAddToNavigationDrag = ({
   dragIndex,
 }: CommandMenuItemWithAddToNavigationDragProps) => {
   const { t } = useLingui();
+  const setRegistry = useSetRecoilState(addToNavPayloadRegistryState);
   const [isHovered, setIsHovered] = useState(false);
+
   const contextualDescription = isHovered
     ? t`Drag to add to navbar`
     : description;
@@ -67,13 +70,10 @@ export const CommandMenuItemWithAddToNavigationDrag = ({
   );
 
   if (dragIndex !== undefined) {
-    const draggableId = getAddToNavDraggableId(payload);
+    setRegistry((prev) => new Map(prev).set(id, payload));
+
     return (
-      <Draggable
-        draggableId={draggableId}
-        index={dragIndex}
-        isDragDisabled={false}
-      >
+      <Draggable draggableId={id} index={dragIndex} isDragDisabled={false}>
         {(provided) => (
           <div
             ref={provided.innerRef}

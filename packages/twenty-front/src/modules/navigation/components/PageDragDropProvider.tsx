@@ -6,6 +6,7 @@ import {
   type ResponderProvided,
 } from '@hello-pangea/dnd';
 import { type ReactNode, useState } from 'react';
+import { useRecoilCallback } from 'recoil';
 import { FeatureFlagKey } from '~/generated-metadata/graphql';
 
 import { FavoritesDragContext } from '@/favorites/contexts/FavoritesDragContext';
@@ -17,7 +18,7 @@ import { NavigationMenuItemDragContext } from '@/navigation-menu-item/contexts/N
 import { useHandleAddToNavigationDrop } from '@/navigation-menu-item/hooks/useHandleAddToNavigationDrop';
 import { useHandleNavigationMenuItemDragAndDrop } from '@/navigation-menu-item/hooks/useHandleNavigationMenuItemDragAndDrop';
 import { useHandleWorkspaceNavigationMenuItemDragAndDrop } from '@/navigation-menu-item/hooks/useHandleWorkspaceNavigationMenuItemDragAndDrop';
-import { getAddToNavPayloadByDraggableId } from '@/navigation-menu-item/utils/addToNavDraggableId';
+import { addToNavPayloadRegistryState } from '@/navigation-menu-item/states/addToNavPayloadRegistryState';
 import { getDropTargetIdFromDestination } from '@/navigation-menu-item/utils/getDropTargetIdFromDestination';
 import { isWorkspaceDroppableId } from '@/navigation-menu-item/utils/isWorkspaceDroppableId';
 import { validateAndExtractWorkspaceFolderId } from '@/navigation-menu-item/utils/validateAndExtractWorkspaceFolderId';
@@ -56,26 +57,34 @@ export const PageDragDropProvider = ({
     setSourceDroppableId(dragStart.source.droppableId);
   };
 
-  const handleDragUpdate: OnDragUpdateResponder = (update) => {
-    const { source, destination } = update;
-    if (source.droppableId !== ADD_TO_NAV_SOURCE_DROPPABLE_ID) {
-      return;
-    }
-    if (!destination || !isWorkspaceDroppableId(destination.droppableId)) {
-      setActiveDropTargetId(null);
-      setForbiddenDropTargetId(null);
-      return;
-    }
-    const dropTargetId = getDropTargetIdFromDestination(destination);
-    setActiveDropTargetId(dropTargetId);
+  const handleDragUpdate = useRecoilCallback(
+    ({ snapshot }) =>
+      ((update: Parameters<OnDragUpdateResponder>[0]) => {
+        const { source, destination } = update;
+        if (source.droppableId !== ADD_TO_NAV_SOURCE_DROPPABLE_ID) {
+          return;
+        }
+        if (!destination || !isWorkspaceDroppableId(destination.droppableId)) {
+          setActiveDropTargetId(null);
+          setForbiddenDropTargetId(null);
+          return;
+        }
+        const dropTargetId = getDropTargetIdFromDestination(destination);
+        setActiveDropTargetId(dropTargetId);
 
-    const payload = getAddToNavPayloadByDraggableId(update.draggableId);
-    const folderId = validateAndExtractWorkspaceFolderId(
-      destination.droppableId,
-    );
-    const isFolderOverFolder = payload?.type === 'folder' && folderId !== null;
-    setForbiddenDropTargetId(isFolderOverFolder ? dropTargetId : null);
-  };
+        const registry = snapshot
+          .getLoadable(addToNavPayloadRegistryState)
+          .getValue();
+        const payload = registry.get(update.draggableId) ?? null;
+        const folderId = validateAndExtractWorkspaceFolderId(
+          destination.droppableId,
+        );
+        const isFolderOverFolder =
+          payload?.type === 'folder' && folderId !== null;
+        setForbiddenDropTargetId(isFolderOverFolder ? dropTargetId : null);
+      }) as OnDragUpdateResponder,
+    [],
+  );
 
   const handleDragEnd = (result: DropResult, provided: ResponderProvided) => {
     setIsDragging(false);

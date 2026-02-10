@@ -1,8 +1,8 @@
 import { useRecoilCallback } from 'recoil';
 
-import { commandMenuSearchState } from '@/command-menu/states/commandMenuSearchState';
-
 import { SIDE_PANEL_FOCUS_ID } from '@/command-menu/constants/SidePanelFocusId';
+import { commandMenuSearchState } from '@/command-menu/states/commandMenuSearchState';
+import { addToNavPayloadRegistryState } from '@/navigation-menu-item/states/addToNavPayloadRegistryState';
 import { useNavigateCommandMenu } from '@/command-menu/hooks/useNavigateCommandMenu';
 import { isCommandMenuClosingState } from '@/command-menu/states/isCommandMenuClosingState';
 import { isCommandMenuOpenedState } from '@/command-menu/states/isCommandMenuOpenedState';
@@ -29,6 +29,7 @@ export const useCommandMenu = () => {
           .getValue();
 
         if (isCommandMenuOpened) {
+          set(addToNavPayloadRegistryState, new Map());
           set(isCommandMenuOpenedState, false);
           set(isCommandMenuClosingState, true);
           closeAnyOpenDropdown();
