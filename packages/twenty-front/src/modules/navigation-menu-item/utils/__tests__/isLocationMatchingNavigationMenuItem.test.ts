@@ -1,3 +1,4 @@
+import { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/types/navigation-menu-item-type';
 import { isLocationMatchingNavigationMenuItem } from '@/navigation-menu-item/utils/isLocationMatchingNavigationMenuItem';
 
 describe('isLocationMatchingNavigationMenuItem', () => {
@@ -5,7 +6,7 @@ describe('isLocationMatchingNavigationMenuItem', () => {
     const currentPath = '/app/objects/people';
     const currentViewPath = '/app/objects/people?viewId=123';
     const navigationMenuItem = {
-      objectNameSingular: 'person',
+      itemType: NAVIGATION_MENU_ITEM_TYPE.RECORD,
       link: '/app/objects/people',
     };
 
@@ -22,7 +23,7 @@ describe('isLocationMatchingNavigationMenuItem', () => {
     const currentPath = '/app/objects/companies';
     const currentViewPath = '/app/objects/companies?viewId=123';
     const navigationMenuItem = {
-      objectNameSingular: 'view',
+      itemType: NAVIGATION_MENU_ITEM_TYPE.VIEW,
       link: '/app/objects/companies?viewId=123',
     };
 
@@ -39,7 +40,7 @@ describe('isLocationMatchingNavigationMenuItem', () => {
     const currentPath = '/app/objects/people';
     const currentViewPath = '/app/objects/people?viewId=123';
     const navigationMenuItem = {
-      objectNameSingular: 'person',
+      itemType: NAVIGATION_MENU_ITEM_TYPE.RECORD,
       link: '/app/objects/company',
     };
 
@@ -56,7 +57,7 @@ describe('isLocationMatchingNavigationMenuItem', () => {
     const currentPath = '/app/objects/companies';
     const currentViewPath = '/app/objects/companies?viewId=123';
     const navigationMenuItem = {
-      objectNameSingular: 'view',
+      itemType: NAVIGATION_MENU_ITEM_TYPE.VIEW,
       link: '/app/objects/companies?viewId=456',
     };
 
@@ -73,7 +74,7 @@ describe('isLocationMatchingNavigationMenuItem', () => {
     const currentPath = '/app/objects/people';
     const currentViewPath = '/app/objects/people?viewId=999';
     const navigationMenuItem = {
-      objectNameSingular: 'person',
+      itemType: NAVIGATION_MENU_ITEM_TYPE.RECORD,
       link: '/app/objects/people',
     };
 
