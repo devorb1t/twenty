@@ -2,7 +2,6 @@ import { useRecoilValue } from 'recoil';
 
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
-import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
@@ -22,9 +21,7 @@ export const useSelectedNavigationMenuItemEditData = () => {
     ? items.find((item) => item.id === selectedNavigationMenuItemInEditMode)
     : undefined;
 
-  const selectedItemType = selectedItem
-    ? getNavigationMenuItemType(selectedItem)
-    : null;
+  const selectedItemType = selectedItem?.itemType ?? null;
   const selectedItemObjectMetadata = selectedItem
     ? getObjectMetadataForNavigationMenuItem(
         selectedItem as ProcessedNavigationMenuItem,

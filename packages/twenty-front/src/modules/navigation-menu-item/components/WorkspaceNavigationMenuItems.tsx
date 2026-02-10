@@ -23,7 +23,6 @@ import {
   type NavigationMenuItemClickParams,
   useWorkspaceSectionItems,
 } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
-import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { filterWorkspaceNavigationMenuItems } from '@/navigation-menu-item/utils/filterWorkspaceNavigationMenuItems';
@@ -91,8 +90,7 @@ export const WorkspaceNavigationMenuItems = () => {
     const { item, objectMetadataItem } = params;
     const id = item.id;
     setSelectedNavigationMenuItemInEditMode(id);
-    const type = getNavigationMenuItemType(item);
-    if (type === 'folder') {
+    if (item.itemType === 'folder') {
       setOpenNavigationMenuItemFolderIds((currentOpenFolders) =>
         currentOpenFolders.includes(id)
           ? currentOpenFolders
@@ -102,7 +100,7 @@ export const WorkspaceNavigationMenuItems = () => {
         pageTitle: t`Edit folder`,
         pageIcon: IconFolder,
       });
-    } else if (type === 'link') {
+    } else if (item.itemType === 'link') {
       openNavigationMenuItemInCommandMenu({
         pageTitle: t`Edit link`,
         pageIcon: IconLink,

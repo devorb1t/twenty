@@ -65,11 +65,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     return <CommandMenuEditFolderPickerSubView onBack={clearSubView} />;
   }
 
-  if (selectedItemType === 'objectView' && !selectedItemObjectMetadata) {
+  if (selectedItemType === 'view' && !selectedItemObjectMetadata) {
     return null;
   }
 
-  if (selectedItemType === 'objectView') {
+  if (selectedItemType === 'view') {
     return (
       <CommandMenuEditObjectViewBase
         onOpenFolderPicker={setFolderPicker}
