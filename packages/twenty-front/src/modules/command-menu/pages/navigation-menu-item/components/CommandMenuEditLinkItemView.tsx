@@ -9,8 +9,9 @@ import {
   type OrganizeActionsProps,
   CommandMenuEditOrganizeActions,
 } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
+import { getOrganizeActionsSelectableItemIds } from '@/command-menu/pages/navigation-menu-item/utils/getOrganizeActionsSelectableItemIds';
 import { CommandMenuEditOwnerSection } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOwnerSection';
-import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
+import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/types/processed-navigation-menu-item';
 import { TextInput } from '@/ui/input/components/TextInput';
 
 type CommandMenuEditLinkItemViewProps = OrganizeActionsProps & {
@@ -34,14 +35,7 @@ export const CommandMenuEditLinkItemView = ({
   const { t } = useLingui();
   const [urlEditInput, setUrlEditInput] = useState('');
 
-  const selectableItemIds = [
-    'move-up',
-    'move-down',
-    'move-to-folder',
-    'add-before',
-    'add-after',
-    'remove',
-  ];
+  const selectableItemIds = getOrganizeActionsSelectableItemIds(true);
 
   return (
     <CommandMenuList commandGroups={[]} selectableItemIds={selectableItemIds}>

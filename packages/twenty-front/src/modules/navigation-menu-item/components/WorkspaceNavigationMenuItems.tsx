@@ -24,7 +24,7 @@ import {
   useWorkspaceSectionItems,
 } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
-import { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
+import { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/types/navigation-menu-item-type';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { filterWorkspaceNavigationMenuItems } from '@/navigation-menu-item/utils/filterWorkspaceNavigationMenuItems';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
@@ -126,7 +126,8 @@ export const WorkspaceNavigationMenuItems = () => {
     });
   };
 
-  const handleAddMenuItem = () => {
+  const handleAddMenuItem = (event?: React.MouseEvent) => {
+    event?.stopPropagation();
     navigateCommandMenu({
       page: CommandMenuPages.NavigationMenuAddItem,
       pageTitle: t`New sidebar item`,
@@ -154,15 +155,7 @@ export const WorkspaceNavigationMenuItems = () => {
                 Icon={IconPlus}
                 accent="tertiary"
                 size="small"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  navigateCommandMenu({
-                    page: CommandMenuPages.NavigationMenuAddItem,
-                    pageTitle: t`New sidebar item`,
-                    pageIcon: IconPlus,
-                    resetNavigationStack: true,
-                  });
-                }}
+                onClick={handleAddMenuItem}
               />
             ) : (
               <LightIconButton

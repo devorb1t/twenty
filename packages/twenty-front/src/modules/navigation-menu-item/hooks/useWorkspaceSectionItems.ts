@@ -3,10 +3,8 @@ import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
 import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
-import {
-  NAVIGATION_MENU_ITEM_TYPE,
-  type ProcessedNavigationMenuItem,
-} from '@/navigation-menu-item/utils/sortNavigationMenuItems';
+import { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/types/navigation-menu-item-type';
+import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/types/processed-navigation-menu-item';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
 import { coreViewsState } from '@/views/states/coreViewState';
