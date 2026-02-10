@@ -131,7 +131,8 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
   );
 
   const { deleteNavigationMenuItem } = useDeleteNavigationMenuItem();
-  const folderContentDropDisabled = useIsDropDisabledForSection(false);
+  const folderContentDropDisabled =
+    useIsDropDisabledForSection(isWorkspaceFolder);
 
   const navigationMenuItemFolderContentLength =
     folder.navigationMenuItems.length;
