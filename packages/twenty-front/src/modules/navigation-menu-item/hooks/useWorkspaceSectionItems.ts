@@ -56,9 +56,7 @@ export const useWorkspaceSectionItems = (): FlatWorkspaceItem[] => {
     FlatWorkspaceItem[]
   >((acc, item) => {
     if (isNavigationMenuItemFolder(item)) {
-      if (isDefined(folderChildrenById.get(item.id))) {
-        acc.push({ ...item, itemType: NAVIGATION_MENU_ITEM_TYPE.FOLDER });
-      }
+      acc.push({ ...item, itemType: NAVIGATION_MENU_ITEM_TYPE.FOLDER });
     } else {
       const processedItem = processedObjectViewsById.get(item.id);
       if (!isDefined(processedItem)) {
