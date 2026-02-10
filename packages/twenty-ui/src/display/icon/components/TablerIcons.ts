@@ -204,6 +204,7 @@ export {
   IconHeart,
   IconHeartOff,
   IconHeartRateMonitor,
+  IconHelp,
   IconHelpCircle,
   IconHierarchy,
   IconHierarchy2,
