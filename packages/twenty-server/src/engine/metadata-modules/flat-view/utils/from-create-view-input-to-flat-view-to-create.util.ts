@@ -4,7 +4,6 @@ import {
 } from 'twenty-shared/utils';
 import { v4 } from 'uuid';
 
-import { type FlatApplication } from 'src/engine/core-modules/application/types/flat-application.type';
 import { type AllFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/types/all-flat-entity-maps.type';
 import { resolveEntityRelationUniversalIdentifiers } from 'src/engine/metadata-modules/flat-entity/utils/resolve-entity-relation-universal-identifiers.util';
 import { computeFlatViewGroupsOnViewCreate } from 'src/engine/metadata-modules/flat-view-group/utils/compute-flat-view-groups-on-view-create.util';
@@ -18,13 +17,13 @@ import { type UniversalFlatView } from 'src/engine/workspace-manager/workspace-m
 export const fromCreateViewInputToFlatViewToCreate = ({
   createViewInput: rawCreateViewInput,
   createdByUserWorkspaceId,
-  flatApplication,
+  applicationUniversalIdentifier,
   flatFieldMetadataMaps,
   flatObjectMetadataMaps,
 }: {
   createViewInput: CreateViewInput;
   createdByUserWorkspaceId?: string;
-  flatApplication: FlatApplication;
+  applicationUniversalIdentifier: string;
   flatFieldMetadataMaps: AllFlatEntityMaps['flatFieldMetadataMaps'];
   flatObjectMetadataMaps: AllFlatEntityMaps['flatObjectMetadataMaps'];
 }): {
@@ -88,7 +87,7 @@ export const fromCreateViewInputToFlatViewToCreate = ({
     viewFilterUniversalIdentifiers: [],
     viewGroupUniversalIdentifiers: [],
     viewFilterGroupUniversalIdentifiers: [],
-    applicationUniversalIdentifier: flatApplication.universalIdentifier,
+    applicationUniversalIdentifier,
   };
 
   let flatViewGroupsToCreate: UniversalFlatViewGroup[] = [];

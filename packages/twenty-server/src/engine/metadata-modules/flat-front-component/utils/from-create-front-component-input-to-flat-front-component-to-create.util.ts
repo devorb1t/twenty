@@ -1,43 +1,39 @@
 import { trimAndRemoveDuplicatedWhitespacesFromObjectStringProperties } from 'twenty-shared/utils';
 import { v4 } from 'uuid';
 
-import { type FlatApplication } from 'src/engine/core-modules/application/types/flat-application.type';
-import { type FlatFrontComponent } from 'src/engine/metadata-modules/flat-front-component/types/flat-front-component.type';
 import { type CreateFrontComponentInput } from 'src/engine/metadata-modules/front-component/dtos/create-front-component.input';
+import { type UniversalFlatFrontComponent } from 'src/engine/workspace-manager/workspace-migration/universal-flat-entity/types/universal-flat-front-component.type';
 
 export const fromCreateFrontComponentInputToFlatFrontComponentToCreate = ({
   createFrontComponentInput,
-  workspaceId,
-  flatApplication,
+  applicationUniversalIdentifier,
 }: {
   createFrontComponentInput: CreateFrontComponentInput;
-  workspaceId: string;
-  flatApplication: FlatApplication;
-}): FlatFrontComponent => {
+  applicationUniversalIdentifier: string;
+}): UniversalFlatFrontComponent & { id: string } => {
   const now = new Date().toISOString();
+  const frontComponentId = createFrontComponentInput.id ?? v4();
 
-  const { name } = trimAndRemoveDuplicatedWhitespacesFromObjectStringProperties(
-    createFrontComponentInput,
-    ['name'],
-  );
+  const { name } =
+    trimAndRemoveDuplicatedWhitespacesFromObjectStringProperties(
+      createFrontComponentInput,
+      ['name'],
+    );
 
-  const id = createFrontComponentInput.id ?? v4();
   const universalIdentifier =
     createFrontComponentInput.universalIdentifier ?? v4();
 
   return {
-    id,
+    id: frontComponentId,
     name: name ?? createFrontComponentInput.componentName,
     description: createFrontComponentInput.description ?? null,
     sourceComponentPath: createFrontComponentInput.sourceComponentPath,
     builtComponentPath: createFrontComponentInput.builtComponentPath,
     componentName: createFrontComponentInput.componentName,
     builtComponentChecksum: createFrontComponentInput.builtComponentChecksum,
-    workspaceId,
     createdAt: now,
     updatedAt: now,
     universalIdentifier,
-    applicationId: flatApplication.id,
-    applicationUniversalIdentifier: flatApplication.universalIdentifier,
+    applicationUniversalIdentifier,
   };
 };

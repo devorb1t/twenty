@@ -1,7 +1,6 @@
 import { trimAndRemoveDuplicatedWhitespacesFromObjectStringProperties } from 'twenty-shared/utils';
 import { v4 } from 'uuid';
 
-import { type FlatApplication } from 'src/engine/core-modules/application/types/flat-application.type';
 import { type AllFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/types/all-flat-entity-maps.type';
 import { resolveEntityRelationUniversalIdentifiers } from 'src/engine/metadata-modules/flat-entity/utils/resolve-entity-relation-universal-identifiers.util';
 import { DEFAULT_VIEW_FIELD_SIZE } from 'src/engine/metadata-modules/flat-view-field/constants/default-view-field-size.constant';
@@ -10,12 +9,12 @@ import { type UniversalFlatViewField } from 'src/engine/workspace-manager/worksp
 
 export type FromCreateViewFieldInputToFlatViewFieldToCreateArgs = {
   createViewFieldInput: CreateViewFieldInput;
-  flatApplication: FlatApplication;
+  applicationUniversalIdentifier: string;
 } & Pick<AllFlatEntityMaps, 'flatFieldMetadataMaps' | 'flatViewMaps'>;
 
 export const fromCreateViewFieldInputToFlatViewFieldToCreate = ({
   createViewFieldInput: rawCreateViewFieldInput,
-  flatApplication,
+  applicationUniversalIdentifier,
   flatFieldMetadataMaps,
   flatViewMaps,
 }: FromCreateViewFieldInputToFlatViewFieldToCreateArgs): UniversalFlatViewField & {
@@ -49,6 +48,6 @@ export const fromCreateViewFieldInputToFlatViewFieldToCreate = ({
     size: createViewFieldInput.size ?? DEFAULT_VIEW_FIELD_SIZE,
     position: createViewFieldInput.position ?? 0,
     aggregateOperation: createViewFieldInput.aggregateOperation ?? null,
-    applicationUniversalIdentifier: flatApplication.universalIdentifier,
+    applicationUniversalIdentifier,
   };
 };

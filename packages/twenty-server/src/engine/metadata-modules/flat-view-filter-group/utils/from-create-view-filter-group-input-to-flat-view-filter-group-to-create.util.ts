@@ -1,7 +1,6 @@
 import { trimAndRemoveDuplicatedWhitespacesFromObjectStringProperties } from 'twenty-shared/utils';
 import { v4 } from 'uuid';
 
-import { type FlatApplication } from 'src/engine/core-modules/application/types/flat-application.type';
 import { type AllFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/types/all-flat-entity-maps.type';
 import { resolveEntityRelationUniversalIdentifiers } from 'src/engine/metadata-modules/flat-entity/utils/resolve-entity-relation-universal-identifiers.util';
 import { type CreateViewFilterGroupInput } from 'src/engine/metadata-modules/view-filter-group/dtos/inputs/create-view-filter-group.input';
@@ -10,12 +9,12 @@ import { type UniversalFlatViewFilterGroup } from 'src/engine/workspace-manager/
 
 export const fromCreateViewFilterGroupInputToFlatViewFilterGroupToCreate = ({
   createViewFilterGroupInput: rawCreateViewFilterGroupInput,
-  flatApplication,
+  applicationUniversalIdentifier,
   flatViewMaps,
   flatViewFilterGroupMaps,
 }: {
   createViewFilterGroupInput: CreateViewFilterGroupInput;
-  flatApplication: FlatApplication;
+  applicationUniversalIdentifier: string;
 } & Pick<
   AllFlatEntityMaps,
   'flatViewMaps' | 'flatViewFilterGroupMaps'
@@ -46,14 +45,14 @@ export const fromCreateViewFilterGroupInputToFlatViewFilterGroupToCreate = ({
     createdAt,
     updatedAt: createdAt,
     deletedAt: null,
-    universalIdentifier: viewFilterGroupId,
+    universalIdentifier: v4(),
     logicalOperator:
       createViewFilterGroupInput.logicalOperator ??
       ViewFilterGroupLogicalOperator.AND,
     parentViewFilterGroupUniversalIdentifier,
     positionInViewFilterGroup:
       createViewFilterGroupInput.positionInViewFilterGroup ?? null,
-    applicationUniversalIdentifier: flatApplication.universalIdentifier,
+    applicationUniversalIdentifier,
     viewFilterUniversalIdentifiers: [],
     childViewFilterGroupUniversalIdentifiers: [],
   };

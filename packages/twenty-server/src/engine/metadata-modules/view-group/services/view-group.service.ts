@@ -8,7 +8,7 @@ import { ApplicationService } from 'src/engine/core-modules/application/services
 import { WorkspaceManyOrAllFlatEntityMapsCacheService } from 'src/engine/metadata-modules/flat-entity/services/workspace-many-or-all-flat-entity-maps-cache.service';
 import { findFlatEntityByIdInFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-id-in-flat-entity-maps.util';
 import { findFlatEntityByUniversalIdentifierOrThrow } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-universal-identifier-or-throw.util';
-import { findManyFlatEntityByIdInFlatEntityMapsOrThrow } from 'src/engine/metadata-modules/flat-entity/utils/find-many-flat-entity-by-id-in-flat-entity-maps-or-throw.util';
+import { findManyFlatEntityByUniversalIdentifierInUniversalFlatEntityMapsOrThrow } from 'src/engine/metadata-modules/flat-entity/utils/find-many-flat-entity-by-universal-identifier-in-universal-flat-entity-maps-or-throw.util';
 import { fromCreateViewGroupInputToFlatViewGroupToCreate } from 'src/engine/metadata-modules/flat-view-group/utils/from-create-view-group-input-to-flat-view-group-to-create.util';
 import { fromDeleteViewGroupInputToFlatViewGroupOrThrow } from 'src/engine/metadata-modules/flat-view-group/utils/from-delete-view-group-input-to-flat-view-group-or-throw.util';
 import { fromDestroyViewGroupInputToFlatViewGroupOrThrow } from 'src/engine/metadata-modules/flat-view-group/utils/from-destroy-view-group-input-to-flat-view-group-or-throw.util';
@@ -101,7 +101,8 @@ export class ViewGroupService {
 
         return fromCreateViewGroupInputToFlatViewGroupToCreate({
           createViewGroupInput,
-          flatApplication: workspaceCustomFlatApplication,
+          applicationUniversalIdentifier:
+            workspaceCustomFlatApplication.universalIdentifier,
           flatViewMaps,
         });
       },
@@ -139,10 +140,14 @@ export class ViewGroupService {
         },
       );
 
-    return findManyFlatEntityByIdInFlatEntityMapsOrThrow({
-      flatEntityIds: flatViewGroupsToCreate.map((el) => el.id),
-      flatEntityMaps: recomputedExistingFlatViewGroupMaps,
-    }).map(fromFlatViewGroupToViewGroupDto);
+    return findManyFlatEntityByUniversalIdentifierInUniversalFlatEntityMapsOrThrow(
+      {
+        universalIdentifiers: flatViewGroupsToCreate.map(
+          (flatViewGroup) => flatViewGroup.universalIdentifier,
+        ),
+        flatEntityMaps: recomputedExistingFlatViewGroupMaps,
+      },
+    ).map(fromFlatViewGroupToViewGroupDto);
   }
 
   async updateOne({

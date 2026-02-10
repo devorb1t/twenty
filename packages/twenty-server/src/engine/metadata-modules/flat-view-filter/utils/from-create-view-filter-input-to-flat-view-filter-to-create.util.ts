@@ -2,7 +2,6 @@ import { ViewFilterOperand } from 'twenty-shared/types';
 import { trimAndRemoveDuplicatedWhitespacesFromObjectStringProperties } from 'twenty-shared/utils';
 import { v4 } from 'uuid';
 
-import { type FlatApplication } from 'src/engine/core-modules/application/types/flat-application.type';
 import { type AllFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/types/all-flat-entity-maps.type';
 import { resolveEntityRelationUniversalIdentifiers } from 'src/engine/metadata-modules/flat-entity/utils/resolve-entity-relation-universal-identifiers.util';
 import { type CreateViewFilterInput } from 'src/engine/metadata-modules/view-filter/dtos/inputs/create-view-filter.input';
@@ -10,13 +9,13 @@ import { type UniversalFlatViewFilter } from 'src/engine/workspace-manager/works
 
 export const fromCreateViewFilterInputToFlatViewFilterToCreate = ({
   createViewFilterInput: rawCreateViewFilterInput,
-  flatApplication,
+  applicationUniversalIdentifier,
   flatFieldMetadataMaps,
   flatViewMaps,
   flatViewFilterGroupMaps,
 }: {
   createViewFilterInput: CreateViewFilterInput;
-  flatApplication: FlatApplication;
+  applicationUniversalIdentifier: string;
 } & Pick<
   AllFlatEntityMaps,
   'flatFieldMetadataMaps' | 'flatViewMaps' | 'flatViewFilterGroupMaps'
@@ -69,6 +68,6 @@ export const fromCreateViewFilterInputToFlatViewFilterToCreate = ({
     positionInViewFilterGroup:
       createViewFilterInput.positionInViewFilterGroup ?? null,
     subFieldName: createViewFilterInput.subFieldName ?? null,
-    applicationUniversalIdentifier: flatApplication.universalIdentifier,
+    applicationUniversalIdentifier,
   };
 };

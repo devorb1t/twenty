@@ -152,8 +152,8 @@ export class CodeStepBuildService {
               | JsonbProperty<HttpRouteTriggerSettings>
               | undefined,
         },
-        workspaceId,
-        ownerFlatApplication: resolvedOwnerFlatApplication,
+        applicationUniversalIdentifier:
+          resolvedOwnerFlatApplication.universalIdentifier,
       });
 
     const created = await this.logicFunctionMetadataService.createOne({

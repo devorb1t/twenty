@@ -68,7 +68,8 @@ export class ViewService {
       fromCreateViewInputToFlatViewToCreate({
         createViewInput,
         createdByUserWorkspaceId,
-        flatApplication: workspaceCustomFlatApplication,
+        applicationUniversalIdentifier:
+          workspaceCustomFlatApplication.universalIdentifier,
         flatFieldMetadataMaps: existingFlatFieldMetadataMaps,
         flatObjectMetadataMaps: existingFlatObjectMetadataMaps,
       });
@@ -112,8 +113,8 @@ export class ViewService {
       );
 
     return fromFlatViewToViewDto(
-      findFlatEntityByIdInFlatEntityMapsOrThrow({
-        flatEntityId: flatViewToCreate.id,
+      findFlatEntityByUniversalIdentifierOrThrow({
+        universalIdentifier: flatViewToCreate.universalIdentifier,
         flatEntityMaps: recomputedExistingFlatViewMaps,
       }),
     );

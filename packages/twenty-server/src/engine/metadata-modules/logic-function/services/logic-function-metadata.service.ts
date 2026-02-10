@@ -7,6 +7,7 @@ import { type FlatApplication } from 'src/engine/core-modules/application/types/
 import { WorkspaceManyOrAllFlatEntityMapsCacheService } from 'src/engine/metadata-modules/flat-entity/services/workspace-many-or-all-flat-entity-maps-cache.service';
 import { findFlatEntityByIdInFlatEntityMapsOrThrow } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-id-in-flat-entity-maps-or-throw.util';
 import { findFlatEntityByIdInFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-id-in-flat-entity-maps.util';
+import { findFlatEntityByUniversalIdentifierOrThrow } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-universal-identifier-or-throw.util';
 import type { CreateLogicFunctionInput } from 'src/engine/metadata-modules/logic-function/dtos/create-logic-function.input';
 import type { UpdateLogicFunctionSourceInput } from 'src/engine/metadata-modules/logic-function/dtos/update-logic-function.input';
 import {
@@ -48,8 +49,8 @@ export class LogicFunctionMetadataService {
     const flatLogicFunctionToCreate =
       fromCreateLogicFunctionInputToFlatLogicFunction({
         createLogicFunctionInput: input,
-        workspaceId,
-        ownerFlatApplication: resolvedOwnerFlatApplication,
+        applicationUniversalIdentifier:
+          resolvedOwnerFlatApplication.universalIdentifier,
       });
 
     const validateAndBuildResult =
@@ -76,7 +77,18 @@ export class LogicFunctionMetadataService {
       );
     }
 
-    return flatLogicFunctionToCreate;
+    const { flatLogicFunctionMaps: recomputedFlatLogicFunctionMaps } =
+      await this.flatEntityMapsCacheService.getOrRecomputeManyOrAllFlatEntityMaps(
+        {
+          workspaceId,
+          flatMapsKeys: ['flatLogicFunctionMaps'],
+        },
+      );
+
+    return findFlatEntityByUniversalIdentifierOrThrow({
+      universalIdentifier: flatLogicFunctionToCreate.universalIdentifier,
+      flatEntityMaps: recomputedFlatLogicFunctionMaps,
+    });
   }
 
   async updateOne({

@@ -6,7 +6,6 @@ import { IsNull, type Repository } from 'typeorm';
 
 import { ApplicationService } from 'src/engine/core-modules/application/services/application.service';
 import { WorkspaceManyOrAllFlatEntityMapsCacheService } from 'src/engine/metadata-modules/flat-entity/services/workspace-many-or-all-flat-entity-maps-cache.service';
-import { findFlatEntityByIdInFlatEntityMapsOrThrow } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-id-in-flat-entity-maps-or-throw.util';
 import { findFlatEntityByUniversalIdentifierOrThrow } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-universal-identifier-or-throw.util';
 import { fromCreateViewFilterGroupInputToFlatViewFilterGroupToCreate } from 'src/engine/metadata-modules/flat-view-filter-group/utils/from-create-view-filter-group-input-to-flat-view-filter-group-to-create.util';
 import { fromDeleteViewFilterGroupInputToFlatViewFilterGroupOrThrow } from 'src/engine/metadata-modules/flat-view-filter-group/utils/from-delete-view-filter-group-input-to-flat-view-filter-group-or-throw.util';
@@ -60,7 +59,8 @@ export class ViewFilterGroupService {
     const flatViewFilterGroupToCreate =
       fromCreateViewFilterGroupInputToFlatViewFilterGroupToCreate({
         createViewFilterGroupInput,
-        flatApplication: workspaceCustomFlatApplication,
+        applicationUniversalIdentifier:
+          workspaceCustomFlatApplication.universalIdentifier,
         flatViewMaps: existingFlatViewMaps,
         flatViewFilterGroupMaps: existingFlatViewFilterGroupMaps,
       });
@@ -100,8 +100,9 @@ export class ViewFilterGroupService {
       );
 
     return fromFlatViewFilterGroupToViewFilterGroupDto(
-      findFlatEntityByIdInFlatEntityMapsOrThrow({
-        flatEntityId: flatViewFilterGroupToCreate.id,
+      findFlatEntityByUniversalIdentifierOrThrow({
+        universalIdentifier:
+          flatViewFilterGroupToCreate.universalIdentifier,
         flatEntityMaps: recomputedExistingFlatViewFilterGroupMaps,
       }),
     );

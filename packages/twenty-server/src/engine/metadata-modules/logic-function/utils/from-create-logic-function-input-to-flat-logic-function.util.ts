@@ -1,24 +1,23 @@
 import { v4 } from 'uuid';
 
-import { type FlatApplication } from 'src/engine/core-modules/application/types/flat-application.type';
 import { type CreateLogicFunctionInput } from 'src/engine/metadata-modules/logic-function/dtos/create-logic-function.input';
 import {
   DEFAULT_HANDLER_NAME,
   LogicFunctionRuntime,
 } from 'src/engine/metadata-modules/logic-function/logic-function.entity';
-import { type FlatLogicFunction } from 'src/engine/metadata-modules/logic-function/types/flat-logic-function.type';
+import { type UniversalFlatLogicFunction } from 'src/engine/workspace-manager/workspace-migration/universal-flat-entity/types/universal-flat-logic-function.type';
 
 export type FromCreateLogicFunctionInputToFlatLogicFunctionArgs = {
   createLogicFunctionInput: Omit<CreateLogicFunctionInput, 'applicationId'>;
-  workspaceId: string;
-  ownerFlatApplication: FlatApplication;
+  applicationUniversalIdentifier: string;
 };
 
 export const fromCreateLogicFunctionInputToFlatLogicFunction = ({
   createLogicFunctionInput: rawCreateLogicFunctionInput,
-  workspaceId,
-  ownerFlatApplication,
-}: FromCreateLogicFunctionInputToFlatLogicFunctionArgs): FlatLogicFunction => {
+  applicationUniversalIdentifier,
+}: FromCreateLogicFunctionInputToFlatLogicFunctionArgs): UniversalFlatLogicFunction & {
+  id: string;
+} => {
   const id = rawCreateLogicFunctionInput.id ?? v4();
   const currentDate = new Date();
 
@@ -48,13 +47,11 @@ export const fromCreateLogicFunctionInputToFlatLogicFunction = ({
     createdAt: currentDate.toISOString(),
     updatedAt: currentDate.toISOString(),
     deletedAt: null,
-    applicationId: ownerFlatApplication.id,
     runtime: LogicFunctionRuntime.NODE22,
     timeoutSeconds: rawCreateLogicFunctionInput.timeoutSeconds ?? 300,
-    workspaceId,
     checksum,
     toolInputSchema: rawCreateLogicFunctionInput.toolInputSchema ?? null,
     isTool: rawCreateLogicFunctionInput?.isTool ?? false,
-    applicationUniversalIdentifier: ownerFlatApplication.universalIdentifier,
+    applicationUniversalIdentifier,
   };
 };

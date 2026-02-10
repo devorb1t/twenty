@@ -1,7 +1,6 @@
 import { trimAndRemoveDuplicatedWhitespacesFromObjectStringProperties } from 'twenty-shared/utils';
 import { v4 } from 'uuid';
 
-import { type FlatApplication } from 'src/engine/core-modules/application/types/flat-application.type';
 import { type AllFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/types/all-flat-entity-maps.type';
 import { resolveEntityRelationUniversalIdentifiers } from 'src/engine/metadata-modules/flat-entity/utils/resolve-entity-relation-universal-identifiers.util';
 import { type CreateViewGroupInput } from 'src/engine/metadata-modules/view-group/dtos/inputs/create-view-group.input';
@@ -9,11 +8,11 @@ import { type UniversalFlatViewGroup } from 'src/engine/workspace-manager/worksp
 
 export const fromCreateViewGroupInputToFlatViewGroupToCreate = ({
   createViewGroupInput: rawCreateViewGroupInput,
-  flatApplication,
+  applicationUniversalIdentifier,
   flatViewMaps,
 }: {
   createViewGroupInput: CreateViewGroupInput;
-  flatApplication: FlatApplication;
+  applicationUniversalIdentifier: string;
 } & Pick<AllFlatEntityMaps, 'flatViewMaps'>): UniversalFlatViewGroup & {
   id: string;
 } => {
@@ -44,6 +43,6 @@ export const fromCreateViewGroupInputToFlatViewGroupToCreate = ({
     isVisible: createViewGroupInput.isVisible ?? true,
     fieldValue: createViewGroupInput.fieldValue,
     position: createViewGroupInput.position ?? 0,
-    applicationUniversalIdentifier: flatApplication.universalIdentifier,
+    applicationUniversalIdentifier,
   };
 };
