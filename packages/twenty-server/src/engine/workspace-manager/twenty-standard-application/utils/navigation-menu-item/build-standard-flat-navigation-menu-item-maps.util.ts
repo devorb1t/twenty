@@ -96,6 +96,7 @@ export const buildStandardFlatNavigationMenuItemMaps = ({
       universalIdentifier: folderItemDefinition.universalIdentifier,
       viewUniversalIdentifier: folderItemDefinition.viewUniversalIdentifier,
       folderId: workflowsFolderId,
+      folderUniversalIdentifier: folderItemDefinition.folderUniversalIdentifier,
       position: folderItemDefinition.position,
       navigationMenuItemId: v4(),
       workspaceId,
