@@ -157,11 +157,30 @@ export class PageLayoutWidgetService {
         { workspaceId },
       );
 
+    const {
+      flatPageLayoutTabMaps,
+      flatObjectMetadataMaps,
+      flatFieldMetadataMaps,
+    } =
+      await this.workspaceManyOrAllFlatEntityMapsCacheService.getOrRecomputeManyOrAllFlatEntityMaps(
+        {
+          workspaceId,
+          flatMapsKeys: [
+            'flatPageLayoutTabMaps',
+            'flatObjectMetadataMaps',
+            'flatFieldMetadataMaps',
+          ],
+        },
+      );
+
     const flatPageLayoutWidgetToCreate =
       fromCreatePageLayoutWidgetInputToFlatPageLayoutWidgetToCreate({
         createPageLayoutWidgetInput: input,
         workspaceId,
-        workspaceCustomApplicationId: workspaceCustomFlatApplication.id,
+        flatApplication: workspaceCustomFlatApplication,
+        flatPageLayoutTabMaps,
+        flatObjectMetadataMaps,
+        flatFieldMetadataMaps,
       });
 
     await this.validateAndRunWidgetMigration({
@@ -203,6 +222,17 @@ export class PageLayoutWidgetService {
     const existingFlatPageLayoutWidgetMaps =
       await this.getFlatPageLayoutWidgetMaps(workspaceId);
 
+    const {
+      flatObjectMetadataMaps: existingFlatObjectMetadataMaps,
+      flatFieldMetadataMaps: existingFlatFieldMetadataMaps,
+    } =
+      await this.workspaceManyOrAllFlatEntityMapsCacheService.getOrRecomputeManyOrAllFlatEntityMaps(
+        {
+          workspaceId,
+          flatMapsKeys: ['flatObjectMetadataMaps', 'flatFieldMetadataMaps'],
+        },
+      );
+
     this.getExistingWidgetOrThrow(id, existingFlatPageLayoutWidgetMaps);
 
     const updatePageLayoutWidgetInput: UpdatePageLayoutWidgetInputWithId = {
@@ -216,6 +246,8 @@ export class PageLayoutWidgetService {
       fromUpdatePageLayoutWidgetInputToFlatPageLayoutWidgetToUpdateOrThrow({
         updatePageLayoutWidgetInput,
         flatPageLayoutWidgetMaps: existingFlatPageLayoutWidgetMaps,
+        flatObjectMetadataMaps: existingFlatObjectMetadataMaps,
+        flatFieldMetadataMaps: existingFlatFieldMetadataMaps,
       });
 
     await this.validateAndRunWidgetMigration({
