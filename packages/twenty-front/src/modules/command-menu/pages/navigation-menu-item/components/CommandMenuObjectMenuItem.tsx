@@ -18,12 +18,14 @@ type CommandMenuObjectMenuItemProps = {
     defaultViewId: string,
   ) => void;
   variant: 'add' | 'edit';
+  dragIndex?: number;
 };
 
 export const CommandMenuObjectMenuItem = ({
   objectMetadataItem,
   onSelect,
   variant,
+  dragIndex,
 }: CommandMenuObjectMenuItemProps) => {
   const theme = useTheme();
   const { getIcon } = useIcons();
@@ -51,6 +53,7 @@ export const CommandMenuObjectMenuItem = ({
           label={objectMetadataItem.labelPlural}
           id={objectMetadataItem.id}
           onClick={handleClick}
+          dragIndex={dragIndex}
           payload={{
             type: 'object' as const,
             objectMetadataId: objectMetadataItem.id,

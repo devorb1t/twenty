@@ -4,6 +4,7 @@ import { isDefined } from 'twenty-shared/utils';
 import { useDebounce } from 'use-debounce';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
+import { CommandMenuAddToNavDroppable } from '@/command-menu/components/CommandMenuAddToNavDroppable';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
 import { MAX_SEARCH_RESULTS } from '@/command-menu/constants/MaxSearchResults';
@@ -88,22 +89,31 @@ export const CommandMenuNewSidebarItemRecordSubView = ({
       searchValue={recordSearchInput}
       onSearchChange={setRecordSearchInput}
     >
-      <CommandMenuList
-        commandGroups={[]}
-        selectableItemIds={selectableItemIds}
-        loading={recordSearchLoading}
-        noResults={isEmpty}
-        noResultsText={noResultsText}
-      >
-        <CommandGroup heading={t`Results`}>
-          {availableSearchRecords.map((record) => (
-            <CommandMenuNewSidebarItemRecordItem
-              key={record.recordId}
-              record={record}
-            />
-          ))}
-        </CommandGroup>
-      </CommandMenuList>
+      <CommandMenuAddToNavDroppable>
+        {({ innerRef, droppableProps, placeholder }) => (
+          <CommandMenuList
+            commandGroups={[]}
+            selectableItemIds={selectableItemIds}
+            loading={recordSearchLoading}
+            noResults={isEmpty}
+            noResultsText={noResultsText}
+          >
+            {/* eslint-disable-next-line react/jsx-props-no-spreading */}
+            <div ref={innerRef} {...droppableProps}>
+              <CommandGroup heading={t`Results`}>
+                {availableSearchRecords.map((record, index) => (
+                  <CommandMenuNewSidebarItemRecordItem
+                    key={record.recordId}
+                    record={record}
+                    dragIndex={index}
+                  />
+                ))}
+              </CommandGroup>
+              {placeholder}
+            </div>
+          </CommandMenuList>
+        )}
+      </CommandMenuAddToNavDroppable>
     </CommandMenuSubViewWithSearch>
   );
 };

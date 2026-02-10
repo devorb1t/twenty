@@ -1,8 +1,6 @@
 import styled from '@emotion/styled';
-import { type ReactNode, useContext, useRef } from 'react';
+import { type ReactNode, useContext } from 'react';
 
-import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
-import { NAVIGATION_SECTIONS } from '@/navigation-menu-item/constants/NavigationSections.constants';
 import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
 import type { NavigationSectionId } from '@/navigation-menu-item/types/NavigationSectionId';
 
@@ -68,65 +66,18 @@ export const NavigationItemDropTarget = ({
   children,
   compact = false,
 }: NavigationItemDropTargetProps) => {
-  const {
-    activeDropTargetId,
-    setActiveDropTargetId,
-    forbiddenDropTargetId,
-    setForbiddenDropTargetId,
-  } = useContext(NavigationDropTargetContext);
-  const ref = useRef<HTMLDivElement>(null);
+  const { activeDropTargetId, forbiddenDropTargetId } = useContext(
+    NavigationDropTargetContext,
+  );
   const dropTargetId = `${sectionId}-${folderId ?? 'orphan'}-${index}`;
   const isDragOver = activeDropTargetId === dropTargetId;
   const isDropForbidden = forbiddenDropTargetId === dropTargetId;
-  const isFolderTarget = folderId !== null;
-
-  const handleDragOver = (event: React.DragEvent) => {
-    if (!event.dataTransfer.types.includes(ADD_TO_NAVIGATION_DRAG.TYPE)) {
-      return;
-    }
-    event.preventDefault();
-    if (sectionId === NAVIGATION_SECTIONS.FAVORITES) {
-      event.dataTransfer.dropEffect = 'none';
-      setForbiddenDropTargetId(dropTargetId);
-      setActiveDropTargetId(null);
-      return;
-    }
-    const isFolderDrag = event.dataTransfer.types.includes(
-      ADD_TO_NAVIGATION_DRAG.FOLDER_TYPE,
-    );
-    const isFolderOverFolder = isFolderTarget && isFolderDrag;
-
-    if (isFolderOverFolder) {
-      event.dataTransfer.dropEffect = 'none';
-      setForbiddenDropTargetId(dropTargetId);
-      setActiveDropTargetId(null);
-    } else {
-      event.dataTransfer.dropEffect = 'copy';
-      setActiveDropTargetId(dropTargetId);
-      setForbiddenDropTargetId(null);
-    }
-  };
-
-  const handleDragLeave = (event: React.DragEvent) => {
-    const relatedTarget = event.relatedTarget as Node | null;
-    if (!ref.current?.contains(relatedTarget)) {
-      setActiveDropTargetId(null);
-      setForbiddenDropTargetId(null);
-    }
-  };
 
   return (
     <StyledDropTarget
-      ref={ref}
       $isDragOver={isDragOver}
       $isDropForbidden={isDropForbidden}
       $compact={compact}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      data-navigation-drop-target=""
-      data-navigation-drop-section={sectionId}
-      data-navigation-drop-folder={folderId ?? 'orphan'}
-      data-navigation-drop-index={String(index)}
     >
       {children}
     </StyledDropTarget>

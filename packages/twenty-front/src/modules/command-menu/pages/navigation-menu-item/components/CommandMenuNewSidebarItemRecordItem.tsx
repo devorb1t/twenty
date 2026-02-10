@@ -20,10 +20,12 @@ type SearchRecord = {
 
 type CommandMenuNewSidebarItemRecordItemProps = {
   record: SearchRecord;
+  dragIndex?: number;
 };
 
 export const CommandMenuNewSidebarItemRecordItem = ({
   record,
+  dragIndex,
 }: CommandMenuNewSidebarItemRecordItemProps) => {
   const { closeCommandMenu } = useCommandMenu();
   const { addRecordToDraft } = useAddRecordToNavigationMenuDraft();
@@ -84,6 +86,7 @@ export const CommandMenuNewSidebarItemRecordItem = ({
         }
         id={record.recordId}
         onClick={handleSelectRecord}
+        dragIndex={dragIndex}
         payload={recordPayload}
       />
     </SelectableListItem>

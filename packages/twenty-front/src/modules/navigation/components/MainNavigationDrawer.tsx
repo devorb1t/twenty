@@ -1,9 +1,9 @@
 import { useRecoilValue } from 'recoil';
+import styled from '@emotion/styled';
 
 import { currentWorkspaceState } from '@/auth/states/currentWorkspaceState';
 import { useFavoritesByFolder } from '@/favorites/hooks/useFavoritesByFolder';
 import { NavigationMenuItemFolderContentDispatcherEffect } from '@/navigation-menu-item/components/NavigationMenuItemFolderContentDispatcher';
-import { NavigationSidebarNativeDropZone } from '@/navigation-menu-item/components/NavigationSidebarNativeDropZone';
 import { useNavigationMenuItemsByFolder } from '@/navigation-menu-item/hooks/useNavigationMenuItemsByFolder';
 import { MainNavigationDrawerFixedItems } from '@/navigation/components/MainNavigationDrawerFixedItems';
 import { MainNavigationDrawerScrollableItems } from '@/navigation/components/MainNavigationDrawerScrollableItems';
@@ -14,6 +14,11 @@ import { currentFavoriteFolderIdState } from '@/ui/navigation/navigation-drawer/
 import { currentNavigationMenuItemFolderIdState } from '@/ui/navigation/navigation-drawer/states/currentNavigationMenuItemFolderIdState';
 import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
 import { FeatureFlagKey } from '~/generated/graphql';
+
+const StyledScrollableContent = styled.div`
+  height: 100%;
+  min-height: 0;
+`;
 
 export const MainNavigationDrawer = ({ className }: { className?: string }) => {
   const currentWorkspace = useRecoilValue(currentWorkspaceState);
@@ -52,7 +57,7 @@ export const MainNavigationDrawer = ({ className }: { className?: string }) => {
 
       <NavigationDrawerScrollableContent>
         {isNavigationMenuItemEnabled ? (
-          <NavigationSidebarNativeDropZone>
+          <StyledScrollableContent>
             {openedFolder ? (
               <NavigationMenuItemFolderContentDispatcherEffect
                 folderName={openedFolder.folderName}
@@ -65,7 +70,7 @@ export const MainNavigationDrawer = ({ className }: { className?: string }) => {
             ) : (
               <MainNavigationDrawerScrollableItems />
             )}
-          </NavigationSidebarNativeDropZone>
+          </StyledScrollableContent>
         ) : openedFolder ? (
           <NavigationMenuItemFolderContentDispatcherEffect
             folderName={openedFolder.folderName}
