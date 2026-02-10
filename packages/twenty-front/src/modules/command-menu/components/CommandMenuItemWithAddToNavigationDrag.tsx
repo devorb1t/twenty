@@ -40,8 +40,8 @@ export const CommandMenuItemWithAddToNavigationDrag = ({
   const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const contextualDescription = isHovered
-    ? (description ?? t`Drag to add to navbar`)
-    : undefined;
+    ? t`Drag to add to navbar`
+    : description;
 
   const handleDragStart = (event: React.DragEvent) => {
     event.dataTransfer.setData(
