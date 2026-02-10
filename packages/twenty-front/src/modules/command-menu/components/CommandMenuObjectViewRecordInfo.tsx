@@ -31,7 +31,7 @@ export const CommandMenuObjectViewRecordInfo = () => {
   return (
     <CommandMenuPageInfoLayout
       icon={<NavigationMenuItemIcon navigationMenuItem={processedItem} />}
-      title={<OverflowingTextWithTooltip text={selectedItemLabel ?? ''} />}
+      title={<OverflowingTextWithTooltip text={selectedItemLabel} />}
       label={label}
     />
   );
