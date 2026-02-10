@@ -22,6 +22,7 @@ import { addToNavPayloadRegistryState } from '@/navigation-menu-item/states/addT
 import { getDropTargetIdFromDestination } from '@/navigation-menu-item/utils/getDropTargetIdFromDestination';
 import { isWorkspaceDroppableId } from '@/navigation-menu-item/utils/isWorkspaceDroppableId';
 import { validateAndExtractWorkspaceFolderId } from '@/navigation-menu-item/utils/validateAndExtractWorkspaceFolderId';
+import { getSnapshotValue } from '@/ui/utilities/state/utils/getSnapshotValue';
 import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
 
 type PageDragDropProviderProps = {
@@ -72,10 +73,10 @@ export const PageDragDropProvider = ({
         const dropTargetId = getDropTargetIdFromDestination(destination);
         setActiveDropTargetId(dropTargetId);
 
-        const registry = snapshot
-          .getLoadable(addToNavPayloadRegistryState)
-          .getValue();
-        const payload = registry.get(update.draggableId) ?? null;
+        const payload =
+          getSnapshotValue(snapshot, addToNavPayloadRegistryState).get(
+            update.draggableId,
+          ) ?? null;
         const folderId = validateAndExtractWorkspaceFolderId(
           destination.droppableId,
         );

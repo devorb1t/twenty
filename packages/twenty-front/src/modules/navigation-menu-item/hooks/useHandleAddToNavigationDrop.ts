@@ -21,6 +21,7 @@ import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-ite
 import { isWorkspaceDroppableId } from '@/navigation-menu-item/utils/isWorkspaceDroppableId';
 import { validateAndExtractWorkspaceFolderId } from '@/navigation-menu-item/utils/validateAndExtractWorkspaceFolderId';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
+import { getSnapshotValue } from '@/ui/utilities/state/utils/getSnapshotValue';
 import { coreViewsState } from '@/views/states/coreViewState';
 import { convertCoreViewToView } from '@/views/utils/convertCoreViewToView';
 
@@ -61,10 +62,10 @@ export const useHandleAddToNavigationDrop = () => {
           return;
         }
 
-        const registry = snapshot
-          .getLoadable(addToNavPayloadRegistryState)
-          .getValue();
-        const payload = registry.get(draggableId) ?? null;
+        const payload =
+          getSnapshotValue(snapshot, addToNavPayloadRegistryState).get(
+            draggableId,
+          ) ?? null;
         if (!payload) {
           return;
         }
@@ -90,6 +91,15 @@ export const useHandleAddToNavigationDrop = () => {
           );
         }
 
+        const openEditForNewNavItem = (
+          newItemId: string,
+          options: Parameters<typeof openNavigationMenuItemInCommandMenu>[0],
+        ) => {
+          setIsNavigationMenuInEditMode(true);
+          setSelectedNavigationMenuItemInEditMode(newItemId);
+          openNavigationMenuItemInCommandMenu(options);
+        };
+
         switch (payload.type) {
           case 'folder': {
             const newFolderId = addFolderToDraft(
@@ -98,9 +108,7 @@ export const useHandleAddToNavigationDrop = () => {
               null,
               index,
             );
-            setIsNavigationMenuInEditMode(true);
-            setSelectedNavigationMenuItemInEditMode(newFolderId);
-            openNavigationMenuItemInCommandMenu({
+            openEditForNewNavItem(newFolderId, {
               pageTitle: t`Edit folder`,
               pageIcon: IconFolder,
               focusTitleInput: true,
@@ -115,9 +123,7 @@ export const useHandleAddToNavigationDrop = () => {
               folderId,
               index,
             );
-            setIsNavigationMenuInEditMode(true);
-            setSelectedNavigationMenuItemInEditMode(newLinkId);
-            openNavigationMenuItemInCommandMenu({
+            openEditForNewNavItem(newLinkId, {
               pageTitle: t`Edit link`,
               pageIcon: IconLink,
               focusTitleInput: true,
@@ -132,12 +138,10 @@ export const useHandleAddToNavigationDrop = () => {
               folderId,
               index,
             );
-            setIsNavigationMenuInEditMode(true);
-            setSelectedNavigationMenuItemInEditMode(newItemId);
             const objectMetadataItem = objectMetadataItems.find(
               (item) => item.id === payload.objectMetadataId,
             );
-            openNavigationMenuItemInCommandMenu({
+            openEditForNewNavItem(newItemId, {
               pageTitle: objectMetadataItem?.labelPlural ?? payload.label,
               pageIcon: objectMetadataItem
                 ? getIcon(objectMetadataItem.icon)
@@ -152,11 +156,9 @@ export const useHandleAddToNavigationDrop = () => {
               folderId,
               index,
             );
-            setIsNavigationMenuInEditMode(true);
-            setSelectedNavigationMenuItemInEditMode(newItemId);
             const views = coreViews.map(convertCoreViewToView);
             const view = views.find((v) => v.id === payload.viewId);
-            openNavigationMenuItemInCommandMenu({
+            openEditForNewNavItem(newItemId, {
               pageTitle: view?.name ?? payload.label,
               pageIcon: view ? getIcon(view.icon) : IconFolder,
             });
@@ -176,12 +178,10 @@ export const useHandleAddToNavigationDrop = () => {
               index,
             );
             if (!isDefined(newItemId)) return;
-            setIsNavigationMenuInEditMode(true);
-            setSelectedNavigationMenuItemInEditMode(newItemId);
             const objectMetadataItem = objectMetadataItems.find(
               (item) => item.id === payload.objectMetadataId,
             );
-            openNavigationMenuItemInCommandMenu({
+            openEditForNewNavItem(newItemId, {
               pageTitle: payload.label,
               pageIcon: objectMetadataItem
                 ? getIcon(objectMetadataItem.icon)
