@@ -65,7 +65,8 @@ export const CommandMenuNewSidebarItemRecordSubView = ({
     ),
   );
 
-  const searchRecords = searchData?.search.edges.map((edge) => edge.node) ?? [];
+  const searchRecords =
+    searchData?.search?.edges?.map((edge) => edge.node) ?? [];
   const availableSearchRecords = searchRecords.filter(
     (record) => !workspaceRecordIds.has(record.recordId),
   ) as SearchRecordBase[];
