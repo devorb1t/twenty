@@ -4,7 +4,7 @@ import { useLingui } from '@lingui/react/macro';
 import { useContext, useState } from 'react';
 
 import { useIsDropDisabledForSection } from '@/navigation-menu-item/hooks/useIsDropDisabledForSection';
-import { NAVIGATION_SECTIONS } from '@/navigation-menu-item/constants/NavigationSections.constants';
+import { NavigationSections } from '@/navigation-menu-item/constants/NavigationSections.constants';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
@@ -221,8 +221,8 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
               index={0}
               sectionId={
                 isWorkspaceFolder
-                  ? NAVIGATION_SECTIONS.WORKSPACE
-                  : NAVIGATION_SECTIONS.FAVORITES
+                  ? NavigationSections.WORKSPACE
+                  : NavigationSections.FAVORITES
               }
             >
               <NavigationDrawerItem
