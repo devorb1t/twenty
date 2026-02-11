@@ -24,7 +24,8 @@ export const NavigationMenuItemIcon = ({
 
   const placeholderColorSeed = navigationMenuItem.targetRecordId ?? undefined;
 
-  const isRecord = navigationMenuItem.itemType === NavigationMenuItemType.RECORD;
+  const isRecord =
+    navigationMenuItem.itemType === NavigationMenuItemType.RECORD;
   const isLink = navigationMenuItem.itemType === NavigationMenuItemType.LINK;
   const iconColors = getNavigationMenuItemIconColors(theme);
   const isObjectIndexView =

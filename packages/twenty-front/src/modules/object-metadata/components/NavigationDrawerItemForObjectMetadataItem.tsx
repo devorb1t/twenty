@@ -48,8 +48,7 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
 
   const isRecord =
     navigationMenuItem?.itemType === NavigationMenuItemType.RECORD;
-  const isView =
-    navigationMenuItem?.itemType === NavigationMenuItemType.VIEW;
+  const isView = navigationMenuItem?.itemType === NavigationMenuItemType.VIEW;
   const hasCustomLink = isRecord || isView;
 
   const navigationPath = hasCustomLink

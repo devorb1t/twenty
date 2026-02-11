@@ -3,8 +3,8 @@ import { Droppable } from '@hello-pangea/dnd';
 import { useLingui } from '@lingui/react/macro';
 import { useContext, useState } from 'react';
 
-import { useIsDropDisabledForSection } from '@/navigation-menu-item/hooks/useIsDropDisabledForSection';
 import { NavigationSections } from '@/navigation-menu-item/constants/NavigationSections.constants';
+import { useIsDropDisabledForSection } from '@/navigation-menu-item/hooks/useIsDropDisabledForSection';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
@@ -105,8 +105,8 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
     if (!isOpen) {
       const firstNonLinkItem = folder.navigationMenuItems.find(
         (item) =>
-        item.itemType !== NavigationMenuItemType.LINK &&
-        isNonEmptyString(item.link),
+          item.itemType !== NavigationMenuItemType.LINK &&
+          isNonEmptyString(item.link),
       );
       if (isDefined(firstNonLinkItem?.link)) {
         navigate(firstNonLinkItem.link);
