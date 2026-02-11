@@ -4,15 +4,17 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { useIcons } from 'twenty-ui/display';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
+import { CommandMenuAddToNavDroppable } from '@/command-menu/components/CommandMenuAddToNavDroppable';
 import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useFilteredPickerItems } from '@/command-menu/hooks/useFilteredPickerItems';
-import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
+import { useDraftNavigationMenuItems } from '@/navigation-menu-item/hooks/useDraftNavigationMenuItems';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { useAddViewToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddViewToNavigationMenuDraft';
-import { addMenuItemInsertionContextState } from '@/navigation-menu-item/states/addMenuItemInsertionContextState';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
+import { addMenuItemInsertionContextState } from '@/navigation-menu-item/states/addMenuItemInsertionContextState';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { type View } from '@/views/types/View';
@@ -32,7 +34,7 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
   const [searchValue, setSearchValue] = useState('');
   const { closeCommandMenu } = useCommandMenu();
   const { addViewToDraft } = useAddViewToNavigationMenuDraft();
-  const { currentDraft } = useNavigationMenuItemEditFolderData();
+  const { currentDraft } = useDraftNavigationMenuItems();
   const addMenuItemInsertionContext = useRecoilValue(
     addMenuItemInsertionContextState,
   );
@@ -89,34 +91,43 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
       searchValue={searchValue}
       onSearchChange={setSearchValue}
     >
-      <CommandMenuList
-        commandGroups={[]}
-        selectableItemIds={selectableItemIds}
-        noResults={isEmpty}
-        noResultsText={noResultsText}
-      >
-        <CommandGroup heading={t`Views`}>
-          {filteredViews.map((view) => (
-            <SelectableListItem
-              key={view.id}
-              itemId={view.id}
-              onEnter={() => handleSelectView(view)}
-            >
-              <CommandMenuItemWithAddToNavigationDrag
-                icon={getIcon(view.icon)}
-                label={view.name}
-                id={view.id}
-                onClick={() => handleSelectView(view)}
-                payload={{
-                  type: 'view',
-                  viewId: view.id,
-                  label: view.name,
-                }}
-              />
-            </SelectableListItem>
-          ))}
-        </CommandGroup>
-      </CommandMenuList>
+      <CommandMenuAddToNavDroppable>
+        {({ innerRef, droppableProps, placeholder }) => (
+          <CommandMenuList
+            commandGroups={[]}
+            selectableItemIds={selectableItemIds}
+            noResults={isEmpty}
+            noResultsText={noResultsText}
+          >
+            {/* eslint-disable-next-line react/jsx-props-no-spreading */}
+            <div ref={innerRef} {...droppableProps}>
+              <CommandGroup heading={t`Views`}>
+                {filteredViews.map((view, index) => (
+                  <SelectableListItem
+                    key={view.id}
+                    itemId={view.id}
+                    onEnter={() => handleSelectView(view)}
+                  >
+                    <CommandMenuItemWithAddToNavigationDrag
+                      icon={getIcon(view.icon)}
+                      label={view.name}
+                      id={view.id}
+                      onClick={() => handleSelectView(view)}
+                      dragIndex={index}
+                      payload={{
+                        type: NavigationMenuItemType.VIEW,
+                        viewId: view.id,
+                        label: view.name,
+                      }}
+                    />
+                  </SelectableListItem>
+                ))}
+              </CommandGroup>
+              {placeholder}
+            </div>
+          </CommandMenuList>
+        )}
+      </CommandMenuAddToNavDroppable>
     </CommandMenuSubViewWithSearch>
   );
 };

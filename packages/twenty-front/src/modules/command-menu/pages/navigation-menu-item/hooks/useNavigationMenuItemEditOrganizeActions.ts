@@ -5,14 +5,43 @@ import { IconPlus } from 'twenty-ui/display';
 
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useNavigateCommandMenu } from '@/command-menu/hooks/useNavigateCommandMenu';
+import { type OrganizeActionsProps } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuPages } from '@/command-menu/types/CommandMenuPages';
 import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { addMenuItemInsertionContextState } from '@/navigation-menu-item/states/addMenuItemInsertionContextState';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
+import { type AddMenuItemInsertionContext } from '@/navigation-menu-item/types/AddMenuItemInsertionContext';
 
-import { type OrganizeActionsProps } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
+const getAddMenuItemInsertionContext = (
+  selectedItem: { id: string; folderId?: string | null },
+  workspaceNavigationMenuItems: Array<{
+    id: string;
+    folderId?: string | null;
+    userWorkspaceId?: string | null;
+  }>,
+  offset: 0 | 1,
+): AddMenuItemInsertionContext | null => {
+  const targetFolderId = selectedItem.folderId ?? null;
+  const itemsInFolder = workspaceNavigationMenuItems.filter(
+    (item) =>
+      (item.folderId ?? null) === targetFolderId &&
+      !isDefined(item.userWorkspaceId),
+  );
+  const selectedIndexInFolder = itemsInFolder.findIndex(
+    (item) => item.id === selectedItem.id,
+  );
+
+  if (selectedIndexInFolder < 0) {
+    return null;
+  }
+
+  return {
+    targetFolderId,
+    targetIndex: selectedIndexInFolder + offset,
+  };
+};
 
 export const useNavigationMenuItemEditOrganizeActions =
   (): OrganizeActionsProps => {
@@ -32,20 +61,30 @@ export const useNavigationMenuItemEditOrganizeActions =
     const items = useWorkspaceSectionItems();
     const { moveUp, moveDown, remove } = useNavigationMenuItemMoveRemove();
 
-    const selectedItemIndex = selectedNavigationMenuItemInEditMode
-      ? items.findIndex(
-          (item) => item.id === selectedNavigationMenuItemInEditMode,
-        )
-      : -1;
     const selectedItem = selectedNavigationMenuItemInEditMode
       ? items.find((item) => item.id === selectedNavigationMenuItemInEditMode)
       : undefined;
-    const isItemInsideFolder = isDefined(selectedItem?.folderId);
-    const canMoveUp = !isItemInsideFolder && selectedItemIndex > 0;
+
+    const folderId = selectedItem?.folderId ?? null;
+    const siblings = items
+      .filter(
+        (item) =>
+          ('folderId' in item ? (item.folderId ?? null) : null) === folderId,
+      )
+      .sort((a, b) => a.position - b.position);
+    const selectedIndexInSiblings = selectedItem
+      ? siblings.findIndex((item) => item.id === selectedItem.id)
+      : -1;
+
+    const canMoveUp =
+      selectedIndexInSiblings > 0 &&
+      selectedItem != null &&
+      isDefined(selectedNavigationMenuItemInEditMode);
     const canMoveDown =
-      !isItemInsideFolder &&
-      selectedItemIndex >= 0 &&
-      selectedItemIndex < items.length - 1;
+      selectedIndexInSiblings >= 0 &&
+      selectedIndexInSiblings < siblings.length - 1 &&
+      selectedItem != null &&
+      isDefined(selectedNavigationMenuItemInEditMode);
 
     const handleMoveUp = () => {
       if (canMoveUp && isDefined(selectedNavigationMenuItemInEditMode)) {
@@ -67,22 +106,15 @@ export const useNavigationMenuItemEditOrganizeActions =
       }
     };
 
-    const handleAddBefore = () => {
+    const handleAddAtOffset = (offset: 0 | 1) => {
       if (!isDefined(selectedItem)) return;
-      const targetFolderId = selectedItem.folderId ?? null;
-      const itemsInFolder = workspaceNavigationMenuItems.filter(
-        (item) =>
-          (item.folderId ?? null) === targetFolderId &&
-          !isDefined(item.userWorkspaceId),
+      const context = getAddMenuItemInsertionContext(
+        selectedItem,
+        workspaceNavigationMenuItems,
+        offset,
       );
-      const selectedIndexInFolder = itemsInFolder.findIndex(
-        (item) => item.id === selectedItem.id,
-      );
-      if (selectedIndexInFolder < 0) return;
-      setAddMenuItemInsertionContext({
-        targetFolderId,
-        targetIndex: selectedIndexInFolder,
-      });
+      if (!context) return;
+      setAddMenuItemInsertionContext(context);
       navigateCommandMenu({
         page: CommandMenuPages.NavigationMenuAddItem,
         pageTitle: t`New sidebar item`,
@@ -91,29 +123,8 @@ export const useNavigationMenuItemEditOrganizeActions =
       });
     };
 
-    const handleAddAfter = () => {
-      if (!isDefined(selectedItem)) return;
-      const targetFolderId = selectedItem.folderId ?? null;
-      const itemsInFolder = workspaceNavigationMenuItems.filter(
-        (item) =>
-          (item.folderId ?? null) === targetFolderId &&
-          !isDefined(item.userWorkspaceId),
-      );
-      const selectedIndexInFolder = itemsInFolder.findIndex(
-        (item) => item.id === selectedItem.id,
-      );
-      if (selectedIndexInFolder < 0) return;
-      setAddMenuItemInsertionContext({
-        targetFolderId,
-        targetIndex: selectedIndexInFolder + 1,
-      });
-      navigateCommandMenu({
-        page: CommandMenuPages.NavigationMenuAddItem,
-        pageTitle: t`New sidebar item`,
-        pageIcon: IconPlus,
-        resetNavigationStack: true,
-      });
-    };
+    const handleAddBefore = () => handleAddAtOffset(0);
+    const handleAddAfter = () => handleAddAtOffset(1);
 
     return {
       canMoveUp,

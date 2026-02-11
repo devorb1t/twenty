@@ -23,8 +23,8 @@ import {
   type NavigationMenuItemClickParams,
   useWorkspaceSectionItems,
 } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
-import { getNavigationMenuItemType } from '@/navigation-menu-item/utils/getNavigationMenuItemType';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { filterWorkspaceNavigationMenuItems } from '@/navigation-menu-item/utils/filterWorkspaceNavigationMenuItems';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/states/openNavigationMenuItemFolderIdsState';
@@ -91,8 +91,7 @@ export const WorkspaceNavigationMenuItems = () => {
     const { item, objectMetadataItem } = params;
     const id = item.id;
     setSelectedNavigationMenuItemInEditMode(id);
-    const type = getNavigationMenuItemType(item);
-    if (type === 'folder') {
+    if (item.itemType === NavigationMenuItemType.FOLDER) {
       setOpenNavigationMenuItemFolderIds((currentOpenFolders) =>
         currentOpenFolders.includes(id)
           ? currentOpenFolders
@@ -102,7 +101,7 @@ export const WorkspaceNavigationMenuItems = () => {
         pageTitle: t`Edit folder`,
         pageIcon: IconFolder,
       });
-    } else if (type === 'link') {
+    } else if (item.itemType === NavigationMenuItemType.LINK) {
       openNavigationMenuItemInCommandMenu({
         pageTitle: t`Edit link`,
         pageIcon: IconLink,
@@ -127,7 +126,8 @@ export const WorkspaceNavigationMenuItems = () => {
     });
   };
 
-  const handleAddMenuItem = () => {
+  const handleAddMenuItem = (event?: React.MouseEvent) => {
+    event?.stopPropagation();
     navigateCommandMenu({
       page: CommandMenuPages.NavigationMenuAddItem,
       pageTitle: t`New sidebar item`,
@@ -155,15 +155,7 @@ export const WorkspaceNavigationMenuItems = () => {
                 Icon={IconPlus}
                 accent="tertiary"
                 size="small"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  navigateCommandMenu({
-                    page: CommandMenuPages.NavigationMenuAddItem,
-                    pageTitle: t`New sidebar item`,
-                    pageIcon: IconPlus,
-                    resetNavigationStack: true,
-                  });
-                }}
+                onClick={handleAddMenuItem}
               />
             ) : (
               <LightIconButton

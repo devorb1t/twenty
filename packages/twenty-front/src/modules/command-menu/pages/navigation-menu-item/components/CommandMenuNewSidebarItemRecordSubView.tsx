@@ -4,11 +4,12 @@ import { isDefined } from 'twenty-shared/utils';
 import { useDebounce } from 'use-debounce';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
+import { CommandMenuAddToNavDroppable } from '@/command-menu/components/CommandMenuAddToNavDroppable';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
 import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandMenuSubViewWithSearch';
 import { MAX_SEARCH_RESULTS } from '@/command-menu/constants/MaxSearchResults';
 import { CommandMenuNewSidebarItemRecordItem } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuNewSidebarItemRecordItem';
-import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
+import { useDraftNavigationMenuItems } from '@/navigation-menu-item/hooks/useDraftNavigationMenuItems';
 import { useApolloCoreClient } from '@/object-metadata/hooks/useApolloCoreClient';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { useObjectPermissions } from '@/object-record/hooks/useObjectPermissions';
@@ -30,7 +31,7 @@ export const CommandMenuNewSidebarItemRecordSubView = ({
   onBack,
 }: CommandMenuNewSidebarItemRecordSubViewProps) => {
   const { t } = useLingui();
-  const { currentDraft } = useNavigationMenuItemEditFolderData();
+  const { currentDraft } = useDraftNavigationMenuItems();
   const { objectMetadataItems } = useObjectMetadataItems();
   const [recordSearchInput, setRecordSearchInput] = useState('');
   const [deferredRecordSearchInput] = useDebounce(recordSearchInput, 300);
@@ -65,7 +66,8 @@ export const CommandMenuNewSidebarItemRecordSubView = ({
     ),
   );
 
-  const searchRecords = searchData?.search.edges.map((edge) => edge.node) ?? [];
+  const searchRecords =
+    searchData?.search?.edges?.map((edge) => edge.node) ?? [];
   const availableSearchRecords = searchRecords.filter(
     (record) => !workspaceRecordIds.has(record.recordId),
   ) as SearchRecordBase[];
@@ -87,22 +89,31 @@ export const CommandMenuNewSidebarItemRecordSubView = ({
       searchValue={recordSearchInput}
       onSearchChange={setRecordSearchInput}
     >
-      <CommandMenuList
-        commandGroups={[]}
-        selectableItemIds={selectableItemIds}
-        loading={recordSearchLoading}
-        noResults={isEmpty}
-        noResultsText={noResultsText}
-      >
-        <CommandGroup heading={t`Results`}>
-          {availableSearchRecords.map((record) => (
-            <CommandMenuNewSidebarItemRecordItem
-              key={record.recordId}
-              record={record}
-            />
-          ))}
-        </CommandGroup>
-      </CommandMenuList>
+      <CommandMenuAddToNavDroppable>
+        {({ innerRef, droppableProps, placeholder }) => (
+          <CommandMenuList
+            commandGroups={[]}
+            selectableItemIds={selectableItemIds}
+            loading={recordSearchLoading}
+            noResults={isEmpty}
+            noResultsText={noResultsText}
+          >
+            {/* eslint-disable-next-line react/jsx-props-no-spreading */}
+            <div ref={innerRef} {...droppableProps}>
+              <CommandGroup heading={t`Results`}>
+                {availableSearchRecords.map((record, index) => (
+                  <CommandMenuNewSidebarItemRecordItem
+                    key={record.recordId}
+                    record={record}
+                    dragIndex={index}
+                  />
+                ))}
+              </CommandGroup>
+              {placeholder}
+            </div>
+          </CommandMenuList>
+        )}
+      </CommandMenuAddToNavDroppable>
     </CommandMenuSubViewWithSearch>
   );
 };

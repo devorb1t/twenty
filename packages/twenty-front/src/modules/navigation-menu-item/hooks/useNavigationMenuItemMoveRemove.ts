@@ -29,17 +29,22 @@ export const useNavigationMenuItemMoveRemove = () => {
     setNavigationMenuItemsDraft((draft) => {
       if (!draft) return draft;
 
-      const flatItems = draft
-        .filter((item) => !isDefined(item.folderId))
+      const currentItem = draft.find(
+        (item) => item.id === navigationMenuItemId,
+      );
+      if (!currentItem) return draft;
+
+      const folderId = currentItem.folderId ?? null;
+      const siblings = draft
+        .filter((item) => (item.folderId ?? null) === folderId)
         .sort((a, b) => a.position - b.position);
 
-      const currentIndex = flatItems.findIndex(
+      const currentIndex = siblings.findIndex(
         (item) => item.id === navigationMenuItemId,
       );
       if (currentIndex <= 0) return draft;
 
-      const itemAbove = flatItems[currentIndex - 1];
-      const currentItem = flatItems[currentIndex];
+      const itemAbove = siblings[currentIndex - 1];
       return swapPositionsInDraft(draft, currentItem, itemAbove);
     });
   };
@@ -48,19 +53,24 @@ export const useNavigationMenuItemMoveRemove = () => {
     setNavigationMenuItemsDraft((draft) => {
       if (!draft) return draft;
 
-      const flatItems = draft
-        .filter((item) => !isDefined(item.folderId))
-        .sort((a, b) => a.position - b.position);
-
-      const currentIndex = flatItems.findIndex(
+      const currentItem = draft.find(
         (item) => item.id === navigationMenuItemId,
       );
-      if (currentIndex < 0 || currentIndex >= flatItems.length - 1) {
+      if (!currentItem) return draft;
+
+      const folderId = currentItem.folderId ?? null;
+      const siblings = draft
+        .filter((item) => (item.folderId ?? null) === folderId)
+        .sort((a, b) => a.position - b.position);
+
+      const currentIndex = siblings.findIndex(
+        (item) => item.id === navigationMenuItemId,
+      );
+      if (currentIndex < 0 || currentIndex >= siblings.length - 1) {
         return draft;
       }
 
-      const itemBelow = flatItems[currentIndex + 1];
-      const currentItem = flatItems[currentIndex];
+      const itemBelow = siblings[currentIndex + 1];
       return swapPositionsInDraft(draft, currentItem, itemBelow);
     });
   };

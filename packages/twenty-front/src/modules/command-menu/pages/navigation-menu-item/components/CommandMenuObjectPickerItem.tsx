@@ -18,6 +18,7 @@ type CommandMenuObjectPickerItemProps = {
     defaultViewId: string,
   ) => void;
   objectMenuItemVariant?: 'add' | 'edit';
+  dragIndex?: number;
 };
 
 export const CommandMenuObjectPickerItem = ({
@@ -26,6 +27,7 @@ export const CommandMenuObjectPickerItem = ({
   onSelectObjectForViewEdit,
   onChangeObject,
   objectMenuItemVariant = 'edit',
+  dragIndex,
 }: CommandMenuObjectPickerItemProps) => {
   const theme = useTheme();
   const { getIcon } = useIcons();
@@ -59,6 +61,7 @@ export const CommandMenuObjectPickerItem = ({
       objectMetadataItem={objectMetadataItem}
       onSelect={onChangeObject}
       variant={objectMenuItemVariant}
+      dragIndex={dragIndex}
     />
   );
 };

@@ -1,13 +1,12 @@
 import { css, useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import type { ReactNode } from 'react';
+import { isDefined } from 'twenty-shared/utils';
 import { IconGripVertical, type IconComponent } from 'twenty-ui/display';
 
-import { AddToNavigationIconSlot } from '@/navigation-menu-item/components/AddToNavigationIconSlot';
-import { ADD_TO_NAVIGATION_DRAG } from '@/navigation-menu-item/constants/AddToNavigationDrag.constants';
+import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
 import { getIconBackgroundColorForPayload } from '@/navigation-menu-item/utils/getIconBackgroundColorForPayload';
-import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
 
 const StyledIconSlot = styled.div<{ $hasFixedSize: boolean }>`
   align-items: center;
@@ -28,18 +27,43 @@ const StyledIconSlot = styled.div<{ $hasFixedSize: boolean }>`
   }
 `;
 
+type AddToNavigationDragHandleIconProps = {
+  icon?: IconComponent;
+  customIconContent?: ReactNode;
+};
+
+const AddToNavigationDragHandleIcon = ({
+  icon,
+  customIconContent,
+}: AddToNavigationDragHandleIconProps) => {
+  const theme = useTheme();
+  const iconSize = theme.icon.size.md;
+  const iconStroke = theme.icon.stroke.sm;
+
+  if (isDefined(customIconContent)) {
+    return <>{customIconContent}</>;
+  }
+
+  if (isDefined(icon)) {
+    const Icon = icon;
+    return (
+      <Icon size={iconSize} stroke={iconStroke} color={theme.grayScale.gray1} />
+    );
+  }
+};
+
 type AddToNavigationDragHandleProps = {
-  icon?: IconComponent | ReactNode;
+  icon?: IconComponent;
+  customIconContent?: ReactNode;
   payload: AddToNavigationDragPayload;
   isHovered: boolean;
-  draggable?: boolean;
 };
 
 export const AddToNavigationDragHandle = ({
   icon,
+  customIconContent,
   payload,
   isHovered,
-  draggable: isDraggable = true,
 }: AddToNavigationDragHandleProps) => {
   const theme = useTheme();
   const iconBackgroundColor = getIconBackgroundColorForPayload(payload, theme);
@@ -48,20 +72,8 @@ export const AddToNavigationDragHandle = ({
   const iconSize = theme.icon.size.md;
   const iconStroke = theme.icon.stroke.sm;
 
-  const handleDragStart = (event: React.DragEvent) => {
-    event.dataTransfer.setData(
-      ADD_TO_NAVIGATION_DRAG.TYPE,
-      JSON.stringify(payload),
-    );
-    event.dataTransfer.effectAllowed = 'copy';
-  };
-
   return (
-    <StyledIconSlot
-      draggable={isDraggable}
-      onDragStart={isDraggable ? handleDragStart : undefined}
-      $hasFixedSize={payloadHasBackgroundColor}
-    >
+    <StyledIconSlot $hasFixedSize={payloadHasBackgroundColor}>
       {isHovered ? (
         <IconGripVertical
           size={iconSize}
@@ -72,18 +84,15 @@ export const AddToNavigationDragHandle = ({
         <StyledNavigationMenuItemIconContainer
           $backgroundColor={iconBackgroundColor}
         >
-          <AddToNavigationIconSlot
+          <AddToNavigationDragHandleIcon
             icon={icon}
-            size={iconSize}
-            stroke={iconStroke}
-            color={theme.grayScale.gray1}
+            customIconContent={customIconContent}
           />
         </StyledNavigationMenuItemIconContainer>
       ) : (
-        <AddToNavigationIconSlot
+        <AddToNavigationDragHandleIcon
           icon={icon}
-          size={iconSize}
-          stroke={iconStroke}
+          customIconContent={customIconContent}
         />
       )}
     </StyledIconSlot>

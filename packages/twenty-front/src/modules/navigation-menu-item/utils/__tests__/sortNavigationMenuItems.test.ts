@@ -309,25 +309,6 @@ describe('sortNavigationMenuItems', () => {
     expect(result[1].objectNameSingular).toBe('person');
   });
 
-  it('should handle empty targetRecordIdentifiers map', () => {
-    const navigationMenuItem: NavigationMenuItem = {
-      id: 'item-id',
-      targetRecordId: 'non-existent-record-id',
-      targetObjectMetadataId: 'metadata-id',
-      position: 1,
-    } as NavigationMenuItem;
-
-    const result = sortNavigationMenuItems(
-      [navigationMenuItem],
-      true,
-      [],
-      [mockObjectMetadataItem],
-      new Map(),
-    );
-
-    expect(result).toHaveLength(0);
-  });
-
   it('should handle navigationMenuItem with both viewId and targetRecordId (viewId takes precedence)', () => {
     const navigationMenuItem: NavigationMenuItem = {
       id: 'item-id',
@@ -350,22 +331,38 @@ describe('sortNavigationMenuItems', () => {
     expect(result[0].viewId).toBe('view-id');
   });
 
-  it('should handle navigationMenuItem with undefined targetRecordId', () => {
-    const navigationMenuItem: NavigationMenuItem = {
-      id: 'item-id',
-      targetRecordId: undefined,
-      targetObjectMetadataId: 'metadata-id',
-      position: 1,
-    } as NavigationMenuItem;
-
-    const result = sortNavigationMenuItems(
-      [navigationMenuItem],
+  it('should process link items with protocol normalization and label from name or link', () => {
+    const withProtocol = sortNavigationMenuItems(
+      [
+        {
+          id: 'link-1',
+          link: 'https://example.com',
+          name: 'My Link',
+          position: 1,
+        } as NavigationMenuItem,
+      ],
       true,
       [],
-      [mockObjectMetadataItem],
+      [],
       new Map(),
     );
+    expect(withProtocol[0].labelIdentifier).toBe('My Link');
+    expect(withProtocol[0].link).toBe('https://example.com');
 
-    expect(result).toHaveLength(0);
+    const noProtocol = sortNavigationMenuItems(
+      [
+        {
+          id: 'link-2',
+          link: 'example.com',
+          position: 2,
+        } as NavigationMenuItem,
+      ],
+      true,
+      [],
+      [],
+      new Map(),
+    );
+    expect(noProtocol[0].link).toBe('https://example.com');
+    expect(noProtocol[0].labelIdentifier).toBe('example.com');
   });
 });

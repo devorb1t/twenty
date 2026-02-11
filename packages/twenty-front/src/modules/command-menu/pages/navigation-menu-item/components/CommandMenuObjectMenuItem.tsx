@@ -6,6 +6,7 @@ import { useIcons } from 'twenty-ui/display';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
 import { IconWithBackground } from '@/navigation-menu-item/components/IconWithBackground';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
@@ -18,12 +19,14 @@ type CommandMenuObjectMenuItemProps = {
     defaultViewId: string,
   ) => void;
   variant: 'add' | 'edit';
+  dragIndex?: number;
 };
 
 export const CommandMenuObjectMenuItem = ({
   objectMetadataItem,
   onSelect,
   variant,
+  dragIndex,
 }: CommandMenuObjectMenuItemProps) => {
   const theme = useTheme();
   const { getIcon } = useIcons();
@@ -51,8 +54,9 @@ export const CommandMenuObjectMenuItem = ({
           label={objectMetadataItem.labelPlural}
           id={objectMetadataItem.id}
           onClick={handleClick}
+          dragIndex={dragIndex}
           payload={{
-            type: 'object' as const,
+            type: NavigationMenuItemType.OBJECT,
             objectMetadataId: objectMetadataItem.id,
             defaultViewId: defaultViewId ?? '',
             label: objectMetadataItem.labelPlural,

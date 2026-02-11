@@ -67,7 +67,8 @@ export const useSaveNavigationMenuItemsDraft = () => {
           if (!original) return false;
           return (
             original.viewId !== item.viewId ||
-            original.targetObjectMetadataId !== item.targetObjectMetadataId
+            original.targetObjectMetadataId !== item.targetObjectMetadataId ||
+            original.targetRecordId !== item.targetRecordId
           );
         });
 

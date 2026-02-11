@@ -79,9 +79,9 @@ export const CommandMenuNewSidebarItemPage = () => {
       .map((view) => view.objectMetadataId),
   );
 
-  const availableObjectMetadataItems = activeNonSystemObjectMetadataItems.sort(
-    (a, b) => a.labelPlural.localeCompare(b.labelPlural),
-  );
+  const availableObjectMetadataItems = [
+    ...activeNonSystemObjectMetadataItems,
+  ].sort((a, b) => a.labelPlural.localeCompare(b.labelPlural));
 
   const activeSystemObjectMetadataItems = objectMetadataItems
     .filter((item) => item.isActive && item.isSystem)

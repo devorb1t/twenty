@@ -3,7 +3,8 @@ import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
 import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
 import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
-import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
+import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/types/processed-navigation-menu-item';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
 import { coreViewsState } from '@/views/states/coreViewState';
@@ -16,7 +17,9 @@ import { useSortedNavigationMenuItems } from './useSortedNavigationMenuItems';
 
 export type FlatWorkspaceItem =
   | ProcessedNavigationMenuItem
-  | (NavigationMenuItem & { itemType: 'folder' });
+  | (NavigationMenuItem & {
+      itemType: NavigationMenuItemType.FOLDER;
+    });
 
 export type NavigationMenuItemClickParams = {
   item: FlatWorkspaceItem;
@@ -53,15 +56,13 @@ export const useWorkspaceSectionItems = (): FlatWorkspaceItem[] => {
     FlatWorkspaceItem[]
   >((acc, item) => {
     if (isNavigationMenuItemFolder(item)) {
-      if (isDefined(folderChildrenById.get(item.id))) {
-        acc.push({ ...item, itemType: 'folder' as const });
-      }
+      acc.push({ ...item, itemType: NavigationMenuItemType.FOLDER });
     } else {
       const processedItem = processedObjectViewsById.get(item.id);
       if (!isDefined(processedItem)) {
         return acc;
       }
-      if (processedItem.itemType === 'link') {
+      if (processedItem.itemType === NavigationMenuItemType.LINK) {
         acc.push(processedItem);
       } else {
         const objectMetadataItem = getObjectMetadataForNavigationMenuItem(
@@ -78,7 +79,7 @@ export const useWorkspaceSectionItems = (): FlatWorkspaceItem[] => {
   }, []);
 
   return flatItems.flatMap((item) =>
-    item.itemType === 'folder'
+    item.itemType === NavigationMenuItemType.FOLDER
       ? [item, ...(folderChildrenById.get(item.id) ?? [])]
       : [item],
   );

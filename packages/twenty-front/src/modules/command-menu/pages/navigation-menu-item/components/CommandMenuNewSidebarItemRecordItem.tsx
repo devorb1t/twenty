@@ -3,7 +3,8 @@ import { Avatar } from 'twenty-ui/display';
 
 import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
-import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
+import { useDraftNavigationMenuItems } from '@/navigation-menu-item/hooks/useDraftNavigationMenuItems';
 import { useAddRecordToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddRecordToNavigationMenuDraft';
 import { addMenuItemInsertionContextState } from '@/navigation-menu-item/states/addMenuItemInsertionContextState';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
@@ -20,14 +21,16 @@ type SearchRecord = {
 
 type CommandMenuNewSidebarItemRecordItemProps = {
   record: SearchRecord;
+  dragIndex?: number;
 };
 
 export const CommandMenuNewSidebarItemRecordItem = ({
   record,
+  dragIndex,
 }: CommandMenuNewSidebarItemRecordItemProps) => {
   const { closeCommandMenu } = useCommandMenu();
   const { addRecordToDraft } = useAddRecordToNavigationMenuDraft();
-  const { currentDraft } = useNavigationMenuItemEditFolderData();
+  const { currentDraft } = useDraftNavigationMenuItems();
   const addMenuItemInsertionContext = useRecoilValue(
     addMenuItemInsertionContextState,
   );
@@ -39,7 +42,7 @@ export const CommandMenuNewSidebarItemRecordItem = ({
     (item) => item.nameSingular === record.objectNameSingular,
   );
   const recordPayload: AddToNavigationDragPayload = {
-    type: 'record',
+    type: NavigationMenuItemType.RECORD,
     recordId: record.recordId,
     objectMetadataId: objectMetadataItem?.id ?? '',
     objectNameSingular: record.objectNameSingular,
@@ -66,7 +69,7 @@ export const CommandMenuNewSidebarItemRecordItem = ({
   return (
     <SelectableListItem itemId={record.recordId} onEnter={handleSelectRecord}>
       <CommandMenuItemWithAddToNavigationDrag
-        icon={
+        customIconContent={
           <Avatar
             type={
               record.objectNameSingular === CoreObjectNameSingular.Company
@@ -84,6 +87,7 @@ export const CommandMenuNewSidebarItemRecordItem = ({
         }
         id={record.recordId}
         onClick={handleSelectRecord}
+        dragIndex={dragIndex}
         payload={recordPayload}
       />
     </SelectableListItem>
