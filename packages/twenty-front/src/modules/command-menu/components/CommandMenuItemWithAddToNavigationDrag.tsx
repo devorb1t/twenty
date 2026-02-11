@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import { Draggable } from '@hello-pangea/dnd';
 import { useLingui } from '@lingui/react/macro';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { type IconComponent } from 'twenty-ui/display';
 
@@ -9,6 +9,17 @@ import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { AddToNavigationDragHandle } from '@/navigation-menu-item/components/AddToNavigationDragHandle';
 import { addToNavPayloadRegistryState } from '@/navigation-menu-item/states/addToNavPayloadRegistryState';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
+
+type CommandMenuItemWithAddToNavigationDragProps = {
+  icon?: IconComponent;
+  customIconContent?: ReactNode;
+  label: string;
+  description?: string;
+  id: string;
+  onClick: () => void;
+  payload: AddToNavigationDragPayload;
+  dragIndex?: number;
+};
 
 const StyledDraggableMenuItem = styled.div`
   cursor: grab;
@@ -19,18 +30,9 @@ const StyledDraggableMenuItem = styled.div`
   }
 `;
 
-type CommandMenuItemWithAddToNavigationDragProps = {
-  icon?: IconComponent | React.ReactNode;
-  label: string;
-  description?: string;
-  id: string;
-  onClick: () => void;
-  payload: AddToNavigationDragPayload;
-  dragIndex?: number;
-};
-
 export const CommandMenuItemWithAddToNavigationDrag = ({
   icon,
+  customIconContent,
   label,
   description,
   id,
@@ -49,15 +51,26 @@ export const CommandMenuItemWithAddToNavigationDrag = ({
   const DragHandleIcon = () => (
     <AddToNavigationDragHandle
       icon={icon}
+      customIconContent={customIconContent}
       payload={payload}
       isHovered={isHovered}
     />
   );
 
+  const registerPayload = () => {
+    if (dragIndex !== undefined) {
+      setRegistry((prev) => new Map(prev).set(id, payload));
+    }
+  };
+
   const menuItemContent = (
     <StyledDraggableMenuItem
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        registerPayload();
+      }}
       onMouseLeave={() => setIsHovered(false)}
+      onMouseDown={registerPayload}
     >
       <CommandMenuItem
         Icon={DragHandleIcon}
@@ -70,8 +83,6 @@ export const CommandMenuItemWithAddToNavigationDrag = ({
   );
 
   if (dragIndex !== undefined) {
-    setRegistry((prev) => new Map(prev).set(id, payload));
-
     return (
       <Draggable draggableId={id} index={dragIndex} isDragDisabled={false}>
         {(provided) => (
