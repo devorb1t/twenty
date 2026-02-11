@@ -714,13 +714,6 @@ export enum CommandMenuItemAvailabilityType {
   SINGLE_RECORD = 'SINGLE_RECORD'
 }
 
-export type ComputeStepOutputSchemaInput = {
-  /** Step JSON format */
-  step: Scalars['JSON'];
-  /** Workflow version ID */
-  workflowVersionId?: InputMaybe<Scalars['UUID']>;
-};
-
 export enum ConfigSource {
   DATABASE = 'DATABASE',
   DEFAULT = 'DEFAULT',
@@ -967,13 +960,6 @@ export type CreateDefaultLogicFunctionInput = {
   toolInputSchema?: InputMaybe<Scalars['JSON']>;
 };
 
-export type CreateDraftFromWorkflowVersionInput = {
-  /** Workflow ID */
-  workflowId: Scalars['UUID'];
-  /** Workflow version ID */
-  workflowVersionIdToCopy: Scalars['UUID'];
-};
-
 export type CreateFieldInput = {
   defaultValue?: InputMaybe<Scalars['JSON']>;
   description?: InputMaybe<Scalars['String']>;
@@ -1166,36 +1152,6 @@ export type CreateWebhookInput = {
   targetUrl: Scalars['String'];
 };
 
-export type CreateWorkflowVersionEdgeInput = {
-  /** Workflow version source step ID */
-  source: Scalars['String'];
-  /** Workflow version source step connection options */
-  sourceConnectionOptions?: InputMaybe<Scalars['JSON']>;
-  /** Workflow version target step ID */
-  target: Scalars['String'];
-  /** Workflow version ID */
-  workflowVersionId: Scalars['String'];
-};
-
-export type CreateWorkflowVersionStepInput = {
-  /** Default settings for the step */
-  defaultSettings?: InputMaybe<Scalars['JSON']>;
-  /** Step ID */
-  id?: InputMaybe<Scalars['String']>;
-  /** Next step ID */
-  nextStepId?: InputMaybe<Scalars['UUID']>;
-  /** Parent step connection options */
-  parentStepConnectionOptions?: InputMaybe<Scalars['JSON']>;
-  /** Parent step ID */
-  parentStepId?: InputMaybe<Scalars['String']>;
-  /** Step position */
-  position?: InputMaybe<WorkflowStepPositionInput>;
-  /** New step type */
-  stepType: Scalars['String'];
-  /** Workflow version ID */
-  workflowVersionId: Scalars['UUID'];
-};
-
 export type CursorPaging = {
   /** Paginate after opaque cursor */
   after?: InputMaybe<Scalars['ConnectionCursor']>;
@@ -1216,17 +1172,6 @@ export enum DatabaseEventAction {
   UPDATED = 'UPDATED',
   UPSERTED = 'UPSERTED'
 }
-
-export type DateTimeFilter = {
-  eq?: InputMaybe<Scalars['DateTime']>;
-  gt?: InputMaybe<Scalars['DateTime']>;
-  gte?: InputMaybe<Scalars['DateTime']>;
-  in?: InputMaybe<Array<Scalars['DateTime']>>;
-  is?: InputMaybe<FilterIs>;
-  lt?: InputMaybe<Scalars['DateTime']>;
-  lte?: InputMaybe<Scalars['DateTime']>;
-  neq?: InputMaybe<Scalars['DateTime']>;
-};
 
 export type DeleteApprovedAccessDomainInput = {
   id: Scalars['UUID'];
@@ -1278,13 +1223,6 @@ export type DeleteViewGroupInput = {
   id: Scalars['UUID'];
 };
 
-export type DeleteWorkflowVersionStepInput = {
-  /** Step to delete ID */
-  stepId: Scalars['String'];
-  /** Workflow version ID */
-  workflowVersionId: Scalars['UUID'];
-};
-
 export type DeletedWorkspaceMember = {
   __typename?: 'DeletedWorkspaceMember';
   avatarUrl?: Maybe<Scalars['String']>;
@@ -1323,18 +1261,6 @@ export type DomainValidRecords = {
   domain: Scalars['String'];
   id: Scalars['UUID'];
   records: Array<DomainRecord>;
-};
-
-export type DuplicateWorkflowInput = {
-  /** Workflow ID to duplicate */
-  workflowIdToDuplicate: Scalars['UUID'];
-  /** Workflow version ID to copy */
-  workflowVersionIdToCopy: Scalars['UUID'];
-};
-
-export type DuplicateWorkflowVersionStepInput = {
-  stepId: Scalars['String'];
-  workflowVersionId: Scalars['String'];
 };
 
 export type DuplicatedDashboard = {
@@ -1651,11 +1577,6 @@ export type FilesConfiguration = {
   __typename?: 'FilesConfiguration';
   configurationType: WidgetConfigurationType;
 };
-
-export enum FilterIs {
-  NotNull = 'NotNull',
-  Null = 'Null'
-}
 
 export type FindAvailableSsoidpOutput = {
   __typename?: 'FindAvailableSSOIDPOutput';
@@ -2091,7 +2012,6 @@ export enum ModelProvider {
 export type Mutation = {
   __typename?: 'Mutation';
   activateSkill: Skill;
-  activateWorkflowVersion: Scalars['Boolean'];
   activateWorkspace: Workspace;
   addQueryToEventStream: Scalars['Boolean'];
   assignRoleToAgent: Scalars['Boolean'];
@@ -2103,7 +2023,6 @@ export type Mutation = {
   checkCustomDomainValidRecords?: Maybe<DomainValidRecords>;
   checkPublicDomainValidRecords?: Maybe<DomainValidRecords>;
   checkoutSession: BillingSessionOutput;
-  computeStepOutputSchema: Scalars['JSON'];
   createApiKey: ApiKey;
   createApprovedAccessDomain: ApprovedAccessDomain;
   createChatThread: AgentChatThread;
@@ -2116,7 +2035,6 @@ export type Mutation = {
   createCoreViewSort: CoreViewSort;
   createDatabaseConfigVariable: Scalars['Boolean'];
   createDefaultLogicFunction: LogicFunction;
-  createDraftFromWorkflowVersion: WorkflowVersionDto;
   createEmailingDomain: EmailingDomain;
   createFile: File;
   createFrontComponent: FrontComponent;
@@ -2138,10 +2056,7 @@ export type Mutation = {
   createSAMLIdentityProvider: SetupSsoOutput;
   createSkill: Skill;
   createWebhook: Webhook;
-  createWorkflowVersionEdge: WorkflowVersionStepChanges;
-  createWorkflowVersionStep: WorkflowVersionStepChanges;
   deactivateSkill: Skill;
-  deactivateWorkflowVersion: Scalars['Boolean'];
   deleteApprovedAccessDomain: Scalars['Boolean'];
   deleteCommandMenuItem: CommandMenuItem;
   deleteCoreView: Scalars['Boolean'];
@@ -2169,8 +2084,6 @@ export type Mutation = {
   deleteUser: User;
   deleteUserFromWorkspace: UserWorkspace;
   deleteWebhook: Webhook;
-  deleteWorkflowVersionEdge: WorkflowVersionStepChanges;
-  deleteWorkflowVersionStep: WorkflowVersionStepChanges;
   deleteWorkspaceInvitation: Scalars['String'];
   destroyCoreView: Scalars['Boolean'];
   destroyCoreViewField: CoreViewField;
@@ -2182,10 +2095,7 @@ export type Mutation = {
   destroyPageLayoutTab: Scalars['Boolean'];
   destroyPageLayoutWidget: Scalars['Boolean'];
   disablePostgresProxy: PostgresCredentials;
-  dismissReconnectAccountBanner: Scalars['Boolean'];
   duplicateDashboard: DuplicatedDashboard;
-  duplicateWorkflow: WorkflowVersionDto;
-  duplicateWorkflowVersionStep: WorkflowVersionStepChanges;
   editSSOIdentityProvider: EditSsoOutput;
   emailPasswordResetLink: EmailPasswordResetLinkOutput;
   enablePostgresProxy: PostgresCredentials;
@@ -2211,7 +2121,6 @@ export type Mutation = {
   retryJobs: RetryJobsResponse;
   revokeApiKey?: Maybe<ApiKey>;
   runEvaluationInput: AgentTurn;
-  runWorkflowVersion: RunWorkflowVersionOutput;
   saveImapSmtpCaldavAccount: ImapSmtpCaldavConnectionSuccess;
   sendInvitations: SendInvitationsOutput;
   setMeteredSubscriptionPrice: BillingUpdateOutput;
@@ -2222,12 +2131,9 @@ export type Mutation = {
   skipBookOnboardingStep: OnboardingStepSuccess;
   skipSyncEmailOnboardingStep: OnboardingStepSuccess;
   startChannelSync: ChannelSyncSuccess;
-  stopWorkflowRun: WorkflowRun;
-  submitFormStep: Scalars['Boolean'];
   switchBillingPlan: BillingUpdateOutput;
   switchSubscriptionInterval: BillingUpdateOutput;
   syncApplication: Scalars['Boolean'];
-  testHttpRequest: TestHttpRequestOutput;
   trackAnalytics: Analytics;
   uninstallApplication: Scalars['Boolean'];
   updateApiKey?: Maybe<ApiKey>;
@@ -2256,9 +2162,6 @@ export type Mutation = {
   updateSkill: Skill;
   updateUserEmail: Scalars['Boolean'];
   updateWebhook: Webhook;
-  updateWorkflowRunStep: WorkflowAction;
-  updateWorkflowVersionPositions: Scalars['Boolean'];
-  updateWorkflowVersionStep: WorkflowAction;
   updateWorkspace: Workspace;
   updateWorkspaceFeatureFlag: Scalars['Boolean'];
   updateWorkspaceMemberRole: WorkspaceMember;
@@ -2284,11 +2187,6 @@ export type Mutation = {
 
 export type MutationActivateSkillArgs = {
   id: Scalars['UUID'];
-};
-
-
-export type MutationActivateWorkflowVersionArgs = {
-  workflowVersionId: Scalars['UUID'];
 };
 
 
@@ -2331,11 +2229,6 @@ export type MutationCheckoutSessionArgs = {
   recurringInterval: SubscriptionInterval;
   requirePaymentMethod?: Scalars['Boolean'];
   successUrlPath?: InputMaybe<Scalars['String']>;
-};
-
-
-export type MutationComputeStepOutputSchemaArgs = {
-  input: ComputeStepOutputSchemaInput;
 };
 
 
@@ -2392,11 +2285,6 @@ export type MutationCreateDatabaseConfigVariableArgs = {
 
 export type MutationCreateDefaultLogicFunctionArgs = {
   input: CreateDefaultLogicFunctionInput;
-};
-
-
-export type MutationCreateDraftFromWorkflowVersionArgs = {
-  input: CreateDraftFromWorkflowVersionInput;
 };
 
 
@@ -2509,23 +2397,8 @@ export type MutationCreateWebhookArgs = {
 };
 
 
-export type MutationCreateWorkflowVersionEdgeArgs = {
-  input: CreateWorkflowVersionEdgeInput;
-};
-
-
-export type MutationCreateWorkflowVersionStepArgs = {
-  input: CreateWorkflowVersionStepInput;
-};
-
-
 export type MutationDeactivateSkillArgs = {
   id: Scalars['UUID'];
-};
-
-
-export type MutationDeactivateWorkflowVersionArgs = {
-  workflowVersionId: Scalars['UUID'];
 };
 
 
@@ -2655,16 +2528,6 @@ export type MutationDeleteWebhookArgs = {
 };
 
 
-export type MutationDeleteWorkflowVersionEdgeArgs = {
-  input: CreateWorkflowVersionEdgeInput;
-};
-
-
-export type MutationDeleteWorkflowVersionStepArgs = {
-  input: DeleteWorkflowVersionStepInput;
-};
-
-
 export type MutationDeleteWorkspaceInvitationArgs = {
   appTokenId: Scalars['String'];
 };
@@ -2715,23 +2578,8 @@ export type MutationDestroyPageLayoutWidgetArgs = {
 };
 
 
-export type MutationDismissReconnectAccountBannerArgs = {
-  connectedAccountId: Scalars['UUID'];
-};
-
-
 export type MutationDuplicateDashboardArgs = {
   id: Scalars['UUID'];
-};
-
-
-export type MutationDuplicateWorkflowArgs = {
-  input: DuplicateWorkflowInput;
-};
-
-
-export type MutationDuplicateWorkflowVersionStepArgs = {
-  input: DuplicateWorkflowVersionStepInput;
 };
 
 
@@ -2851,11 +2699,6 @@ export type MutationRunEvaluationInputArgs = {
 };
 
 
-export type MutationRunWorkflowVersionArgs = {
-  input: RunWorkflowVersionInput;
-};
-
-
 export type MutationSaveImapSmtpCaldavAccountArgs = {
   accountOwnerId: Scalars['UUID'];
   connectionParameters: EmailAccountConnectionParameters;
@@ -2909,23 +2752,8 @@ export type MutationStartChannelSyncArgs = {
 };
 
 
-export type MutationStopWorkflowRunArgs = {
-  workflowRunId: Scalars['UUID'];
-};
-
-
-export type MutationSubmitFormStepArgs = {
-  input: SubmitFormStepInput;
-};
-
-
 export type MutationSyncApplicationArgs = {
   manifest: Scalars['JSON'];
-};
-
-
-export type MutationTestHttpRequestArgs = {
-  input: TestHttpRequestInput;
 };
 
 
@@ -3081,21 +2909,6 @@ export type MutationUpdateUserEmailArgs = {
 
 export type MutationUpdateWebhookArgs = {
   input: UpdateWebhookInput;
-};
-
-
-export type MutationUpdateWorkflowRunStepArgs = {
-  input: UpdateWorkflowRunStepInput;
-};
-
-
-export type MutationUpdateWorkflowVersionPositionsArgs = {
-  input: UpdateWorkflowVersionPositionsInput;
-};
-
-
-export type MutationUpdateWorkflowVersionStepArgs = {
-  input: UpdateWorkflowVersionStepInput;
 };
 
 
@@ -3357,16 +3170,6 @@ export type ObjectRecordEventProperties = {
   before?: Maybe<Scalars['JSON']>;
   diff?: Maybe<Scalars['JSON']>;
   updatedFields?: Maybe<Array<Scalars['String']>>;
-};
-
-export type ObjectRecordFilterInput = {
-  and?: InputMaybe<Array<ObjectRecordFilterInput>>;
-  createdAt?: InputMaybe<DateTimeFilter>;
-  deletedAt?: InputMaybe<DateTimeFilter>;
-  id?: InputMaybe<UuidFilter>;
-  not?: InputMaybe<ObjectRecordFilterInput>;
-  or?: InputMaybe<Array<ObjectRecordFilterInput>>;
-  updatedAt?: InputMaybe<DateTimeFilter>;
 };
 
 /** Date granularity options (e.g. DAY, MONTH, QUARTER, YEAR, WEEK, DAY_OF_THE_WEEK, MONTH_OF_THE_YEAR, QUARTER_OF_THE_YEAR) */
@@ -3706,12 +3509,6 @@ export type Query = {
   getRoles: Array<Role>;
   getSSOIdentityProviders: Array<FindAvailableSsoidpOutput>;
   getSystemHealthStatus: SystemHealth;
-  getTimelineCalendarEventsFromCompanyId: TimelineCalendarEventsWithTotal;
-  getTimelineCalendarEventsFromOpportunityId: TimelineCalendarEventsWithTotal;
-  getTimelineCalendarEventsFromPersonId: TimelineCalendarEventsWithTotal;
-  getTimelineThreadsFromCompanyId: TimelineThreadsWithTotal;
-  getTimelineThreadsFromOpportunityId: TimelineThreadsWithTotal;
-  getTimelineThreadsFromPersonId: TimelineThreadsWithTotal;
   getToolIndex: Array<ToolIndexEntry>;
   index: Index;
   indexMetadatas: IndexConnection;
@@ -3722,7 +3519,6 @@ export type Query = {
   object: Object;
   objects: ObjectConnection;
   pieChartData: PieChartDataOutput;
-  search: SearchResultConnection;
   skill?: Maybe<Skill>;
   skills: Array<Skill>;
   validatePasswordResetToken: ValidatePasswordResetTokenOutput;
@@ -3975,48 +3771,6 @@ export type QueryGetQueueMetricsArgs = {
 };
 
 
-export type QueryGetTimelineCalendarEventsFromCompanyIdArgs = {
-  companyId: Scalars['UUID'];
-  page: Scalars['Int'];
-  pageSize: Scalars['Int'];
-};
-
-
-export type QueryGetTimelineCalendarEventsFromOpportunityIdArgs = {
-  opportunityId: Scalars['UUID'];
-  page: Scalars['Int'];
-  pageSize: Scalars['Int'];
-};
-
-
-export type QueryGetTimelineCalendarEventsFromPersonIdArgs = {
-  page: Scalars['Int'];
-  pageSize: Scalars['Int'];
-  personId: Scalars['UUID'];
-};
-
-
-export type QueryGetTimelineThreadsFromCompanyIdArgs = {
-  companyId: Scalars['UUID'];
-  page: Scalars['Int'];
-  pageSize: Scalars['Int'];
-};
-
-
-export type QueryGetTimelineThreadsFromOpportunityIdArgs = {
-  opportunityId: Scalars['UUID'];
-  page: Scalars['Int'];
-  pageSize: Scalars['Int'];
-};
-
-
-export type QueryGetTimelineThreadsFromPersonIdArgs = {
-  page: Scalars['Int'];
-  pageSize: Scalars['Int'];
-  personId: Scalars['UUID'];
-};
-
-
 export type QueryIndexArgs = {
   id: Scalars['UUID'];
 };
@@ -4051,16 +3805,6 @@ export type QueryObjectsArgs = {
 
 export type QueryPieChartDataArgs = {
   input: PieChartDataInput;
-};
-
-
-export type QuerySearchArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  excludedObjectNameSingulars?: InputMaybe<Array<Scalars['String']>>;
-  filter?: InputMaybe<ObjectRecordFilterInput>;
-  includedObjectNameSingulars?: InputMaybe<Array<Scalars['String']>>;
-  limit: Scalars['Int'];
-  searchInput: Scalars['String'];
 };
 
 
@@ -4290,20 +4034,6 @@ export enum RowLevelPermissionPredicateOperand {
   VECTOR_SEARCH = 'VECTOR_SEARCH'
 }
 
-export type RunWorkflowVersionInput = {
-  /** Execution result in JSON format */
-  payload?: InputMaybe<Scalars['JSON']>;
-  /** Workflow run ID */
-  workflowRunId?: InputMaybe<Scalars['UUID']>;
-  /** Workflow version ID */
-  workflowVersionId: Scalars['UUID'];
-};
-
-export type RunWorkflowVersionOutput = {
-  __typename?: 'RunWorkflowVersionOutput';
-  workflowRunId: Scalars['UUID'];
-};
-
 export type SsoConnection = {
   __typename?: 'SSOConnection';
   id: Scalars['UUID'];
@@ -4337,12 +4067,6 @@ export type SearchRecord = {
   recordId: Scalars['UUID'];
   tsRank: Scalars['Float'];
   tsRankCD: Scalars['Float'];
-};
-
-export type SearchResultConnection = {
-  __typename?: 'SearchResultConnection';
-  edges: Array<SearchResultEdge>;
-  pageInfo: SearchResultPageInfo;
 };
 
 export type SearchResultEdge = {
@@ -4438,15 +4162,6 @@ export type StandardOverrides = {
   translations?: Maybe<Scalars['JSON']>;
 };
 
-export type SubmitFormStepInput = {
-  /** Form response in JSON format */
-  response: Scalars['JSON'];
-  /** Workflow step ID */
-  stepId: Scalars['UUID'];
-  /** Workflow run ID */
-  workflowRunId: Scalars['UUID'];
-};
-
 export type Subscription = {
   __typename?: 'Subscription';
   logicFunctionLogs: LogicFunctionLogs;
@@ -4513,35 +4228,6 @@ export type TasksConfiguration = {
   configurationType: WidgetConfigurationType;
 };
 
-export type TestHttpRequestInput = {
-  /** Request body */
-  body?: InputMaybe<Scalars['JSON']>;
-  /** HTTP headers */
-  headers?: InputMaybe<Scalars['JSON']>;
-  /** HTTP method */
-  method: Scalars['String'];
-  /** URL to make the request to */
-  url: Scalars['String'];
-};
-
-export type TestHttpRequestOutput = {
-  __typename?: 'TestHttpRequestOutput';
-  /** Error information */
-  error?: Maybe<Scalars['JSON']>;
-  /** Response headers */
-  headers?: Maybe<Scalars['JSON']>;
-  /** Message describing the result */
-  message: Scalars['String'];
-  /** Response data */
-  result?: Maybe<Scalars['JSON']>;
-  /** HTTP status code */
-  status?: Maybe<Scalars['Float']>;
-  /** HTTP status text */
-  statusText?: Maybe<Scalars['String']>;
-  /** Whether the request was successful */
-  success: Scalars['Boolean'];
-};
-
 export type TimelineCalendarEvent = {
   __typename?: 'TimelineCalendarEvent';
   conferenceLink: LinksMetadata;
@@ -4567,12 +4253,6 @@ export type TimelineCalendarEventParticipant = {
   lastName: Scalars['String'];
   personId?: Maybe<Scalars['UUID']>;
   workspaceMemberId?: Maybe<Scalars['UUID']>;
-};
-
-export type TimelineCalendarEventsWithTotal = {
-  __typename?: 'TimelineCalendarEventsWithTotal';
-  timelineCalendarEvents: Array<TimelineCalendarEvent>;
-  totalNumberOfCalendarEvents: Scalars['Int'];
 };
 
 export type TimelineConfiguration = {
@@ -4605,12 +4285,6 @@ export type TimelineThreadParticipant = {
   workspaceMemberId?: Maybe<Scalars['UUID']>;
 };
 
-export type TimelineThreadsWithTotal = {
-  __typename?: 'TimelineThreadsWithTotal';
-  timelineThreads: Array<TimelineThread>;
-  totalNumberOfThreads: Scalars['Int'];
-};
-
 export type ToolIndexEntry = {
   __typename?: 'ToolIndexEntry';
   category: Scalars['String'];
@@ -4630,17 +4304,6 @@ export type TwoFactorAuthenticationMethodDto = {
   status: Scalars['String'];
   strategy: Scalars['String'];
   twoFactorAuthenticationMethodId: Scalars['UUID'];
-};
-
-export type UuidFilter = {
-  eq?: InputMaybe<Scalars['UUID']>;
-  gt?: InputMaybe<Scalars['UUID']>;
-  gte?: InputMaybe<Scalars['UUID']>;
-  in?: InputMaybe<Array<Scalars['UUID']>>;
-  is?: InputMaybe<FilterIs>;
-  lt?: InputMaybe<Scalars['UUID']>;
-  lte?: InputMaybe<Scalars['UUID']>;
-  neq?: InputMaybe<Scalars['UUID']>;
 };
 
 export type UuidFilterComparison = {
@@ -4939,27 +4602,6 @@ export type UpdateWebhookInputUpdates = {
   targetUrl?: InputMaybe<Scalars['String']>;
 };
 
-export type UpdateWorkflowRunStepInput = {
-  /** Step to update in JSON format */
-  step: Scalars['JSON'];
-  /** Workflow run ID */
-  workflowRunId: Scalars['UUID'];
-};
-
-export type UpdateWorkflowVersionPositionsInput = {
-  /** Workflow version updated positions */
-  positions: Array<WorkflowStepPositionUpdateInput>;
-  /** Workflow version ID */
-  workflowVersionId: Scalars['UUID'];
-};
-
-export type UpdateWorkflowVersionStepInput = {
-  /** Step to update in JSON format */
-  step: Scalars['JSON'];
-  /** Workflow version ID */
-  workflowVersionId: Scalars['UUID'];
-};
-
 export type UpdateWorkspaceInput = {
   aiAdditionalInstructions?: InputMaybe<Scalars['String']>;
   allowImpersonation?: InputMaybe<Scalars['Boolean']>;
@@ -5248,45 +4890,9 @@ export type WorkerQueueMetrics = {
   waiting: Scalars['Float'];
 };
 
-export type WorkflowAction = {
-  __typename?: 'WorkflowAction';
-  id: Scalars['UUID'];
-  name: Scalars['String'];
-  nextStepIds?: Maybe<Array<Scalars['UUID']>>;
-  position?: Maybe<WorkflowStepPosition>;
-  settings: Scalars['JSON'];
-  type: WorkflowActionType;
-  valid: Scalars['Boolean'];
-};
-
-export enum WorkflowActionType {
-  AI_AGENT = 'AI_AGENT',
-  CODE = 'CODE',
-  CREATE_RECORD = 'CREATE_RECORD',
-  DELAY = 'DELAY',
-  DELETE_RECORD = 'DELETE_RECORD',
-  EMPTY = 'EMPTY',
-  FILTER = 'FILTER',
-  FIND_RECORDS = 'FIND_RECORDS',
-  FORM = 'FORM',
-  HTTP_REQUEST = 'HTTP_REQUEST',
-  IF_ELSE = 'IF_ELSE',
-  ITERATOR = 'ITERATOR',
-  LOGIC_FUNCTION = 'LOGIC_FUNCTION',
-  SEND_EMAIL = 'SEND_EMAIL',
-  UPDATE_RECORD = 'UPDATE_RECORD',
-  UPSERT_RECORD = 'UPSERT_RECORD'
-}
-
 export type WorkflowConfiguration = {
   __typename?: 'WorkflowConfiguration';
   configurationType: WidgetConfigurationType;
-};
-
-export type WorkflowRun = {
-  __typename?: 'WorkflowRun';
-  id: Scalars['UUID'];
-  status: WorkflowRunStatusEnum;
 };
 
 export type WorkflowRunConfiguration = {
@@ -5294,56 +4900,15 @@ export type WorkflowRunConfiguration = {
   configurationType: WidgetConfigurationType;
 };
 
-/** Status of the workflow run */
-export enum WorkflowRunStatusEnum {
-  COMPLETED = 'COMPLETED',
-  ENQUEUED = 'ENQUEUED',
-  FAILED = 'FAILED',
-  NOT_STARTED = 'NOT_STARTED',
-  RUNNING = 'RUNNING',
-  STOPPED = 'STOPPED',
-  STOPPING = 'STOPPING'
-}
-
 export type WorkflowStepPosition = {
   __typename?: 'WorkflowStepPosition';
   x: Scalars['Float'];
   y: Scalars['Float'];
 };
 
-export type WorkflowStepPositionInput = {
-  x: Scalars['Float'];
-  y: Scalars['Float'];
-};
-
-export type WorkflowStepPositionUpdateInput = {
-  /** Step or trigger ID */
-  id: Scalars['String'];
-  /** Position of the step or trigger */
-  position: WorkflowStepPositionInput;
-};
-
 export type WorkflowVersionConfiguration = {
   __typename?: 'WorkflowVersionConfiguration';
   configurationType: WidgetConfigurationType;
-};
-
-export type WorkflowVersionDto = {
-  __typename?: 'WorkflowVersionDTO';
-  createdAt: Scalars['String'];
-  id: Scalars['UUID'];
-  name: Scalars['String'];
-  status: Scalars['String'];
-  steps?: Maybe<Scalars['JSON']>;
-  trigger?: Maybe<Scalars['JSON']>;
-  updatedAt: Scalars['String'];
-  workflowId: Scalars['UUID'];
-};
-
-export type WorkflowVersionStepChanges = {
-  __typename?: 'WorkflowVersionStepChanges';
-  stepsDiff?: Maybe<Scalars['JSON']>;
-  triggerDiff?: Maybe<Scalars['JSON']>;
 };
 
 export type Workspace = {
