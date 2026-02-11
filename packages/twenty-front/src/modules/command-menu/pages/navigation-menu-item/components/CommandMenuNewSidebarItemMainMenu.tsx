@@ -13,7 +13,8 @@ import { CommandMenuAddToNavDroppable } from '@/command-menu/components/CommandM
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
 import { CommandMenuList } from '@/command-menu/components/CommandMenuList';
-import { useAddFolderAndLinkToNavigationMenu } from '@/command-menu/pages/navigation-menu-item/hooks/useAddFolderAndLinkToNavigationMenu';
+import { useAddFolderToNavigationMenu } from '@/command-menu/pages/navigation-menu-item/hooks/useAddFolderToNavigationMenu';
+import { useAddLinkToNavigationMenu } from '@/command-menu/pages/navigation-menu-item/hooks/useAddLinkToNavigationMenu';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 
@@ -29,8 +30,8 @@ export const CommandMenuNewSidebarItemMainMenu = ({
   onSelectRecord,
 }: CommandMenuNewSidebarItemMainMenuProps) => {
   const { t } = useLingui();
-  const { handleAddFolder, handleAddLink } =
-    useAddFolderAndLinkToNavigationMenu();
+  const { handleAddFolder } = useAddFolderToNavigationMenu();
+  const { handleAddLink } = useAddLinkToNavigationMenu();
 
   return (
     <CommandMenuAddToNavDroppable>
