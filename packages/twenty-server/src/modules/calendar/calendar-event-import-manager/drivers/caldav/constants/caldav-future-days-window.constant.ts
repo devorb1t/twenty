@@ -1,0 +1,1 @@
+export const CALDAV_FUTURE_DAYS_WINDOW = 365;

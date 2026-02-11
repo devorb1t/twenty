@@ -1,5 +1,5 @@
 import { isNonEmptyString, isString } from '@sniptt/guards';
-import { isDefined } from 'class-validator';
+import { isDefined } from 'twenty-shared/utils';
 
 /**
  * Extracts the string value from an iCal property that may have parameters.
@@ -11,7 +11,7 @@ import { isDefined } from 'class-validator';
  * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.2 (Property Parameters)
  * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.1.2 (Multiple Values)
  */
-export const icalDataExtractPropertyValue = (
+export const extractICalPropertyValue = (
   property:
     | string
     | { val?: string; params?: Record<string, unknown> }

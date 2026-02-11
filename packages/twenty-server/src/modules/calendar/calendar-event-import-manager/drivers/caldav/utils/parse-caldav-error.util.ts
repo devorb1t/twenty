@@ -2,11 +2,38 @@ import {
   CalendarEventImportDriverException,
   CalendarEventImportDriverExceptionCode,
 } from 'src/modules/calendar/calendar-event-import-manager/drivers/exceptions/calendar-event-import-driver.exception';
+import { parseCalDAVHttpStatusError } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/utils/parse-caldav-http-status-error.util';
+
+const NETWORK_ERROR_CODES = [
+  'ECONNRESET',
+  'ENOTFOUND',
+  'ECONNABORTED',
+  'ETIMEDOUT',
+  'ERR_NETWORK',
+];
 
 export const parseCalDAVError = (
-  error: Error,
+  error: Error & { code?: string; statusCode?: number },
 ): CalendarEventImportDriverException => {
   const { message } = error;
+
+  if (error.code && NETWORK_ERROR_CODES.includes(error.code)) {
+    return new CalendarEventImportDriverException(
+      message,
+      CalendarEventImportDriverExceptionCode.TEMPORARY_ERROR,
+    );
+  }
+
+  if (error.statusCode) {
+    return parseCalDAVHttpStatusError(error.statusCode, message);
+  }
+
+  if (message.includes('CALDAV_SYNC_COLLECTION_NOT_SUPPORTED')) {
+    return new CalendarEventImportDriverException(
+      message,
+      CalendarEventImportDriverExceptionCode.CHANNEL_MISCONFIGURED,
+    );
+  }
 
   switch (message) {
     case 'Collection does not exist on server':
@@ -19,6 +46,8 @@ export const parseCalDAVError = (
     case 'no account for fetchAddressBooks':
     case 'no account for fetchCalendars':
     case 'Must have account before syncCalendars':
+    case 'Invalid credentials':
+    case 'Invalid auth method':
       return new CalendarEventImportDriverException(
         message,
         CalendarEventImportDriverExceptionCode.INSUFFICIENT_PERMISSIONS,
@@ -33,21 +62,10 @@ export const parseCalDAVError = (
         CalendarEventImportDriverExceptionCode.NOT_FOUND,
       );
 
-    case 'Invalid credentials':
+    default:
       return new CalendarEventImportDriverException(
         message,
-        CalendarEventImportDriverExceptionCode.INSUFFICIENT_PERMISSIONS,
-      );
-
-    case 'Invalid auth method':
-      return new CalendarEventImportDriverException(
-        message,
-        CalendarEventImportDriverExceptionCode.INSUFFICIENT_PERMISSIONS,
+        CalendarEventImportDriverExceptionCode.UNKNOWN,
       );
   }
-
-  return new CalendarEventImportDriverException(
-    message,
-    CalendarEventImportDriverExceptionCode.UNKNOWN,
-  );
 };

@@ -1,6 +1,6 @@
-import { icalDataExtractPropertyValue } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/lib/utils/icalDataExtractPropertyValue';
+import { extractICalPropertyValue } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/utils/extract-ical-property-value.util';
 
-describe('icalDataExtractPropertyValue', () => {
+describe('extractICalPropertyValue', () => {
   describe('properties with parameters (RFC 5545 Section 3.2)', () => {
     it('should extract value from property object with val and params', () => {
       const property = {
@@ -8,7 +8,7 @@ describe('icalDataExtractPropertyValue', () => {
         params: { LANGUAGE: 'en-US' },
       };
 
-      const result = icalDataExtractPropertyValue(property);
+      const result = extractICalPropertyValue(property);
 
       expect(result).toBe('Meeting Title');
     });
@@ -18,7 +18,7 @@ describe('icalDataExtractPropertyValue', () => {
         val: 'Conference Room A',
       };
 
-      const result = icalDataExtractPropertyValue(property);
+      const result = extractICalPropertyValue(property);
 
       expect(result).toBe('Conference Room A');
     });
@@ -29,7 +29,7 @@ describe('icalDataExtractPropertyValue', () => {
         params: { TYPE: 'INTEGER' },
       } as any;
 
-      const result = icalDataExtractPropertyValue(property);
+      const result = extractICalPropertyValue(property);
 
       expect(result).toBe('12345');
     });
@@ -40,7 +40,7 @@ describe('icalDataExtractPropertyValue', () => {
         params: { LANGUAGE: 'de-DE' },
       };
 
-      const result = icalDataExtractPropertyValue(property, 'default');
+      const result = extractICalPropertyValue(property, 'default');
 
       expect(result).toBe('');
     });
@@ -50,7 +50,7 @@ describe('icalDataExtractPropertyValue', () => {
     it('should join multiple string values with comma and space', () => {
       const property = ['Value 1', 'Value 2', 'Value 3'] as any;
 
-      const result = icalDataExtractPropertyValue(property);
+      const result = extractICalPropertyValue(property);
 
       expect(result).toBe('Value 1, Value 2, Value 3');
     });
@@ -61,7 +61,7 @@ describe('icalDataExtractPropertyValue', () => {
         { val: 'Second Value', params: { LANGUAGE: 'fr' } },
       ] as any;
 
-      const result = icalDataExtractPropertyValue(property);
+      const result = extractICalPropertyValue(property);
 
       expect(result).toBe('First Value, Second Value');
     });
@@ -69,7 +69,7 @@ describe('icalDataExtractPropertyValue', () => {
     it('should filter out empty values from array', () => {
       const property = ['Value 1', '', 'Value 3', { val: '' }] as any;
 
-      const result = icalDataExtractPropertyValue(property);
+      const result = extractICalPropertyValue(property);
 
       expect(result).toBe('Value 1, Value 3');
     });
@@ -77,7 +77,7 @@ describe('icalDataExtractPropertyValue', () => {
     it('should return default value when array contains only empty values', () => {
       const property = ['', { val: '' }, null] as any;
 
-      const result = icalDataExtractPropertyValue(property, 'No values');
+      const result = extractICalPropertyValue(property, 'No values');
 
       expect(result).toBe('No values');
     });
@@ -89,7 +89,7 @@ describe('icalDataExtractPropertyValue', () => {
         'Another String',
       ] as any;
 
-      const result = icalDataExtractPropertyValue(property);
+      const result = extractICalPropertyValue(property);
 
       expect(result).toBe('Plain String, Object Value, Another String');
     });

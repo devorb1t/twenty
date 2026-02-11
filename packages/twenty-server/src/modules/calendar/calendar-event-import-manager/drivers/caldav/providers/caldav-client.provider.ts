@@ -2,17 +2,17 @@ import { Injectable } from '@nestjs/common';
 
 import { isDefined } from 'twenty-shared/utils';
 
-import { CalDAVClient } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/lib/caldav.client';
+import { CalDAVClient } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/services/caldav-client';
 import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
 
 @Injectable()
 export class CalDavClientProvider {
-  public async getCalDavCalendarClient(
+  public getCalDavCalendarClient(
     connectedAccount: Pick<
       ConnectedAccountWorkspaceEntity,
       'id' | 'provider' | 'connectionParameters' | 'handle'
     >,
-  ): Promise<CalDAVClient> {
+  ): CalDAVClient {
     if (
       !connectedAccount.connectionParameters?.CALDAV?.password ||
       !connectedAccount.connectionParameters?.CALDAV?.host ||
@@ -20,14 +20,13 @@ export class CalDavClientProvider {
     ) {
       throw new Error('Missing required CalDAV connection parameters');
     }
-    const caldavClient = new CalDAVClient({
+
+    return new CalDAVClient({
       username:
         connectedAccount.connectionParameters.CALDAV.username ??
         connectedAccount.handle,
       password: connectedAccount.connectionParameters.CALDAV.password,
       serverUrl: connectedAccount.connectionParameters.CALDAV.host,
     });
-
-    return caldavClient;
   }
 }
