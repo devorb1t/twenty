@@ -68,60 +68,12 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     return <CommandMenuEditFolderPickerSubView onBack={clearSubView} />;
   }
 
-  if (
-    selectedItemType === NavigationMenuItemType.VIEW &&
-    !selectedItemObjectMetadata
-  ) {
-    return null;
-  }
-
-  if (selectedItemType === NavigationMenuItemType.VIEW) {
-    return (
-      <CommandMenuEditObjectViewBase
-        onOpenFolderPicker={setFolderPicker}
-        canMoveUp={canMoveUp}
-        canMoveDown={canMoveDown}
-        onMoveUp={onMoveUp}
-        onMoveDown={onMoveDown}
-        onRemove={onRemove}
-        onAddBefore={onAddBefore}
-        onAddAfter={onAddAfter}
-      />
-    );
-  }
-
-  if (
-    isDefined(selectedItem) &&
-    selectedItem.itemType === NavigationMenuItemType.LINK
-  ) {
-    return (
-      <CommandMenuEditLinkItemView
-        key={selectedItem.id}
-        selectedItem={selectedItem}
-        onUpdateLink={(linkId, link) => updateLinkInDraft(linkId, { link })}
-        onOpenFolderPicker={setFolderPicker}
-        canMoveUp={canMoveUp}
-        canMoveDown={canMoveDown}
-        onMoveUp={onMoveUp}
-        onMoveDown={onMoveDown}
-        onRemove={onRemove}
-        onAddBefore={onAddBefore}
-        onAddAfter={onAddAfter}
-      />
-    );
-  }
-
-  if (selectedItemType === NavigationMenuItemType.LINK) {
-    return null;
-  }
-
-  if (selectedItemType === NavigationMenuItemType.FOLDER) {
-    return (
-      <CommandMenuList
-        commandGroups={[]}
-        selectableItemIds={getOrganizeActionsSelectableItemIds(false)}
-      >
-        <CommandMenuEditOrganizeActions
+  switch (selectedItemType) {
+    case NavigationMenuItemType.VIEW:
+      if (!selectedItemObjectMetadata) return null;
+      return (
+        <CommandMenuEditObjectViewBase
+          onOpenFolderPicker={setFolderPicker}
           canMoveUp={canMoveUp}
           canMoveDown={canMoveDown}
           onMoveUp={onMoveUp}
@@ -130,27 +82,65 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
           onAddBefore={onAddBefore}
           onAddAfter={onAddAfter}
         />
-        <CommandMenuEditOwnerSection />
-      </CommandMenuList>
-    );
+      );
+    case NavigationMenuItemType.LINK:
+      if (
+        isDefined(selectedItem) &&
+        selectedItem.itemType === NavigationMenuItemType.LINK
+      ) {
+        return (
+          <CommandMenuEditLinkItemView
+            key={selectedItem.id}
+            selectedItem={selectedItem}
+            onUpdateLink={(linkId, link) => updateLinkInDraft(linkId, { link })}
+            onOpenFolderPicker={setFolderPicker}
+            canMoveUp={canMoveUp}
+            canMoveDown={canMoveDown}
+            onMoveUp={onMoveUp}
+            onMoveDown={onMoveDown}
+            onRemove={onRemove}
+            onAddBefore={onAddBefore}
+            onAddAfter={onAddAfter}
+          />
+        );
+      }
+      return null;
+    case NavigationMenuItemType.FOLDER:
+      return (
+        <CommandMenuList
+          commandGroups={[]}
+          selectableItemIds={getOrganizeActionsSelectableItemIds(false)}
+        >
+          <CommandMenuEditOrganizeActions
+            canMoveUp={canMoveUp}
+            canMoveDown={canMoveDown}
+            onMoveUp={onMoveUp}
+            onMoveDown={onMoveDown}
+            onRemove={onRemove}
+            onAddBefore={onAddBefore}
+            onAddAfter={onAddAfter}
+          />
+          <CommandMenuEditOwnerSection />
+        </CommandMenuList>
+      );
+    default:
+      return (
+        <CommandMenuList
+          commandGroups={[]}
+          selectableItemIds={getOrganizeActionsSelectableItemIds(true)}
+        >
+          <CommandMenuEditOrganizeActions
+            canMoveUp={canMoveUp}
+            canMoveDown={canMoveDown}
+            onMoveUp={onMoveUp}
+            onMoveDown={onMoveDown}
+            onRemove={onRemove}
+            onAddBefore={onAddBefore}
+            onAddAfter={onAddAfter}
+            showMoveToFolder
+            onMoveToFolder={setFolderPicker}
+          />
+        </CommandMenuList>
+      );
   }
-
-  return (
-    <CommandMenuList
-      commandGroups={[]}
-      selectableItemIds={getOrganizeActionsSelectableItemIds(true)}
-    >
-      <CommandMenuEditOrganizeActions
-        canMoveUp={canMoveUp}
-        canMoveDown={canMoveDown}
-        onMoveUp={onMoveUp}
-        onMoveDown={onMoveDown}
-        onRemove={onRemove}
-        onAddBefore={onAddBefore}
-        onAddAfter={onAddAfter}
-        showMoveToFolder
-        onMoveToFolder={setFolderPicker}
-      />
-    </CommandMenuList>
-  );
 };
