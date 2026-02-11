@@ -4,7 +4,7 @@ import { IconApps } from 'twenty-ui/display';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
-import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
+import { useDraftNavigationMenuItems } from '@/navigation-menu-item/hooks/useDraftNavigationMenuItems';
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { useFindOneApplicationQuery } from '~/generated-metadata/graphql';
@@ -19,7 +19,7 @@ export const CommandMenuEditOwnerSection = ({
   const { t } = useLingui();
 
   const { selectedItem } = useSelectedNavigationMenuItemEditData();
-  const { currentDraft } = useNavigationMenuItemEditFolderData();
+  const { currentDraft } = useDraftNavigationMenuItems();
 
   const applicationIdFromDraft =
     selectedItem && currentDraft

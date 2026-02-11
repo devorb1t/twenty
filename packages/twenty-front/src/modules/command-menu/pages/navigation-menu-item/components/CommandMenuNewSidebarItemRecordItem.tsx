@@ -3,7 +3,7 @@ import { Avatar } from 'twenty-ui/display';
 
 import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
-import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
+import { useDraftNavigationMenuItems } from '@/navigation-menu-item/hooks/useDraftNavigationMenuItems';
 import { useAddRecordToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddRecordToNavigationMenuDraft';
 import { addMenuItemInsertionContextState } from '@/navigation-menu-item/states/addMenuItemInsertionContextState';
 import type { AddToNavigationDragPayload } from '@/navigation-menu-item/types/add-to-navigation-drag-payload';
@@ -29,7 +29,7 @@ export const CommandMenuNewSidebarItemRecordItem = ({
 }: CommandMenuNewSidebarItemRecordItemProps) => {
   const { closeCommandMenu } = useCommandMenu();
   const { addRecordToDraft } = useAddRecordToNavigationMenuDraft();
-  const { currentDraft } = useNavigationMenuItemEditFolderData();
+  const { currentDraft } = useDraftNavigationMenuItems();
   const addMenuItemInsertionContext = useRecoilValue(
     addMenuItemInsertionContextState,
   );

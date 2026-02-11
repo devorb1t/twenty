@@ -2,9 +2,10 @@ import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
-import { useNavigationMenuItemEditFolderData } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditFolderData';
 import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditSubView';
 import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
+import { useDraftNavigationMenuItemsAllFolders } from '@/navigation-menu-item/hooks/useDraftNavigationMenuItemsAllFolders';
+import { useDraftNavigationMenuItemsWorkspaceFolders } from '@/navigation-menu-item/hooks/useDraftNavigationMenuItemsWorkspaceFolders';
 import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/types/navigation-menu-item-type';
@@ -47,8 +48,8 @@ export const useFolderPickerSelectionData = () => {
   );
   const { selectedItem, selectedItemType } =
     useSelectedNavigationMenuItemEditData();
-  const { allFolders, workspaceFolders } =
-    useNavigationMenuItemEditFolderData();
+  const { allFolders } = useDraftNavigationMenuItemsAllFolders();
+  const { workspaceFolders } = useDraftNavigationMenuItemsWorkspaceFolders();
 
   const selectedFolderId =
     selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER
