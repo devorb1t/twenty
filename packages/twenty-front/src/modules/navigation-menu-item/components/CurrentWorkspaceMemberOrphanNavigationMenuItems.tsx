@@ -41,9 +41,7 @@ export const CurrentWorkspaceMemberOrphanNavigationMenuItems = () => {
 
   return (
     <NavigationMenuItemDroppable
-      droppableId={
-        NavigationMenuItemDroppableIds.ORPHAN_NAVIGATION_MENU_ITEMS
-      }
+      droppableId={NavigationMenuItemDroppableIds.ORPHAN_NAVIGATION_MENU_ITEMS}
       isWorkspaceSection={false}
     >
       {orphanNavigationMenuItems.length > 0 ? (
