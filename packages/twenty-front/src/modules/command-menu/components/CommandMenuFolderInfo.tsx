@@ -6,6 +6,7 @@ import { IconFolder } from 'twenty-ui/display';
 import { CommandMenuPageInfoLayout } from '@/command-menu/components/CommandMenuPageInfoLayout';
 import { commandMenuPageInfoState } from '@/command-menu/states/commandMenuPageInfoState';
 import { commandMenuShouldFocusTitleInputComponentState } from '@/command-menu/states/commandMenuShouldFocusTitleInputComponentState';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
 import { useUpdateFolderNameInDraft } from '@/navigation-menu-item/hooks/useUpdateFolderNameInDraft';
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
@@ -35,7 +36,7 @@ export const CommandMenuFolderInfo = () => {
   const selectedItem = selectedNavigationMenuItemInEditMode
     ? items.find(
         (item) =>
-          item.itemType === 'folder' &&
+          item.itemType === NavigationMenuItemType.FOLDER &&
           item.id === selectedNavigationMenuItemInEditMode,
       )
     : undefined;

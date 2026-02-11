@@ -6,6 +6,7 @@ import { IconLink } from 'twenty-ui/display';
 import { CommandMenuPageInfoLayout } from '@/command-menu/components/CommandMenuPageInfoLayout';
 import { commandMenuPageInfoState } from '@/command-menu/states/commandMenuPageInfoState';
 import { commandMenuShouldFocusTitleInputComponentState } from '@/command-menu/states/commandMenuShouldFocusTitleInputComponentState';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/components/NavigationMenuItemIconContainer';
 import { useUpdateLinkInDraft } from '@/navigation-menu-item/hooks/useUpdateLinkInDraft';
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
@@ -35,7 +36,7 @@ export const CommandMenuLinkInfo = () => {
   const selectedItem = selectedNavigationMenuItemInEditMode
     ? items.find(
         (item) =>
-          item.itemType === 'link' &&
+          item.itemType === NavigationMenuItemType.LINK &&
           item.id === selectedNavigationMenuItemInEditMode,
       )
     : undefined;
