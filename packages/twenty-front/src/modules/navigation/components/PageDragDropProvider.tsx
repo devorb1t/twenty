@@ -156,6 +156,7 @@ export const PageDragDropProvider = ({
               setActiveDropTargetId,
               forbiddenDropTargetId,
               setForbiddenDropTargetId,
+              addToNavFallbackDestination,
             }}
           >
             <DragDropContext

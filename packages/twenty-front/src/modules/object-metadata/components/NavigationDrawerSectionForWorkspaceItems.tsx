@@ -3,6 +3,7 @@ import { Droppable } from '@hello-pangea/dnd';
 import { useLingui } from '@lingui/react/macro';
 import { useContext } from 'react';
 import { useRecoilValue } from 'recoil';
+import { NavigationDropTargetContext } from '@/navigation-menu-item/contexts/NavigationDropTargetContext';
 import { isDefined } from 'twenty-shared/utils';
 import { IconLink, IconPlus } from 'twenty-ui/display';
 
@@ -70,8 +71,14 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
   const { objectPermissionsByObjectMetadataId } = useObjectPermissions();
   const objectMetadataItems = useRecoilValue(objectMetadataItemsState);
   const { isDragging } = useContext(NavigationMenuItemDragContext);
+  const { addToNavFallbackDestination } = useContext(
+    NavigationDropTargetContext,
+  );
 
   const flatItems = items.filter((item) => !isDefined(item.folderId));
+  const isAddToNavDropTargetVisible =
+    addToNavFallbackDestination?.droppableId ===
+    NavigationMenuItemDroppableIds.WORKSPACE_ORPHAN_NAVIGATION_MENU_ITEMS;
   const folderChildrenById = items.reduce<
     Map<string, ProcessedNavigationMenuItem[]>
   >((acc, item) => {
@@ -140,7 +147,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
     };
   };
 
-  if (flatItems.length === 0) {
+  if (flatItems.length === 0 && !isAddToNavDropTargetVisible) {
     return null;
   }
 
@@ -154,7 +161,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
           alwaysShowRightIcon={isEditMode}
         />
       </NavigationDrawerAnimatedCollapseWrapper>
-      {isNavigationSectionOpen && (
+      {(isNavigationSectionOpen || isAddToNavDropTargetVisible) && (
         <Droppable
           droppableId={
             NavigationMenuItemDroppableIds.WORKSPACE_ORPHAN_NAVIGATION_MENU_ITEMS
@@ -320,6 +327,16 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
                   />
                 )}
               </NavigationItemDropTarget>
+              {addToNavFallbackDestination?.droppableId ===
+                NavigationMenuItemDroppableIds.WORKSPACE_ORPHAN_NAVIGATION_MENU_ITEMS &&
+                addToNavFallbackDestination.index > filteredItems.length && (
+                  <NavigationItemDropTarget
+                    folderId={null}
+                    index={addToNavFallbackDestination.index}
+                    sectionId={NavigationSections.WORKSPACE}
+                    compact
+                  />
+                )}
               {provided.placeholder}
             </div>
           )}
