@@ -8,7 +8,7 @@ import { useDraftNavigationMenuItemsWorkspaceFolders } from '@/navigation-menu-i
 import { useSelectedNavigationMenuItemEditItem } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItem';
 import { useNavigationMenuItemMoveRemove } from '@/navigation-menu-item/hooks/useNavigationMenuItemMoveRemove';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
-import { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/types/navigation-menu-item-type';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 
 type FolderOption = {
   id: string;
@@ -52,29 +52,29 @@ export const useFolderPickerSelectionData = () => {
   const { workspaceFolders } = useDraftNavigationMenuItemsWorkspaceFolders();
 
   const selectedFolderId =
-    selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER
+    selectedItemType === NavigationMenuItemType.FOLDER
       ? selectedNavigationMenuItemInEditMode
       : null;
   const currentFolderId =
-    selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER
+    selectedItemType === NavigationMenuItemType.FOLDER
       ? (selectedItem?.id ?? null)
       : (selectedItem?.folderId ?? null);
 
   const descendantFolderIds =
-    selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER &&
+    selectedItemType === NavigationMenuItemType.FOLDER &&
     isDefined(selectedFolderId)
       ? getDescendantFolderIds(selectedFolderId, allFolders)
       : new Set<string>();
 
   const includeNoFolderOption =
-    (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER &&
+    (selectedItemType === NavigationMenuItemType.FOLDER &&
       isDefined(selectedFolderId)) ||
-    (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.LINK &&
+    (selectedItemType === NavigationMenuItemType.LINK &&
       isDefined(currentFolderId));
 
   const folders =
     includeNoFolderOption &&
-    selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER &&
+    selectedItemType === NavigationMenuItemType.FOLDER &&
     isDefined(selectedFolderId)
       ? allFolders.filter(
           (folder) =>

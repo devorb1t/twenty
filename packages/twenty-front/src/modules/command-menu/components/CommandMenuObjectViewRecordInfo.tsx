@@ -5,7 +5,7 @@ import { CommandMenuPageInfoLayout } from '@/command-menu/components/CommandMenu
 import { NavigationMenuItemIcon } from '@/navigation-menu-item/components/NavigationMenuItemIcon';
 import { useSelectedNavigationMenuItemEditItem } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItem';
 import { useSelectedNavigationMenuItemEditItemLabel } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItemLabel';
-import { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/types/navigation-menu-item-type';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { ViewKey } from '@/views/types/ViewKey';
 
 export const CommandMenuObjectViewRecordInfo = () => {
@@ -14,7 +14,7 @@ export const CommandMenuObjectViewRecordInfo = () => {
   const { selectedItemLabel } = useSelectedNavigationMenuItemEditItemLabel();
 
   const processedItem =
-    selectedItem && selectedItem.itemType !== NAVIGATION_MENU_ITEM_TYPE.FOLDER
+    selectedItem && selectedItem.itemType !== NavigationMenuItemType.FOLDER
       ? selectedItem
       : undefined;
 

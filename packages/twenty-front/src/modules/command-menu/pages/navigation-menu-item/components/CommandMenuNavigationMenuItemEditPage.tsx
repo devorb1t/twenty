@@ -12,7 +12,7 @@ import { useSelectedNavigationMenuItemEditItemLabel } from '@/navigation-menu-it
 import { useSelectedNavigationMenuItemEditItemObjectMetadata } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItemObjectMetadata';
 import { useUpdateLinkInDraft } from '@/navigation-menu-item/hooks/useUpdateLinkInDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
-import { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/types/navigation-menu-item-type';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { useRecoilValue } from 'recoil';
@@ -69,13 +69,13 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   }
 
   if (
-    selectedItemType === NAVIGATION_MENU_ITEM_TYPE.VIEW &&
+    selectedItemType === NavigationMenuItemType.VIEW &&
     !selectedItemObjectMetadata
   ) {
     return null;
   }
 
-  if (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.VIEW) {
+  if (selectedItemType === NavigationMenuItemType.VIEW) {
     return (
       <CommandMenuEditObjectViewBase
         onOpenFolderPicker={setFolderPicker}
@@ -92,7 +92,7 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
 
   if (
     isDefined(selectedItem) &&
-    selectedItem.itemType === NAVIGATION_MENU_ITEM_TYPE.LINK
+    selectedItem.itemType === NavigationMenuItemType.LINK
   ) {
     return (
       <CommandMenuEditLinkItemView
@@ -111,11 +111,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     );
   }
 
-  if (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.LINK) {
+  if (selectedItemType === NavigationMenuItemType.LINK) {
     return null;
   }
 
-  if (selectedItemType === NAVIGATION_MENU_ITEM_TYPE.FOLDER) {
+  if (selectedItemType === NavigationMenuItemType.FOLDER) {
     return (
       <CommandMenuList
         commandGroups={[]}
