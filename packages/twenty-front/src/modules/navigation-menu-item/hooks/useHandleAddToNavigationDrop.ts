@@ -5,7 +5,6 @@ import { isDefined } from 'twenty-shared/utils';
 import { IconFolder, IconLink, useIcons } from 'twenty-ui/display';
 
 import { ADD_TO_NAV_SOURCE_DROPPABLE_ID } from '@/navigation-menu-item/constants/AddToNavSourceDroppableId';
-import { NAVIGATION_MENU_ITEM_DROPPABLE_IDS } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
 import { useAddFolderToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddFolderToNavigationMenuDraft';
 import { useAddLinkToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddLinkToNavigationMenuDraft';
 import { useAddObjectToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddObjectToNavigationMenuDraft';
@@ -82,10 +81,7 @@ export const useHandleAddToNavigationDrop = () => {
           return;
         }
 
-        const isDropOnFolderHeader = destination.droppableId.startsWith(
-          NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_FOLDER_HEADER_PREFIX,
-        );
-        if (isDefined(folderId) && !isDropOnFolderHeader) {
+        if (isDefined(folderId)) {
           setOpenNavigationMenuItemFolderIds((current) =>
             current.includes(folderId) ? current : [...current, folderId],
           );
