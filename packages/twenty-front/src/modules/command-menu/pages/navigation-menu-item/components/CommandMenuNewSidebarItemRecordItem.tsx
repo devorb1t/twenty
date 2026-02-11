@@ -68,7 +68,7 @@ export const CommandMenuNewSidebarItemRecordItem = ({
   return (
     <SelectableListItem itemId={record.recordId} onEnter={handleSelectRecord}>
       <CommandMenuItemWithAddToNavigationDrag
-        icon={
+        customIconContent={
           <Avatar
             type={
               record.objectNameSingular === CoreObjectNameSingular.Company
