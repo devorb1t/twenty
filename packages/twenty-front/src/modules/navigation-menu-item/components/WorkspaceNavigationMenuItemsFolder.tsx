@@ -8,13 +8,14 @@ import { isDefined } from 'twenty-shared/utils';
 import { useIsDropDisabledForSection } from '@/navigation-menu-item/hooks/useIsDropDisabledForSection';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { IconFolder, IconFolderOpen } from 'twenty-ui/display';
+import { IconChevronDown, IconChevronRight, useIcons } from 'twenty-ui/display';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
 import { useIsMobile } from 'twenty-ui/utilities';
 
 import { NavigationMenuItemDroppable } from '@/navigation-menu-item/components/NavigationMenuItemDroppable';
 import { NavigationMenuItemIcon } from '@/navigation-menu-item/components/NavigationMenuItemIcon';
 import { WorkspaceNavigationMenuItemFolderDragClone } from '@/navigation-menu-item/components/WorkspaceNavigationMenuItemFolderDragClone';
+import { FOLDER_ICON_DEFAULT } from '@/navigation-menu-item/constants/folderIconDefault';
 import { NavigationMenuItemDroppableIds } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
 import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { NavigationMenuItemDragContext } from '@/navigation-menu-item/contexts/NavigationMenuItemDragContext';
@@ -59,6 +60,7 @@ const StyledFolderExpandableWrapper = styled.div`
 type WorkspaceNavigationMenuItemsFolderProps = {
   folderId: string;
   folderName: string;
+  folderIconKey?: string | null;
   navigationMenuItems: ProcessedNavigationMenuItem[];
   isGroup: boolean;
   isEditMode?: boolean;
@@ -72,6 +74,7 @@ type WorkspaceNavigationMenuItemsFolderProps = {
 export const WorkspaceNavigationMenuItemsFolder = ({
   folderId,
   folderName,
+  folderIconKey,
   navigationMenuItems,
   isGroup,
   isEditMode = false,
@@ -82,7 +85,9 @@ export const WorkspaceNavigationMenuItemsFolder = ({
   isDragging = false,
 }: WorkspaceNavigationMenuItemsFolderProps) => {
   const theme = useTheme();
+  const { getIcon } = useIcons();
   const iconColors = getNavigationMenuItemIconColors(theme);
+  const FolderIcon = getIcon(folderIconKey ?? FOLDER_ICON_DEFAULT);
   const objectMetadataItems = useRecoilValue(objectMetadataItemsState);
   const coreViews = useRecoilValue(coreViewsState);
   const views = coreViews.map(convertCoreViewToView);
@@ -115,8 +120,8 @@ export const WorkspaceNavigationMenuItemsFolder = ({
     if (!isOpen) {
       const firstNonLinkItem = navigationMenuItems.find(
         (item) =>
-        item.itemType !== NavigationMenuItemType.LINK &&
-        isNonEmptyString(item.link),
+          item.itemType !== NavigationMenuItemType.LINK &&
+          isNonEmptyString(item.link),
       );
       if (isDefined(firstNonLinkItem?.link)) {
         navigate(firstNonLinkItem.link);
@@ -147,13 +152,29 @@ export const WorkspaceNavigationMenuItemsFolder = ({
         >
           <NavigationDrawerItem
             label={folderName}
-            Icon={isOpen ? IconFolderOpen : IconFolder}
+            Icon={FolderIcon}
             iconBackgroundColor={iconColors.folder}
             onClick={handleClick}
             className="navigation-drawer-item"
             triggerEvent="CLICK"
             preventCollapseOnMobile={isMobile}
             isDragging={isDragging}
+            rightOptions={
+              isOpen ? (
+                <IconChevronDown
+                  size={theme.icon.size.sm}
+                  stroke={theme.icon.stroke.sm}
+                  color={theme.font.color.tertiary}
+                />
+              ) : (
+                <IconChevronRight
+                  size={theme.icon.size.sm}
+                  stroke={theme.icon.stroke.sm}
+                  color={theme.font.color.tertiary}
+                />
+              )
+            }
+            alwaysShowRightOptions
           />
         </NavigationMenuItemDroppable>
 

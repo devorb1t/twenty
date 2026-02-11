@@ -87,6 +87,7 @@ export const useSaveNavigationMenuItemsDraft = () => {
             folderId?: string | null;
             name?: string;
             link?: string;
+            icon?: string | null;
             viewId?: string;
             targetObjectMetadataId?: string;
             targetRecordId?: string;
@@ -96,6 +97,7 @@ export const useSaveNavigationMenuItemsDraft = () => {
 
           if (isNavigationMenuItemFolder(draftItem)) {
             input.name = draftItem.name ?? undefined;
+            input.icon = draftItem.icon ?? null;
           } else if (isNavigationMenuItemLink(draftItem)) {
             input.name = draftItem.name ?? 'Link';
             const linkUrl = (draftItem.link ?? '').trim();
@@ -139,12 +141,16 @@ export const useSaveNavigationMenuItemsDraft = () => {
           const linkChanged =
             isNavigationMenuItemLink(draftItem) &&
             (original.link ?? null) !== (draftItem.link ?? null);
+          const iconChanged =
+            isNavigationMenuItemFolder(draftItem) &&
+            (original.icon ?? null) !== (draftItem.icon ?? null);
 
           if (
             positionChanged ||
             folderIdChanged ||
             nameChanged ||
-            linkChanged
+            linkChanged ||
+            iconChanged
           ) {
             const updateInput: {
               id: string;
@@ -152,6 +158,7 @@ export const useSaveNavigationMenuItemsDraft = () => {
               folderId?: string | null;
               name?: string;
               link?: string | null;
+              icon?: string | null;
             } = { id: draftItem.id };
 
             if (positionChanged) {
@@ -177,6 +184,9 @@ export const useSaveNavigationMenuItemsDraft = () => {
                   ? linkUrl
                   : `https://${linkUrl}`
                 : null;
+            }
+            if (iconChanged && isNavigationMenuItemFolder(draftItem)) {
+              updateInput.icon = draftItem.icon ?? null;
             }
 
             await updateNavigationMenuItem(updateInput);

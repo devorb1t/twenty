@@ -2,8 +2,9 @@ import { useRecoilValue } from 'recoil';
 import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
 import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/utils/getObjectMetadataForNavigationMenuItem';
-import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
+import { FOLDER_ICON_DEFAULT } from '@/navigation-menu-item/constants/folderIconDefault';
 import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
+import { isNavigationMenuItemFolder } from '@/navigation-menu-item/utils/isNavigationMenuItemFolder';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/types/processed-navigation-menu-item';
 import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
@@ -19,6 +20,7 @@ export type FlatWorkspaceItem =
   | ProcessedNavigationMenuItem
   | (NavigationMenuItem & {
       itemType: NavigationMenuItemType.FOLDER;
+      Icon: string;
     });
 
 export type NavigationMenuItemClickParams = {
@@ -56,7 +58,11 @@ export const useWorkspaceSectionItems = (): FlatWorkspaceItem[] => {
     FlatWorkspaceItem[]
   >((acc, item) => {
     if (isNavigationMenuItemFolder(item)) {
-      acc.push({ ...item, itemType: NavigationMenuItemType.FOLDER });
+      acc.push({
+        ...item,
+        itemType: NavigationMenuItemType.FOLDER,
+        Icon: item.icon ?? FOLDER_ICON_DEFAULT,
+      });
     } else {
       const processedItem = processedObjectViewsById.get(item.id);
       if (!isDefined(processedItem)) {

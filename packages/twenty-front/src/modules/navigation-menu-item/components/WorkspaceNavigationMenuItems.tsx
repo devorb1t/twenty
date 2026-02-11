@@ -6,13 +6,7 @@ import {
   useRecoilValue,
   useSetRecoilState,
 } from 'recoil';
-import {
-  IconFolder,
-  IconLink,
-  IconPlus,
-  IconTool,
-  useIcons,
-} from 'twenty-ui/display';
+import { IconLink, IconPlus, IconTool, useIcons } from 'twenty-ui/display';
 import { LightIconButton } from 'twenty-ui/input';
 import { FeatureFlagKey } from '~/generated-metadata/graphql';
 
@@ -24,6 +18,7 @@ import {
   useWorkspaceSectionItems,
 } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
+import { FOLDER_ICON_DEFAULT } from '@/navigation-menu-item/constants/folderIconDefault';
 import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { navigationMenuItemsDraftState } from '@/navigation-menu-item/states/navigationMenuItemsDraftState';
 import { filterWorkspaceNavigationMenuItems } from '@/navigation-menu-item/utils/filterWorkspaceNavigationMenuItems';
@@ -99,7 +94,7 @@ export const WorkspaceNavigationMenuItems = () => {
       );
       openNavigationMenuItemInCommandMenu({
         pageTitle: t`Edit folder`,
-        pageIcon: IconFolder,
+        pageIcon: getIcon(item.icon ?? item.Icon ?? FOLDER_ICON_DEFAULT),
       });
     } else if (item.itemType === NavigationMenuItemType.LINK) {
       openNavigationMenuItemInCommandMenu({

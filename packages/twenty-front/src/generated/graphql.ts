@@ -3096,6 +3096,7 @@ export type NavigationMenuItem = {
   applicationId?: Maybe<Scalars['UUID']>;
   createdAt: Scalars['DateTime'];
   folderId?: Maybe<Scalars['UUID']>;
+  icon?: Maybe<Scalars['String']>;
   id: Scalars['UUID'];
   link?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
