@@ -6,6 +6,8 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { IconCheck, useIcons } from 'twenty-ui/display';
 
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
+import { commandMenuPageState } from '@/command-menu/states/commandMenuPageState';
+import { CommandMenuPages } from '@/command-menu/types/CommandMenuPages';
 import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/useNavigationMenuItemsDraftState';
 import { useSaveNavigationMenuItemsDraft } from '@/navigation-menu-item/hooks/useSaveNavigationMenuItemsDraft';
 import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
@@ -39,6 +41,7 @@ export const NavigationMenuEditModeBar = () => {
   const { getIcon } = useIcons();
   const [isSaving, setIsSaving] = useState(false);
   const { closeCommandMenu } = useCommandMenu();
+  const commandMenuPage = useRecoilValue(commandMenuPageState);
   const { enqueueErrorSnackBar } = useSnackBar();
   const setNavigationMenuItemsDraft = useSetRecoilState(
     navigationMenuItemsDraftState,
@@ -56,6 +59,12 @@ export const NavigationMenuEditModeBar = () => {
     setNavigationMenuItemsDraft(null);
     setSelectedNavigationMenuItemInEditMode(null);
     setIsNavigationMenuInEditMode(false);
+    const isNavItemPageOpen =
+      commandMenuPage === CommandMenuPages.NavigationMenuAddItem ||
+      commandMenuPage === CommandMenuPages.NavigationMenuItemEdit;
+    if (isNavItemPageOpen) {
+      closeCommandMenu();
+    }
   };
 
   const isNavigationMenuInEditMode = useRecoilValue(
