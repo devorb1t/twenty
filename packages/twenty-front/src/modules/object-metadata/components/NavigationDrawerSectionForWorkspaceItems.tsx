@@ -11,7 +11,7 @@ import { NavigationSections } from '@/navigation-menu-item/constants/NavigationS
 
 import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
 import { WorkspaceNavigationMenuItemsFolder } from '@/navigation-menu-item/components/WorkspaceNavigationMenuItemsFolder';
-import { NAVIGATION_MENU_ITEM_DROPPABLE_IDS } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
+import { NavigationMenuItemDroppableIds } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
 import { NavigationMenuItemDragContext } from '@/navigation-menu-item/contexts/NavigationMenuItemDragContext';
 import {
   type FlatWorkspaceItem,
@@ -151,7 +151,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
       {isNavigationSectionOpen && (
         <Droppable
           droppableId={
-            NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_ORPHAN_NAVIGATION_MENU_ITEMS
+            NavigationMenuItemDroppableIds.WORKSPACE_ORPHAN_NAVIGATION_MENU_ITEMS
           }
           isDropDisabled={workspaceDropDisabled}
         >

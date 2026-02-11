@@ -9,7 +9,7 @@ import { NavigationItemDropTarget } from '@/navigation-menu-item/components/Navi
 import { NavigationSections } from '@/navigation-menu-item/constants/NavigationSections.constants';
 import { NavigationMenuItemDroppable } from '@/navigation-menu-item/components/NavigationMenuItemDroppable';
 import { NavigationMenuItemIcon } from '@/navigation-menu-item/components/NavigationMenuItemIcon';
-import { NAVIGATION_MENU_ITEM_DROPPABLE_IDS } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
+import { NavigationMenuItemDroppableIds } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
 import { NavigationMenuItemDragContext } from '@/navigation-menu-item/contexts/NavigationMenuItemDragContext';
 import { useDeleteNavigationMenuItem } from '@/navigation-menu-item/hooks/useDeleteNavigationMenuItem';
 import { useSortedNavigationMenuItems } from '@/navigation-menu-item/hooks/useSortedNavigationMenuItems';
@@ -42,7 +42,7 @@ export const CurrentWorkspaceMemberOrphanNavigationMenuItems = () => {
   return (
     <NavigationMenuItemDroppable
       droppableId={
-        NAVIGATION_MENU_ITEM_DROPPABLE_IDS.ORPHAN_NAVIGATION_MENU_ITEMS
+        NavigationMenuItemDroppableIds.ORPHAN_NAVIGATION_MENU_ITEMS
       }
       isWorkspaceSection={false}
     >

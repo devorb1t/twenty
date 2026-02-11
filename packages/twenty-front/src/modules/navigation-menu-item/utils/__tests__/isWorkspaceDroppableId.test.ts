@@ -1,4 +1,4 @@
-import { NAVIGATION_MENU_ITEM_DROPPABLE_IDS } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
+import { NavigationMenuItemDroppableIds } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
 import { isWorkspaceDroppableId } from '@/navigation-menu-item/utils/isWorkspaceDroppableId';
 
 describe('isWorkspaceDroppableId', () => {
@@ -11,7 +11,7 @@ describe('isWorkspaceDroppableId', () => {
   it('should return true for workspace orphan or folder droppable ids', () => {
     expect(
       isWorkspaceDroppableId(
-        NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_ORPHAN_NAVIGATION_MENU_ITEMS,
+        NavigationMenuItemDroppableIds.WORKSPACE_ORPHAN_NAVIGATION_MENU_ITEMS,
       ),
     ).toBe(true);
     expect(isWorkspaceDroppableId('workspace-folder-folder-123')).toBe(true);

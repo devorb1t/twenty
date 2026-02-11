@@ -1,7 +1,7 @@
 import { CustomError, isDefined } from 'twenty-shared/utils';
 import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
-import { NAVIGATION_MENU_ITEM_DROPPABLE_IDS } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
+import { NavigationMenuItemDroppableIds } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
 
 export const matchesWorkspaceFolderId = (
   item: NavigationMenuItem,
@@ -15,18 +15,18 @@ export const validateAndExtractWorkspaceFolderId = (
 ): string | null => {
   if (
     droppableId ===
-    NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_ORPHAN_NAVIGATION_MENU_ITEMS
+    NavigationMenuItemDroppableIds.WORKSPACE_ORPHAN_NAVIGATION_MENU_ITEMS
   ) {
     return null;
   }
 
   if (
     droppableId.startsWith(
-      NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_FOLDER_HEADER_PREFIX,
+      NavigationMenuItemDroppableIds.WORKSPACE_FOLDER_HEADER_PREFIX,
     )
   ) {
     const folderId = droppableId.replace(
-      NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_FOLDER_HEADER_PREFIX,
+      NavigationMenuItemDroppableIds.WORKSPACE_FOLDER_HEADER_PREFIX,
       '',
     );
     if (!folderId)
@@ -39,11 +39,11 @@ export const validateAndExtractWorkspaceFolderId = (
 
   if (
     droppableId.startsWith(
-      NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_FOLDER_PREFIX,
+      NavigationMenuItemDroppableIds.WORKSPACE_FOLDER_PREFIX,
     )
   ) {
     const folderId = droppableId.replace(
-      NAVIGATION_MENU_ITEM_DROPPABLE_IDS.WORKSPACE_FOLDER_PREFIX,
+      NavigationMenuItemDroppableIds.WORKSPACE_FOLDER_PREFIX,
       '',
     );
     if (!folderId)
