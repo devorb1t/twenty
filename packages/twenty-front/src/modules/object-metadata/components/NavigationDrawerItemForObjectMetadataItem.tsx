@@ -1,3 +1,4 @@
+import { ObjectIconWithViewOverlay } from '@/navigation-menu-item/components/ObjectIconWithViewOverlay';
 import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { getNavigationMenuItemIconColors } from '@/navigation-menu-item/utils/getNavigationMenuItemIconColors';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
@@ -112,13 +113,18 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
         />
       )
     : isViewWithCustomName && isDefined(navigationMenuItem?.Icon)
-      ? getIcon(navigationMenuItem.Icon)
+      ? () => (
+          <ObjectIconWithViewOverlay
+            ObjectIcon={getIcon(objectMetadataItem.icon)}
+            ViewIcon={getIcon(navigationMenuItem!.Icon!)}
+          />
+        )
       : getIcon(objectMetadataItem.icon);
 
   const iconBackgroundColor = isRecord
     ? undefined
     : isViewWithCustomName
-      ? iconColors.view
+      ? undefined
       : iconColors.object;
 
   const secondaryLabel =
