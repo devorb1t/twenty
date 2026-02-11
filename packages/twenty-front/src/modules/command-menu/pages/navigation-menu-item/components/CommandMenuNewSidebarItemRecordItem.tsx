@@ -3,6 +3,7 @@ import { Avatar } from 'twenty-ui/display';
 
 import { CommandMenuItemWithAddToNavigationDrag } from '@/command-menu/components/CommandMenuItemWithAddToNavigationDrag';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { useDraftNavigationMenuItems } from '@/navigation-menu-item/hooks/useDraftNavigationMenuItems';
 import { useAddRecordToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddRecordToNavigationMenuDraft';
 import { addMenuItemInsertionContextState } from '@/navigation-menu-item/states/addMenuItemInsertionContextState';
@@ -41,7 +42,7 @@ export const CommandMenuNewSidebarItemRecordItem = ({
     (item) => item.nameSingular === record.objectNameSingular,
   );
   const recordPayload: AddToNavigationDragPayload = {
-    type: 'record',
+    type: NavigationMenuItemType.RECORD,
     recordId: record.recordId,
     objectMetadataId: objectMetadataItem?.id ?? '',
     objectNameSingular: record.objectNameSingular,

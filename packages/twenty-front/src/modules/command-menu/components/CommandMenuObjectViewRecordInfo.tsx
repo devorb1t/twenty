@@ -23,13 +23,14 @@ export const CommandMenuObjectViewRecordInfo = () => {
   }
 
   const isViewOrRecord =
-    processedItem.itemType === 'view' || processedItem.itemType === 'record';
+    processedItem.itemType === NavigationMenuItemType.VIEW ||
+    processedItem.itemType === NavigationMenuItemType.RECORD;
   if (!isViewOrRecord) {
     return null;
   }
 
   const label =
-    processedItem.itemType === 'record'
+    processedItem.itemType === NavigationMenuItemType.RECORD
       ? t`record`
       : processedItem.viewKey === ViewKey.Index
         ? t`object`

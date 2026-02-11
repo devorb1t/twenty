@@ -6,10 +6,10 @@ import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import { IconLink, IconPlus } from 'twenty-ui/display';
 
+import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { useIsDropDisabledForSection } from '@/navigation-menu-item/hooks/useIsDropDisabledForSection';
 import { NavigationSections } from '@/navigation-menu-item/constants/NavigationSections.constants';
-
-import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
 import { WorkspaceNavigationMenuItemsFolder } from '@/navigation-menu-item/components/WorkspaceNavigationMenuItemsFolder';
 import { NavigationMenuItemDroppableIds } from '@/navigation-menu-item/constants/NavigationMenuItemDroppableIds';
 import { NavigationMenuItemDragContext } from '@/navigation-menu-item/contexts/NavigationMenuItemDragContext';
@@ -85,15 +85,21 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
   }, new Map());
 
   const folderCount = flatItems.filter(
-    (item) => item.itemType === 'folder',
+    (item) => item.itemType === NavigationMenuItemType.FOLDER,
   ).length;
 
   const filteredItems = flatItems.filter((item) => {
     const type = item.itemType;
-    if (type === 'folder' || type === 'link') {
+    if (
+      type === NavigationMenuItemType.FOLDER ||
+      type === NavigationMenuItemType.LINK
+    ) {
       return true;
     }
-    if (type === 'view' || type === 'record') {
+    if (
+      type === NavigationMenuItemType.VIEW ||
+      type === NavigationMenuItemType.RECORD
+    ) {
       const objectMetadataItem = getObjectMetadataForNavigationMenuItem(
         item as ProcessedNavigationMenuItem,
         objectMetadataItems,

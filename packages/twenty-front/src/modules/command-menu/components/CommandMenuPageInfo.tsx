@@ -11,6 +11,7 @@ import { CommandMenuPageLayoutInfo } from '@/command-menu/components/CommandMenu
 import { CommandMenuRecordInfo } from '@/command-menu/components/CommandMenuRecordInfo';
 import { CommandMenuWorkflowStepInfo } from '@/command-menu/components/CommandMenuWorkflowStepInfo';
 import { CommandMenuPages } from '@/command-menu/types/CommandMenuPages';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { useWorkspaceSectionItems } from '@/navigation-menu-item/hooks/useWorkspaceSectionItems';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 
@@ -45,15 +46,18 @@ export const CommandMenuPageInfo = ({ pageChip }: CommandMenuPageInfoProps) => {
   if (isNavigationMenuItemEditPage && isDefined(selectedNavItem)) {
     const itemType = selectedNavItem.itemType;
 
-    if (itemType === 'folder') {
+    if (itemType === NavigationMenuItemType.FOLDER) {
       return <CommandMenuFolderInfo />;
     }
 
-    if (itemType === 'link') {
+    if (itemType === NavigationMenuItemType.LINK) {
       return <CommandMenuLinkInfo />;
     }
 
-    if (itemType === 'view' || itemType === 'record') {
+    if (
+      itemType === NavigationMenuItemType.VIEW ||
+      itemType === NavigationMenuItemType.RECORD
+    ) {
       return <CommandMenuObjectViewRecordInfo />;
     }
   }

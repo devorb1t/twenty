@@ -20,6 +20,7 @@ import { NavigationMenuItemDroppable } from '@/navigation-menu-item/components/N
 import { NavigationMenuItemFolderNavigationDrawerItemDropdown } from '@/navigation-menu-item/components/NavigationMenuItemFolderNavigationDrawerItemDropdown';
 import { NavigationMenuItemIcon } from '@/navigation-menu-item/components/NavigationMenuItemIcon';
 import { NAVIGATION_MENU_ITEM_FOLDER_DELETE_MODAL_ID } from '@/navigation-menu-item/constants/NavigationMenuItemFolderDeleteModalId';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { NavigationMenuItemDragContext } from '@/navigation-menu-item/contexts/NavigationMenuItemDragContext';
 import { useDeleteNavigationMenuItem } from '@/navigation-menu-item/hooks/useDeleteNavigationMenuItem';
 import { useDeleteNavigationMenuItemFolder } from '@/navigation-menu-item/hooks/useDeleteNavigationMenuItemFolder';
@@ -103,7 +104,9 @@ export const CurrentWorkspaceMemberNavigationMenuItems = ({
 
     if (!isOpen) {
       const firstNonLinkItem = folder.navigationMenuItems.find(
-        (item) => item.itemType !== 'link' && isNonEmptyString(item.link),
+        (item) =>
+        item.itemType !== NavigationMenuItemType.LINK &&
+        isNonEmptyString(item.link),
       );
       if (isDefined(firstNonLinkItem?.link)) {
         navigate(firstNonLinkItem.link);

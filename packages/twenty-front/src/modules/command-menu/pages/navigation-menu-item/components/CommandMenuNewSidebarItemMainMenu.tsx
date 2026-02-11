@@ -8,6 +8,7 @@ import {
 } from 'twenty-ui/display';
 
 import { CommandGroup } from '@/command-menu/components/CommandGroup';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { CommandMenuAddToNavDraggablePlaceholder } from '@/command-menu/components/CommandMenuAddToNavDraggablePlaceholder';
 import { CommandMenuAddToNavDroppable } from '@/command-menu/components/CommandMenuAddToNavDroppable';
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
@@ -85,7 +86,7 @@ export const CommandMenuNewSidebarItemMainMenu = ({
                   onClick={onAddFolder}
                   dragIndex={3}
                   payload={{
-                    type: 'folder',
+                    type: NavigationMenuItemType.FOLDER,
                     folderId: 'new',
                     name: t`New folder`,
                   }}
@@ -99,7 +100,7 @@ export const CommandMenuNewSidebarItemMainMenu = ({
                   onClick={onAddLink}
                   dragIndex={4}
                   payload={{
-                    type: 'link',
+                    type: NavigationMenuItemType.LINK,
                     linkId: 'new',
                     name: t`Link label`,
                     link: 'https://www.example.com',

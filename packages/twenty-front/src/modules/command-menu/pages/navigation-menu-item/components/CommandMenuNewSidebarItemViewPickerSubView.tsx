@@ -11,6 +11,7 @@ import { CommandMenuSubViewWithSearch } from '@/command-menu/components/CommandM
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useFilteredPickerItems } from '@/command-menu/hooks/useFilteredPickerItems';
 import { useDraftNavigationMenuItems } from '@/navigation-menu-item/hooks/useDraftNavigationMenuItems';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { useAddViewToNavigationMenuDraft } from '@/navigation-menu-item/hooks/useAddViewToNavigationMenuDraft';
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { addMenuItemInsertionContextState } from '@/navigation-menu-item/states/addMenuItemInsertionContextState';
@@ -114,7 +115,7 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
                       onClick={() => handleSelectView(view)}
                       dragIndex={index}
                       payload={{
-                        type: 'view',
+                        type: NavigationMenuItemType.VIEW,
                         viewId: view.id,
                         label: view.name,
                       }}
