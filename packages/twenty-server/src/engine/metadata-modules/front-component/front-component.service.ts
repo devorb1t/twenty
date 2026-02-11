@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 
 import { type Readable } from 'stream';
 
 import { FileFolder } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
+import { Repository } from 'typeorm';
 
+import { ApplicationEntity } from 'src/engine/core-modules/application/application.entity';
 import { ApplicationService } from 'src/engine/core-modules/application/services/application.service';
 import { type FlatApplication } from 'src/engine/core-modules/application/types/flat-application.type';
 import { FileStorageService } from 'src/engine/core-modules/file-storage/file-storage.service';
+import { FileEntity } from 'src/engine/core-modules/file/entities/file.entity';
+import { removeFileFolderFromFileEntityPath } from 'src/engine/core-modules/file/utils/remove-file-folder-from-file-entity-path.utils';
 import { WorkspaceManyOrAllFlatEntityMapsCacheService } from 'src/engine/metadata-modules/flat-entity/services/workspace-many-or-all-flat-entity-maps-cache.service';
 import { findFlatEntityByIdInFlatEntityMapsOrThrow } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-id-in-flat-entity-maps-or-throw.util';
 import { findFlatEntityByIdInFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-id-in-flat-entity-maps.util';
@@ -32,6 +37,10 @@ export class FrontComponentService {
     private readonly workspaceManyOrAllFlatEntityMapsCacheService: WorkspaceManyOrAllFlatEntityMapsCacheService,
     private readonly applicationService: ApplicationService,
     private readonly fileStorageService: FileStorageService,
+    @InjectRepository(FileEntity)
+    private readonly fileRepository: Repository<FileEntity>,
+    @InjectRepository(ApplicationEntity)
+    private readonly applicationRepository: Repository<ApplicationEntity>,
   ) {}
 
   async findAll(workspaceId: string): Promise<FrontComponentDTO[]> {
@@ -300,6 +309,13 @@ export class FrontComponentService {
       workspaceId,
     );
 
+    if (isDefined(frontComponent.fileId)) {
+      return this.getFileStreamByFileId({
+        fileId: frontComponent.fileId,
+        workspaceId,
+      });
+    }
+
     const application = await this.applicationService.findOneApplicationOrThrow(
       {
         id: frontComponent.applicationId,
@@ -312,6 +328,36 @@ export class FrontComponentService {
       applicationUniversalIdentifier: application.universalIdentifier,
       fileFolder: FileFolder.BuiltFrontComponent,
       resourcePath: frontComponent.builtComponentPath,
+    });
+  }
+
+  private async getFileStreamByFileId({
+    fileId,
+    workspaceId,
+  }: {
+    fileId: string;
+    workspaceId: string;
+  }): Promise<Readable> {
+    const file = await this.fileRepository.findOneOrFail({
+      where: {
+        id: fileId,
+        workspaceId,
+        application: { workspaceId },
+      },
+    });
+
+    const application = await this.applicationRepository.findOneOrFail({
+      where: {
+        id: file.applicationId,
+        workspaceId,
+      },
+    });
+
+    return this.fileStorageService.readFile({
+      resourcePath: removeFileFolderFromFileEntityPath(file.path),
+      fileFolder: FileFolder.BuiltFrontComponent,
+      applicationUniversalIdentifier: application.universalIdentifier,
+      workspaceId,
     });
   }
 }

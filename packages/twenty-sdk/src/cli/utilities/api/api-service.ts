@@ -525,7 +525,7 @@ export class ApiService {
     builtHandlerPath: string;
     fileFolder: FileFolder;
     applicationUniversalIdentifier: string;
-  }): Promise<ApiResponse<boolean>> {
+  }): Promise<ApiResponse<{ id: string; path: string }>> {
     try {
       const absolutePath = path.resolve(filePath);
 
@@ -543,7 +543,7 @@ export class ApiService {
       const mutation = `
       mutation UploadApplicationFile($file: Upload!, $applicationUniversalIdentifier: String!, $fileFolder: FileFolder!, $filePath: String!) {
         uploadApplicationFile(file: $file, applicationUniversalIdentifier: $applicationUniversalIdentifier, fileFolder: $fileFolder, filePath: $filePath)
-        { path }
+        { id path }
       }
     `;
 

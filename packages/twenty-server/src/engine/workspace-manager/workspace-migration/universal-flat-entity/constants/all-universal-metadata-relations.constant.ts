@@ -504,6 +504,7 @@ export const ALL_UNIVERSAL_METADATA_RELATIONS = {
     manyToOne: {
       workspace: null,
       application: null,
+      file: null,
     },
     oneToMany: {},
   },

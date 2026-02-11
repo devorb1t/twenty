@@ -27,6 +27,11 @@ export class UpdateFrontComponentInputUpdates {
   @IsString()
   @HideField()
   builtComponentChecksum?: string;
+
+  @IsOptional()
+  @IsUUID()
+  @Field(() => UUIDScalarType, { nullable: true })
+  fileId?: string;
 }
 
 @InputType()

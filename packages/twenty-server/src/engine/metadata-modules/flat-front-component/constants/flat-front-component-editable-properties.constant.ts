@@ -7,4 +7,5 @@ export const FLAT_FRONT_COMPONENT_EDITABLE_PROPERTIES = [
   'sourceComponentPath',
   'builtComponentPath',
   'componentName',
+  'fileId',
 ] as const satisfies MetadataEntityPropertyName<'frontComponent'>[];

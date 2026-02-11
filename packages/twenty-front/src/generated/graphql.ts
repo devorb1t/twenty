@@ -997,6 +997,7 @@ export type CreateFrontComponentInput = {
   builtComponentPath: Scalars['String'];
   componentName: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
+  fileId?: InputMaybe<Scalars['UUID']>;
   id?: InputMaybe<Scalars['UUID']>;
   name: Scalars['String'];
   sourceComponentPath: Scalars['String'];
@@ -1645,6 +1646,7 @@ export type FrontComponent = {
   componentName: Scalars['String'];
   createdAt: Scalars['DateTime'];
   description?: Maybe<Scalars['String']>;
+  fileId?: Maybe<Scalars['UUID']>;
   id: Scalars['UUID'];
   name: Scalars['String'];
   sourceComponentPath: Scalars['String'];
@@ -4551,6 +4553,7 @@ export type UpdateFrontComponentInput = {
 
 export type UpdateFrontComponentInputUpdates = {
   description?: InputMaybe<Scalars['String']>;
+  fileId?: InputMaybe<Scalars['UUID']>;
   name?: InputMaybe<Scalars['String']>;
 };
 

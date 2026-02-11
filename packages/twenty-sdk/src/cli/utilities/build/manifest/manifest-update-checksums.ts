@@ -14,7 +14,12 @@ export type UpdateManifestChecksumParams = {
   manifest: Manifest;
   builtFileInfos: Map<
     string,
-    { checksum: string; builtPath: string; fileFolder: FileFolder }
+    {
+      checksum: string;
+      builtPath: string;
+      fileFolder: FileFolder;
+      fileId?: string;
+    }
   >;
 };
 
@@ -25,7 +30,7 @@ export const manifestUpdateChecksums = ({
   let result = structuredClone(manifest);
   for (const [
     builtPath,
-    { fileFolder, checksum },
+    { fileFolder, checksum, fileId },
   ] of builtFileInfos.entries()) {
     const rootBuiltPath = relative(OUTPUT_DIR, builtPath);
     if (fileFolder === FileFolder.BuiltLogicFunction) {
@@ -72,7 +77,11 @@ export const manifestUpdateChecksums = ({
         ...result,
         frontComponents: frontComponents.map((component, index) =>
           index === componentIndex
-            ? { ...component, builtComponentChecksum: checksum }
+            ? {
+                ...component,
+                builtComponentChecksum: checksum,
+                ...(fileId ? { fileId } : {}),
+              }
             : component,
         ),
       };

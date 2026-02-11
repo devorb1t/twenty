@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 
 import { FileFolder } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
+import { Repository } from 'typeorm';
 import { v4 } from 'uuid';
 
 import { WorkspaceMigrationRunnerActionHandler } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-runner/interfaces/workspace-migration-runner-action-handler-service.interface';
 
 import { FileStorageService } from 'src/engine/core-modules/file-storage/file-storage.service';
+import { FileEntity } from 'src/engine/core-modules/file/entities/file.entity';
 import { FrontComponentEntity } from 'src/engine/metadata-modules/front-component/entities/front-component.entity';
 import {
   FrontComponentException,
@@ -26,7 +29,11 @@ export class CreateFrontComponentActionHandlerService extends WorkspaceMigration
   'create',
   'frontComponent',
 ) {
-  constructor(private readonly fileStorageService: FileStorageService) {
+  constructor(
+    private readonly fileStorageService: FileStorageService,
+    @InjectRepository(FileEntity)
+    private readonly fileRepository: Repository<FileEntity>,
+  ) {
     super();
   }
 
@@ -54,7 +61,12 @@ export class CreateFrontComponentActionHandlerService extends WorkspaceMigration
 
     const applicationUniversalIdentifier = flatApplication.universalIdentifier;
 
-    if (isDefined(frontComponent.builtComponentChecksum)) {
+    if (isDefined(frontComponent.fileId)) {
+      await this.verifyFileExistsByFileId({
+        fileId: frontComponent.fileId,
+        workspaceId,
+      });
+    } else if (isDefined(frontComponent.builtComponentChecksum)) {
       await this.verifySourceAndBuiltFilesExist({
         workspaceId,
         applicationUniversalIdentifier,
@@ -92,6 +104,28 @@ export class CreateFrontComponentActionHandlerService extends WorkspaceMigration
     if (!builtExists) {
       throw new FrontComponentException(
         `Front component built file missing before create (built: ${builtExists})`,
+        FrontComponentExceptionCode.FRONT_COMPONENT_CREATE_FAILED,
+      );
+    }
+  }
+
+  private async verifyFileExistsByFileId({
+    fileId,
+    workspaceId,
+  }: {
+    fileId: string;
+    workspaceId: string;
+  }): Promise<void> {
+    const file = await this.fileRepository.findOne({
+      where: {
+        id: fileId,
+        workspaceId,
+      },
+    });
+
+    if (!isDefined(file)) {
+      throw new FrontComponentException(
+        `Front component file with id ${fileId} not found`,
         FrontComponentExceptionCode.FRONT_COMPONENT_CREATE_FAILED,
       );
     }

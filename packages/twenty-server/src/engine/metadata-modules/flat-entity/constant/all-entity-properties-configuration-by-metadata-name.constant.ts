@@ -341,6 +341,7 @@ export const ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME = {
     sourceComponentPath: { toStringify: false, universalProperty: undefined },
     builtComponentPath: { toStringify: false, universalProperty: undefined },
     componentName: { toStringify: false, universalProperty: undefined },
+    fileId: { toStringify: false, universalProperty: undefined },
   },
   webhook: {
     targetUrl: { toStringify: false, universalProperty: undefined },

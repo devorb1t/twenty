@@ -30,6 +30,7 @@ export class DevModeOrchestrator {
       builtPath: string;
       sourcePath: string;
       fileFolder: FileFolder;
+      fileId?: string;
     }
   >();
 
@@ -175,6 +176,12 @@ export class DevModeOrchestrator {
     })
       .then((result) => {
         if (result.success) {
+          const existingInfo = this.builtFileInfos.get(builtPath);
+
+          if (existingInfo) {
+            existingInfo.fileId = result.data.id;
+          }
+
           this.uiStateManager.addEvent({
             message: `Successfully uploaded ${builtPath}`,
             status: 'success',

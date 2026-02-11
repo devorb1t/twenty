@@ -44,4 +44,9 @@ export class CreateFrontComponentInput {
   @IsNotEmpty()
   @Field()
   builtComponentChecksum: string;
+
+  @IsUUID()
+  @IsOptional()
+  @Field(() => UUIDScalarType, { nullable: true })
+  fileId?: string;
 }

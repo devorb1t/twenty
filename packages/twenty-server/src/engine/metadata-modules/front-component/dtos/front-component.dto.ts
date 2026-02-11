@@ -46,6 +46,11 @@ export class FrontComponentDTO {
   @IsUUID()
   @IsOptional()
   @Field(() => UUIDScalarType, { nullable: true })
+  fileId?: string;
+
+  @IsUUID()
+  @IsOptional()
+  @Field(() => UUIDScalarType, { nullable: true })
   universalIdentifier?: string;
 
   @HideField()
