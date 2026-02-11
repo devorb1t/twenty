@@ -6,4 +6,9 @@ describe('normalizeUrl', () => {
     expect(normalizeUrl('example.com')).toBe('https://example.com');
     expect(normalizeUrl('  example.com  ')).toBe('https://example.com');
   });
+
+  it('should return empty string for empty or whitespace input', () => {
+    expect(normalizeUrl('')).toBe('');
+    expect(normalizeUrl('   ')).toBe('');
+  });
 });

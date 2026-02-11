@@ -1,6 +1,11 @@
 export const normalizeUrl = (url: string) => {
-  const trimmed = url.trim();
-  return trimmed.startsWith('http://') || trimmed.startsWith('https://')
-    ? trimmed
-    : `https://${trimmed}`;
+  const trimmedUrl = url.trim();
+
+  if (trimmedUrl === '') {
+    return trimmedUrl;
+  }
+
+  return trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')
+    ? trimmedUrl
+    : `https://${trimmedUrl}`;
 };
