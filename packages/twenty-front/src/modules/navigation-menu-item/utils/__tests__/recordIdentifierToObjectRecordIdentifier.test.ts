@@ -55,7 +55,9 @@ describe('recordIdentifierToObjectRecordIdentifier', () => {
   it('should return empty linkToShowPage for targets and workspace member', () => {
     const objectMetadataItems: ObjectMetadataItem[] = [
       { nameSingular: CoreObjectNameSingular.NoteTarget } as ObjectMetadataItem,
-      { nameSingular: CoreObjectNameSingular.WorkspaceMember } as ObjectMetadataItem,
+      {
+        nameSingular: CoreObjectNameSingular.WorkspaceMember,
+      } as ObjectMetadataItem,
     ];
 
     objectMetadataItems.forEach((objectMetadataItem) => {

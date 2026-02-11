@@ -350,7 +350,13 @@ describe('sortNavigationMenuItems', () => {
     expect(withProtocol[0].link).toBe('https://example.com');
 
     const noProtocol = sortNavigationMenuItems(
-      [{ id: 'link-2', link: 'example.com', position: 2 } as NavigationMenuItem],
+      [
+        {
+          id: 'link-2',
+          link: 'example.com',
+          position: 2,
+        } as NavigationMenuItem,
+      ],
       true,
       [],
       [],

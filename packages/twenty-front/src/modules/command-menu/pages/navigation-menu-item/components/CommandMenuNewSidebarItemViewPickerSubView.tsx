@@ -98,6 +98,7 @@ export const CommandMenuNewSidebarItemViewPickerSubView = ({
             noResults={isEmpty}
             noResultsText={noResultsText}
           >
+            {/* eslint-disable-next-line react/jsx-props-no-spreading */}
             <div ref={innerRef} {...droppableProps}>
               <CommandGroup heading={t`Views`}>
                 {filteredViews.map((view, index) => (
