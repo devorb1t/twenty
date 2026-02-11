@@ -6,11 +6,13 @@ import {
   type DAVAccount,
   type DAVCalendar,
   DAVNamespaceShort,
+  type DAVResponse,
   fetchCalendars,
   getBasicAuthHeaders,
   syncCollection,
 } from 'tsdav';
 
+import { CalDavHttpException } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/exceptions/caldav-http.exception';
 import { type CalDavCalendar } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/types/caldav-calendar.type';
 import { type CalDavCredentials } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/types/caldav-credentials.type';
 
@@ -62,6 +64,17 @@ export class CalDAVClient {
 
   isValidCalendarObjectUrl(url: string): boolean {
     return ALLOWED_EXTENSIONS.includes(this.getFileExtension(url));
+  }
+
+  private throwOnHttpError(responses: DAVResponse[]): void {
+    const failedResponse = responses.find((response) => !response.ok);
+
+    if (failedResponse) {
+      throw new CalDavHttpException(
+        failedResponse.status,
+        failedResponse.statusText,
+      );
+    }
   }
 
   async listCalendars(): Promise<CalDavCalendar[]> {
@@ -132,6 +145,8 @@ export class CalDAVClient {
       headers: this.headers,
     });
 
+    this.throwOnHttpError(syncResult);
+
     return syncResult
       .map((item) => ({ href: item.href || '' }))
       .filter((item) => item.href && this.isValidCalendarObjectUrl(item.href));
@@ -157,6 +172,8 @@ export class CalDAVClient {
       depth: '1',
       headers: this.headers,
     });
+
+    this.throwOnHttpError(calendarObjects);
 
     return calendarObjects
       .filter((obj) => obj.props?.calendarData)

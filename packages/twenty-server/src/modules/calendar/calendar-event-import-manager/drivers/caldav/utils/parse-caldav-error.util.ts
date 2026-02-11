@@ -1,3 +1,4 @@
+import { CalDavHttpException } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/exceptions/caldav-http.exception';
 import {
   CalendarEventImportDriverException,
   CalendarEventImportDriverExceptionCode,
@@ -13,7 +14,7 @@ const NETWORK_ERROR_CODES = [
 ];
 
 export const parseCalDAVError = (
-  error: Error & { code?: string; statusCode?: number },
+  error: Error & { code?: string },
 ): CalendarEventImportDriverException => {
   const { message } = error;
 
@@ -24,8 +25,8 @@ export const parseCalDAVError = (
     );
   }
 
-  if (error.statusCode) {
-    return parseCalDAVHttpStatusError(error.statusCode, message);
+  if (error instanceof CalDavHttpException) {
+    return parseCalDAVHttpStatusError(error.status, message);
   }
 
   if (message.includes('CALDAV_SYNC_COLLECTION_NOT_SUPPORTED')) {

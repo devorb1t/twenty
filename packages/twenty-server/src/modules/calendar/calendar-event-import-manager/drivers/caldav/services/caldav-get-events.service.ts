@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { CALDAV_FUTURE_DAYS_WINDOW } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/constants/caldav-future-days-window.constant';
 import { CALDAV_PAST_DAYS_WINDOW } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/constants/caldav-past-days-window.constant';
+import { CalDavHttpException } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/exceptions/caldav-http.exception';
 import { CalDavClientProvider } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/providers/caldav-client.provider';
 import { type CalDAVClient } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/services/caldav-client';
 import { type CalDavCalendar } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/types/caldav-calendar.type';
@@ -133,6 +134,10 @@ export class CalDavGetEventsService {
         fallbackSyncToken: existingSyncToken,
       };
     } catch (error) {
+      if (error instanceof CalDavHttpException) {
+        throw error;
+      }
+
       this.logger.error(`Failed to sync calendar ${calendar.url}`, error);
 
       return {
@@ -185,6 +190,10 @@ export class CalDavGetEventsService {
         })
         .filter((event): event is FetchedCalendarEvent => event !== null);
     } catch (error) {
+      if (error instanceof CalDavHttpException) {
+        throw error;
+      }
+
       this.logger.error(
         `Failed to fetch calendar objects for ${calendarUrl}`,
         error,

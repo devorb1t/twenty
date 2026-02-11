@@ -1,3 +1,4 @@
+import { CalDavHttpException } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/exceptions/caldav-http.exception';
 import { parseCalDAVError } from 'src/modules/calendar/calendar-event-import-manager/drivers/caldav/utils/parse-caldav-error.util';
 import { CalendarEventImportDriverExceptionCode } from 'src/modules/calendar/calendar-event-import-manager/drivers/exceptions/calendar-event-import-driver.exception';
 
@@ -47,22 +48,50 @@ describe('parseCalDAVError', () => {
   });
 
   it('should map HTTP 401 to INSUFFICIENT_PERMISSIONS', () => {
-    const error = Object.assign(new Error('Unauthorized'), {
-      statusCode: 401,
-    });
+    const error = new CalDavHttpException(401, 'Unauthorized');
 
     expect(parseCalDAVError(error).code).toBe(
       CalendarEventImportDriverExceptionCode.INSUFFICIENT_PERMISSIONS,
     );
   });
 
+  it('should map HTTP 403 to INSUFFICIENT_PERMISSIONS', () => {
+    const error = new CalDavHttpException(403, 'Forbidden');
+
+    expect(parseCalDAVError(error).code).toBe(
+      CalendarEventImportDriverExceptionCode.INSUFFICIENT_PERMISSIONS,
+    );
+  });
+
+  it('should map HTTP 404 to NOT_FOUND', () => {
+    const error = new CalDavHttpException(404, 'Not Found');
+
+    expect(parseCalDAVError(error).code).toBe(
+      CalendarEventImportDriverExceptionCode.NOT_FOUND,
+    );
+  });
+
   it('should map HTTP 429 to TEMPORARY_ERROR', () => {
-    const error = Object.assign(new Error('Too many requests'), {
-      statusCode: 429,
-    });
+    const error = new CalDavHttpException(429, 'Too Many Requests');
 
     expect(parseCalDAVError(error).code).toBe(
       CalendarEventImportDriverExceptionCode.TEMPORARY_ERROR,
+    );
+  });
+
+  it('should map HTTP 500 to TEMPORARY_ERROR', () => {
+    const error = new CalDavHttpException(500, 'Internal Server Error');
+
+    expect(parseCalDAVError(error).code).toBe(
+      CalendarEventImportDriverExceptionCode.TEMPORARY_ERROR,
+    );
+  });
+
+  it('should map unhandled HTTP status to UNKNOWN', () => {
+    const error = new CalDavHttpException(418, "I'm a Teapot");
+
+    expect(parseCalDAVError(error).code).toBe(
+      CalendarEventImportDriverExceptionCode.UNKNOWN,
     );
   });
 
