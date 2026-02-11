@@ -5,16 +5,16 @@ import { CommandMenuEditObjectViewBase } from '@/command-menu/pages/navigation-m
 import { CommandMenuEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOrganizeActions';
 import { CommandMenuEditOwnerSection } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOwnerSection';
 import { useNavigationMenuItemEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditOrganizeActions';
-import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditSubView';
 import { getOrganizeActionsSelectableItemIds } from '@/command-menu/pages/navigation-menu-item/utils/getOrganizeActionsSelectableItemIds';
+import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { useSelectedNavigationMenuItemEditItem } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItem';
 import { useSelectedNavigationMenuItemEditItemLabel } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItemLabel';
 import { useSelectedNavigationMenuItemEditItemObjectMetadata } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItemObjectMetadata';
 import { useUpdateLinkInDraft } from '@/navigation-menu-item/hooks/useUpdateLinkInDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
-import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
+import { useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 
@@ -39,8 +39,8 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     useSelectedNavigationMenuItemEditItemObjectMetadata();
   const selectedItemType = selectedItem?.itemType ?? null;
 
-  const { editSubView, setFolderPicker, clearSubView } =
-    useNavigationMenuItemEditSubView();
+  const [isFolderPickerOpen, setIsFolderPickerOpen] = useState(false);
+  const setFolderPicker = () => setIsFolderPickerOpen(true);
 
   const {
     canMoveUp,
@@ -64,8 +64,12 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
     );
   }
 
-  if (editSubView === 'folder-picker') {
-    return <CommandMenuEditFolderPickerSubView onBack={clearSubView} />;
+  if (isFolderPickerOpen) {
+    return (
+      <CommandMenuEditFolderPickerSubView
+        onBack={() => setIsFolderPickerOpen(false)}
+      />
+    );
   }
 
   switch (selectedItemType) {

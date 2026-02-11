@@ -2,7 +2,6 @@ import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
-import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditSubView';
 import { useDraftNavigationMenuItemsAllFolders } from '@/navigation-menu-item/hooks/useDraftNavigationMenuItemsAllFolders';
 import { useDraftNavigationMenuItemsWorkspaceFolders } from '@/navigation-menu-item/hooks/useDraftNavigationMenuItemsWorkspaceFolders';
 import { useSelectedNavigationMenuItemEditItem } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItem';
@@ -39,9 +38,14 @@ const excludeCurrentFolder = <T extends { id: string }>(
     ? folders
     : folders.filter((folder) => folder.id !== currentFolderId);
 
-export const useFolderPickerSelectionData = () => {
+type UseFolderPickerSelectionDataParams = {
+  onCloseSubView: () => void;
+};
+
+export const useFolderPickerSelectionData = ({
+  onCloseSubView,
+}: UseFolderPickerSelectionDataParams) => {
   const { closeCommandMenu } = useCommandMenu();
-  const { clearSubView } = useNavigationMenuItemEditSubView();
   const { moveToFolder } = useNavigationMenuItemMoveRemove();
   const selectedNavigationMenuItemInEditMode = useRecoilValue(
     selectedNavigationMenuItemInEditModeState,
@@ -90,7 +94,7 @@ export const useFolderPickerSelectionData = () => {
   const handleSelectFolder = (folderId: string | null) => {
     if (isDefined(selectedNavigationMenuItemInEditMode)) {
       moveToFolder(selectedNavigationMenuItemInEditMode, folderId);
-      clearSubView();
+      onCloseSubView();
       closeCommandMenu();
     }
   };
