@@ -6,8 +6,10 @@ import { CommandMenuEditOrganizeActions } from '@/command-menu/pages/navigation-
 import { CommandMenuEditOwnerSection } from '@/command-menu/pages/navigation-menu-item/components/CommandMenuEditOwnerSection';
 import { useNavigationMenuItemEditOrganizeActions } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditOrganizeActions';
 import { useNavigationMenuItemEditSubView } from '@/command-menu/pages/navigation-menu-item/hooks/useNavigationMenuItemEditSubView';
-import { useSelectedNavigationMenuItemEditData } from '@/command-menu/pages/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditData';
 import { getOrganizeActionsSelectableItemIds } from '@/command-menu/pages/navigation-menu-item/utils/getOrganizeActionsSelectableItemIds';
+import { useSelectedNavigationMenuItemEditItem } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItem';
+import { useSelectedNavigationMenuItemEditItemLabel } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItemLabel';
+import { useSelectedNavigationMenuItemEditItemObjectMetadata } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItemObjectMetadata';
 import { useUpdateLinkInDraft } from '@/navigation-menu-item/hooks/useUpdateLinkInDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
 import { NAVIGATION_MENU_ITEM_TYPE } from '@/navigation-menu-item/types/navigation-menu-item-type';
@@ -31,12 +33,11 @@ export const CommandMenuNavigationMenuItemEditPage = () => {
   const selectedNavigationMenuItemInEditMode = useRecoilValue(
     selectedNavigationMenuItemInEditModeState,
   );
-  const {
-    selectedItemLabel,
-    selectedItem,
-    selectedItemObjectMetadata,
-    selectedItemType,
-  } = useSelectedNavigationMenuItemEditData();
+  const { selectedItemLabel } = useSelectedNavigationMenuItemEditItemLabel();
+  const { selectedItem } = useSelectedNavigationMenuItemEditItem();
+  const { selectedItemObjectMetadata } =
+    useSelectedNavigationMenuItemEditItemObjectMetadata();
+  const selectedItemType = selectedItem?.itemType ?? null;
 
   const { editSubView, setFolderPicker, clearSubView } =
     useNavigationMenuItemEditSubView();
