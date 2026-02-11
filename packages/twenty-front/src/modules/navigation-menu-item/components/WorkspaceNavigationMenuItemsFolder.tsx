@@ -115,8 +115,8 @@ export const WorkspaceNavigationMenuItemsFolder = ({
     if (!isOpen) {
       const firstNonLinkItem = navigationMenuItems.find(
         (item) =>
-        item.itemType !== NavigationMenuItemType.LINK &&
-        isNonEmptyString(item.link),
+          item.itemType !== NavigationMenuItemType.LINK &&
+          isNonEmptyString(item.link),
       );
       if (isDefined(firstNonLinkItem?.link)) {
         navigate(firstNonLinkItem.link);
