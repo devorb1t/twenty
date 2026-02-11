@@ -1,3 +1,4 @@
+import { isNonEmptyString } from '@sniptt/guards';
 import { CustomError, isDefined } from 'twenty-shared/utils';
 import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
@@ -29,7 +30,7 @@ export const validateAndExtractWorkspaceFolderId = (
       NavigationMenuItemDroppableIds.WORKSPACE_FOLDER_HEADER_PREFIX,
       '',
     );
-    if (!folderId)
+    if (!isNonEmptyString(folderId))
       throw new CustomError(
         `Invalid workspace folder header ID: ${droppableId}`,
         'INVALID_WORKSPACE_FOLDER_HEADER_ID',
@@ -46,7 +47,7 @@ export const validateAndExtractWorkspaceFolderId = (
       NavigationMenuItemDroppableIds.WORKSPACE_FOLDER_PREFIX,
       '',
     );
-    if (!folderId)
+    if (!isNonEmptyString(folderId))
       throw new CustomError(
         `Invalid workspace folder ID: ${droppableId}`,
         'INVALID_WORKSPACE_FOLDER_ID',
