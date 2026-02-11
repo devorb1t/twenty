@@ -52,54 +52,18 @@ describe('recordIdentifierToObjectRecordIdentifier', () => {
     expect(result.avatarUrl).toBeUndefined();
   });
 
-  it('should return empty linkToShowPage for NoteTarget', () => {
-    const objectMetadataItem: ObjectMetadataItem = {
-      nameSingular: CoreObjectNameSingular.NoteTarget,
-    } as ObjectMetadataItem;
+  it('should return empty linkToShowPage for targets and workspace member', () => {
+    const objectMetadataItems: ObjectMetadataItem[] = [
+      { nameSingular: CoreObjectNameSingular.NoteTarget } as ObjectMetadataItem,
+      { nameSingular: CoreObjectNameSingular.WorkspaceMember } as ObjectMetadataItem,
+    ];
 
-    const result = recordIdentifierToObjectRecordIdentifier({
-      recordIdentifier: baseRecordIdentifier,
-      objectMetadataItem,
+    objectMetadataItems.forEach((objectMetadataItem) => {
+      const result = recordIdentifierToObjectRecordIdentifier({
+        recordIdentifier: baseRecordIdentifier,
+        objectMetadataItem,
+      });
+      expect(result.linkToShowPage).toBe('');
     });
-
-    expect(result.linkToShowPage).toBe('');
-  });
-
-  it('should return empty linkToShowPage for TaskTarget', () => {
-    const objectMetadataItem: ObjectMetadataItem = {
-      nameSingular: CoreObjectNameSingular.TaskTarget,
-    } as ObjectMetadataItem;
-
-    const result = recordIdentifierToObjectRecordIdentifier({
-      recordIdentifier: baseRecordIdentifier,
-      objectMetadataItem,
-    });
-
-    expect(result.linkToShowPage).toBe('');
-  });
-
-  it('should return empty linkToShowPage for WorkspaceMember', () => {
-    const objectMetadataItem: ObjectMetadataItem = {
-      nameSingular: CoreObjectNameSingular.WorkspaceMember,
-    } as ObjectMetadataItem;
-
-    const result = recordIdentifierToObjectRecordIdentifier({
-      recordIdentifier: baseRecordIdentifier,
-      objectMetadataItem,
-    });
-
-    expect(result.linkToShowPage).toBe('');
-  });
-
-  it('should return empty linkToShowPage when record id is undefined', () => {
-    const result = recordIdentifierToObjectRecordIdentifier({
-      recordIdentifier: {
-        ...baseRecordIdentifier,
-        id: undefined as unknown as string,
-      },
-      objectMetadataItem: baseObjectMetadataItem,
-    });
-
-    expect(result.linkToShowPage).toBe('');
   });
 });

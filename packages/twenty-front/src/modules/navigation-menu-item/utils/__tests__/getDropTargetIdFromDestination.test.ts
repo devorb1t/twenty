@@ -1,11 +1,8 @@
 import { getDropTargetIdFromDestination } from '@/navigation-menu-item/utils/getDropTargetIdFromDestination';
 
 describe('getDropTargetIdFromDestination', () => {
-  it('should return null when destination is null', () => {
+  it('should return null when destination is null or droppableId is not workspace', () => {
     expect(getDropTargetIdFromDestination(null)).toBe(null);
-  });
-
-  it('should return null when droppableId is not a workspace droppable id', () => {
     expect(
       getDropTargetIdFromDestination({
         droppableId: 'favorites-orphan',
