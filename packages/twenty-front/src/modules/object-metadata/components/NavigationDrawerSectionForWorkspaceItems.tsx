@@ -7,7 +7,7 @@ import { isDefined } from 'twenty-shared/utils';
 import { IconLink, IconPlus } from 'twenty-ui/display';
 
 import { useIsDropDisabledForSection } from '@/navigation-menu-item/hooks/useIsDropDisabledForSection';
-import { NAVIGATION_SECTIONS } from '@/navigation-menu-item/constants/NavigationSections.constants';
+import { NavigationSections } from '@/navigation-menu-item/constants/NavigationSections.constants';
 
 import { NavigationItemDropTarget } from '@/navigation-menu-item/components/NavigationItemDropTarget';
 import { WorkspaceNavigationMenuItemsFolder } from '@/navigation-menu-item/components/WorkspaceNavigationMenuItemsFolder';
@@ -171,7 +171,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
                       key={item.id}
                       folderId={null}
                       index={index}
-                      sectionId={NAVIGATION_SECTIONS.WORKSPACE}
+                      sectionId={NavigationSections.WORKSPACE}
                     >
                       <DraggableItem
                         draggableId={item.id}
@@ -214,7 +214,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
                       key={item.id}
                       folderId={null}
                       index={index}
-                      sectionId={NAVIGATION_SECTIONS.WORKSPACE}
+                      sectionId={NavigationSections.WORKSPACE}
                     >
                       <DraggableItem
                         draggableId={item.id}
@@ -263,7 +263,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
                     key={item.id}
                     folderId={null}
                     index={index}
-                    sectionId={NAVIGATION_SECTIONS.WORKSPACE}
+                    sectionId={NavigationSections.WORKSPACE}
                   >
                     <DraggableItem
                       draggableId={item.id}
@@ -301,7 +301,7 @@ export const NavigationDrawerSectionForWorkspaceItems = ({
               <NavigationItemDropTarget
                 folderId={null}
                 index={filteredItems.length}
-                sectionId={NAVIGATION_SECTIONS.WORKSPACE}
+                sectionId={NavigationSections.WORKSPACE}
                 compact={!!(isEditMode && onAddMenuItem)}
               >
                 {isEditMode && onAddMenuItem && (
