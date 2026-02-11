@@ -6,14 +6,22 @@ import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
 describe('matchesWorkspaceFolderId', () => {
   it('should return true when folderId and item folder match (including null for orphan)', () => {
-    expect(matchesWorkspaceFolderId({ folderId: null } as NavigationMenuItem, null)).toBe(true);
+    expect(
+      matchesWorkspaceFolderId({ folderId: null } as NavigationMenuItem, null),
+    ).toBe(true);
     expect(matchesWorkspaceFolderId({} as NavigationMenuItem, null)).toBe(true);
-    expect(matchesWorkspaceFolderId({ folderId: 'f1' } as NavigationMenuItem, 'f1')).toBe(true);
+    expect(
+      matchesWorkspaceFolderId({ folderId: 'f1' } as NavigationMenuItem, 'f1'),
+    ).toBe(true);
   });
 
   it('should return false when folderId and item folder do not match', () => {
-    expect(matchesWorkspaceFolderId({ folderId: 'f1' } as NavigationMenuItem, null)).toBe(false);
-    expect(matchesWorkspaceFolderId({ folderId: 'f1' } as NavigationMenuItem, 'f2')).toBe(false);
+    expect(
+      matchesWorkspaceFolderId({ folderId: 'f1' } as NavigationMenuItem, null),
+    ).toBe(false);
+    expect(
+      matchesWorkspaceFolderId({ folderId: 'f1' } as NavigationMenuItem, 'f2'),
+    ).toBe(false);
   });
 });
 
