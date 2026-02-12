@@ -1,8 +1,10 @@
+import { COMMAND_MENU_SEARCH_BAR_HEIGHT_MOBILE } from '@/command-menu/constants/CommandMenuSearchBarHeightMobile';
 import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { isCommandMenuOpenedState } from '@/command-menu/states/isCommandMenuOpenedState';
+import { isNavigationMenuInEditModeState } from '@/navigation-menu-item/states/isNavigationMenuInEditModeState';
 import { RootStackingContextZIndices } from '@/ui/layout/constants/RootStackingContextZIndices';
 import { PAGE_HEADER_COMMAND_MENU_BUTTON_CLICK_OUTSIDE_ID } from '@/ui/layout/page-header/constants/PageHeaderCommandMenuButtonClickOutsideId';
-import { useTheme } from '@emotion/react';
+import { css, useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { i18n } from '@lingui/core';
 import { t } from '@lingui/core/macro';
@@ -12,8 +14,20 @@ import { AppTooltip, TooltipDelay, TooltipPosition } from 'twenty-ui/display';
 import { AnimatedButton } from 'twenty-ui/input';
 import { getOsControlSymbol, useIsMobile } from 'twenty-ui/utilities';
 
-const StyledButtonWrapper = styled.div`
+const StyledButtonWrapper = styled.div<{
+  alignWithCommandMenuTopBar: boolean;
+}>`
   z-index: ${RootStackingContextZIndices.CommandMenuButton};
+  ${({ alignWithCommandMenuTopBar, theme }) =>
+    alignWithCommandMenuTopBar &&
+    css`
+      align-items: center;
+      display: flex;
+      height: ${COMMAND_MENU_SEARCH_BAR_HEIGHT_MOBILE}px;
+      position: fixed;
+      right: ${theme.spacing(3)};
+      top: 0;
+    `}
 `;
 
 const StyledTooltipWrapper = styled.div`
@@ -109,8 +123,14 @@ const AnimatedIcon = ({
 export const PageHeaderToggleCommandMenuButton = () => {
   const { toggleCommandMenu } = useCommandMenu();
   const isCommandMenuOpened = useRecoilValue(isCommandMenuOpenedState);
+  const isNavigationMenuInEditMode = useRecoilValue(
+    isNavigationMenuInEditModeState,
+  );
 
   const isMobile = useIsMobile();
+
+  const alignWithCommandMenuTopBar =
+    isMobile && isNavigationMenuInEditMode && isCommandMenuOpened;
 
   const ariaLabel = isCommandMenuOpened
     ? t`Close command menu`
@@ -119,7 +139,9 @@ export const PageHeaderToggleCommandMenuButton = () => {
   const theme = useTheme();
 
   return (
-    <StyledButtonWrapper>
+    <StyledButtonWrapper
+      alignWithCommandMenuTopBar={alignWithCommandMenuTopBar}
+    >
       <div id="toggle-command-menu-button">
         <AnimatedButton
           animatedSvg={
