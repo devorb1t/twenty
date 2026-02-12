@@ -7,6 +7,7 @@ import { TWENTY_STANDARD_APPLICATION } from 'src/engine/workspace-manager/twenty
 export const createStandardNavigationMenuItemFolderFlatMetadata = ({
   universalIdentifier,
   name,
+  icon,
   position,
   navigationMenuItemId,
   workspaceId,
@@ -15,6 +16,7 @@ export const createStandardNavigationMenuItemFolderFlatMetadata = ({
 }: {
   universalIdentifier: string;
   name: string;
+  icon?: string | null;
   position: number;
   navigationMenuItemId: string;
   workspaceId: string;
@@ -37,7 +39,7 @@ export const createStandardNavigationMenuItemFolderFlatMetadata = ({
   folderUniversalIdentifier: null,
   name,
   link: null,
-  icon: null,
+  icon: icon ?? null,
   position,
   createdAt: now,
   updatedAt: now,
