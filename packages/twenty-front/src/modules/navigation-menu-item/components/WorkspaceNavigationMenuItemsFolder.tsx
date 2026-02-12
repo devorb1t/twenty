@@ -174,7 +174,6 @@ export const WorkspaceNavigationMenuItemsFolder = ({
                 />
               )
             }
-            alwaysShowRightOptions
           />
         </NavigationMenuItemDroppable>
 
