@@ -287,7 +287,6 @@ export class MigrateFavoritesToNavigationMenuItemsCommand extends ActiveOrSuspen
           link: null,
           icon: null,
           position: favoriteFolder.position,
-          link: null,
           workspaceId,
           applicationId: workspaceCustomApplicationId,
           applicationUniversalIdentifier:
@@ -322,7 +321,6 @@ export class MigrateFavoritesToNavigationMenuItemsCommand extends ActiveOrSuspen
           link: null,
           icon: null,
           position: favoriteFolder.position,
-          link: null,
           workspaceId,
           applicationId: workspaceCustomApplicationId,
           applicationUniversalIdentifier:
@@ -530,7 +528,6 @@ export class MigrateFavoritesToNavigationMenuItemsCommand extends ActiveOrSuspen
           link: null,
           icon: null,
           position: favorite.position,
-          link: null,
           workspaceId,
           applicationId,
           applicationUniversalIdentifier,
@@ -578,7 +575,6 @@ export class MigrateFavoritesToNavigationMenuItemsCommand extends ActiveOrSuspen
         link: null,
         icon: null,
         position: favorite.position,
-        link: null,
         workspaceId,
         applicationId: workspaceCustomApplicationId,
         applicationUniversalIdentifier:

@@ -67,7 +67,6 @@ export const createStandardNavigationMenuItemFlatMetadata = ({
     link: null,
     icon: null,
     position,
-    link: null,
     createdAt: now,
     updatedAt: now,
   };
