@@ -5,7 +5,7 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
-import { useRecoilValue } from 'recoil';
+import { useRecoilCallback, useRecoilValue } from 'recoil';
 
 import {
   setSessionId,
@@ -98,7 +98,20 @@ export const PageChangeEffect = () => {
   );
 
   const { closeCommandMenu } = useCommandMenu();
-  const commandMenuPage = useRecoilValue(commandMenuPageState);
+
+  const closeCommandMenuUnlessOnEditPage = useRecoilCallback(
+    ({ snapshot }) =>
+      () => {
+        const currentPage = snapshot
+          .getLoadable(commandMenuPageState)
+          .getValue();
+        if (currentPage === CommandMenuPages.NavigationMenuItemEdit) {
+          return;
+        }
+        closeCommandMenu();
+      },
+    [closeCommandMenu],
+  );
 
   const { resetFocusStackToFocusItem } = useResetFocusStackToFocusItem();
 
@@ -107,11 +120,8 @@ export const PageChangeEffect = () => {
   const { openNewRecordTitleCell } = useOpenNewRecordTitleCell();
 
   useEffect(() => {
-    if (commandMenuPage === CommandMenuPages.NavigationMenuItemEdit) {
-      return;
-    }
-    closeCommandMenu();
-  }, [location.pathname, closeCommandMenu, commandMenuPage]);
+    closeCommandMenuUnlessOnEditPage();
+  }, [location.pathname, closeCommandMenuUnlessOnEditPage]);
 
   useEffect(() => {
     if (!previousLocation || previousLocation !== location.pathname) {
