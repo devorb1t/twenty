@@ -1482,6 +1482,7 @@ export enum FeatureFlagKey {
   IS_APPLICATION_INSTALLATION_FROM_TARBALL_ENABLED = 'IS_APPLICATION_INSTALLATION_FROM_TARBALL_ENABLED',
   IS_ATTACHMENT_MIGRATED = 'IS_ATTACHMENT_MIGRATED',
   IS_COMMAND_MENU_ITEM_ENABLED = 'IS_COMMAND_MENU_ITEM_ENABLED',
+  IS_CORE_PICTURE_MIGRATED = 'IS_CORE_PICTURE_MIGRATED',
   IS_DASHBOARD_V2_ENABLED = 'IS_DASHBOARD_V2_ENABLED',
   IS_DRAFT_EMAIL_ENABLED = 'IS_DRAFT_EMAIL_ENABLED',
   IS_EMAILING_DOMAIN_ENABLED = 'IS_EMAILING_DOMAIN_ENABLED',
@@ -1492,6 +1493,7 @@ export enum FeatureFlagKey {
   IS_NAVIGATION_MENU_ITEM_EDITING_ENABLED = 'IS_NAVIGATION_MENU_ITEM_EDITING_ENABLED',
   IS_NAVIGATION_MENU_ITEM_ENABLED = 'IS_NAVIGATION_MENU_ITEM_ENABLED',
   IS_NOTE_TARGET_MIGRATED = 'IS_NOTE_TARGET_MIGRATED',
+  IS_OTHER_FILE_MIGRATED = 'IS_OTHER_FILE_MIGRATED',
   IS_PUBLIC_DOMAIN_ENABLED = 'IS_PUBLIC_DOMAIN_ENABLED',
   IS_RECORD_PAGE_LAYOUT_EDITING_ENABLED = 'IS_RECORD_PAGE_LAYOUT_EDITING_ENABLED',
   IS_ROW_LEVEL_PERMISSION_PREDICATES_ENABLED = 'IS_ROW_LEVEL_PERMISSION_PREDICATES_ENABLED',
@@ -1630,6 +1632,7 @@ export enum FileFolder {
   Attachment = 'Attachment',
   BuiltFrontComponent = 'BuiltFrontComponent',
   BuiltLogicFunction = 'BuiltLogicFunction',
+  CorePicture = 'CorePicture',
   Dependencies = 'Dependencies',
   File = 'File',
   FilesField = 'FilesField',
@@ -1637,21 +1640,22 @@ export enum FileFolder {
   ProfilePicture = 'ProfilePicture',
   PublicAsset = 'PublicAsset',
   Source = 'Source',
+  Workflow = 'Workflow',
   WorkspaceLogo = 'WorkspaceLogo'
 }
 
-export type FilesConfiguration = {
-  __typename?: 'FilesConfiguration';
-  configurationType: WidgetConfigurationType;
-};
-
-export type FilesFieldFile = {
-  __typename?: 'FilesFieldFile';
+export type FileWithSignedUrl = {
+  __typename?: 'FileWithSignedUrl';
   createdAt: Scalars['DateTime'];
   id: Scalars['UUID'];
   path: Scalars['String'];
   size: Scalars['Float'];
   url: Scalars['String'];
+};
+
+export type FilesConfiguration = {
+  __typename?: 'FilesConfiguration';
+  configurationType: WidgetConfigurationType;
 };
 
 export type FindAvailableSsoidpOutput = {
@@ -2168,6 +2172,7 @@ export type Mutation = {
   createCoreViewSort: CoreViewSort;
   createDatabaseConfigVariable: Scalars['Boolean'];
   createEmailingDomain: EmailingDomain;
+  /** @deprecated Use specific file service instead */
   createFile: File;
   createFrontComponent: FrontComponent;
   createManyCoreViewFieldGroups: Array<CoreViewFieldGroup>;
@@ -2203,6 +2208,7 @@ export type Mutation = {
   deleteCurrentWorkspace: Workspace;
   deleteDatabaseConfigVariable: Scalars['Boolean'];
   deleteEmailingDomain: Scalars['Boolean'];
+  /** @deprecated  */
   deleteFile: File;
   deleteFrontComponent: FrontComponent;
   deleteJobs: DeleteJobsResponse;
@@ -2307,10 +2313,13 @@ export type Mutation = {
   uploadApplicationFile: File;
   /** @deprecated Use uploadFilesFieldFile instead */
   uploadFile: SignedFile;
-  uploadFilesFieldFile: FilesFieldFile;
+  uploadFilesFieldFile: FileWithSignedUrl;
   uploadImage: SignedFile;
-  uploadWorkspaceLogo: SignedFile;
-  uploadWorkspaceMemberProfilePicture: SignedFile;
+  uploadWorkflowFile: FileWithSignedUrl;
+  uploadWorkspaceLogo: FileWithSignedUrl;
+  uploadWorkspaceLogoLegacy: SignedFile;
+  uploadWorkspaceMemberProfilePicture: FileWithSignedUrl;
+  uploadWorkspaceMemberProfilePictureLegacy: SignedFile;
   upsertFieldPermissions: Array<FieldPermission>;
   upsertObjectPermissions: Array<ObjectPermission>;
   upsertPermissionFlags: Array<PermissionFlag>;
@@ -3130,12 +3139,27 @@ export type MutationUploadImageArgs = {
 };
 
 
+export type MutationUploadWorkflowFileArgs = {
+  file: Scalars['Upload'];
+};
+
+
 export type MutationUploadWorkspaceLogoArgs = {
   file: Scalars['Upload'];
 };
 
 
+export type MutationUploadWorkspaceLogoLegacyArgs = {
+  file: Scalars['Upload'];
+};
+
+
 export type MutationUploadWorkspaceMemberProfilePictureArgs = {
+  file: Scalars['Upload'];
+};
+
+
+export type MutationUploadWorkspaceMemberProfilePictureLegacyArgs = {
   file: Scalars['Upload'];
 };
 
@@ -5080,6 +5104,7 @@ export type Workspace = {
   isPublicInviteLinkEnabled: Scalars['Boolean'];
   isTwoFactorAuthenticationEnforced: Scalars['Boolean'];
   logo?: Maybe<Scalars['String']>;
+  logoFileId?: Maybe<Scalars['UUID']>;
   metadataVersion: Scalars['Float'];
   routerModel: Scalars['String'];
   smartModel: Scalars['String'];
@@ -5734,7 +5759,14 @@ export type UploadFilesFieldFileMutationVariables = Exact<{
 }>;
 
 
-export type UploadFilesFieldFileMutation = { __typename?: 'Mutation', uploadFilesFieldFile: { __typename?: 'FilesFieldFile', id: string, path: string, size: number, createdAt: string, url: string } };
+export type UploadFilesFieldFileMutation = { __typename?: 'Mutation', uploadFilesFieldFile: { __typename?: 'FileWithSignedUrl', id: string, path: string, size: number, createdAt: string, url: string } };
+
+export type UploadWorkflowFileMutationVariables = Exact<{
+  file: Scalars['Upload'];
+}>;
+
+
+export type UploadWorkflowFileMutation = { __typename?: 'Mutation', uploadWorkflowFile: { __typename?: 'FileWithSignedUrl', id: string, path: string, size: number, createdAt: string, url: string } };
 
 export type FindManyFrontComponentsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -6221,7 +6253,14 @@ export type UploadWorkspaceMemberProfilePictureMutationVariables = Exact<{
 }>;
 
 
-export type UploadWorkspaceMemberProfilePictureMutation = { __typename?: 'Mutation', uploadWorkspaceMemberProfilePicture: { __typename?: 'SignedFile', path: string, token: string } };
+export type UploadWorkspaceMemberProfilePictureMutation = { __typename?: 'Mutation', uploadWorkspaceMemberProfilePicture: { __typename?: 'FileWithSignedUrl', url: string } };
+
+export type UploadWorkspaceMemberProfilePictureLegacyMutationVariables = Exact<{
+  file: Scalars['Upload'];
+}>;
+
+
+export type UploadWorkspaceMemberProfilePictureLegacyMutation = { __typename?: 'Mutation', uploadWorkspaceMemberProfilePictureLegacy: { __typename?: 'SignedFile', path: string, token: string } };
 
 export type UpdateUserEmailMutationVariables = Exact<{
   newEmail: Scalars['String'];
@@ -6740,7 +6779,14 @@ export type UploadWorkspaceLogoMutationVariables = Exact<{
 }>;
 
 
-export type UploadWorkspaceLogoMutation = { __typename?: 'Mutation', uploadWorkspaceLogo: { __typename?: 'SignedFile', path: string, token: string } };
+export type UploadWorkspaceLogoMutation = { __typename?: 'Mutation', uploadWorkspaceLogo: { __typename?: 'FileWithSignedUrl', url: string } };
+
+export type UploadWorkspaceLogoLegacyMutationVariables = Exact<{
+  file: Scalars['Upload'];
+}>;
+
+
+export type UploadWorkspaceLogoLegacyMutation = { __typename?: 'Mutation', uploadWorkspaceLogoLegacy: { __typename?: 'SignedFile', path: string, token: string } };
 
 export type CheckCustomDomainValidRecordsMutationVariables = Exact<{ [key: string]: never; }>;
 
@@ -10440,6 +10486,43 @@ export function useUploadFilesFieldFileMutation(baseOptions?: Apollo.MutationHoo
 export type UploadFilesFieldFileMutationHookResult = ReturnType<typeof useUploadFilesFieldFileMutation>;
 export type UploadFilesFieldFileMutationResult = Apollo.MutationResult<UploadFilesFieldFileMutation>;
 export type UploadFilesFieldFileMutationOptions = Apollo.BaseMutationOptions<UploadFilesFieldFileMutation, UploadFilesFieldFileMutationVariables>;
+export const UploadWorkflowFileDocument = gql`
+    mutation UploadWorkflowFile($file: Upload!) {
+  uploadWorkflowFile(file: $file) {
+    id
+    path
+    size
+    createdAt
+    url
+  }
+}
+    `;
+export type UploadWorkflowFileMutationFn = Apollo.MutationFunction<UploadWorkflowFileMutation, UploadWorkflowFileMutationVariables>;
+
+/**
+ * __useUploadWorkflowFileMutation__
+ *
+ * To run a mutation, you first call `useUploadWorkflowFileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUploadWorkflowFileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [uploadWorkflowFileMutation, { data, loading, error }] = useUploadWorkflowFileMutation({
+ *   variables: {
+ *      file: // value for 'file'
+ *   },
+ * });
+ */
+export function useUploadWorkflowFileMutation(baseOptions?: Apollo.MutationHookOptions<UploadWorkflowFileMutation, UploadWorkflowFileMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UploadWorkflowFileMutation, UploadWorkflowFileMutationVariables>(UploadWorkflowFileDocument, options);
+      }
+export type UploadWorkflowFileMutationHookResult = ReturnType<typeof useUploadWorkflowFileMutation>;
+export type UploadWorkflowFileMutationResult = Apollo.MutationResult<UploadWorkflowFileMutation>;
+export type UploadWorkflowFileMutationOptions = Apollo.BaseMutationOptions<UploadWorkflowFileMutation, UploadWorkflowFileMutationVariables>;
 export const FindManyFrontComponentsDocument = gql`
     query FindManyFrontComponents {
   frontComponents {
@@ -13095,8 +13178,7 @@ export type UpdateLabPublicFeatureFlagMutationOptions = Apollo.BaseMutationOptio
 export const UploadWorkspaceMemberProfilePictureDocument = gql`
     mutation UploadWorkspaceMemberProfilePicture($file: Upload!) {
   uploadWorkspaceMemberProfilePicture(file: $file) {
-    path
-    token
+    url
   }
 }
     `;
@@ -13126,6 +13208,40 @@ export function useUploadWorkspaceMemberProfilePictureMutation(baseOptions?: Apo
 export type UploadWorkspaceMemberProfilePictureMutationHookResult = ReturnType<typeof useUploadWorkspaceMemberProfilePictureMutation>;
 export type UploadWorkspaceMemberProfilePictureMutationResult = Apollo.MutationResult<UploadWorkspaceMemberProfilePictureMutation>;
 export type UploadWorkspaceMemberProfilePictureMutationOptions = Apollo.BaseMutationOptions<UploadWorkspaceMemberProfilePictureMutation, UploadWorkspaceMemberProfilePictureMutationVariables>;
+export const UploadWorkspaceMemberProfilePictureLegacyDocument = gql`
+    mutation UploadWorkspaceMemberProfilePictureLegacy($file: Upload!) {
+  uploadWorkspaceMemberProfilePictureLegacy(file: $file) {
+    path
+    token
+  }
+}
+    `;
+export type UploadWorkspaceMemberProfilePictureLegacyMutationFn = Apollo.MutationFunction<UploadWorkspaceMemberProfilePictureLegacyMutation, UploadWorkspaceMemberProfilePictureLegacyMutationVariables>;
+
+/**
+ * __useUploadWorkspaceMemberProfilePictureLegacyMutation__
+ *
+ * To run a mutation, you first call `useUploadWorkspaceMemberProfilePictureLegacyMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUploadWorkspaceMemberProfilePictureLegacyMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [uploadWorkspaceMemberProfilePictureLegacyMutation, { data, loading, error }] = useUploadWorkspaceMemberProfilePictureLegacyMutation({
+ *   variables: {
+ *      file: // value for 'file'
+ *   },
+ * });
+ */
+export function useUploadWorkspaceMemberProfilePictureLegacyMutation(baseOptions?: Apollo.MutationHookOptions<UploadWorkspaceMemberProfilePictureLegacyMutation, UploadWorkspaceMemberProfilePictureLegacyMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UploadWorkspaceMemberProfilePictureLegacyMutation, UploadWorkspaceMemberProfilePictureLegacyMutationVariables>(UploadWorkspaceMemberProfilePictureLegacyDocument, options);
+      }
+export type UploadWorkspaceMemberProfilePictureLegacyMutationHookResult = ReturnType<typeof useUploadWorkspaceMemberProfilePictureLegacyMutation>;
+export type UploadWorkspaceMemberProfilePictureLegacyMutationResult = Apollo.MutationResult<UploadWorkspaceMemberProfilePictureLegacyMutation>;
+export type UploadWorkspaceMemberProfilePictureLegacyMutationOptions = Apollo.BaseMutationOptions<UploadWorkspaceMemberProfilePictureLegacyMutation, UploadWorkspaceMemberProfilePictureLegacyMutationVariables>;
 export const UpdateUserEmailDocument = gql`
     mutation UpdateUserEmail($newEmail: String!, $verifyEmailRedirectPath: String) {
   updateUserEmail(
@@ -15527,8 +15643,7 @@ export type UpdateWorkspaceMutationOptions = Apollo.BaseMutationOptions<UpdateWo
 export const UploadWorkspaceLogoDocument = gql`
     mutation UploadWorkspaceLogo($file: Upload!) {
   uploadWorkspaceLogo(file: $file) {
-    path
-    token
+    url
   }
 }
     `;
@@ -15558,6 +15673,40 @@ export function useUploadWorkspaceLogoMutation(baseOptions?: Apollo.MutationHook
 export type UploadWorkspaceLogoMutationHookResult = ReturnType<typeof useUploadWorkspaceLogoMutation>;
 export type UploadWorkspaceLogoMutationResult = Apollo.MutationResult<UploadWorkspaceLogoMutation>;
 export type UploadWorkspaceLogoMutationOptions = Apollo.BaseMutationOptions<UploadWorkspaceLogoMutation, UploadWorkspaceLogoMutationVariables>;
+export const UploadWorkspaceLogoLegacyDocument = gql`
+    mutation UploadWorkspaceLogoLegacy($file: Upload!) {
+  uploadWorkspaceLogoLegacy(file: $file) {
+    path
+    token
+  }
+}
+    `;
+export type UploadWorkspaceLogoLegacyMutationFn = Apollo.MutationFunction<UploadWorkspaceLogoLegacyMutation, UploadWorkspaceLogoLegacyMutationVariables>;
+
+/**
+ * __useUploadWorkspaceLogoLegacyMutation__
+ *
+ * To run a mutation, you first call `useUploadWorkspaceLogoLegacyMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUploadWorkspaceLogoLegacyMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [uploadWorkspaceLogoLegacyMutation, { data, loading, error }] = useUploadWorkspaceLogoLegacyMutation({
+ *   variables: {
+ *      file: // value for 'file'
+ *   },
+ * });
+ */
+export function useUploadWorkspaceLogoLegacyMutation(baseOptions?: Apollo.MutationHookOptions<UploadWorkspaceLogoLegacyMutation, UploadWorkspaceLogoLegacyMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UploadWorkspaceLogoLegacyMutation, UploadWorkspaceLogoLegacyMutationVariables>(UploadWorkspaceLogoLegacyDocument, options);
+      }
+export type UploadWorkspaceLogoLegacyMutationHookResult = ReturnType<typeof useUploadWorkspaceLogoLegacyMutation>;
+export type UploadWorkspaceLogoLegacyMutationResult = Apollo.MutationResult<UploadWorkspaceLogoLegacyMutation>;
+export type UploadWorkspaceLogoLegacyMutationOptions = Apollo.BaseMutationOptions<UploadWorkspaceLogoLegacyMutation, UploadWorkspaceLogoLegacyMutationVariables>;
 export const CheckCustomDomainValidRecordsDocument = gql`
     mutation CheckCustomDomainValidRecords {
   checkCustomDomainValidRecords {
