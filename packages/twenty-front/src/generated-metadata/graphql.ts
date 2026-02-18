@@ -1617,6 +1617,7 @@ export type FieldRichTextConfiguration = {
 export type FieldsConfiguration = {
   __typename?: 'FieldsConfiguration';
   configurationType: WidgetConfigurationType;
+  newFieldDefaultConfiguration?: Maybe<NewFieldDefaultConfiguration>;
   viewId?: Maybe<Scalars['String']>;
 };
 
@@ -3241,6 +3242,12 @@ export type NavigationMenuItem = {
   updatedAt: Scalars['DateTime'];
   userWorkspaceId?: Maybe<Scalars['UUID']>;
   viewId?: Maybe<Scalars['UUID']>;
+};
+
+export type NewFieldDefaultConfiguration = {
+  __typename?: 'NewFieldDefaultConfiguration';
+  isVisible: Scalars['Boolean'];
+  viewFieldGroupId?: Maybe<Scalars['String']>;
 };
 
 export type NotesConfiguration = {
