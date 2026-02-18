@@ -1448,13 +1448,8 @@ export enum EventLogTable {
 export type EventSubscription = {
   __typename?: 'EventSubscription';
   eventStreamId: Scalars['String'];
-  eventWithQueryIdsList: Array<EventWithQueryIds>;
-};
-
-export type EventWithQueryIds = {
-  __typename?: 'EventWithQueryIds';
-  event: ObjectRecordEvent;
-  queryIds: Array<Scalars['String']>;
+  metadataEventsWithQueryIds: Array<MetadataEventWithQueryIds>;
+  objectRecordEventsWithQueryIds: Array<ObjectRecordEventWithQueryIds>;
 };
 
 export type ExecuteOneLogicFunctionInput = {
@@ -2136,6 +2131,27 @@ export type MarketplaceAppRoleObjectPermission = {
   canSoftDeleteObjectRecords?: Maybe<Scalars['Boolean']>;
   canUpdateObjectRecords?: Maybe<Scalars['Boolean']>;
   objectUniversalIdentifier: Scalars['String'];
+};
+
+export type MetadataEvent = {
+  __typename?: 'MetadataEvent';
+  metadataName: Scalars['String'];
+  properties: ObjectRecordEventProperties;
+  recordId: Scalars['String'];
+  type: MetadataEventAction;
+};
+
+/** Metadata Event Action */
+export enum MetadataEventAction {
+  CREATED = 'CREATED',
+  DELETED = 'DELETED',
+  UPDATED = 'UPDATED'
+}
+
+export type MetadataEventWithQueryIds = {
+  __typename?: 'MetadataEventWithQueryIds';
+  metadataEvent: MetadataEvent;
+  queryIds: Array<Scalars['String']>;
 };
 
 export enum ModelProvider {
@@ -3377,6 +3393,12 @@ export type ObjectRecordEventProperties = {
   before?: Maybe<Scalars['JSON']>;
   diff?: Maybe<Scalars['JSON']>;
   updatedFields?: Maybe<Array<Scalars['String']>>;
+};
+
+export type ObjectRecordEventWithQueryIds = {
+  __typename?: 'ObjectRecordEventWithQueryIds';
+  objectRecordEvent: ObjectRecordEvent;
+  queryIds: Array<Scalars['String']>;
 };
 
 /** Date granularity options (e.g. DAY, MONTH, QUARTER, YEAR, WEEK, DAY_OF_THE_WEEK, MONTH_OF_THE_YEAR, QUARTER_OF_THE_YEAR) */
@@ -5781,7 +5803,7 @@ export type FindOneFrontComponentQueryVariables = Exact<{
 }>;
 
 
-export type FindOneFrontComponentQuery = { __typename?: 'Query', frontComponent?: { __typename?: 'FrontComponent', id: string, name: string, applicationId: string, applicationTokenPair?: { __typename?: 'ApplicationTokenPair', applicationAccessToken: { __typename?: 'AuthToken', token: string, expiresAt: string }, applicationRefreshToken: { __typename?: 'AuthToken', token: string, expiresAt: string } } | null } | null };
+export type FindOneFrontComponentQuery = { __typename?: 'Query', frontComponent?: { __typename?: 'FrontComponent', id: string, name: string, applicationId: string, builtComponentChecksum: string, applicationTokenPair?: { __typename?: 'ApplicationTokenPair', applicationAccessToken: { __typename?: 'AuthToken', token: string, expiresAt: string }, applicationRefreshToken: { __typename?: 'AuthToken', token: string, expiresAt: string } } | null } | null };
 
 export type LogicFunctionFieldsFragment = { __typename?: 'LogicFunction', id: string, name: string, description?: string | null, runtime: string, timeoutSeconds: number, sourceHandlerPath: string, handlerName: string, toolInputSchema?: any | null, isTool: boolean, applicationId?: string | null, createdAt: string, updatedAt: string };
 
@@ -10569,6 +10591,7 @@ export const FindOneFrontComponentDocument = gql`
     id
     name
     applicationId
+    builtComponentChecksum
     applicationTokenPair {
       applicationAccessToken {
         token
