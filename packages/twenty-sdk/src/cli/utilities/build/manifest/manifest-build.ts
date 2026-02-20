@@ -29,6 +29,7 @@ import {
   type ObjectManifest,
   type PageLayoutManifest,
   type RoleManifest,
+  type SkillManifest,
   type ViewManifest,
 } from 'twenty-shared/application';
 import { getInputSchemaFromSourceCode } from 'twenty-shared/logic-function';
@@ -64,6 +65,7 @@ export const buildManifest = async (
   const objects: ObjectManifest[] = [];
   const fields: FieldManifest[] = [];
   const roles: RoleManifest[] = [];
+  const skills: SkillManifest[] = [];
   const logicFunctions: LogicFunctionManifest[] = [];
   const frontComponents: FrontComponentManifest[] = [];
   const publicAssets: AssetManifest[] = [];
@@ -75,6 +77,7 @@ export const buildManifest = async (
   const objectsFilePaths: string[] = [];
   const fieldsFilePaths: string[] = [];
   const rolesFilePaths: string[] = [];
+  const skillsFilePaths: string[] = [];
   const logicFunctionsFilePaths: string[] = [];
   const frontComponentsFilePaths: string[] = [];
   const publicAssetsFilePaths: string[] = [];
@@ -163,6 +166,16 @@ export const buildManifest = async (
         roles.push(extract.config);
         errors.push(...extract.errors);
         rolesFilePaths.push(relativePath);
+        break;
+      }
+      case ManifestEntityKey.Skills: {
+        const extract = await extractManifestFromFile<SkillManifest>({
+          appPath,
+          filePath,
+        });
+        skills.push(extract.config);
+        errors.push(...extract.errors);
+        skillsFilePaths.push(relativePath);
         break;
       }
       case ManifestEntityKey.LogicFunctions: {
@@ -295,6 +308,7 @@ export const buildManifest = async (
         objects,
         fields,
         roles,
+        skills,
         logicFunctions,
         frontComponents,
         publicAssets,
@@ -308,6 +322,7 @@ export const buildManifest = async (
     objects: objectsFilePaths,
     fields: fieldsFilePaths,
     roles: rolesFilePaths,
+    skills: skillsFilePaths,
     logicFunctions: logicFunctionsFilePaths,
     frontComponents: frontComponentsFilePaths,
     publicAssets: publicAssetsFilePaths,
