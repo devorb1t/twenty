@@ -5,7 +5,6 @@ import {
   TARGET_FUNCTION_TO_ENTITY_KEY_MAPPING,
 } from '@/cli/utilities/build/manifest/manifest-extract-config';
 import { extractManifestFromFile } from '@/cli/utilities/build/manifest/manifest-extract-config-from-file';
-import { injectDefaultFieldsInObjectFields } from '@/cli/utilities/build/manifest/utils/inject-default-fields-in-object-fields';
 import {
   type ApplicationConfig,
   type FrontComponentConfig,
@@ -34,6 +33,7 @@ import {
 } from 'twenty-shared/application';
 import { getInputSchemaFromSourceCode } from 'twenty-shared/logic-function';
 import { assertUnreachable } from 'twenty-shared/utils';
+import { getDefaultFieldsInObjectFields } from '@/cli/utilities/build/manifest/utils/get-default-fields-in-object-fields';
 
 const loadSources = async (appPath: string): Promise<string[]> => {
   return await glob(['**/*.ts', '**/*.tsx'], {
@@ -120,13 +120,14 @@ export const buildManifest = async (
           filePath,
         });
 
-        const objectFieldsWithDefaultFields = injectDefaultFieldsInObjectFields(
-          extract.config,
-        );
+        const {
+          objectFields: objectFieldsWithDefaults,
+          fields: reverseRelationFields,
+        } = getDefaultFieldsInObjectFields(extract.config);
 
         const labelIdentifierFieldMetadataUniversalIdentifier =
           extract.config.labelIdentifierFieldMetadataUniversalIdentifier ??
-          objectFieldsWithDefaultFields.find((field) => field.name === 'name')
+          objectFieldsWithDefaults.find((field) => field.name === 'name')
             ?.universalIdentifier;
 
         if (!labelIdentifierFieldMetadataUniversalIdentifier) {
@@ -138,11 +139,12 @@ export const buildManifest = async (
 
         const objectManifest: ObjectManifest = {
           ...extract.config,
-          fields: objectFieldsWithDefaultFields,
+          fields: objectFieldsWithDefaults,
           labelIdentifierFieldMetadataUniversalIdentifier,
         };
 
         objects.push(objectManifest);
+        fields.push(...reverseRelationFields);
 
         errors.push(...extract.errors);
         objectsFilePaths.push(relativePath);

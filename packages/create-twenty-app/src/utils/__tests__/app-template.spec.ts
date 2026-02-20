@@ -1,4 +1,5 @@
 import { type ExampleOptions } from '@/types/scaffolding-options';
+import { GENERATED_DIR } from 'twenty-shared/application';
 import { copyBaseApplicationProject } from '@/utils/app-template';
 import * as fs from 'fs-extra';
 import { tmpdir } from 'os';
@@ -111,7 +112,7 @@ describe('copyBaseApplicationProject', () => {
 
     const gitignoreContent = await fs.readFile(gitignorePath, 'utf8');
     expect(gitignoreContent).toContain('/node_modules');
-    expect(gitignoreContent).toContain('generated');
+    expect(gitignoreContent).toContain(GENERATED_DIR);
   });
 
   it('should create yarn.lock file', async () => {
