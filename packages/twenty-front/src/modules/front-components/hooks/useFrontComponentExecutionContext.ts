@@ -1,4 +1,4 @@
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useSetRecoilState } from 'recoil';
 import {
   type FrontComponentExecutionContext,
   type FrontComponentHostCommunicationApi,
@@ -10,6 +10,7 @@ import { useCommandMenu } from '@/command-menu/hooks/useCommandMenu';
 import { useNavigateCommandMenu } from '@/command-menu/hooks/useNavigateCommandMenu';
 import { commandMenuSearchState } from '@/command-menu/states/commandMenuSearchState';
 import { useUnmountHeadlessFrontComponent } from '@/front-components/hooks/useUnmountHeadlessFrontComponent';
+import { useRecoilValueV2 } from '@/ui/utilities/state/jotai/hooks/useRecoilValueV2';
 import { useIcons } from 'twenty-ui/display';
 import { useNavigateApp } from '~/hooks/useNavigateApp';
 
@@ -21,7 +22,7 @@ export const useFrontComponentExecutionContext = ({
   executionContext: FrontComponentExecutionContext;
   frontComponentHostCommunicationApi: FrontComponentHostCommunicationApi;
 } => {
-  const currentUser = useRecoilValue(currentUserState);
+  const currentUser = useRecoilValueV2(currentUserState);
   const navigateApp = useNavigateApp();
   const { navigateCommandMenu } = useNavigateCommandMenu();
   const setCommandMenuSearchState = useSetRecoilState(commandMenuSearchState);
