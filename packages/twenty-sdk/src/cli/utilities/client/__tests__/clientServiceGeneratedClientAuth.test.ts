@@ -129,14 +129,14 @@ describe('ClientService generated Twenty auth behavior', () => {
         injectClientWrapper: (
           output: string,
           options: {
-            className: string;
+            apiClientName: string;
             defaultUrl: string;
             includeUploadFile: boolean;
           },
         ) => Promise<void>;
       }
     ).injectClientWrapper(temporaryGeneratedClientDirectory, {
-      className: 'MetadataApiClient',
+      apiClientName: 'MetadataApiClient',
       defaultUrl: '`${process.env.TWENTY_API_URL}/metadata`',
       includeUploadFile: true,
     });
@@ -244,6 +244,7 @@ describe('ClientService generated Twenty auth behavior', () => {
 
   it('refreshes and retries once after auth error when refresh callback is available', async () => {
     process.env.TWENTY_APP_ACCESS_TOKEN = 'stale-token';
+    process.env.TWENTY_API_KEY = 'legacy-api-key-token';
 
     const requestAccessTokenRefresh = vi
       .fn<() => Promise<string>>()
@@ -289,7 +290,7 @@ describe('ClientService generated Twenty auth behavior', () => {
     expect(requestAccessTokenRefresh).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(process.env.TWENTY_APP_ACCESS_TOKEN).toBe('fresh-token');
-    expect(process.env.TWENTY_API_KEY).toBe('fresh-token');
+    expect(process.env.TWENTY_API_KEY).toBe('legacy-api-key-token');
   });
 
   it('deduplicates concurrent token refresh requests', async () => {
