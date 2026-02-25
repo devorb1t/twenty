@@ -140,7 +140,7 @@ describe('useActivityTargetObjectRecords', () => {
 
     const { result } = renderHook(
       () => {
-        const setRecordFromStore = useSetAtomFamilyState(
+        const setRecordStore = useSetAtomFamilyState(
           recordStoreFamilyState,
           task.id,
         );
@@ -151,14 +151,14 @@ describe('useActivityTargetObjectRecords', () => {
 
         return {
           activityTargetObjectRecords,
-          setRecordFromStore,
+          setRecordStore,
         };
       },
       { wrapper: Wrapper },
     );
 
     act(() => {
-      result.current.setRecordFromStore(task);
+      result.current.setRecordStore(task);
     });
 
     const activityTargetObjectRecords =
