@@ -5,11 +5,11 @@ import {
   type ZObject,
 } from 'zapier-platform-core';
 
-import { crudRecordKey } from '../../creates/crud_record';
-import App from '../../index';
-import getBundle from '../../utils/getBundle';
-import requestDb from '../../utils/requestDb';
-import { DatabaseEventAction } from '../../utils/triggers/triggers.utils';
+import { crudRecordKey } from 'src/creates/crud_record';
+import App from 'src/index';
+import { getBundle } from 'src/utils/getBundle';
+import requestDb from 'src/utils/requestDb';
+import { DatabaseEventAction } from 'src/utils/triggers/triggers.utils';
 const appTester = createAppTester(App);
 tools.env.inject();
 
@@ -49,11 +49,11 @@ describe('creates.create_company', () => {
     expect(result.data?.createCompany?.id).toBeDefined();
     const checkDbResult = await appTester(
       (z: ZObject, bundle: Bundle) =>
-        requestDb(
+        requestDb({
           z,
           bundle,
-          `query findCompany {company(filter: {id: {eq: "${result.data.createCompany.id}"}}){id annualRecurringRevenue{amountMicros currencyCode}}}`,
-        ),
+          query: `query findCompany {company(filter: {id: {eq: "${result.data.createCompany.id}"}}){id annualRecurringRevenue{amountMicros currencyCode}}}`,
+        }),
       bundle,
     );
     expect(
@@ -83,11 +83,11 @@ describe('creates.create_company', () => {
     expect(result.data?.createPerson?.id).toBeDefined();
     const checkDbResult = await appTester(
       (z: ZObject, bundle: Bundle) =>
-        requestDb(
+        requestDb({
           z,
           bundle,
-          `query findPerson {person(filter: {id: {eq: "${result.data.createPerson.id}"}}){phones{primaryPhoneNumber}}}`,
-        ),
+          query: `query findPerson {person(filter: {id: {eq: "${result.data.createPerson.id}"}}){phones{primaryPhoneNumber}}}`,
+        }),
       bundle,
     );
     expect(checkDbResult.data.person.phones.primaryPhoneNumber).toEqual(
@@ -128,11 +128,11 @@ describe('creates.update_company', () => {
     expect(updateResult.data?.updateCompany?.id).toBeDefined();
     const checkDbResult = await appTester(
       (z: ZObject, bundle: Bundle) =>
-        requestDb(
+        requestDb({
           z,
           bundle,
-          `query findCompany {company(filter: {id: {eq: "${companyId}"}}){id name}}`,
-        ),
+          query: `query findCompany {company(filter: {id: {eq: "${companyId}"}}){id name}}`,
+        }),
       updateBundle,
     );
     expect(checkDbResult.data.company.name).toEqual('Updated Company Name');
@@ -170,11 +170,11 @@ describe('creates.delete_company', () => {
     expect(deleteResult.data?.deleteCompany?.id).toBeDefined();
     const checkDbResult = await appTester(
       (z: ZObject, bundle: Bundle) =>
-        requestDb(
+        requestDb({
           z,
           bundle,
-          `query findCompanies {companies(filter: {id: {eq: "${companyId}"}}){edges{node{id}}}}`,
-        ),
+          query: `query findCompanies {companies(filter: {id: {eq: "${companyId}"}}){edges{node{id}}}}`,
+        }),
       deleteBundle,
     );
     expect(checkDbResult.data.companies.edges.length).toEqual(0);

@@ -4,11 +4,11 @@ import {
   type ZObject,
 } from 'zapier-platform-core';
 
-import App from '../../index';
-import { triggerRecordKey } from '../../triggers/trigger_record';
-import getBundle from '../../utils/getBundle';
-import requestDb from '../../utils/requestDb';
-import { DatabaseEventAction } from '../../utils/triggers/triggers.utils';
+import App from 'src/index';
+import { triggerRecordKey } from 'src/triggers/trigger_record';
+import { getBundle } from 'src/utils/getBundle';
+import requestDb from 'src/utils/requestDb';
+import { DatabaseEventAction } from 'src/utils/triggers/triggers.utils';
 const appTester = createAppTester(App);
 
 describe('triggers.trigger_record.created', () => {
@@ -29,11 +29,12 @@ describe('triggers.trigger_record.created', () => {
 
     const checkDbResult = await appTester(
       (z: ZObject, bundle: Bundle) =>
-        requestDb(
+        requestDb({
           z,
           bundle,
-          `query webhook {webhook(input: {id: "${result.id}"}){id operations}}`,
-        ),
+          query: `query webhook {webhook(id: "${result.id}"){id operations}}`,
+          endpoint: 'metadata',
+        }),
       bundle,
     );
 
@@ -65,7 +66,12 @@ describe('triggers.trigger_record.created', () => {
 
     const checkDbResult = await appTester(
       (z: ZObject, bundle: Bundle) =>
-        requestDb(z, bundle, `query webhook {webhooks {id}}`),
+        requestDb({
+          z,
+          bundle,
+          query: `query webhook {webhooks {id}}`,
+          endpoint: 'metadata',
+        }),
       bundle,
     );
     expect(
@@ -141,11 +147,12 @@ describe('triggers.trigger_record.update', () => {
 
     const checkDbResult = await appTester(
       (z: ZObject, bundle: Bundle) =>
-        requestDb(
+        requestDb({
           z,
           bundle,
-          `query webhook {webhook(input: {id: "${result.id}"}){id operations}}`,
-        ),
+          query: `query webhook {webhook(id: "${result.id}"){id operations }}`,
+          endpoint: 'metadata',
+        }),
       bundle,
     );
 
@@ -176,7 +183,12 @@ describe('triggers.trigger_record.update', () => {
 
     const checkDbResult = await appTester(
       (z: ZObject, bundle: Bundle) =>
-        requestDb(z, bundle, `query webhook {webhooks {id}}`),
+        requestDb({
+          z,
+          bundle,
+          query: `query webhook {webhooks {id}}`,
+          endpoint: 'metadata',
+        }),
       bundle,
     );
     expect(
@@ -223,11 +235,12 @@ describe('triggers.trigger_record.delete', () => {
 
     const checkDbResult = await appTester(
       (z: ZObject, bundle: Bundle) =>
-        requestDb(
+        requestDb({
           z,
           bundle,
-          `query webhook {webhook(input: {id: "${result.id}"}){id operations}}`,
-        ),
+          query: `query webhook {webhook(id: "${result.id}"){id operations }}`,
+          endpoint: 'metadata',
+        }),
       bundle,
     );
 
@@ -258,7 +271,12 @@ describe('triggers.trigger_record.delete', () => {
 
     const checkDbResult = await appTester(
       (z: ZObject, bundle: Bundle) =>
-        requestDb(z, bundle, `query webhook {webhooks {id}}`),
+        requestDb({
+          z,
+          bundle,
+          query: `query webhook {webhooks {id}}`,
+          endpoint: 'metadata',
+        }),
       bundle,
     );
     expect(
