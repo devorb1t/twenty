@@ -21,5 +21,5 @@ const STANDARD_OBJECT_ICON_COLOR: Partial<
 };
 
 export const getStandardObjectIconColor = (nameSingular: string): ThemeColor =>
-  (STANDARD_OBJECT_ICON_COLOR[nameSingular as CoreObjectNameSingular] ??
-    getDefaultColorForCustomObject(nameSingular)) as ThemeColor;
+  STANDARD_OBJECT_ICON_COLOR[nameSingular as CoreObjectNameSingular] ??
+  getDefaultColorForCustomObject(nameSingular);
