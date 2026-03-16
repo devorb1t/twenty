@@ -187,14 +187,15 @@ export const SidePanelNavigationMenuItemEditPage = () => {
           commandGroups={[]}
           selectableItemIds={getOrganizeActionsSelectableItemIds(true)}
         >
-          {selectedItem && (
-            <SidePanelGroup heading={t`Customize`}>
-              <SidePanelEditColorOption
-                navigationMenuItemId={selectedItem.id}
-                color={parseThemeColor(selectedItem.color)}
-              />
-            </SidePanelGroup>
-          )}
+          {selectedItem &&
+            selectedItemType !== NavigationMenuItemType.RECORD && (
+              <SidePanelGroup heading={t`Customize`}>
+                <SidePanelEditColorOption
+                  navigationMenuItemId={selectedItem.id}
+                  color={parseThemeColor(selectedItem.color)}
+                />
+              </SidePanelGroup>
+            )}
           <SidePanelEditOrganizeActions
             canMoveUp={canMoveUp}
             canMoveDown={canMoveDown}
