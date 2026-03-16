@@ -53,6 +53,7 @@ export type {
 export type { ServerVariables } from './server-variables.type';
 export type { SkillManifest } from './skillManifestType';
 export type { SyncableEntityOptions } from './syncableEntityOptionsType';
+export { getDefaultColorForCustomObject } from './utils/getDefaultColorForCustomObject.util';
 export type {
   ViewManifestFilterValue,
   ViewFieldManifest,
