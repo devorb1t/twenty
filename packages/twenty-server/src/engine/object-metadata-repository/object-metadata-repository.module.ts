@@ -7,8 +7,6 @@ import {
 
 import { capitalize } from 'twenty-shared/utils';
 
-import { WorkspaceManyOrAllFlatEntityMapsCacheModule } from 'src/engine/metadata-modules/flat-entity/services/workspace-many-or-all-flat-entity-maps-cache.module';
-import { WorkspaceManyOrAllFlatEntityMapsCacheService } from 'src/engine/metadata-modules/flat-entity/services/workspace-many-or-all-flat-entity-maps-cache.service';
 import { metadataToRepositoryMapping } from 'src/engine/object-metadata-repository/metadata-to-repository.mapping';
 import { GlobalWorkspaceOrmManager } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-orm.manager';
 import { TwentyORMModule } from 'src/engine/twenty-orm/twenty-orm.module';
@@ -33,29 +31,16 @@ export class ObjectMetadataRepositoryModule {
         provide: `${capitalize(
           convertClassNameToObjectMetadataName(objectMetadata.name),
         )}Repository`,
-        useFactory: (
-          globalWorkspaceOrmManager: GlobalWorkspaceOrmManager,
-          workspaceManyOrAllFlatEntityMapsCacheService: WorkspaceManyOrAllFlatEntityMapsCacheService,
-        ) => {
-          return new repositoryClass(
-            globalWorkspaceOrmManager,
-            workspaceManyOrAllFlatEntityMapsCacheService,
-          );
+        useFactory: (globalWorkspaceOrmManager: GlobalWorkspaceOrmManager) => {
+          return new repositoryClass(globalWorkspaceOrmManager);
         },
-        inject: [
-          GlobalWorkspaceOrmManager,
-          WorkspaceManyOrAllFlatEntityMapsCacheService,
-        ],
+        inject: [GlobalWorkspaceOrmManager],
       };
     });
 
     return {
       module: ObjectMetadataRepositoryModule,
-      imports: [
-        WorkspaceDataSourceModule,
-        TwentyORMModule,
-        WorkspaceManyOrAllFlatEntityMapsCacheModule,
-      ],
+      imports: [WorkspaceDataSourceModule, TwentyORMModule],
       providers: [...providers],
       exports: providers,
     };
