@@ -7,8 +7,7 @@ export const getDefaultColorForCustomObject = (
   nameSingular: string,
 ): ThemeColorName => {
   const customObjectColors = MAIN_COLOR_NAMES.filter(
-    (color): color is Exclude<(typeof MAIN_COLOR_NAMES)[number], 'gray'> =>
-      color !== 'gray',
+    (color): color is Exclude<ThemeColorName, 'gray'> => color !== 'gray',
   );
   let hash = 0;
   for (let index = 0; index < nameSingular.length; index += 1) {
