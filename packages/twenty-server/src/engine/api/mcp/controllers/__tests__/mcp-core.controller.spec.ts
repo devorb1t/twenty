@@ -2,7 +2,9 @@ import { Test, type TestingModule } from '@nestjs/testing';
 
 import { DEFAULT_TOOL_INPUT_SCHEMA } from 'twenty-shared/logic-function';
 
-import { MCP_SERVER_METADATA } from 'src/engine/api/mcp/constants/mcp.const';
+import { MCP_PROTOCOL_VERSION } from 'src/engine/api/mcp/constants/mcp-protocol-version.const';
+import { MCP_SERVER_INFO } from 'src/engine/api/mcp/constants/mcp-server-info.const';
+import { MCP_SERVER_INSTRUCTIONS } from 'src/engine/api/mcp/constants/mcp-server-instructions.const';
 import { McpCoreController } from 'src/engine/api/mcp/controllers/mcp-core.controller';
 import { type JsonRpc } from 'src/engine/api/mcp/dtos/json-rpc';
 import { McpAuthGuard } from 'src/engine/api/mcp/guards/mcp-auth.guard';
@@ -122,12 +124,14 @@ describe('McpCoreController', () => {
         id: '123',
         jsonrpc: '2.0',
         result: {
-          ...MCP_SERVER_METADATA,
+          protocolVersion: MCP_PROTOCOL_VERSION,
           capabilities: {
             tools: { listChanged: false },
             resources: { listChanged: false },
             prompts: { listChanged: false },
           },
+          serverInfo: MCP_SERVER_INFO,
+          instructions: MCP_SERVER_INSTRUCTIONS,
         },
       };
 

@@ -3,7 +3,10 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { type ToolSet, zodSchema } from 'ai';
 import { isDefined } from 'twenty-shared/utils';
 
-import { MCP_SERVER_METADATA } from 'src/engine/api/mcp/constants/mcp.const';
+import { JSON_RPC_ERROR_CODE } from 'src/engine/api/mcp/constants/json-rpc-error-code.const';
+import { MCP_PROTOCOL_VERSION } from 'src/engine/api/mcp/constants/mcp-protocol-version.const';
+import { MCP_SERVER_INFO } from 'src/engine/api/mcp/constants/mcp-server-info.const';
+import { MCP_SERVER_INSTRUCTIONS } from 'src/engine/api/mcp/constants/mcp-server-instructions.const';
 import { type JsonRpc } from 'src/engine/api/mcp/dtos/json-rpc';
 import { McpToolExecutorService } from 'src/engine/api/mcp/services/mcp-tool-executor.service';
 import { wrapJsonRpcResponse } from 'src/engine/api/mcp/utils/wrap-jsonrpc-response.util';
@@ -52,15 +55,14 @@ export class McpProtocolService {
   handleInitialize(requestId: string | number) {
     return wrapJsonRpcResponse(requestId, {
       result: {
-        ...MCP_SERVER_METADATA,
+        protocolVersion: MCP_PROTOCOL_VERSION,
         capabilities: {
           tools: { listChanged: false },
           resources: { listChanged: false },
           prompts: { listChanged: false },
         },
-        tools: [],
-        resources: [],
-        prompts: [],
+        serverInfo: MCP_SERVER_INFO,
+        instructions: MCP_SERVER_INSTRUCTIONS,
       },
     });
   }
@@ -173,9 +175,32 @@ export class McpProtocolService {
         return this.handleInitialize(id);
       }
 
+      if (method === 'notifications/initialized') {
+        return wrapJsonRpcResponse(id, { result: {} });
+      }
+
       if (method === 'ping') {
+        return wrapJsonRpcResponse(id, { result: {} });
+      }
+
+      if (method === 'prompts/list') {
         return wrapJsonRpcResponse(id, {
-          result: {},
+          result: { prompts: [] },
+        });
+      }
+
+      if (method === 'resources/list') {
+        return wrapJsonRpcResponse(id, {
+          result: { resources: [] },
+        });
+      }
+
+      if (method !== 'tools/list' && method !== 'tools/call') {
+        return wrapJsonRpcResponse(id, {
+          error: {
+            code: JSON_RPC_ERROR_CODE.METHOD_NOT_FOUND,
+            message: `Method '${method}' not found`,
+          },
         });
       }
 
@@ -195,7 +220,16 @@ export class McpProtocolService {
         userWorkspaceId,
       });
 
-      if (method === 'tools/call' && params) {
+      if (method === 'tools/call') {
+        if (!params) {
+          return wrapJsonRpcResponse(id, {
+            error: {
+              code: JSON_RPC_ERROR_CODE.INVALID_PARAMS,
+              message: 'tools/call requires params with name and arguments',
+            },
+          });
+        }
+
         return await this.mcpToolExecutorService.handleToolCall(
           id,
           toolSet,
@@ -203,34 +237,12 @@ export class McpProtocolService {
         );
       }
 
-      if (method === 'tools/list') {
-        return this.mcpToolExecutorService.handleToolsListing(id, toolSet);
-      }
-
-      if (method === 'prompts/list') {
-        return wrapJsonRpcResponse(id, {
-          result: {
-            prompts: [],
-          },
-        });
-      }
-
-      if (method === 'resources/list') {
-        return wrapJsonRpcResponse(id, {
-          result: {
-            resources: [],
-          },
-        });
-      }
-
-      return wrapJsonRpcResponse(id, {
-        result: {},
-      });
+      return this.mcpToolExecutorService.handleToolsListing(id, toolSet);
     } catch (error) {
       return wrapJsonRpcResponse(id, {
         error: {
-          code: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-          message: error.message || 'Failed to execute tool',
+          code: JSON_RPC_ERROR_CODE.INTERNAL_ERROR,
+          message: error.message || 'Internal server error',
         },
       });
     }
