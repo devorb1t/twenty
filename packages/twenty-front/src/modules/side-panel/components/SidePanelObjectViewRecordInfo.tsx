@@ -7,7 +7,6 @@ import { NavigationMenuItemType } from '@/navigation-menu-item/constants/Navigat
 import { useSelectedNavigationMenuItemEditItem } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItem';
 import { useSelectedNavigationMenuItemEditItemLabel } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItemLabel';
 import { useSelectedNavigationMenuItemEditItemObjectMetadata } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItemObjectMetadata';
-import { ViewKey } from '@/views/types/ViewKey';
 
 export const SidePanelObjectViewRecordInfo = () => {
   const { t } = useLingui();
@@ -25,19 +24,20 @@ export const SidePanelObjectViewRecordInfo = () => {
     return null;
   }
 
-  const isViewOrRecord = [
+  const isObjectViewOrRecord = [
+    NavigationMenuItemType.OBJECT,
     NavigationMenuItemType.VIEW,
     NavigationMenuItemType.RECORD,
   ].includes(processedItem.itemType);
 
-  if (!isViewOrRecord) {
+  if (!isObjectViewOrRecord) {
     return null;
   }
 
   const label =
     processedItem.itemType === NavigationMenuItemType.RECORD
       ? selectedItemObjectMetadata?.labelSingular
-      : processedItem.viewKey === ViewKey.INDEX
+      : processedItem.itemType === NavigationMenuItemType.OBJECT
         ? t`Object`
         : t`View`;
 

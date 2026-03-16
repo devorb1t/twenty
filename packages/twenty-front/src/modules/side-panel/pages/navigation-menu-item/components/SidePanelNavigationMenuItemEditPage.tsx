@@ -4,9 +4,9 @@ import { useNavigationMenuItemsDraftState } from '@/navigation-menu-item/hooks/u
 import { useOpenAddItemToFolderPage } from '@/navigation-menu-item/hooks/useOpenAddItemToFolderPage';
 import { useSelectedNavigationMenuItemEditItem } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItem';
 import { useSelectedNavigationMenuItemEditItemLabel } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItemLabel';
-import { useSelectedNavigationMenuItemEditItemObjectMetadata } from '@/navigation-menu-item/hooks/useSelectedNavigationMenuItemEditItemObjectMetadata';
 import { useUpdateLinkInDraft } from '@/navigation-menu-item/hooks/useUpdateLinkInDraft';
 import { selectedNavigationMenuItemInEditModeState } from '@/navigation-menu-item/states/selectedNavigationMenuItemInEditModeState';
+import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/types/processed-navigation-menu-item';
 import { parseThemeColor } from '@/navigation-menu-item/utils/parseThemeColor';
 import { SidePanelGroup } from '@/side-panel/components/SidePanelGroup';
 import { SidePanelList } from '@/side-panel/components/SidePanelList';
@@ -21,7 +21,6 @@ import { getOrganizeActionsSelectableItemIds } from '@/side-panel/pages/navigati
 import { SidePanelSubPages } from '@/side-panel/types/SidePanelSubPages';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
-import { ViewKey } from '@/views/types/ViewKey';
 import { styled } from '@linaria/react';
 import { useLingui } from '@lingui/react/macro';
 import { isDefined } from 'twenty-shared/utils';
@@ -47,8 +46,6 @@ export const SidePanelNavigationMenuItemEditPage = () => {
   );
   const { selectedItemLabel } = useSelectedNavigationMenuItemEditItemLabel();
   const { selectedItem } = useSelectedNavigationMenuItemEditItem();
-  const { selectedItemObjectMetadata } =
-    useSelectedNavigationMenuItemEditItemObjectMetadata();
   const selectedItemType = selectedItem?.itemType ?? null;
 
   const { navigateToSidePanelSubPage } = useSidePanelSubPageHistory();
@@ -97,8 +94,7 @@ export const SidePanelNavigationMenuItemEditPage = () => {
   }
 
   switch (selectedItemType) {
-    case NavigationMenuItemType.VIEW:
-      if (!selectedItemObjectMetadata) return null;
+    case NavigationMenuItemType.OBJECT:
       return (
         <SidePanelEditObjectViewBase
           onOpenFolderPicker={openFolderPicker}
@@ -109,11 +105,21 @@ export const SidePanelNavigationMenuItemEditPage = () => {
           onRemove={onRemove}
           onAddBefore={onAddBefore}
           onAddAfter={onAddAfter}
-          showColorOption={
-            selectedItem &&
-            'viewKey' in selectedItem &&
-            selectedItem.viewKey === ViewKey.INDEX
-          }
+          showColorOption={isDefined(selectedItem)}
+          selectedItem={selectedItem as ProcessedNavigationMenuItem | undefined}
+        />
+      );
+    case NavigationMenuItemType.VIEW:
+      return (
+        <SidePanelEditObjectViewBase
+          onOpenFolderPicker={openFolderPicker}
+          canMoveUp={canMoveUp}
+          canMoveDown={canMoveDown}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
+          onRemove={onRemove}
+          onAddBefore={onAddBefore}
+          onAddAfter={onAddAfter}
         />
       );
     case NavigationMenuItemType.LINK:
@@ -187,14 +193,6 @@ export const SidePanelNavigationMenuItemEditPage = () => {
           commandGroups={[]}
           selectableItemIds={getOrganizeActionsSelectableItemIds(true)}
         >
-          {selectedItem && (
-            <SidePanelGroup heading={t`Customize`}>
-              <SidePanelEditColorOption
-                navigationMenuItemId={selectedItem.id}
-                color={parseThemeColor(selectedItem.color)}
-              />
-            </SidePanelGroup>
-          )}
           <SidePanelEditOrganizeActions
             canMoveUp={canMoveUp}
             canMoveDown={canMoveDown}

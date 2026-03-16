@@ -8,8 +8,8 @@ import { StyledNavigationMenuItemIconContainer } from '@/navigation-menu-item/co
 import { ObjectIconWithViewOverlay } from '@/navigation-menu-item/components/ObjectIconWithViewOverlay';
 import { NavigationMenuItemType } from '@/navigation-menu-item/constants/NavigationMenuItemType';
 import { useObjectNavItemColor } from '@/navigation-menu-item/hooks/useObjectNavItemColor';
-import { getNavigationMenuItemIconStyleFromColor } from '@/navigation-menu-item/utils/getNavigationMenuItemIconStyleFromColor';
 import { getEffectiveNavigationMenuItemColor } from '@/navigation-menu-item/utils/getEffectiveNavigationMenuItemColor';
+import { getNavigationMenuItemIconStyleFromColor } from '@/navigation-menu-item/utils/getNavigationMenuItemIconStyleFromColor';
 import { type ProcessedNavigationMenuItem } from '@/navigation-menu-item/utils/sortNavigationMenuItems';
 import { useGetStandardObjectIcon } from '@/object-metadata/hooks/useGetStandardObjectIcon';
 import { objectMetadataItemsState } from '@/object-metadata/states/objectMetadataItemsState';
@@ -73,8 +73,10 @@ export const NavigationMenuItemIcon = ({
   const iconToUse =
     StandardIcon ??
     (navigationMenuItem.Icon ? getIcon(navigationMenuItem.Icon) : undefined);
-  const effectiveColor =
-    getEffectiveNavigationMenuItemColor(navigationMenuItem);
+  const effectiveColor = getEffectiveNavigationMenuItemColor(
+    navigationMenuItem,
+    objectNavItemColor,
+  );
   const useStyledIcon = !isRecord && isNonEmptyString(effectiveColor);
   const iconStyle = useStyledIcon
     ? getNavigationMenuItemIconStyleFromColor(effectiveColor)
