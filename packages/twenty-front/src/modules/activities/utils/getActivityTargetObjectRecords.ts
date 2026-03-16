@@ -29,13 +29,19 @@ export const getActivityTargetObjectRecords = ({
 
   const isNote = isDefined(activityRecord) && 'noteTargets' in activityRecord;
 
-  const targets = activityTargets
+  const rawTargets = activityTargets
     ? activityTargets
     : 'noteTargets' in activityRecord && isDefined(activityRecord.noteTargets)
       ? activityRecord.noteTargets
       : 'taskTargets' in activityRecord && isDefined(activityRecord.taskTargets)
         ? activityRecord.taskTargets
         : [];
+
+  if (!Array.isArray(rawTargets)) {
+    return [];
+  }
+
+  const targets = rawTargets;
 
   const activityTargetObjectNameSingular = isNote
     ? CoreObjectNameSingular.NoteTarget
