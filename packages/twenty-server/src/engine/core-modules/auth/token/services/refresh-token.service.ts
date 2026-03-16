@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { addMilliseconds } from 'date-fns';
 import ms from 'ms';
-import { IsNull, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 import {
   AppTokenEntity,
@@ -69,6 +69,7 @@ export class RefreshTokenService {
 
     const user = await this.userRepository.findOne({
       where: { id: jwtPayload.sub },
+      relations: ['appTokens'],
     });
 
     if (!user) {
@@ -85,13 +86,17 @@ export class RefreshTokenService {
       if (wasRevokedBeforeGracePeriod) {
         // Token was revoked long ago and is being reused -- suspicious.
         // Revoke all user refresh tokens as a safety measure.
-        await this.appTokenRepository.update(
-          {
-            userId: user.id,
-            type: AppTokenType.RefreshToken,
-            revokedAt: IsNull(),
-          },
-          { revokedAt: new Date() },
+        await Promise.all(
+          user.appTokens.map(async ({ id, type }) => {
+            if (type === AppTokenType.RefreshToken) {
+              await this.appTokenRepository.update(
+                { id },
+                {
+                  revokedAt: new Date(),
+                },
+              );
+            }
+          }),
         );
 
         throw new AuthException(

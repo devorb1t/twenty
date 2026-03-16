@@ -16,7 +16,6 @@ const StyledSlot = styled.div<{ isActive: boolean }>`
     isActive
       ? themeCssVariables.border.color.strong
       : themeCssVariables.border.color.medium};
-  outline-color: ${themeCssVariables.border.color.medium};
 
   .group:hover &,
   .group:focus-within & {

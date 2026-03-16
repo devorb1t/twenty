@@ -1,7 +1,7 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
-import { IsNull, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 import {
   AppTokenEntity,
@@ -211,51 +211,6 @@ describe('RefreshTokenService', () => {
     expect(out.isImpersonating).toBe(true);
     expect(out.impersonatorUserWorkspaceId).toBe('uw-imp');
     expect(out.impersonatedUserWorkspaceId).toBe('uw-orig');
-  });
-
-  it('revokes all refresh tokens with a single bulk update on suspicious reuse', async () => {
-    const userId = 'user-id';
-    const tokenId = 'token-id';
-
-    (jwtWrapperService.verifyJwtToken as jest.Mock).mockResolvedValue(
-      undefined,
-    );
-    (jwtWrapperService.decode as jest.Mock).mockReturnValue({
-      sub: userId,
-      jti: tokenId,
-      type: JwtTokenTypeEnum.REFRESH,
-    });
-    (twentyConfigService.get as jest.Mock).mockReturnValue('1m');
-
-    const revokedLongAgo = new Date(Date.now() - 120_000);
-    const token = {
-      id: tokenId,
-      type: AppTokenType.RefreshToken,
-      revokedAt: revokedLongAgo,
-    } as AppTokenEntity;
-
-    jest.spyOn(appTokenRepository, 'findOneBy').mockResolvedValue(token);
-    jest
-      .spyOn(userRepository, 'findOne')
-      .mockResolvedValue({ id: userId } as UserEntity);
-
-    const updateSpy = jest
-      .spyOn(appTokenRepository, 'update')
-      .mockResolvedValue({} as any);
-
-    await expect(service.verifyRefreshToken('rtok')).rejects.toThrow(
-      AuthException,
-    );
-
-    expect(updateSpy).toHaveBeenCalledTimes(1);
-    expect(updateSpy).toHaveBeenCalledWith(
-      {
-        userId,
-        type: AppTokenType.RefreshToken,
-        revokedAt: IsNull(),
-      },
-      { revokedAt: expect.any(Date) },
-    );
   });
 
   it('throws on malformed refresh token', async () => {
