@@ -4,9 +4,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TypeOrmQueryService } from '@ptc-org/nestjs-query-typeorm';
 import {
   FeatureFlagKey,
+  ViewKey,
   ViewOpenRecordIn,
   ViewType,
-  ViewKey,
   ViewVisibility,
 } from 'twenty-shared/types';
 import { fromArrayToUniqueKeyRecord, isDefined } from 'twenty-shared/utils';
@@ -31,6 +31,7 @@ import { fromUpdateObjectInputToFlatObjectMetadataAndRelatedFlatEntities } from 
 import { type FlatPageLayoutTab } from 'src/engine/metadata-modules/flat-page-layout-tab/types/flat-page-layout-tab.type';
 import { type FlatPageLayoutWidget } from 'src/engine/metadata-modules/flat-page-layout-widget/types/flat-page-layout-widget.type';
 import { type FlatPageLayout } from 'src/engine/metadata-modules/flat-page-layout/types/flat-page-layout.type';
+import { getDefaultColorForCustomObject } from 'twenty-shared/application';
 import { CreateObjectInput } from 'src/engine/metadata-modules/object-metadata/dtos/create-object.input';
 import { DeleteOneObjectInput } from 'src/engine/metadata-modules/object-metadata/dtos/delete-object.input';
 import { UpdateOneObjectInput } from 'src/engine/metadata-modules/object-metadata/dtos/update-object.input';
@@ -470,6 +471,7 @@ export class ObjectMetadataService extends TypeOrmQueryService<ObjectMetadataEnt
     const flatNavigationMenuItemToCreate =
       await this.computeFlatNavigationMenuItemToCreate({
         view: flatDefaultViewToCreate,
+        objectMetadata: flatObjectMetadataToCreate,
         workspaceId,
         workspaceCustomApplicationId: workspaceCustomFlatApplication.id,
         workspaceCustomApplicationUniversalIdentifier:
@@ -684,11 +686,13 @@ export class ObjectMetadataService extends TypeOrmQueryService<ObjectMetadataEnt
 
   private async computeFlatNavigationMenuItemToCreate({
     view,
+    objectMetadata,
     workspaceId,
     workspaceCustomApplicationId,
     workspaceCustomApplicationUniversalIdentifier,
   }: {
     view: UniversalFlatView & { id: string };
+    objectMetadata: { nameSingular: string; icon: string | null };
     workspaceId: string;
     workspaceCustomApplicationId: string;
     workspaceCustomApplicationUniversalIdentifier: string;
@@ -725,8 +729,8 @@ export class ObjectMetadataService extends TypeOrmQueryService<ObjectMetadataEnt
       folderUniversalIdentifier: null,
       name: null,
       link: null,
-      icon: null,
-      color: null,
+      icon: objectMetadata.icon ?? null,
+      color: getDefaultColorForCustomObject(objectMetadata.nameSingular),
       position: nextPosition,
       workspaceId,
       applicationId: workspaceCustomApplicationId,
