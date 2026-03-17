@@ -13,7 +13,7 @@ import { useStore } from 'jotai';
 export const useHandleSseClientConnectionRetry = () => {
   const store = useStore();
   const handleSseClientConnectionRetry = useCallback(
-    async (retryCount: number, initialTokenForSseClient: string) => {
+    async (retryCount: number) => {
       const sseClient = store.get(sseClientState.atom);
 
       if (!isDefined(sseClient)) {
@@ -27,10 +27,11 @@ export const useHandleSseClientConnectionRetry = () => {
       const tokenPair = store.get(tokenPairState.atom);
       const currentAppToken = tokenPair?.accessOrWorkspaceAgnosticToken?.token;
 
+      // With dynamic headers, the SSE client automatically picks up the
+      // latest token on each reconnection attempt. We only need to reset
+      // when the user has logged out or after too many consecutive failures.
       const shouldResetSseClient =
-        !isDefined(currentAppToken) ||
-        currentAppToken !== initialTokenForSseClient ||
-        retryCount > 10;
+        !isDefined(currentAppToken) || retryCount > 10;
 
       if (shouldResetSseClient) {
         await sleep(
