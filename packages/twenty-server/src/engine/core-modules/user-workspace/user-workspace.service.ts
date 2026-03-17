@@ -372,7 +372,10 @@ export class UserWorkspaceService extends TypeOrmQueryService<UserWorkspaceEntit
     });
 
     if (!isDefined(userWorkspace)) {
-      throw new Error('User workspace not found');
+      throw new AuthException(
+        'User workspace not found',
+        AuthExceptionCode.USER_WORKSPACE_NOT_FOUND,
+      );
     }
 
     return userWorkspace;

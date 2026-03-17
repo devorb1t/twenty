@@ -784,7 +784,7 @@ describe('UserWorkspaceService', () => {
 
       await expect(
         service.getUserWorkspaceForUserOrThrow({ userId, workspaceId }),
-      ).rejects.toThrow('User workspace not found');
+      ).rejects.toThrow(AuthException);
     });
   });
 
