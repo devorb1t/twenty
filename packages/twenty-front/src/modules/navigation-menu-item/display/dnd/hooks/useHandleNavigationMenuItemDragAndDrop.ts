@@ -1,14 +1,13 @@
 import { type OnDragEndResponder } from '@hello-pangea/dnd';
 
 import { NavigationMenuItemDroppableIds } from '@/navigation-menu-item/common/constants/NavigationMenuItemDroppableIds';
-import { isWorkspaceDroppableId } from '@/navigation-menu-item/common/utils/isWorkspaceDroppableId';
+import { canNavigationMenuItemBeDroppedIn } from '@/navigation-menu-item/common/utils/canNavigationMenuItemBeDroppedIn';
 import { useSortedNavigationMenuItems } from '@/navigation-menu-item/display/hooks/useSortedNavigationMenuItems';
 import { useUpdateNavigationMenuItem } from '@/navigation-menu-item/common/hooks/useUpdateNavigationMenuItem';
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/common/states/openNavigationMenuItemFolderIdsState';
 import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomState';
 import { calculateNewPosition } from '@/ui/layout/draggable-list/utils/calculateNewPosition';
-import { FOLDER_DROPPABLE_IDS } from '@/ui/layout/draggable-list/utils/folderDroppableIds';
-import { validateAndExtractFolderId } from '@/ui/layout/draggable-list/utils/validateAndExtractFolderId';
+import { extractFolderIdFromDroppableId } from '@/navigation-menu-item/common/utils/extractFolderIdFromDroppableId';
 
 import { useNavigationMenuItemsData } from '@/navigation-menu-item/display/hooks/useNavigationMenuItemsData';
 
@@ -49,7 +48,12 @@ export const useHandleNavigationMenuItemDragAndDrop = () => {
       return;
     }
 
-    if (isWorkspaceDroppableId(destination.droppableId)) {
+    if (
+      canNavigationMenuItemBeDroppedIn({
+        navigationMenuItemSection: 'workspace',
+        droppableId: destination.droppableId,
+      })
+    ) {
       return;
     }
 
@@ -60,20 +64,18 @@ export const useHandleNavigationMenuItemDragAndDrop = () => {
       return;
     }
 
-    const destinationFolderId = validateAndExtractFolderId({
-      droppableId: destination.droppableId,
-      orphanDroppableId:
-        NavigationMenuItemDroppableIds.ORPHAN_NAVIGATION_MENU_ITEMS,
-    });
-    const sourceFolderId = validateAndExtractFolderId({
-      droppableId: source.droppableId,
-      orphanDroppableId:
-        NavigationMenuItemDroppableIds.ORPHAN_NAVIGATION_MENU_ITEMS,
-    });
+    const destinationFolderId = extractFolderIdFromDroppableId(
+      destination.droppableId,
+      'favorite',
+    );
+    const sourceFolderId = extractFolderIdFromDroppableId(
+      source.droppableId,
+      'favorite',
+    );
 
     if (
       destination.droppableId.startsWith(
-        FOLDER_DROPPABLE_IDS.FOLDER_HEADER_PREFIX,
+        NavigationMenuItemDroppableIds.FAVORITE_FOLDER_HEADER_PREFIX,
       )
     ) {
       if (destinationFolderId === null)
