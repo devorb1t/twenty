@@ -57,10 +57,7 @@ export class BillingEventWriterService {
     }));
 
     this.clickHouseService.insert('billingEvent', rows).catch((error) => {
-      this.logger.error(
-        'Failed to write billing events to ClickHouse',
-        error,
-      );
+      this.logger.error('Failed to write billing events to ClickHouse', error);
     });
   }
 }

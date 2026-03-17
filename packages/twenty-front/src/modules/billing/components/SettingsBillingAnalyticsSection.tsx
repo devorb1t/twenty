@@ -1,5 +1,17 @@
+import { BillingChartTooltip } from '@/billing/components/BillingChartTooltip';
+import {
+  BillingLineChartContainer,
+  BillingPieChartContainer,
+} from '@/billing/components/BillingChartContainers';
 import { SettingsBillingLabelValueItem } from '@/billing/components/internal/SettingsBillingLabelValueItem';
 import { SubscriptionInfoContainer } from '@/billing/components/SubscriptionInfoContainer';
+import {
+  type PeriodPreset,
+  getChartColors,
+  getExecutionTypeLabel,
+  getPeriodDates,
+  getPeriodOptions,
+} from '@/billing/utils/billing-analytics.utils';
 import { useNumberFormat } from '@/localization/hooks/useNumberFormat';
 import { CHART_MOTION_CONFIG } from '@/page-layout/widgets/graph/constants/ChartMotionConfig';
 import { useLineChartTheme } from '@/page-layout/widgets/graph/graph-widget-line-chart/hooks/useLineChartTheme';
@@ -24,21 +36,6 @@ import { useQuery } from '@apollo/client/react';
 import { GetBillingAnalyticsDocument } from '~/generated-metadata/graphql';
 import { formatDate } from '~/utils/date-utils';
 import { normalizeSearchText } from '~/utils/normalizeSearchText';
-
-const getExecutionTypeLabel = (key: string): string => {
-  switch (key) {
-    case 'ai_token':
-      return t`AI Chat`;
-    case 'workflow_execution':
-      return t`Workflow Execution`;
-    case 'code_execution':
-      return t`Code Execution`;
-    default:
-      return key;
-  }
-};
-
-type PeriodPreset = '7d' | '30d' | '90d';
 
 const StyledBarRow = styled.div`
   display: flex;
@@ -68,16 +65,6 @@ const StyledValueText = styled.span`
   font-weight: ${themeCssVariables.font.weight.medium};
 `;
 
-const StyledChartContainer = styled.div`
-  height: 200px;
-  width: 100%;
-`;
-
-const StyledPieChartContainer = styled.div`
-  height: 220px;
-  width: 100%;
-`;
-
 const StyledSearchInputContainer = styled.div`
   padding-bottom: ${themeCssVariables.spacing[2]};
 `;
@@ -86,60 +73,7 @@ const StyledIconChevronRightContainer = styled.div`
   color: ${themeCssVariables.font.color.tertiary};
 `;
 
-const StyledClickableTable = styled(Table)`
-  a > * {
-    cursor: pointer;
-  }
-`;
-
 const USAGE_USER_TABLE_GRID_TEMPLATE_COLUMNS = '1fr 120px 36px';
-
-const getChartColors = (theme: {
-  color: {
-    blue: string;
-    purple: string;
-    turquoise: string;
-    orange: string;
-    pink: string;
-    green: string;
-  };
-}): string[] => [
-  theme.color.blue,
-  theme.color.purple,
-  theme.color.turquoise,
-  theme.color.orange,
-  theme.color.pink,
-  theme.color.green,
-];
-
-const getPeriodDates = (
-  preset: PeriodPreset,
-): { periodStart: string; periodEnd: string } => {
-  const now = new Date();
-  const daysMap: Record<PeriodPreset, number> = {
-    '7d': 7,
-    '30d': 30,
-    '90d': 90,
-  };
-  const start = new Date(now);
-
-  start.setDate(start.getDate() - daysMap[preset]);
-
-  return {
-    periodStart: start.toISOString(),
-    periodEnd: now.toISOString(),
-  };
-};
-
-const usePeriodOptions = () =>
-  useMemo(
-    () => [
-      { value: '7d' as const, label: t`Last 7 days` },
-      { value: '30d' as const, label: t`Last 30 days` },
-      { value: '90d' as const, label: t`Last 90 days` },
-    ],
-    [],
-  );
 
 export const SettingsBillingAnalyticsSection = () => {
   const { theme } = useContext(ThemeContext);
@@ -151,9 +85,9 @@ export const SettingsBillingAnalyticsSection = () => {
   const [resourcePeriod, setResourcePeriod] = useState<PeriodPreset>('30d');
   const [userSearchTerm, setUserSearchTerm] = useState('');
 
-  const chartColors = useMemo(() => getChartColors(theme), [theme]);
+  const chartColors = getChartColors(theme);
   const lineChartTheme = useLineChartTheme();
-  const periodOptions = usePeriodOptions();
+  const periodOptions = getPeriodOptions();
 
   const typeDates = useMemo(() => getPeriodDates(typePeriod), [typePeriod]);
   const dailyDates = useMemo(() => getPeriodDates(dailyPeriod), [dailyPeriod]);
@@ -193,17 +127,6 @@ export const SettingsBillingAnalyticsSection = () => {
   const usageByUser = userAnalytics?.usageByUser ?? [];
   const usageByResource = resourceAnalytics?.usageByResource ?? [];
 
-  const filteredUsageByUser = useMemo(
-    () =>
-      usageByUser.filter((item) => {
-        const search = normalizeSearchText(userSearchTerm);
-        const name = normalizeSearchText(item.label ?? item.key);
-
-        return name.includes(search);
-      }),
-    [usageByUser, userSearchTerm],
-  );
-
   const allLoading =
     typeLoading && dailyLoading && userLoading && resourceLoading;
 
@@ -221,6 +144,18 @@ export const SettingsBillingAnalyticsSection = () => {
     (sum, item) => sum + item.creditsUsed,
     0,
   );
+
+  const resourceTotal = usageByResource.reduce(
+    (sum, resource) => sum + resource.creditsUsed,
+    0,
+  );
+
+  const filteredUsageByUser = usageByUser.filter((item) => {
+    const search = normalizeSearchText(userSearchTerm);
+    const name = normalizeSearchText(item.label ?? item.key);
+
+    return name.includes(search);
+  });
 
   const pieData = usageByExecutionType.map((item, index) => ({
     id: getExecutionTypeLabel(item.key),
@@ -274,7 +209,7 @@ export const SettingsBillingAnalyticsSection = () => {
             }
           />
           <SubscriptionInfoContainer>
-            <StyledPieChartContainer>
+            <BillingPieChartContainer>
               <ResponsivePie
                 data={pieData}
                 margin={{ top: 20, right: 80, bottom: 20, left: 80 }}
@@ -292,23 +227,13 @@ export const SettingsBillingAnalyticsSection = () => {
                 animate
                 motionConfig={CHART_MOTION_CONFIG}
                 tooltip={({ datum }) => (
-                  <div
-                    style={{
-                      background: theme.background.primary,
-                      border: `1px solid ${theme.border.color.medium}`,
-                      borderRadius: theme.border.radius.sm,
-                      padding: '6px 10px',
-                      fontSize: theme.font.size.sm,
-                      color: theme.font.color.primary,
-                      boxShadow: theme.boxShadow.light,
-                    }}
-                  >
-                    <strong>{datum.id}</strong>: {formatNumber(datum.value)}{' '}
-                    {t`credits`}
-                  </div>
+                  <BillingChartTooltip
+                    label={String(datum.id)}
+                    value={`${formatNumber(datum.value)} ${t`credits`}`}
+                  />
                 )}
               />
-            </StyledPieChartContainer>
+            </BillingPieChartContainer>
           </SubscriptionInfoContainer>
         </Section>
       )}
@@ -330,7 +255,7 @@ export const SettingsBillingAnalyticsSection = () => {
             }
           />
           <SubscriptionInfoContainer>
-            <StyledChartContainer>
+            <BillingLineChartContainer>
               <ResponsiveLine
                 data={lineData}
                 margin={{ top: 10, right: 20, bottom: 30, left: 50 }}
@@ -361,9 +286,7 @@ export const SettingsBillingAnalyticsSection = () => {
                       ? lineData[0].data
                           .filter(
                             (_, index) =>
-                              index %
-                                Math.ceil(timeSeries.length / 7) ===
-                              0,
+                              index % Math.ceil(timeSeries.length / 7) === 0,
                           )
                           .map((point) => point.x)
                       : undefined,
@@ -378,24 +301,13 @@ export const SettingsBillingAnalyticsSection = () => {
                 theme={lineChartTheme}
                 enableSlices="x"
                 sliceTooltip={({ slice }) => (
-                  <div
-                    style={{
-                      background: theme.background.primary,
-                      border: `1px solid ${theme.border.color.medium}`,
-                      borderRadius: theme.border.radius.sm,
-                      padding: '6px 10px',
-                      fontSize: theme.font.size.sm,
-                      color: theme.font.color.primary,
-                      boxShadow: theme.boxShadow.light,
-                    }}
-                  >
-                    <strong>{slice.points[0]?.data.xFormatted}</strong>:{' '}
-                    {formatNumber(Number(slice.points[0]?.data.yFormatted))}{' '}
-                    {t`credits`}
-                  </div>
+                  <BillingChartTooltip
+                    label={String(slice.points[0]?.data.xFormatted)}
+                    value={`${formatNumber(Number(slice.points[0]?.data.yFormatted))} ${t`credits`}`}
+                  />
                 )}
               />
-            </StyledChartContainer>
+            </BillingLineChartContainer>
           </SubscriptionInfoContainer>
         </Section>
       )}
@@ -423,7 +335,7 @@ export const SettingsBillingAnalyticsSection = () => {
               onChange={setUserSearchTerm}
             />
           </StyledSearchInputContainer>
-          <StyledClickableTable>
+          <Table>
             <TableRow
               gridTemplateColumns={USAGE_USER_TABLE_GRID_TEMPLATE_COLUMNS}
             >
@@ -464,7 +376,7 @@ export const SettingsBillingAnalyticsSection = () => {
                 </TableCell>
               </TableRow>
             ))}
-          </StyledClickableTable>
+          </Table>
         </Section>
       )}
 
@@ -486,10 +398,6 @@ export const SettingsBillingAnalyticsSection = () => {
           />
           <SubscriptionInfoContainer>
             {usageByResource.map((item, index) => {
-              const resourceTotal = usageByResource.reduce(
-                (sum, resource) => sum + resource.creditsUsed,
-                0,
-              );
               const percentage =
                 resourceTotal > 0
                   ? (item.creditsUsed / resourceTotal) * 100
@@ -498,9 +406,7 @@ export const SettingsBillingAnalyticsSection = () => {
               return (
                 <StyledBarRow key={item.key}>
                   <StyledBarLabel>
-                    <StyledLabelText>
-                      {item.label ?? item.key}
-                    </StyledLabelText>
+                    <StyledLabelText>{item.label ?? item.key}</StyledLabelText>
                     <StyledValueText>
                       {formatNumber(item.creditsUsed)} {t`credits`}
                     </StyledValueText>

@@ -1,6 +1,6 @@
 /* @license Enterprise */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { ClickHouseService } from 'src/database/clickHouse/clickHouse.service';
 import { formatDateForClickHouse } from 'src/database/clickHouse/clickHouse.util';
@@ -23,10 +23,18 @@ type PeriodParams = {
   periodEnd: Date;
 };
 
+const ALLOWED_GROUP_BY_FIELDS = [
+  'userWorkspaceId',
+  'resourceId',
+  'executionType',
+] as const;
+
+type GroupByField = (typeof ALLOWED_GROUP_BY_FIELDS)[number];
+
+const BREAKDOWN_QUERY_LIMIT = 50;
+
 @Injectable()
 export class BillingAnalyticsService {
-  private readonly logger = new Logger(BillingAnalyticsService.name);
-
   constructor(private readonly clickHouseService: ClickHouseService) {}
 
   async getUsageByUser(
@@ -84,9 +92,9 @@ export class BillingAnalyticsService {
     periodEnd,
     groupByField,
     extraWhere = '',
-    extraParams = {},
+    extraParams,
   }: PeriodParams & {
-    groupByField: string;
+    groupByField: GroupByField;
     extraWhere?: string;
     extraParams?: Record<string, unknown>;
   }): Promise<BillingUsageBreakdownItem[]> {
@@ -101,21 +109,20 @@ export class BillingAnalyticsService {
         ${extraWhere}
       GROUP BY ${groupByField}
       ORDER BY creditsUsed DESC
-      LIMIT 50
+      LIMIT ${BREAKDOWN_QUERY_LIMIT}
     `;
 
-    const rows =
-      await this.clickHouseService.select<BillingUsageBreakdownItem>(query, {
+    const rows = await this.clickHouseService.select<BillingUsageBreakdownItem>(
+      query,
+      {
         workspaceId,
         periodStart: formatDateForClickHouse(periodStart),
         periodEnd: formatDateForClickHouse(periodEnd),
-        ...extraParams,
-      });
+        ...(extraParams ?? {}),
+      },
+    );
 
-    return rows.map((row) => ({
-      ...row,
-      creditsUsed: toDisplayCredits(row.creditsUsed),
-    }));
+    return this.mapToDisplayCredits(rows);
   }
 
   private async queryTimeSeries({
@@ -123,7 +130,7 @@ export class BillingAnalyticsService {
     periodStart,
     periodEnd,
     extraWhere = '',
-    extraParams = {},
+    extraParams,
   }: PeriodParams & {
     extraWhere?: string;
     extraParams?: Record<string, unknown>;
@@ -146,9 +153,15 @@ export class BillingAnalyticsService {
         workspaceId,
         periodStart: formatDateForClickHouse(periodStart),
         periodEnd: formatDateForClickHouse(periodEnd),
-        ...extraParams,
+        ...(extraParams ?? {}),
       });
 
+    return this.mapToDisplayCredits(rows);
+  }
+
+  private mapToDisplayCredits<T extends { creditsUsed: number }>(
+    rows: T[],
+  ): T[] {
     return rows.map((row) => ({
       ...row,
       creditsUsed: toDisplayCredits(row.creditsUsed),

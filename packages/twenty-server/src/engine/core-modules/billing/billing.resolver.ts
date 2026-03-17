@@ -19,10 +19,8 @@ import { BillingMeteredProductUsageDTO } from 'src/engine/core-modules/billing/d
 import { BillingPlanDTO } from 'src/engine/core-modules/billing/dtos/billing-plan.dto';
 import { BillingSessionDTO } from 'src/engine/core-modules/billing/dtos/billing-session.dto';
 import { BillingUpdateDTO } from 'src/engine/core-modules/billing/dtos/billing-update.dto';
-import {
-  BillingAnalyticsDTO,
-  BillingAnalyticsInput,
-} from 'src/engine/core-modules/billing/dtos/billing-usage-breakdown.dto';
+import { BillingAnalyticsDTO } from 'src/engine/core-modules/billing/dtos/billing-analytics.dto';
+import { BillingAnalyticsInput } from 'src/engine/core-modules/billing/dtos/inputs/billing-analytics.input';
 import { BillingPlanKey } from 'src/engine/core-modules/billing/enums/billing-plan-key.enum';
 import {
   type BillingUsageBreakdownItem,
@@ -350,22 +348,8 @@ export class BillingResolver {
     @AuthWorkspace() workspace: WorkspaceEntity,
     @Args('input', { nullable: true }) input?: BillingAnalyticsInput,
   ): Promise<BillingAnalyticsDTO> {
-    let defaultPeriodStart: Date;
-    let defaultPeriodEnd: Date;
-
-    if (this.billingService.isBillingEnabled()) {
-      const subscription =
-        await this.billingSubscriptionService.getCurrentBillingSubscriptionOrThrow(
-          { workspaceId: workspace.id },
-        );
-
-      defaultPeriodStart = subscription.currentPeriodStart;
-      defaultPeriodEnd = subscription.currentPeriodEnd;
-    } else {
-      defaultPeriodEnd = new Date();
-      defaultPeriodStart = new Date();
-      defaultPeriodStart.setDate(defaultPeriodStart.getDate() - 30);
-    }
+    const { defaultPeriodStart, defaultPeriodEnd } =
+      await this.getDefaultAnalyticsPeriod(workspace.id);
 
     const periodStart = input?.periodStart ?? defaultPeriodStart;
     const periodEnd = input?.periodEnd ?? defaultPeriodEnd;
@@ -387,17 +371,15 @@ export class BillingResolver {
         this.billingAnalyticsService.getUsageTimeSeries(periodParams),
       ]);
 
-    const resolvedUsageByUser =
-      await this.resolveBreakdownKeys(
-        usageByUser,
-        (ids) => this.resolveUserNames(ids),
-      );
+    const resolvedUsageByUser = await this.resolveBreakdownKeys(
+      usageByUser,
+      (ids) => this.resolveUserNames(ids, workspace.id),
+    );
 
-    const resolvedUsageByResource =
-      await this.resolveBreakdownKeys(
-        usageByResource,
-        (ids) => this.resolveResourceNames(ids, workspace.id),
-      );
+    const resolvedUsageByResource = await this.resolveBreakdownKeys(
+      usageByResource,
+      (ids) => this.resolveResourceNames(ids, workspace.id),
+    );
 
     const result: BillingAnalyticsDTO = {
       usageByUser: resolvedUsageByUser,
@@ -409,16 +391,23 @@ export class BillingResolver {
     };
 
     if (input?.userWorkspaceId) {
-      const dailyUsage =
-        await this.billingAnalyticsService.getUsageByUserTimeSeries({
-          ...periodParams,
-          userWorkspaceId: input.userWorkspaceId,
-        });
+      const userWorkspace = await this.userWorkspaceRepository.findOne({
+        where: { id: input.userWorkspaceId, workspaceId: workspace.id },
+        select: { id: true },
+      });
 
-      result.userDailyUsage = {
-        userWorkspaceId: input.userWorkspaceId,
-        dailyUsage,
-      };
+      if (isDefined(userWorkspace)) {
+        const dailyUsage =
+          await this.billingAnalyticsService.getUsageByUserTimeSeries({
+            ...periodParams,
+            userWorkspaceId: input.userWorkspaceId,
+          });
+
+        result.userDailyUsage = {
+          userWorkspaceId: input.userWorkspaceId,
+          dailyUsage,
+        };
+      }
     }
 
     return result;
@@ -444,6 +433,29 @@ export class BillingResolver {
           { workspaceId: workspace.id },
         ),
     };
+  }
+
+  private async getDefaultAnalyticsPeriod(
+    workspaceId: string,
+  ): Promise<{ defaultPeriodStart: Date; defaultPeriodEnd: Date }> {
+    if (this.billingService.isBillingEnabled()) {
+      const subscription =
+        await this.billingSubscriptionService.getCurrentBillingSubscriptionOrThrow(
+          { workspaceId },
+        );
+
+      return {
+        defaultPeriodStart: subscription.currentPeriodStart,
+        defaultPeriodEnd: subscription.currentPeriodEnd,
+      };
+    }
+
+    const defaultPeriodEnd = new Date();
+    const defaultPeriodStart = new Date();
+
+    defaultPeriodStart.setDate(defaultPeriodStart.getDate() - 30);
+
+    return { defaultPeriodStart, defaultPeriodEnd };
   }
 
   private async validateCanCheckoutSessionPermissionOrThrow({
@@ -482,8 +494,6 @@ export class BillingResolver {
         PermissionsExceptionCode.PERMISSION_DENIED,
       );
     }
-
-    return;
   }
 
   private async resolveBreakdownKeys(
@@ -505,6 +515,7 @@ export class BillingResolver {
 
   private async resolveUserNames(
     userWorkspaceIds: string[],
+    workspaceId: string,
   ): Promise<Map<string, string>> {
     const nameMap = new Map<string, string>();
 
@@ -513,9 +524,12 @@ export class BillingResolver {
     }
 
     const userWorkspaces = await this.userWorkspaceRepository.find({
-      where: { id: In(userWorkspaceIds) },
+      where: { id: In(userWorkspaceIds), workspaceId },
       relations: ['user'],
-      select: { id: true, user: { firstName: true, lastName: true, email: true } },
+      select: {
+        id: true,
+        user: { firstName: true, lastName: true, email: true },
+      },
     });
 
     for (const userWorkspace of userWorkspaces) {

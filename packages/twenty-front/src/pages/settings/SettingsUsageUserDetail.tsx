@@ -1,5 +1,17 @@
+import { BillingChartTooltip } from '@/billing/components/BillingChartTooltip';
+import {
+  BillingLineChartContainer,
+  BillingPieChartContainer,
+} from '@/billing/components/BillingChartContainers';
 import { SettingsBillingLabelValueItem } from '@/billing/components/internal/SettingsBillingLabelValueItem';
 import { SubscriptionInfoContainer } from '@/billing/components/SubscriptionInfoContainer';
+import {
+  type PeriodPreset,
+  getChartColors,
+  getExecutionTypeLabel,
+  getPeriodDates,
+  getPeriodOptions,
+} from '@/billing/utils/billing-analytics.utils';
 import { useNumberFormat } from '@/localization/hooks/useNumberFormat';
 import { CHART_MOTION_CONFIG } from '@/page-layout/widgets/graph/constants/ChartMotionConfig';
 import { useLineChartTheme } from '@/page-layout/widgets/graph/graph-widget-line-chart/hooks/useLineChartTheme';
@@ -22,18 +34,6 @@ import { ThemeContext, themeCssVariables } from 'twenty-ui/theme-constants';
 import { useQuery } from '@apollo/client/react';
 import { GetBillingAnalyticsDocument } from '~/generated-metadata/graphql';
 import { formatDate } from '~/utils/date-utils';
-
-type PeriodPreset = '7d' | '30d' | '90d';
-
-const StyledChartContainer = styled.div`
-  height: 200px;
-  width: 100%;
-`;
-
-const StyledPieChartContainer = styled.div`
-  height: 220px;
-  width: 100%;
-`;
 
 const StyledUserHeader = styled.div`
   align-items: center;
@@ -58,75 +58,18 @@ const StyledUserCredits = styled.span`
   font-size: ${themeCssVariables.font.size.sm};
 `;
 
-const getExecutionTypeLabel = (key: string): string => {
-  switch (key) {
-    case 'ai_token':
-      return t`AI Chat`;
-    case 'workflow_execution':
-      return t`Workflow Execution`;
-    case 'code_execution':
-      return t`Code Execution`;
-    default:
-      return key;
-  }
-};
-
-const getChartColors = (theme: {
-  color: {
-    blue: string;
-    purple: string;
-    turquoise: string;
-    orange: string;
-    pink: string;
-    green: string;
-  };
-}): string[] => [
-  theme.color.blue,
-  theme.color.purple,
-  theme.color.turquoise,
-  theme.color.orange,
-  theme.color.pink,
-  theme.color.green,
-];
-
-const getPeriodDates = (
-  preset: PeriodPreset,
-): { periodStart: string; periodEnd: string } => {
-  const now = new Date();
-  const daysMap: Record<PeriodPreset, number> = {
-    '7d': 7,
-    '30d': 30,
-    '90d': 90,
-  };
-  const start = new Date(now);
-
-  start.setDate(start.getDate() - daysMap[preset]);
-
-  return {
-    periodStart: start.toISOString(),
-    periodEnd: now.toISOString(),
-  };
-};
-
 export const SettingsUsageUserDetail = () => {
   const { t: tLingui } = useLingui();
   const { userWorkspaceId } = useParams<{ userWorkspaceId: string }>();
   const { theme } = useContext(ThemeContext);
   const { formatNumber } = useNumberFormat();
   const lineChartTheme = useLineChartTheme();
-  const chartColors = useMemo(() => getChartColors(theme), [theme]);
+  const chartColors = getChartColors(theme);
 
   const [dailyPeriod, setDailyPeriod] = useState<PeriodPreset>('30d');
   const [typePeriod, setTypePeriod] = useState<PeriodPreset>('30d');
 
-  const periodOptions = useMemo(
-    () => [
-      { value: '7d' as const, label: t`Last 7 days` },
-      { value: '30d' as const, label: t`Last 30 days` },
-      { value: '90d' as const, label: t`Last 90 days` },
-    ],
-    [],
-  );
+  const periodOptions = getPeriodOptions();
 
   const dailyDates = useMemo(() => getPeriodDates(dailyPeriod), [dailyPeriod]);
   const typeDates = useMemo(() => getPeriodDates(typePeriod), [typePeriod]);
@@ -164,12 +107,10 @@ export const SettingsUsageUserDetail = () => {
   const usageByExecutionType = typeAnalytics?.usageByExecutionType ?? [];
 
   const userName =
-    dailyAnalytics?.usageByUser?.find(
-      (item) => item.key === userWorkspaceId,
-    )?.label ??
-    typeAnalytics?.usageByUser?.find(
-      (item) => item.key === userWorkspaceId,
-    )?.label;
+    dailyAnalytics?.usageByUser?.find((item) => item.key === userWorkspaceId)
+      ?.label ??
+    typeAnalytics?.usageByUser?.find((item) => item.key === userWorkspaceId)
+      ?.label;
 
   const totalCredits = usageByExecutionType.reduce(
     (sum, item) => sum + item.creditsUsed,
@@ -194,7 +135,8 @@ export const SettingsUsageUserDetail = () => {
     },
   ];
 
-  const isInitialLoading = dailyLoading && typeLoading && !dailyData && !typeData;
+  const isInitialLoading =
+    dailyLoading && typeLoading && !dailyData && !typeData;
 
   const breadcrumbLinks = [
     {
@@ -252,10 +194,7 @@ export const SettingsUsageUserDetail = () => {
   }
 
   return (
-    <SubMenuTopBarContainer
-      title={tLingui`User Usage`}
-      links={breadcrumbLinks}
-    >
+    <SubMenuTopBarContainer title={tLingui`User Usage`} links={breadcrumbLinks}>
       <SettingsPageContainer>
         <StyledUserHeader>
           <Avatar
@@ -300,7 +239,7 @@ export const SettingsUsageUserDetail = () => {
               }
             />
             <SubscriptionInfoContainer>
-              <StyledChartContainer>
+              <BillingLineChartContainer>
                 <ResponsiveLine
                   data={lineData}
                   margin={{ top: 10, right: 20, bottom: 30, left: 50 }}
@@ -331,8 +270,7 @@ export const SettingsUsageUserDetail = () => {
                         ? lineData[0].data
                             .filter(
                               (_, index) =>
-                                index %
-                                  Math.ceil(userDailyUsage.length / 7) ===
+                                index % Math.ceil(userDailyUsage.length / 7) ===
                                 0,
                             )
                             .map((point) => point.x)
@@ -348,26 +286,13 @@ export const SettingsUsageUserDetail = () => {
                   theme={lineChartTheme}
                   enableSlices="x"
                   sliceTooltip={({ slice }) => (
-                    <div
-                      style={{
-                        background: theme.background.primary,
-                        border: `1px solid ${theme.border.color.medium}`,
-                        borderRadius: theme.border.radius.sm,
-                        padding: '6px 10px',
-                        fontSize: theme.font.size.sm,
-                        color: theme.font.color.primary,
-                        boxShadow: theme.boxShadow.light,
-                      }}
-                    >
-                      <strong>{slice.points[0]?.data.xFormatted}</strong>:{' '}
-                      {formatNumber(
-                        Number(slice.points[0]?.data.yFormatted),
-                      )}{' '}
-                      {t`credits`}
-                    </div>
+                    <BillingChartTooltip
+                      label={String(slice.points[0]?.data.xFormatted)}
+                      value={`${formatNumber(Number(slice.points[0]?.data.yFormatted))} ${t`credits`}`}
+                    />
                   )}
                 />
-              </StyledChartContainer>
+              </BillingLineChartContainer>
             </SubscriptionInfoContainer>
           </Section>
         )}
@@ -389,7 +314,7 @@ export const SettingsUsageUserDetail = () => {
               }
             />
             <SubscriptionInfoContainer>
-              <StyledPieChartContainer>
+              <BillingPieChartContainer>
                 <ResponsivePie
                   data={pieData}
                   margin={{ top: 20, right: 80, bottom: 20, left: 80 }}
@@ -407,23 +332,13 @@ export const SettingsUsageUserDetail = () => {
                   animate
                   motionConfig={CHART_MOTION_CONFIG}
                   tooltip={({ datum }) => (
-                    <div
-                      style={{
-                        background: theme.background.primary,
-                        border: `1px solid ${theme.border.color.medium}`,
-                        borderRadius: theme.border.radius.sm,
-                        padding: '6px 10px',
-                        fontSize: theme.font.size.sm,
-                        color: theme.font.color.primary,
-                        boxShadow: theme.boxShadow.light,
-                      }}
-                    >
-                      <strong>{datum.id}</strong>: {formatNumber(datum.value)}{' '}
-                      {t`credits`}
-                    </div>
+                    <BillingChartTooltip
+                      label={String(datum.id)}
+                      value={`${formatNumber(datum.value)} ${t`credits`}`}
+                    />
                   )}
                 />
-              </StyledPieChartContainer>
+              </BillingPieChartContainer>
             </SubscriptionInfoContainer>
           </Section>
         )}

@@ -22,9 +22,11 @@ import { useQuery } from '@apollo/client/react';
 import {
   SubscriptionStatus,
   BillingPortalSessionDocument,
+  FeatureFlagKey,
 } from '~/generated-metadata/graphql';
 import { useGetWorkflowNodeExecutionUsage } from '@/billing/hooks/useGetWorkflowNodeExecutionUsage';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
+import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
 
 export const SettingsBillingContent = () => {
   const { t } = useLingui();
@@ -52,6 +54,10 @@ export const SettingsBillingContent = () => {
     },
     skip: !hasSubscriptions,
   });
+
+  const isUsageAnalyticsEnabled = useIsFeatureEnabled(
+    FeatureFlagKey.IS_USAGE_ANALYTICS_ENABLED,
+  );
 
   const billingPortalButtonDisabled =
     loading || !isDefined(data) || !isDefined(data.billingPortalSession.url);
@@ -84,20 +90,24 @@ export const SettingsBillingContent = () => {
             }
           />
         )}
-      <SettingsBillingAnalyticsSection />
-      <Section>
-        <H2Title
-          title={t`Usage`}
-          description={t`View detailed usage analytics for your workspace`}
-        />
-        <Link to={getSettingsPath(SettingsPath.Usage)}>
-          <Button
-            Icon={IconChartBar}
-            title={t`View usage`}
-            variant="secondary"
-          />
-        </Link>
-      </Section>
+      {isUsageAnalyticsEnabled && (
+        <>
+          <SettingsBillingAnalyticsSection />
+          <Section>
+            <H2Title
+              title={t`Usage`}
+              description={t`View detailed usage analytics for your workspace`}
+            />
+            <Link to={getSettingsPath(SettingsPath.Usage)}>
+              <Button
+                Icon={IconChartBar}
+                title={t`View usage`}
+                variant="secondary"
+              />
+            </Link>
+          </Section>
+        </>
+      )}
       <Section>
         <H2Title
           title={t`Manage billing information`}
