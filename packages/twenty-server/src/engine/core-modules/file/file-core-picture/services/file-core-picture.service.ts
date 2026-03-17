@@ -161,13 +161,21 @@ export class FileCorePictureService {
     fileId: string;
     workspaceId: string;
   }): Promise<void> {
-    const file = await this.fileRepository.findOneOrFail({
+    const file = await this.fileRepository.findOne({
       where: {
         id: fileId,
         path: Like(`${FileFolder.CorePicture}/%`),
         workspaceId,
       },
     });
+
+    if (!isDefined(file)) {
+      this.logger.warn(
+        `Core picture file not found for deletion — fileId: ${fileId}, workspaceId: ${workspaceId}`,
+      );
+
+      return;
+    }
 
     const { workspaceCustomFlatApplication } =
       await this.applicationService.findWorkspaceTwentyStandardAndCustomApplicationOrThrow(

@@ -1,7 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { isDefined } from 'twenty-shared/utils';
 import { Repository } from 'typeorm';
 
 import { WorkspaceCacheProvider } from 'src/engine/workspace-cache/interfaces/workspace-cache-provider.service';
@@ -21,10 +20,6 @@ import { addFlatEntityToFlatEntityMapsThroughMutationOrThrow } from 'src/engine/
 @Injectable()
 @WorkspaceCache('flatViewFilterMaps')
 export class WorkspaceFlatViewFilterMapCacheService extends WorkspaceCacheProvider<FlatViewFilterMaps> {
-  private readonly logger = new Logger(
-    WorkspaceFlatViewFilterMapCacheService.name,
-  );
-
   constructor(
     @InjectRepository(ViewFilterEntity)
     private readonly viewFilterRepository: Repository<ViewFilterEntity>,
@@ -78,25 +73,9 @@ export class WorkspaceFlatViewFilterMapCacheService extends WorkspaceCacheProvid
     const viewIdToUniversalIdentifierMap =
       createIdToUniversalIdentifierMap(views);
 
-    const consistentViewFilters = viewFilters.filter((viewFilterEntity) => {
-      const hasFieldMetadata = isDefined(
-        fieldMetadataIdToUniversalIdentifierMap.get(
-          viewFilterEntity.fieldMetadataId,
-        ),
-      );
-
-      if (!hasFieldMetadata) {
-        this.logger.warn(
-          `Skipping orphaned ViewFilter ${viewFilterEntity.id}: FieldMetadata ${viewFilterEntity.fieldMetadataId} not found (workspace ${workspaceId})`,
-        );
-      }
-
-      return hasFieldMetadata;
-    });
-
     const flatViewFilterMaps = createEmptyFlatEntityMaps();
 
-    for (const viewFilterEntity of consistentViewFilters) {
+    for (const viewFilterEntity of viewFilters) {
       const flatViewFilter = fromViewFilterEntityToFlatViewFilter({
         entity: viewFilterEntity,
         applicationIdToUniversalIdentifierMap,

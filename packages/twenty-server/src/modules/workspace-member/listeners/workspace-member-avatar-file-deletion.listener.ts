@@ -29,7 +29,7 @@ export class WorkspaceMemberAvatarFileDeletionListener {
   ) {
     const fileIdsToDelete = this.getFileIdsToDeleteFromUpdateEvent(payload);
 
-    this.deleteCorePictures(fileIdsToDelete, payload.workspaceId);
+    await this.deleteCorePictures(fileIdsToDelete, payload.workspaceId);
   }
 
   @OnDatabaseBatchEvent('workspaceMember', DatabaseEventAction.DESTROYED)
