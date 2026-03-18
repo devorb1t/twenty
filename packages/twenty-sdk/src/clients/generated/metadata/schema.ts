@@ -1338,7 +1338,7 @@ export interface FeatureFlag {
     __typename: 'FeatureFlag'
 }
 
-export type FeatureFlagKey = 'IS_UNIQUE_INDEXES_ENABLED' | 'IS_JSON_FILTER_ENABLED' | 'IS_AI_ENABLED' | 'IS_APPLICATION_ENABLED' | 'IS_MARKETPLACE_ENABLED' | 'IS_RECORD_PAGE_LAYOUT_EDITING_ENABLED' | 'IS_PUBLIC_DOMAIN_ENABLED' | 'IS_EMAILING_DOMAIN_ENABLED' | 'IS_DASHBOARD_V2_ENABLED' | 'IS_ATTACHMENT_MIGRATED' | 'IS_NOTE_TARGET_MIGRATED' | 'IS_TASK_TARGET_MIGRATED' | 'IS_ROW_LEVEL_PERMISSION_PREDICATES_ENABLED' | 'IS_JUNCTION_RELATIONS_ENABLED' | 'IS_COMMAND_MENU_ITEM_ENABLED' | 'IS_NAVIGATION_MENU_ITEM_ENABLED' | 'IS_DATE_TIME_WHOLE_DAY_FILTER_ENABLED' | 'IS_NAVIGATION_MENU_ITEM_EDITING_ENABLED' | 'IS_DRAFT_EMAIL_ENABLED' | 'IS_RICH_TEXT_V1_MIGRATED'
+export type FeatureFlagKey = 'IS_UNIQUE_INDEXES_ENABLED' | 'IS_JSON_FILTER_ENABLED' | 'IS_AI_ENABLED' | 'IS_APPLICATION_ENABLED' | 'IS_MARKETPLACE_ENABLED' | 'IS_RECORD_PAGE_LAYOUT_EDITING_ENABLED' | 'IS_PUBLIC_DOMAIN_ENABLED' | 'IS_EMAILING_DOMAIN_ENABLED' | 'IS_DASHBOARD_V2_ENABLED' | 'IS_ATTACHMENT_MIGRATED' | 'IS_NOTE_TARGET_MIGRATED' | 'IS_TASK_TARGET_MIGRATED' | 'IS_ROW_LEVEL_PERMISSION_PREDICATES_ENABLED' | 'IS_JUNCTION_RELATIONS_ENABLED' | 'IS_COMMAND_MENU_ITEM_ENABLED' | 'IS_NAVIGATION_MENU_ITEM_ENABLED' | 'IS_DATE_TIME_WHOLE_DAY_FILTER_ENABLED' | 'IS_NAVIGATION_MENU_ITEM_EDITING_ENABLED' | 'IS_DRAFT_EMAIL_ENABLED' | 'IS_RICH_TEXT_V1_MIGRATED' | 'IS_RECORD_PAGE_LAYOUT_GLOBAL_EDITION_ENABLED'
 
 export interface SSOIdentityProvider {
     id: Scalars['UUID']
@@ -5981,9 +5981,9 @@ export interface GridPositionInput {row: Scalars['Float'],column: Scalars['Float
 
 export interface UpdatePageLayoutWidgetInput {title?: (Scalars['String'] | null),type?: (WidgetType | null),objectMetadataId?: (Scalars['UUID'] | null),gridPosition?: (GridPositionInput | null),position?: (Scalars['JSON'] | null),configuration?: (Scalars['JSON'] | null),conditionalDisplay?: (Scalars['JSON'] | null)}
 
-export interface CreatePageLayoutTabInput {title: Scalars['String'],position?: (Scalars['Float'] | null),pageLayoutId: Scalars['UUID']}
+export interface CreatePageLayoutTabInput {title: Scalars['String'],position?: (Scalars['Float'] | null),pageLayoutId: Scalars['UUID'],layoutMode?: (PageLayoutTabLayoutMode | null)}
 
-export interface UpdatePageLayoutTabInput {title?: (Scalars['String'] | null),position?: (Scalars['Float'] | null),icon?: (Scalars['String'] | null)}
+export interface UpdatePageLayoutTabInput {title?: (Scalars['String'] | null),position?: (Scalars['Float'] | null),icon?: (Scalars['String'] | null),layoutMode?: (PageLayoutTabLayoutMode | null)}
 
 export interface CreatePageLayoutInput {name: Scalars['String'],type?: (PageLayoutType | null),objectMetadataId?: (Scalars['UUID'] | null)}
 
@@ -5991,7 +5991,7 @@ export interface UpdatePageLayoutInput {name?: (Scalars['String'] | null),type?:
 
 export interface UpdatePageLayoutWithTabsInput {name: Scalars['String'],type: PageLayoutType,objectMetadataId?: (Scalars['UUID'] | null),tabs: UpdatePageLayoutTabWithWidgetsInput[]}
 
-export interface UpdatePageLayoutTabWithWidgetsInput {id: Scalars['UUID'],title: Scalars['String'],position: Scalars['Float'],icon?: (Scalars['String'] | null),widgets: UpdatePageLayoutWidgetWithIdInput[]}
+export interface UpdatePageLayoutTabWithWidgetsInput {id: Scalars['UUID'],title: Scalars['String'],position: Scalars['Float'],icon?: (Scalars['String'] | null),layoutMode?: (PageLayoutTabLayoutMode | null),widgets: UpdatePageLayoutWidgetWithIdInput[]}
 
 export interface UpdatePageLayoutWidgetWithIdInput {id: Scalars['UUID'],pageLayoutTabId: Scalars['UUID'],title: Scalars['String'],type: WidgetType,objectMetadataId?: (Scalars['UUID'] | null),gridPosition: GridPositionInput,position?: (Scalars['JSON'] | null),configuration?: (Scalars['JSON'] | null),conditionalDisplay?: (Scalars['JSON'] | null)}
 
@@ -8685,7 +8685,8 @@ export const enumFeatureFlagKey = {
    IS_DATE_TIME_WHOLE_DAY_FILTER_ENABLED: 'IS_DATE_TIME_WHOLE_DAY_FILTER_ENABLED' as const,
    IS_NAVIGATION_MENU_ITEM_EDITING_ENABLED: 'IS_NAVIGATION_MENU_ITEM_EDITING_ENABLED' as const,
    IS_DRAFT_EMAIL_ENABLED: 'IS_DRAFT_EMAIL_ENABLED' as const,
-   IS_RICH_TEXT_V1_MIGRATED: 'IS_RICH_TEXT_V1_MIGRATED' as const
+   IS_RICH_TEXT_V1_MIGRATED: 'IS_RICH_TEXT_V1_MIGRATED' as const,
+   IS_RECORD_PAGE_LAYOUT_GLOBAL_EDITION_ENABLED: 'IS_RECORD_PAGE_LAYOUT_GLOBAL_EDITION_ENABLED' as const
 }
 
 export const enumRelationType = {

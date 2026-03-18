@@ -1125,6 +1125,7 @@ export type CreatePageLayoutInput = {
 };
 
 export type CreatePageLayoutTabInput = {
+  layoutMode?: InputMaybe<PageLayoutTabLayoutMode>;
   pageLayoutId: Scalars['UUID'];
   position?: InputMaybe<Scalars['Float']>;
   title: Scalars['String'];
@@ -1632,6 +1633,7 @@ export enum FeatureFlagKey {
   IS_NOTE_TARGET_MIGRATED = 'IS_NOTE_TARGET_MIGRATED',
   IS_PUBLIC_DOMAIN_ENABLED = 'IS_PUBLIC_DOMAIN_ENABLED',
   IS_RECORD_PAGE_LAYOUT_EDITING_ENABLED = 'IS_RECORD_PAGE_LAYOUT_EDITING_ENABLED',
+  IS_RECORD_PAGE_LAYOUT_GLOBAL_EDITION_ENABLED = 'IS_RECORD_PAGE_LAYOUT_GLOBAL_EDITION_ENABLED',
   IS_RICH_TEXT_V1_MIGRATED = 'IS_RICH_TEXT_V1_MIGRATED',
   IS_ROW_LEVEL_PERMISSION_PREDICATES_ENABLED = 'IS_ROW_LEVEL_PERMISSION_PREDICATES_ENABLED',
   IS_TASK_TARGET_MIGRATED = 'IS_TASK_TARGET_MIGRATED',
@@ -5014,6 +5016,7 @@ export type UpdatePageLayoutInput = {
 
 export type UpdatePageLayoutTabInput = {
   icon?: InputMaybe<Scalars['String']>;
+  layoutMode?: InputMaybe<PageLayoutTabLayoutMode>;
   position?: InputMaybe<Scalars['Float']>;
   title?: InputMaybe<Scalars['String']>;
 };
@@ -5021,6 +5024,7 @@ export type UpdatePageLayoutTabInput = {
 export type UpdatePageLayoutTabWithWidgetsInput = {
   icon?: InputMaybe<Scalars['String']>;
   id: Scalars['UUID'];
+  layoutMode?: InputMaybe<PageLayoutTabLayoutMode>;
   position: Scalars['Float'];
   title: Scalars['String'];
   widgets: Array<UpdatePageLayoutWidgetWithIdInput>;
