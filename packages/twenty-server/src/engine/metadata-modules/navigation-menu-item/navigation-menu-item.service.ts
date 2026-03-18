@@ -54,6 +54,8 @@ export class NavigationMenuItemService {
       .filter(
         (item): item is NonNullable<typeof item> =>
           isDefined(item) &&
+          // Items may have a null type before the backfill command has run
+          isDefined(item.type as string | null) &&
           (!isDefined(item.userWorkspaceId) ||
             item.userWorkspaceId === userWorkspaceId),
       )
@@ -81,7 +83,10 @@ export class NavigationMenuItemService {
       flatEntityMaps: flatNavigationMenuItemMaps,
     });
 
-    if (!isDefined(flatNavigationMenuItem)) {
+    if (
+      !isDefined(flatNavigationMenuItem) ||
+      !isDefined(flatNavigationMenuItem.type as string | null)
+    ) {
       return null;
     }
 
