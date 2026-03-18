@@ -22,7 +22,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            // Fetch recent open issues for duplicate detection (titles + bodies for better matching)
+            // Fetch recent open issues for duplicate detection
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -72,9 +72,9 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           direct_prompt: |
-            You are a knowledgeable first responder for Twenty, an open-source CRM.
-            You have READ-ONLY access to the full codebase. Your job is to understand the issue,
-            search the code for relevant context, and provide a genuinely helpful response.
+            You are an issue triager for Twenty, an open-source CRM (https://github.com/twentyhq/twenty).
+            You have read-only access to the codebase. Your primary job is to CLASSIFY issues accurately.
+            You may also search the code to find relevant context when it helps.
 
             ## Issue to analyze
 
@@ -83,53 +83,58 @@ jobs:
             Body:
             ${{ github.event.issue.body }}
 
-            Available issue types: ${{ steps.context.outputs.issue_types }}
+            Available issue types in this repo:
+            ${{ steps.context.outputs.issue_types }}
 
             Recent open issues (for duplicate check):
             ${{ steps.context.outputs.open_issues }}
 
-            ## Your task
+            ## Classification
 
-            1. SEARCH the codebase for relevant code:
-               - For bug reports: grep for error messages, component names, API endpoints, or function names mentioned
-               - For questions: search for the feature or concept they're asking about
-               - For features: check if related functionality already exists
-               - Read the relevant source files to understand the current implementation
+            Determine the following:
 
-            2. CLASSIFY the issue:
-               - issue_type: "Bug" (broken behavior with evidence), "Feature" (new capability/enhancement), "Task" (refactoring/docs/internal), or null
-               - scope: "front" (React/UI), "backend" (NestJS/API/DB), "back+front" (both), "infra" (CI/CD/deploy), "self-host" (Docker/self-hosted), or null
-               - is_support_question: true if asking "how do I..." or troubleshooting
-               - is_feature_suggestion: true if proposing new functionality
-               - needs_reproduction: true for bugs that lack clear reproduction steps
-               - good_first_issue: true only if the fix is clearly straightforward and well-scoped
-               - duplicate_of: issue number ONLY if clearly the same problem (not just related)
+            **issue_type** — one of:
+            - "Bug": something is broken or not working as expected, WITH evidence (error messages, screenshots, clear reproduction steps)
+            - "Support": help request, troubleshooting, "how do I...", or a report that LOOKS like a bug but lacks evidence or reproduction steps
+            - "Feature": a new capability, enhancement, or product suggestion
+            - "Task": refactoring, cleanup, tech debt, documentation, or internal work
+            - null: if truly unclear
 
-            3. WRITE a helpful comment:
-               - If you found relevant code, share the file path(s) and explain what you see
-               - For bugs: try to identify the relevant code area or possible root cause
-               - For questions: try to answer from what you find in the codebase
-               - For features: mention existing related functionality and where it lives
-               - Be concise but substantive — a few sentences with code pointers beats a wall of text
-               - If you genuinely can't find anything relevant, keep it brief
-               - DO NOT suggest priority, timeline, or size estimates — that's for maintainers
-               - DO NOT promise fixes or assign responsibility
+            **scope** — one of: "front" (React/UI), "backend" (NestJS/API/DB), "back+front" (both), "infra" (CI/CD/deploy), "self-host" (Docker/self-hosted), or null
 
-            ## Output format
+            **good_first_issue** — true only if the fix is clearly straightforward, well-scoped, and good for newcomers
 
-            After your research, output ONLY a JSON object with no markdown fencing:
+            **needs_reproduction** — true for bugs that lack clear steps to reproduce
+
+            **duplicate_of** — an existing issue number ONLY if you are confident this is clearly about the same problem. Do not set for merely related issues.
+
+            **comment** — a markdown string or null. Default to null. Only set this when you have something genuinely specific and useful to say:
+            - You found a likely duplicate (explain which issue and why you think so)
+            - A bug is missing reproduction steps (ask for specifics relevant to this issue)
+            - A feature is significant enough to suggest moving to a GitHub Discussion
+            - You searched the codebase and found a confident, specific code pointer relevant to the issue (file path + brief explanation)
+            Do NOT post generic comments. Most issues just need labels, not a bot comment.
+
+            ## How to search the codebase
+
+            You can use Glob, Grep, and Read to search for relevant code when it helps classification or when you want to provide a specific code pointer in the comment. For example:
+            - Grep for error messages or component names mentioned in the issue
+            - Search for the feature area being discussed
+            Keep searches focused — you have limited turns.
+
+            ## Output
+
+            After your analysis, output ONLY a JSON object with no markdown fencing:
 
             {
-              "issue_type": "<Bug|Feature|Task|null>",
+              "issue_type": "<Bug|Support|Feature|Task|null>",
               "scope": "<front|backend|back+front|infra|self-host|null>",
-              "is_support_question": <boolean>,
-              "is_feature_suggestion": <boolean>,
               "good_first_issue": <boolean>,
               "needs_reproduction": <boolean>,
               "duplicate_of": <number or null>,
-              "comment": "<your helpful markdown response>"
+              "comment": "<markdown string or null>"
             }
-          claude_args: '--max-turns 10 --model sonnet --allowedTools "Glob,Grep,Read"'
+          claude_args: '--max-turns 5 --model sonnet --allowedTools "Glob,Grep,Read"'
 
       - name: Apply triage results
         if: steps.triage.outputs.result
@@ -158,7 +163,9 @@ jobs:
             if (triage.issue_type) {
               try {
                 const issueTypes = JSON.parse(`${{ steps.context.outputs.issue_types }}`);
-                const matchedType = issueTypes.find(t => t.name === triage.issue_type);
+                // Map "Support" to the "Troubleshooting" GitHub issue type
+                const typeName = triage.issue_type === 'Support' ? 'Troubleshooting' : triage.issue_type;
+                const matchedType = issueTypes.find(t => t.name === typeName);
                 if (matchedType) {
                   const issueData = await github.graphql(`
                     {
@@ -183,7 +190,7 @@ jobs:
                   `, {
                     headers: { 'GraphQL-Features': 'issue_types' }
                   });
-                  console.log(`Set issue type to: ${triage.issue_type}`);
+                  console.log(`Set issue type to: ${typeName}`);
                 }
               } catch (e) {
                 console.log(`Could not set issue type: ${e.message}`);
@@ -206,10 +213,6 @@ jobs:
               labels.push('needs: reproduction');
             }
 
-            if (triage.is_support_question === true) {
-              labels.push('support');
-            }
-
             // 3. Ensure labels exist and apply them
             if (labels.length > 0) {
               const existingLabels = await github.rest.issues.listLabelsForRepo({
@@ -219,7 +222,6 @@ jobs:
 
               const labelColors = {
                 'needs: reproduction': 'fbca04',
-                'support': '0075ca',
                 'scope: self-host': 'bfd4f2',
               };
 
@@ -245,35 +247,14 @@ jobs:
               console.log(`Applied labels: ${labels.join(', ')}`);
             }
 
-            // 4. Build and post comment
-            const commentParts = [];
-
-            // Claude's substantive response (the main value)
+            // 4. Post comment only if Claude had something specific to say
             if (triage.comment) {
-              commentParts.push(triage.comment);
-            }
+              const commentParts = [triage.comment];
 
-            // Flag duplicates
-            if (triage.duplicate_of && Number.isInteger(triage.duplicate_of)) {
-              commentParts.push(`\n> **Possible duplicate** of #${triage.duplicate_of} — please check if this is the same issue.`);
-            }
+              if (triage.duplicate_of && Number.isInteger(triage.duplicate_of)) {
+                commentParts.push(`\n> **Possible duplicate** of #${triage.duplicate_of} — please check if this is the same issue.`);
+              }
 
-            // Guide support questions
-            if (triage.is_support_question === true) {
-              commentParts.push(`\n---\nFor faster help, you can also try our [Discord](https://discord.gg/cx5n7CSns2) or [GitHub Discussions](https://github.com/twentyhq/twenty/discussions). If this is a confirmed bug, please update the issue with reproduction steps and we'll re-triage.`);
-            }
-
-            // Guide feature suggestions
-            if (triage.is_feature_suggestion === true && triage.issue_type !== 'Bug') {
-              commentParts.push(`\n---\nFeature requests are often discussed in [GitHub Discussions](https://github.com/twentyhq/twenty/discussions) before becoming tracked issues. A maintainer may move this there.`);
-            }
-
-            // Reproduction needed
-            if (triage.needs_reproduction === true && !triage.is_support_question) {
-              commentParts.push(`\n---\nTo help us investigate, please provide:\n- Steps to reproduce\n- Expected vs actual behavior\n- Environment details (self-hosted/cloud, version, browser)`);
-            }
-
-            if (commentParts.length > 0) {
               await github.rest.issues.createComment({
                 owner, repo,
                 issue_number: issueNumber,
