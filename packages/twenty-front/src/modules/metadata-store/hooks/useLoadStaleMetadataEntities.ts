@@ -72,6 +72,13 @@ export const useLoadStaleMetadataEntities = () => {
               fetchPolicy: 'network-only',
             })
             .then((result) => {
+              if (!isDefined(result.data?.objects)) {
+                console.error(
+                  'ObjectMetadataItems query returned unexpected response shape',
+                  { hasData: isDefined(result.data) },
+                );
+              }
+
               const compositeObjects =
                 mapPaginatedObjectMetadataItemsToObjectMetadataItems({
                   pagedObjectMetadataItems: result.data,
