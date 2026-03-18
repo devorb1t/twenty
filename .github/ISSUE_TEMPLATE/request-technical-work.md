@@ -2,7 +2,7 @@
 name: Request technical chore
 about: Request technical work that does not provide any product increment (aka refactoring)
 title: ''
-labels: ['type: chore']
+labels: []
 assignees: ''
 ---
 

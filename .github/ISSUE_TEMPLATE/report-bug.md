@@ -2,7 +2,7 @@
 name: Report a bug
 about: Report a bug or a functional regression
 title: 'Ex: In DarkMode, a blank square appears in bottom right corner while scrolling'
-labels: ['type: bug']
+labels: []
 assignees: ''
 
 ---
