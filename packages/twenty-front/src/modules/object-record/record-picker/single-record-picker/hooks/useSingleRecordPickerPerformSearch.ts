@@ -34,7 +34,8 @@ export const useSingleRecordPickerPerformSearch = ({
 
   const { objectMetadataItems } = useObjectMetadataItems();
 
-  const selectedIdsFilter = { id: { in: selectedIds } };
+  const selectedIdsFilter =
+    selectedIds.length > 0 ? { id: { in: selectedIds } } : undefined;
 
   const { loading: selectedRecordsLoading, searchRecords: selectedRecords } =
     useObjectRecordSearchRecords({
