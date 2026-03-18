@@ -2404,7 +2404,6 @@ type ClientConfig {
   isAttachmentPreviewEnabled: Boolean!
   sentry: Sentry!
   captcha: Captcha!
-  chromeExtensionId: String
   api: ApiConfig!
   canManageFeatureFlags: Boolean!
   publicFeatureFlags: [PublicFeatureFlag!]!
@@ -2460,9 +2459,7 @@ enum ConfigVariablesGroup {
   MICROSOFT_AUTH
   EMAIL_SETTINGS
   LOGGING
-  METERING
-  EXCEPTION_HANDLER
-  OTHER
+  ADVANCED_SETTINGS
   BILLING_CONFIG
   CAPTCHA_CONFIG
   CLOUDFLARE_CONFIG
@@ -2473,7 +2470,6 @@ enum ConfigVariablesGroup {
   SUPPORT_CHAT_CONFIG
   ANALYTICS_CONFIG
   TOKENS_DURATION
-  TWO_FACTOR_AUTHENTICATION
   AWS_SES_SETTINGS
 }
 
