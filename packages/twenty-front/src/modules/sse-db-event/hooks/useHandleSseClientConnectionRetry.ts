@@ -27,9 +27,6 @@ export const useHandleSseClientConnectionRetry = () => {
       const tokenPair = store.get(tokenPairState.atom);
       const currentAppToken = tokenPair?.accessOrWorkspaceAgnosticToken?.token;
 
-      // With dynamic headers, the SSE client automatically picks up the
-      // latest token on each reconnection attempt. We only need to reset
-      // when the user has logged out or after too many consecutive failures.
       const shouldResetSseClient =
         !isDefined(currentAppToken) || retryCount > 10;
 

@@ -16,6 +16,7 @@ import { type CurrentWorkspaceMember } from '@/auth/states/currentWorkspaceMembe
 import { type CurrentWorkspace } from '@/auth/states/currentWorkspaceState';
 import { type AuthTokenPair } from '~/generated-metadata/graphql';
 import { logDebug } from '~/utils/logDebug';
+import { retryWithBackoff } from '~/utils/retryWithBackoff';
 
 import { REST_API_BASE_URL } from '@/apollo/constant/rest-api-base-url';
 import { type ApolloManager } from '@/apollo/types/apolloManager.interface';
@@ -162,41 +163,19 @@ export class ApolloFactory implements ApolloManager {
       const attemptTokenRenewal = async (): Promise<void> => {
         const graphqlUri = `${REACT_APP_SERVER_BASE_URL}/metadata`;
 
-        for (let attempt = 0; attempt <= TOKEN_RENEWAL_MAX_RETRIES; attempt++) {
-          try {
-            const tokens = await renewToken(graphqlUri, getTokenPair());
+        const tokens = await retryWithBackoff(
+          () => renewToken(graphqlUri, getTokenPair()),
+          {
+            maxRetries: TOKEN_RENEWAL_MAX_RETRIES,
+            baseDelayMs: TOKEN_RENEWAL_RETRY_DELAY_MS,
+            shouldRetry: (error) =>
+              !CombinedGraphQLErrors.is(error) && isDefined(getTokenPair()),
+          },
+        );
 
-            if (isDefined(tokens)) {
-              onTokenPairChange?.(tokens);
-              cookieStorage.setItem('tokenPair', JSON.stringify(tokens));
-            }
-
-            return;
-          } catch (error) {
-            // Server explicitly rejected the refresh token (expired,
-            // revoked, invalid). No point retrying.
-            if (CombinedGraphQLErrors.is(error)) {
-              throw error;
-            }
-
-            if (!getTokenPair()) {
-              throw error;
-            }
-
-            // Transient error (network, timeout, server 500).
-            // Retry with linear backoff if attempts remain.
-            if (attempt < TOKEN_RENEWAL_MAX_RETRIES) {
-              await new Promise((resolve) =>
-                setTimeout(
-                  resolve,
-                  TOKEN_RENEWAL_RETRY_DELAY_MS * (attempt + 1),
-                ),
-              );
-              continue;
-            }
-
-            throw error;
-          }
+        if (isDefined(tokens)) {
+          onTokenPairChange?.(tokens);
+          cookieStorage.setItem('tokenPair', JSON.stringify(tokens));
         }
       };
 

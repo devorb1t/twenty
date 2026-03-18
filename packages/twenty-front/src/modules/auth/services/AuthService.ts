@@ -27,9 +27,6 @@ const renewTokenMutation = async (
     cache: new InMemoryCache({}),
   });
 
-  // Let errors propagate with their original type so callers can
-  // distinguish GraphQL rejections (e.g. expired refresh token)
-  // from transient network failures.
   const result = await client.mutate<
     RenewTokenMutation,
     RenewTokenMutationVariables
