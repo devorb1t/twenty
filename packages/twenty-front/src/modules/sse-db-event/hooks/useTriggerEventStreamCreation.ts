@@ -9,10 +9,11 @@ import { shouldDestroyEventStreamState } from '@/sse-db-event/states/shouldDestr
 import { sseClientState } from '@/sse-db-event/states/sseClientState';
 import { sseEventStreamIdState } from '@/sse-db-event/states/sseEventStreamIdState';
 import { sseEventStreamReadyState } from '@/sse-db-event/states/sseEventStreamReadyState';
+import { isGraphQLSchemaValidationError } from '@/sse-db-event/utils/isGraphQLSchemaValidationError';
 import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomState';
 import { captureException } from '@sentry/react';
 import { isNonEmptyString } from '@sniptt/guards';
-import { print, type ExecutionResult } from 'graphql';
+import { print, type ExecutionResult, type GraphQLError } from 'graphql';
 
 import { useStore } from 'jotai';
 import { useCallback } from 'react';
@@ -80,6 +81,17 @@ export const useTriggerEventStreamCreation = () => {
           }>,
         ) => {
           if (isDefined(value?.errors) && Array.isArray(value.errors)) {
+            const hasSchemaValidationError = value.errors.some(
+              (error: GraphQLError) =>
+                isGraphQLSchemaValidationError(error),
+            );
+
+            if (hasSchemaValidationError) {
+              window.location.reload();
+
+              return;
+            }
+
             captureException(
               new Error(`SSE subscription error: ${value.errors[0]?.message}`),
             );
@@ -128,6 +140,17 @@ export const useTriggerEventStreamCreation = () => {
           try {
             if (event === 'next') {
               if (isDefined(result?.errors)) {
+                const hasSchemaValidationError = result.errors.some(
+                  (error) =>
+                    isGraphQLSchemaValidationError(error as GraphQLError),
+                );
+
+                if (hasSchemaValidationError) {
+                  window.location.reload();
+
+                  return;
+                }
+
                 const subCode = result.errors[0]?.extensions?.subCode;
 
                 switch (subCode) {
@@ -137,7 +160,11 @@ export const useTriggerEventStreamCreation = () => {
                   }
                   default: {
                     for (const error of result.errors) {
-                      captureException(error);
+                      captureException(
+                        new Error(
+                          `SSE subscription error: ${error.message ?? 'Unknown error'}`,
+                        ),
+                      );
                     }
                   }
                 }
