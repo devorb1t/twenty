@@ -6,7 +6,9 @@ import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/use
 import { useStore } from 'jotai';
 import { useCallback } from 'react';
 
-export const useUpdateCurrentWidgetConfig = (pageLayoutIdFromProps: string) => {
+export const useUpdateCurrentWidgetConfig = (
+  pageLayoutIdFromProps?: string,
+) => {
   const pageLayoutDraft = useAtomComponentStateCallbackState(
     pageLayoutDraftComponentState,
     pageLayoutIdFromProps,

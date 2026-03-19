@@ -1,6 +1,6 @@
 import { contextStoreCurrentObjectMetadataItemIdComponentState } from '@/context-store/states/contextStoreCurrentObjectMetadataItemIdComponentState';
 import { contextStoreTargetedRecordsRuleComponentState } from '@/context-store/states/contextStoreTargetedRecordsRuleComponentState';
-import { useObjectMetadataItemById } from '@/object-metadata/hooks/useObjectMetadataItemById';
+import { objectMetadataItemsSelector } from '@/object-metadata/states/objectMetadataItemsSelector';
 import { recordStoreFamilyState } from '@/object-record/record-store/states/recordStoreFamilyState';
 import { currentPageLayoutIdState } from '@/page-layout/states/currentPageLayoutIdState';
 import { recordPageLayoutByObjectMetadataIdFamilySelector } from '@/page-layout/states/selectors/recordPageLayoutByObjectMetadataIdFamilySelector';
@@ -21,35 +21,48 @@ export const usePageLayoutIdFromContextStore = () => {
     contextStoreCurrentObjectMetadataItemIdComponentState,
   );
 
-  if (!isDefined(contextStoreCurrentObjectMetadataItemId)) {
-    throw new Error('Object metadata ID is not defined');
-  }
+  const hasSingleRecordSelected =
+    contextStoreTargetedRecordsRule.mode === 'selection' &&
+    contextStoreTargetedRecordsRule.selectedRecordIds.length === 1;
 
-  const { objectMetadataItem } = useObjectMetadataItemById({
-    objectId: contextStoreCurrentObjectMetadataItemId,
-  });
+  const recordId = hasSingleRecordSelected
+    ? contextStoreTargetedRecordsRule.selectedRecordIds[0]
+    : undefined;
 
-  if (
-    !(
-      contextStoreTargetedRecordsRule.mode === 'selection' &&
-      contextStoreTargetedRecordsRule.selectedRecordIds.length === 1
-    )
-  ) {
-    throw new Error('Only one record should be selected');
-  }
+  const objectMetadataItems = useAtomStateValue(objectMetadataItemsSelector);
 
-  const recordId: string = contextStoreTargetedRecordsRule.selectedRecordIds[0];
+  const objectMetadataItem = isDefined(contextStoreCurrentObjectMetadataItemId)
+    ? objectMetadataItems.find(
+        (item) => item.id === contextStoreCurrentObjectMetadataItemId,
+      )
+    : undefined;
 
   const isDashboardContext =
+    isDefined(objectMetadataItem) &&
     objectMetadataItem.nameSingular === CoreObjectNameSingular.Dashboard;
 
-  const recordStore = useAtomFamilyStateValue(recordStoreFamilyState, recordId);
+  const recordStore = useAtomFamilyStateValue(
+    recordStoreFamilyState,
+    recordId ?? '',
+  );
   const currentPageLayoutId = useAtomStateValue(currentPageLayoutIdState);
 
   const recordPageLayout = useAtomFamilySelectorValue(
     recordPageLayoutByObjectMetadataIdFamilySelector,
-    { objectMetadataId: objectMetadataItem.id },
+    {
+      objectMetadataId: isDefined(objectMetadataItem)
+        ? objectMetadataItem.id
+        : '',
+    },
   );
+
+  if (!isDefined(objectMetadataItem) || !isDefined(recordId)) {
+    return {
+      pageLayoutId: undefined,
+      recordId: undefined,
+      objectNameSingular: undefined,
+    };
+  }
 
   const pageLayoutId = isDashboardContext
     ? (recordStore?.pageLayoutId ?? currentPageLayoutId)
