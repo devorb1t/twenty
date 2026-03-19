@@ -7,7 +7,7 @@ import { filePreviewState } from '@/ui/field/display/states/filePreviewState';
 import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomState';
 import { styled } from '@linaria/react';
 import { t } from '@lingui/core/macro';
-import { useCallback, useContext } from 'react';
+import { type MouseEvent, useCallback, useContext } from 'react';
 import { type ExtendedFileUIPart } from 'twenty-shared/ai';
 import { isDefined } from 'twenty-shared/utils';
 import { AvatarOrIcon, Chip, ChipVariant } from 'twenty-ui/components';
@@ -71,11 +71,18 @@ export const AgentChatFilePreview = ({
     />
   );
 
-  const rightComponent = onRemove ? (
+  const handleRemove = onRemove
+    ? (e: MouseEvent) => {
+        e.stopPropagation();
+        onRemove();
+      }
+    : undefined;
+
+  const rightComponent = handleRemove ? (
     <AvatarOrIcon
       Icon={IconX}
       IconColor={theme.font.color.secondary}
-      onClick={onRemove}
+      onClick={handleRemove}
     />
   ) : undefined;
 
