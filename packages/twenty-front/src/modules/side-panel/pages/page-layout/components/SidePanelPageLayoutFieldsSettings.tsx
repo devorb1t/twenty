@@ -3,15 +3,16 @@ import { CommandMenuItemToggle } from '@/command-menu/components/CommandMenuItem
 import { useFieldsWidgetGroups } from '@/page-layout/widgets/fields/hooks/useFieldsWidgetGroups';
 import { SidePanelGroup } from '@/side-panel/components/SidePanelGroup';
 import { SidePanelList } from '@/side-panel/components/SidePanelList';
+import { useSidePanelSubPageHistory } from '@/side-panel/hooks/useSidePanelSubPageHistory';
+import { NewFieldDefaultVisibilityToggle } from '@/side-panel/pages/page-layout/components/NewFieldDefaultVisibilityToggle';
 import { WidgetSettingsFooter } from '@/side-panel/pages/page-layout/components/WidgetSettingsFooter';
-import { useNavigatePageLayoutSidePanel } from '@/side-panel/pages/page-layout/hooks/useNavigatePageLayoutSidePanel';
-import { usePageLayoutIdForRecordPageLayoutFromContextStoreTargetedRecord } from '@/side-panel/pages/page-layout/hooks/usePageLayoutIdForRecordPageLayoutFromContextStoreTargetedRecord';
+import { usePageLayoutIdFromContextStore } from '@/side-panel/pages/page-layout/hooks/usePageLayoutIdFromContextStore';
 import { useUpdateCurrentWidgetConfig } from '@/side-panel/pages/page-layout/hooks/useUpdateCurrentWidgetConfig';
 import { useWidgetInEditMode } from '@/side-panel/pages/page-layout/hooks/useWidgetInEditMode';
+import { SidePanelSubPages } from '@/side-panel/types/SidePanelSubPages';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { styled } from '@linaria/react';
 import { useLingui } from '@lingui/react/macro';
-import { SidePanelPages } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { IconChevronDown, IconLayoutSidebarRight } from 'twenty-ui/display';
 import { type FieldsConfiguration } from '~/generated-metadata/graphql';
@@ -31,9 +32,9 @@ const StyledSidePanelContainer = styled.div`
 
 export const SidePanelPageLayoutFieldsSettings = () => {
   const { t } = useLingui();
-  const { navigatePageLayoutSidePanel } = useNavigatePageLayoutSidePanel();
+  const { navigateToSidePanelSubPage } = useSidePanelSubPageHistory();
   const { pageLayoutId, objectNameSingular } =
-    usePageLayoutIdForRecordPageLayoutFromContextStoreTargetedRecord();
+    usePageLayoutIdFromContextStore();
 
   const { updateCurrentWidgetConfig } =
     useUpdateCurrentWidgetConfig(pageLayoutId);
@@ -59,9 +60,7 @@ export const SidePanelPageLayoutFieldsSettings = () => {
   );
 
   const handleNavigateToLayout = () => {
-    navigatePageLayoutSidePanel({
-      sidePanelPage: SidePanelPages.PageLayoutFieldsLayout,
-    });
+    navigateToSidePanelSubPage(SidePanelSubPages.PageLayoutFieldsLayout);
   };
 
   const isShouldAllowUserToSeeHiddenFieldsToggled =
@@ -78,6 +77,7 @@ export const SidePanelPageLayoutFieldsSettings = () => {
 
   const selectableItemIds = [
     'layout',
+    'new-field-default-visibility',
     'display-more-fields-button',
     'action-button',
     'move-down',
@@ -119,6 +119,10 @@ export const SidePanelPageLayoutFieldsSettings = () => {
                 onToggleChange={handleToggleShouldAllowUserToSeeHiddenFields}
               />
             </SelectableListItem>
+            <NewFieldDefaultVisibilityToggle
+              pageLayoutId={pageLayoutId}
+              widgetId={widgetInEditMode.id}
+            />
           </SidePanelGroup>
         </SidePanelList>
       </StyledSidePanelContainer>

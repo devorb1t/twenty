@@ -10,6 +10,7 @@ export const PAGE_LAYOUT_WIDGET_FRAGMENT = gql`
     createdAt
     updatedAt
     deletedAt
+    conditionalDisplay
     gridPosition {
       column
       columnSpan
@@ -167,11 +168,8 @@ export const PAGE_LAYOUT_WIDGET_FRAGMENT = gql`
       ... on FieldsConfiguration {
         configurationType
         viewId
+        newFieldDefaultVisibility
         shouldAllowUserToSeeHiddenFields
-        newFieldDefaultConfiguration {
-          isVisible
-          viewFieldGroupId
-        }
       }
       ... on FilesConfiguration {
         configurationType

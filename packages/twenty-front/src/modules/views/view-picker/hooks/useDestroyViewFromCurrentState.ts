@@ -7,8 +7,7 @@ import { useAtomFamilySelectorValue } from '@/ui/utilities/state/jotai/hooks/use
 import { usePerformViewAPIPersist } from '@/views/hooks/internal/usePerformViewAPIPersist';
 import { useChangeView } from '@/views/hooks/useChangeView';
 import { useGetCurrentViewOnly } from '@/views/hooks/useGetCurrentViewOnly';
-import { coreViewsByObjectMetadataIdFamilySelector } from '@/views/states/selectors/coreViewsByObjectMetadataIdFamilySelector';
-import { coreViewsFromObjectMetadataItemFamilySelector } from '@/views/states/selectors/coreViewsFromObjectMetadataItemFamilySelector';
+import { viewsFromObjectMetadataItemFamilySelector } from '@/views/states/selectors/viewsFromObjectMetadataItemFamilySelector';
 import { useCloseAndResetViewPicker } from '@/views/view-picker/hooks/useCloseAndResetViewPicker';
 import { viewPickerIsDirtyComponentState } from '@/views/view-picker/states/viewPickerIsDirtyComponentState';
 import { viewPickerIsPersistingComponentState } from '@/views/view-picker/states/viewPickerIsPersistingComponentState';
@@ -37,7 +36,7 @@ export const useDestroyViewFromCurrentState = (viewBarInstanceId?: string) => {
   const { objectMetadataItem } = useContextStoreObjectMetadataItemOrThrow();
 
   const viewsOnCurrentObject = useAtomFamilySelectorValue(
-    coreViewsFromObjectMetadataItemFamilySelector,
+    viewsFromObjectMetadataItemFamilySelector,
     { objectMetadataItemId: objectMetadataItem.id },
   );
 
@@ -60,26 +59,22 @@ export const useDestroyViewFromCurrentState = (viewBarInstanceId?: string) => {
 
     const shouldChangeView = viewPickerReferenceViewId === currentView?.id;
 
-    if (shouldChangeView) {
-      changeView(
-        viewsOnCurrentObject.filter(
-          (view) => view.id !== viewPickerReferenceViewId,
-        )[0].id,
-      );
+    const remainingViews = viewsOnCurrentObject.filter(
+      (view) => view.id !== viewPickerReferenceViewId,
+    );
+
+    if (remainingViews.length === 0) {
+      return;
     }
 
-    store.set(
-      coreViewsByObjectMetadataIdFamilySelector.selectorFamily(
-        objectMetadataItem.id,
-      ),
-      (views) => views.filter((view) => view.id !== viewPickerReferenceViewId),
-    );
+    if (shouldChangeView) {
+      changeView(remainingViews[0].id);
+    }
 
     await performViewAPIDestroy({ id: viewPickerReferenceViewId });
   }, [
     currentView,
     closeAndResetViewPicker,
-    objectMetadataItem.id,
     changeView,
     performViewAPIDestroy,
     store,
