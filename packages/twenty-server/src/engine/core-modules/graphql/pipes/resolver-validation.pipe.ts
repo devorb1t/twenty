@@ -29,7 +29,16 @@ export class ResolverValidationPipe implements PipeTransform {
       return value;
     }
 
-    const object = plainToInstance(metatype, value);
+    let object: object;
+
+    try {
+      object = plainToInstance(metatype, value);
+    } catch (error) {
+      throw new UserInputError(
+        `Invalid input: ${error instanceof Error ? error.message : 'transformation failed'}`,
+      );
+    }
+
     const errors = await safeClassValidatorValidateWrapper(object);
 
     if (errors.length === 0) {
