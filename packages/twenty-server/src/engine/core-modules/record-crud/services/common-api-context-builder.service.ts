@@ -128,10 +128,11 @@ export class CommonApiContextBuilderService {
         authContext.apiKey.id,
         workspaceId,
       );
-    } else if (
-      isApplicationAuthContext(authContext) &&
-      isDefined(authContext.application.defaultRoleId)
-    ) {
+    } else if (isApplicationAuthContext(authContext)) {
+      if (!isDefined(authContext.application.defaultRoleId)) {
+        return {};
+      }
+
       roleId = authContext.application.defaultRoleId;
     } else if (isUserAuthContext(authContext)) {
       const userWorkspaceRoleId =
