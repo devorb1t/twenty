@@ -1,5 +1,5 @@
 import { atom, type WritableAtom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
+import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 import { isDefined } from 'twenty-shared/utils';
 
 import { type State } from '@/ui/utilities/state/jotai/types/State';
@@ -52,10 +52,22 @@ export const createAtomState = <ValueType>({
       { getOnInit: true },
     ) as StateAtom<ValueType>;
   } else if (useLocalStorage) {
+    const safeStorage = createJSONStorage<ValueType>(() => ({
+      getItem: (k: string) => localStorage.getItem(k),
+      setItem: (k: string, v: string) => {
+        try {
+          localStorage.setItem(k, v);
+        } catch {
+          // Silently ignore QuotaExceededError — the in-memory Jotai state
+          // remains correct; persistence is best-effort.
+        }
+      },
+      removeItem: (k: string) => localStorage.removeItem(k),
+    }));
     baseAtom = atomWithStorage<ValueType>(
       key,
       defaultValue,
-      undefined,
+      safeStorage,
       localStorageOptions ?? undefined,
     ) as StateAtom<ValueType>;
   } else {

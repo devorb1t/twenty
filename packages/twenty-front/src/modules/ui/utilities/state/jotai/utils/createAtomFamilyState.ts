@@ -1,7 +1,21 @@
 import { atom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
+import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 
 import { type FamilyState } from '@/ui/utilities/state/jotai/types/FamilyState';
+
+const createSafeLocalStorage = <ValueType>() =>
+  createJSONStorage<ValueType>(() => ({
+    getItem: (key: string) => localStorage.getItem(key),
+    setItem: (key: string, value: string) => {
+      try {
+        localStorage.setItem(key, value);
+      } catch {
+        // Silently ignore QuotaExceededError — the in-memory Jotai state
+        // remains correct; persistence is best-effort.
+      }
+    },
+    removeItem: (key: string) => localStorage.removeItem(key),
+  }));
 
 export const createAtomFamilyState = <ValueType, FamilyKey>({
   key,
@@ -36,7 +50,7 @@ export const createAtomFamilyState = <ValueType, FamilyKey>({
       ? atomWithStorage<ValueType>(
           atomKey,
           defaultValue,
-          undefined,
+          createSafeLocalStorage<ValueType>(),
           localStorageOptions ?? undefined,
         )
       : atom(defaultValue);
