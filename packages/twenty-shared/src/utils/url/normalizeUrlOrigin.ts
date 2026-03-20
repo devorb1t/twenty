@@ -11,8 +11,5 @@ export const normalizeUrlOrigin = (rawUrl: string) => {
     return rawUrl;
   }
 
-  return (url.origin + url.pathname + url.search + url.hash).replace(
-    /\/$/,
-    '',
-  );
+  return (url.origin + url.pathname + url.search + url.hash).replace(/\/$/, '');
 };
