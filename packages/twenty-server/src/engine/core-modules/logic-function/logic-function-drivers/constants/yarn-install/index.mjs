@@ -118,10 +118,17 @@ export const handler = async (event) => {
     await copyYarnEngine(nodejsDir);
     await runYarnInstall(nodejsDir);
     await createZip(buildDir, zipPath);
-
     await uploadToPresignedUrl(zipPath, presignedUploadUrl);
 
     return { success: true };
+  } catch (error) {
+    const isYarnInstallError = error.message?.startsWith('yarn install failed');
+
+    return {
+      success: false,
+      category: isYarnInstallError ? 'USER_ERROR' : 'INFRA_ERROR',
+      errorMessage: error.message,
+    };
   } finally {
     await fs.rm(buildDir, { recursive: true, force: true });
     await fs.rm(zipPath, { force: true });

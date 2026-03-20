@@ -6,6 +6,10 @@ import { type WorkflowAction } from 'src/modules/workflow/workflow-executor/inte
 
 import { LogicFunctionExecutorService } from 'src/engine/core-modules/logic-function/logic-function-executor/logic-function-executor.service';
 import {
+  LogicFunctionException,
+  LogicFunctionExceptionCode,
+} from 'src/engine/metadata-modules/logic-function/logic-function.exception';
+import {
   WorkflowStepExecutorException,
   WorkflowStepExecutorExceptionCode,
 } from 'src/modules/workflow/workflow-executor/exceptions/workflow-step-executor.exception';
@@ -46,16 +50,31 @@ export class CodeWorkflowAction implements WorkflowAction {
 
     const { workspaceId } = runInfo;
 
-    const result = await this.logicFunctionExecutorService.execute({
-      logicFunctionId: workflowActionInput.logicFunctionId,
-      workspaceId,
-      payload: workflowActionInput.logicFunctionInput,
-    });
+    try {
+      const result = await this.logicFunctionExecutorService.execute({
+        logicFunctionId: workflowActionInput.logicFunctionId,
+        workspaceId,
+        payload: workflowActionInput.logicFunctionInput,
+      });
 
-    if (result.error) {
-      return { error: result.error.errorMessage };
+      if (result.error) {
+        return { error: result.error.errorMessage };
+      }
+
+      return { result: result.data || {} };
+    } catch (error) {
+      if (
+        error instanceof LogicFunctionException &&
+        error.code ===
+          LogicFunctionExceptionCode.LOGIC_FUNCTION_BUILD_USER_ERROR
+      ) {
+        throw new WorkflowStepExecutorException(
+          error.message,
+          WorkflowStepExecutorExceptionCode.INVALID_STEP_INPUT,
+        );
+      }
+
+      throw error;
     }
-
-    return { result: result.data || {} };
   }
 }

@@ -59,6 +59,12 @@ export const handler = async (event) => {
     const builtCode = await fs.readFile(outFilePath, 'utf-8');
 
     return { builtCode };
+  } catch (error) {
+    return {
+      success: false,
+      category: 'USER_ERROR',
+      errorMessage: error.message,
+    };
   } finally {
     await fs.rm(workDir, { recursive: true, force: true });
   }

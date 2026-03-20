@@ -81,6 +81,8 @@ type LambdaDriverExecutorPayload = {
   handlerName: string;
 };
 
+export type LambdaErrorCategory = 'USER_ERROR' | 'INFRA_ERROR';
+
 export type YarnInstallLambdaPayload = {
   action: 'createLayer';
   packageJson: string;
@@ -88,9 +90,13 @@ export type YarnInstallLambdaPayload = {
   presignedUploadUrl: string;
 };
 
-export type YarnInstallLambdaResult = {
-  success: boolean;
-};
+export type YarnInstallLambdaResult =
+  | { success: true }
+  | {
+      success: false;
+      category: LambdaErrorCategory;
+      errorMessage: string;
+    };
 
 export type BuilderLambdaPayload = {
   action: 'transpile';
@@ -99,9 +105,13 @@ export type BuilderLambdaPayload = {
   builtFileName: string;
 };
 
-export type BuilderLambdaResult = {
-  builtCode: string;
-};
+export type BuilderLambdaResult =
+  | { builtCode: string }
+  | {
+      success: false;
+      category: LambdaErrorCategory;
+      errorMessage: string;
+    };
 
 export interface LambdaDriverOptions extends LambdaClientConfig {
   logicFunctionResourceService: LogicFunctionResourceService;
@@ -395,10 +405,18 @@ export class LambdaDriver implements LogicFunctionDriver {
 
     const parsedResult: YarnInstallLambdaResult = result.Payload
       ? JSON.parse(result.Payload.transformToString())
-      : {};
+      : { success: false, category: 'INFRA_ERROR', errorMessage: 'Empty payload' };
 
     if (!parsedResult.success) {
-      throw new Error('Yarn install Lambda did not report success');
+      const exceptionCode =
+        parsedResult.category === 'USER_ERROR'
+          ? LogicFunctionExceptionCode.LOGIC_FUNCTION_BUILD_USER_ERROR
+          : LogicFunctionExceptionCode.LOGIC_FUNCTION_CREATE_FAILED;
+
+      throw new LogicFunctionException(
+        `Yarn install Lambda failed: ${parsedResult.errorMessage}`,
+        exceptionCode,
+      );
     }
 
     return parsedResult;
@@ -496,7 +514,19 @@ export class LambdaDriver implements LogicFunctionDriver {
       ? JSON.parse(result.Payload.transformToString())
       : {};
 
-    if (!parsedResult.builtCode) {
+    if ('success' in parsedResult && parsedResult.success === false) {
+      const exceptionCode =
+        parsedResult.category === 'USER_ERROR'
+          ? LogicFunctionExceptionCode.LOGIC_FUNCTION_BUILD_USER_ERROR
+          : LogicFunctionExceptionCode.LOGIC_FUNCTION_CREATE_FAILED;
+
+      throw new LogicFunctionException(
+        `Builder Lambda failed: ${parsedResult.errorMessage}`,
+        exceptionCode,
+      );
+    }
+
+    if (!('builtCode' in parsedResult) || !parsedResult.builtCode) {
       throw new Error('Builder Lambda did not return builtCode');
     }
 
