@@ -54,6 +54,11 @@ export const SentryInitEffect = () => {
             tracesSampleRate: 1.0,
             replaysSessionSampleRate: 0.1,
             replaysOnErrorSampleRate: 1.0,
+            ignoreErrors: [
+              // Browser localStorage quota errors are non-fatal — the app
+              // works fine from in-memory state; persistence is best-effort.
+              'QuotaExceededError',
+            ],
           });
 
           setIsSentryInitialized(true);
