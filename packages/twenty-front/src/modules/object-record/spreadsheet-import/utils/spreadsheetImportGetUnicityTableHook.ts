@@ -104,9 +104,7 @@ const getUniqueValues = (
             .primaryLinkUrl,
         )
       ) {
-        return normalizeUrlOrigin(
-          row?.[columnName]?.toString().trim() || '',
-        );
+        return normalizeUrlOrigin(row?.[columnName]?.toString().trim() || '');
       }
 
       return row?.[columnName]?.toString().trim().toLowerCase();

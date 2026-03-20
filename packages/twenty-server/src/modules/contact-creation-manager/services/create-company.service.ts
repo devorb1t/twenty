@@ -7,10 +7,7 @@ import {
   type ConnectedAccountProvider,
   type FieldActorSource,
 } from 'twenty-shared/types';
-import {
-  isDefined,
-  normalizeUrlOrigin,
-} from 'twenty-shared/utils';
+import { isDefined, normalizeUrlOrigin } from 'twenty-shared/utils';
 import { type DeepPartial, ILike } from 'typeorm';
 
 import { SecureHttpClientService } from 'src/engine/core-modules/secure-http-client/secure-http-client.service';

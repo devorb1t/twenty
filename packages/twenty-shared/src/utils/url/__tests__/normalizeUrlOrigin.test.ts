@@ -39,19 +39,19 @@ describe('normalizeUrlOrigin', () => {
       expected: 'https://www.example.com/TEST#Hash',
     },
     {
-      title: 'should preserve special characters in path',
-      input: 'https://test.test/edouard-ménard-22219837',
-      expected: 'https://test.test/edouard-ménard-22219837',
+      title: 'should percent-encode non-ASCII characters in path',
+      input: 'https://test.test/john-döe-22219837',
+      expected: 'https://test.test/john-d%C3%B6e-22219837',
     },
     {
       title: 'should preserve already encoded special characters in path',
-      input: 'https://test.test/edouard-m%C3%A9nard-22219837',
-      expected: 'https://test.test/edouard-m%C3%A9nard-22219837',
+      input: 'https://test.test/john-d%C3%B6e-22219837',
+      expected: 'https://test.test/john-d%C3%B6e-22219837',
     },
     {
-      title: 'should preserve special characters in query params',
+      title: 'should percent-encode non-ASCII characters in query params',
       input: 'https://example.com/path?name=José',
-      expected: 'https://example.com/path?name=José',
+      expected: 'https://example.com/path?name=Jos%C3%A9',
     },
     {
       title:
@@ -66,9 +66,9 @@ describe('normalizeUrlOrigin', () => {
       expected: 'https://example.com/test%2520name',
     },
     {
-      title: 'should preserve special characters in hash fragments',
+      title: 'should percent-encode non-ASCII characters in hash fragments',
       input: 'https://example.com/path#frédéric',
-      expected: 'https://example.com/path#frédéric',
+      expected: 'https://example.com/path#fr%C3%A9d%C3%A9ric',
     },
     {
       title: 'should keep encoded characters in hash fragments as-is',
