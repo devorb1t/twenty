@@ -146,16 +146,26 @@ export const useCreateOneRecord = <
         update: (cache, { data }) => {
           const record = data?.[mutationResponseField];
           if (skipPostOptimisticEffect === false && isDefined(record)) {
-            triggerCreateRecordsOptimisticEffect({
-              cache,
+            const recordNode = getRecordNodeFromRecord({
               objectMetadataItem,
-              recordsToCreate: [record],
               objectMetadataItems,
-              shouldMatchRootQueryFilter,
-              checkForRecordInCache: true,
-              objectPermissionsByObjectMetadataId,
-              upsertRecordsInStore,
+              record: record as CreatedObjectRecord,
+              recordGqlFields: computedRecordGqlFields,
+              computeReferences: false,
             });
+
+            if (isDefined(recordNode)) {
+              triggerCreateRecordsOptimisticEffect({
+                cache,
+                objectMetadataItem,
+                recordsToCreate: [recordNode],
+                objectMetadataItems,
+                shouldMatchRootQueryFilter,
+                checkForRecordInCache: true,
+                objectPermissionsByObjectMetadataId,
+                upsertRecordsInStore,
+              });
+            }
           }
 
           setLoading(false);
