@@ -57,10 +57,9 @@ export const useRelatedRecordCommands = ({
       (item) => item.nameSingular === targetObjectName,
     );
 
+    // Target object may be inactive/deactivated — skip this relation
     if (!isDefined(targetObjectMetadataItem)) {
-      throw new Error(
-        `Target object metadata item is undefined for field: ${field.id}`,
-      );
+      continue;
     }
 
     const targetObjectNameSingular = targetObjectMetadataItem.nameSingular;

@@ -54,10 +54,9 @@ export const generateDepthRecordGqlFieldsFromFields = ({
             fieldMetadata.relation?.targetObjectMetadata.id,
         );
 
+        // Target object may be inactive/deactivated — skip the relation field
         if (!targetObjectMetadataItem) {
-          throw new Error(
-            `Target object metadata item not found for ${fieldMetadata.name}`,
-          );
+          return recordGqlFields;
         }
 
         const isActivityTargetField =
