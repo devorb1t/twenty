@@ -60,7 +60,7 @@ export class FileCorePictureService {
     const universalIdentifier =
       applicationUniversalIdentifier ??
       (
-        await this.applicationService.findWorkspaceTwentyStandardAndCustomApplicationOrThrow(
+        await this.applicationService.findWorkspaceCustomFlatApplicationOrThrow(
           { workspaceId },
         )
       ).workspaceCustomFlatApplication.universalIdentifier;
@@ -170,11 +170,9 @@ export class FileCorePictureService {
     });
 
     const { workspaceCustomFlatApplication } =
-      await this.applicationService.findWorkspaceTwentyStandardAndCustomApplicationOrThrow(
-        {
-          workspaceId,
-        },
-      );
+      await this.applicationService.findWorkspaceCustomFlatApplicationOrThrow({
+        workspaceId,
+      });
 
     await this.fileStorageService.delete({
       workspaceId,
@@ -287,11 +285,9 @@ export class FileCorePictureService {
     });
 
     const { workspaceCustomFlatApplication: sourceApplication } =
-      await this.applicationService.findWorkspaceTwentyStandardAndCustomApplicationOrThrow(
-        {
-          workspaceId: sourceWorkspaceId,
-        },
-      );
+      await this.applicationService.findWorkspaceCustomFlatApplicationOrThrow({
+        workspaceId: sourceWorkspaceId,
+      });
 
     const fileStream = await this.fileStorageService.readFile({
       workspaceId: sourceWorkspaceId,
