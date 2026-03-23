@@ -34,13 +34,19 @@ export const usePerformViewGroupAPIPersist = () => {
       }
 
       try {
-        const results = await Promise.all(
-          updateViewGroupInputs.map((variables) =>
-            updateViewGroupMutation({
+        // ViewGroup updates are serialized to avoid concurrent workspace
+        // migration runner executions that race on cache invalidation and
+        // database row locks, which can stall the server.
+        const results: Awaited<ReturnType<typeof updateViewGroupMutation>>[] =
+          [];
+
+        for (const variables of updateViewGroupInputs) {
+          results.push(
+            await updateViewGroupMutation({
               variables,
             }),
-          ),
-        );
+          );
+        }
 
         return {
           status: 'successful',
