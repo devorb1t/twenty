@@ -97,6 +97,12 @@ export const RecordInlineCellContainer = () => {
     onMouseLeave?.();
   };
 
+  const handleContainerTouchStart = () => {
+    if (!readonly) {
+      setIsFocused(true);
+    }
+  };
+
   const labelId = `label-${getRecordFieldInputInstanceId({
     recordId,
     fieldName: fieldDefinition?.metadata?.fieldName,
@@ -107,6 +113,7 @@ export const RecordInlineCellContainer = () => {
       readonly={readonly ?? false}
       onMouseEnter={handleContainerMouseEnter}
       onMouseLeave={handleContainerMouseLeave}
+      onTouchStart={handleContainerTouchStart}
     >
       {(IconLabel || label) && (
         <StyledLabelAndIconContainer id={labelId}>
