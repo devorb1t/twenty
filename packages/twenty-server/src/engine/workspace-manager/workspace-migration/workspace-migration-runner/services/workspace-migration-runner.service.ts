@@ -26,6 +26,8 @@ import { type MetadataEvent } from 'src/engine/workspace-manager/workspace-migra
 
 @Injectable()
 export class WorkspaceMigrationRunnerService {
+  private readonly activeRunsByWorkspace = new Map<string, number>();
+
   constructor(
     private readonly flatEntityMapsCacheService: WorkspaceManyOrAllFlatEntityMapsCacheService,
     @InjectDataSource()
@@ -108,13 +110,15 @@ export class WorkspaceMigrationRunnerService {
   async invalidateCache({
     allFlatEntityMapsKeys,
     workspaceId,
+    runId,
   }: {
     allFlatEntityMapsKeys: (keyof AllFlatEntityMaps)[];
     workspaceId: string;
+    runId: string;
   }): Promise<void> {
     this.logger.time(
       'Runner',
-      `Cache invalidation ${allFlatEntityMapsKeys.join()}`,
+      `Cache invalidation ${allFlatEntityMapsKeys.join()} ${runId}`,
     );
 
     await this.flatEntityMapsCacheService.invalidateFlatEntityMaps({
@@ -147,7 +151,7 @@ export class WorkspaceMigrationRunnerService {
 
     this.logger.timeEnd(
       'Runner',
-      `Cache invalidation ${allFlatEntityMapsKeys.join()}`,
+      `Cache invalidation ${allFlatEntityMapsKeys.join()} ${runId}`,
     );
   }
 
@@ -163,8 +167,21 @@ export class WorkspaceMigrationRunnerService {
     allFlatEntityMaps: AllFlatEntityMaps;
     metadataEvents: MetadataEvent[];
   }> => {
-    this.logger.time('Runner', 'Total execution');
-    this.logger.time('Runner', 'Initial cache retrieval');
+    const runId = `${workspaceId.slice(0, 8)}#${Math.random().toString(36).slice(2, 8)}`;
+
+    const activeRuns = this.activeRunsByWorkspace.get(workspaceId) ?? 0;
+
+    this.activeRunsByWorkspace.set(workspaceId, activeRuns + 1);
+
+    if (activeRuns > 0) {
+      this.logger.warn(
+        `Concurrent migration runner execution detected for workspace ${workspaceId} (${activeRuns + 1} active runs)`,
+        'Runner',
+      );
+    }
+
+    this.logger.time('Runner', `Total execution ${runId}`);
+    this.logger.time('Runner', `Initial cache retrieval ${runId}`);
 
     const queryRunner =
       externalQueryRunner ?? this.coreDataSource.createQueryRunner();
@@ -195,7 +212,7 @@ export class WorkspaceMigrationRunnerService {
         flatMapsKeys: allFlatEntityMapsKeys,
       });
 
-    this.logger.timeEnd('Runner', 'Initial cache retrieval');
+    this.logger.timeEnd('Runner', `Initial cache retrieval ${runId}`);
 
     const { flatApplicationMaps } =
       await this.workspaceCacheService.getOrRecompute(workspaceId, [
@@ -217,7 +234,7 @@ export class WorkspaceMigrationRunnerService {
       });
     }
 
-    this.logger.time('Runner', 'Transaction execution');
+    this.logger.time('Runner', `Transaction execution ${runId}`);
 
     if (!isTransactionAlreadyActive) {
       await queryRunner.connect();
@@ -254,14 +271,15 @@ export class WorkspaceMigrationRunnerService {
         await queryRunner.commitTransaction();
       }
 
-      this.logger.timeEnd('Runner', 'Transaction execution');
+      this.logger.timeEnd('Runner', `Transaction execution ${runId}`);
 
       await this.invalidateCache({
         allFlatEntityMapsKeys,
         workspaceId,
+        runId,
       });
 
-      this.logger.timeEnd('Runner', 'Total execution');
+      this.logger.timeEnd('Runner', `Total execution ${runId}`);
 
       return { allFlatEntityMaps, metadataEvents: allMetadataEvents };
     } catch (error) {
@@ -299,6 +317,15 @@ export class WorkspaceMigrationRunnerService {
         code: WorkspaceMigrationRunnerExceptionCode.INTERNAL_SERVER_ERROR,
       });
     } finally {
+      const currentRuns =
+        this.activeRunsByWorkspace.get(workspaceId) ?? 1;
+
+      if (currentRuns <= 1) {
+        this.activeRunsByWorkspace.delete(workspaceId);
+      } else {
+        this.activeRunsByWorkspace.set(workspaceId, currentRuns - 1);
+      }
+
       if (!isTransactionAlreadyActive) {
         await queryRunner.release();
       }
