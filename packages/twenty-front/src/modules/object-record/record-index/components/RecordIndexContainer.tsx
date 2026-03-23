@@ -63,7 +63,9 @@ export const RecordIndexContainer = () => {
             viewBarId={recordIndexId}
           />
         </SpreadsheetImportProvider>
-        <RecordIndexFiltersToContextStoreEffect />
+        {recordIndexViewType === ViewType.TABLE && (
+          <RecordIndexFiltersToContextStoreEffect />
+        )}
         {recordIndexViewType === ViewType.TABLE && (
           <>
             <RecordIndexTableContainer recordTableId={recordIndexId} />

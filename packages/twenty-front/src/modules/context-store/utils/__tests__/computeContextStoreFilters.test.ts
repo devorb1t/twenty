@@ -46,6 +46,24 @@ describe('computeContextStoreFilters', () => {
     });
   });
 
+  it('should return undefined for selection mode with empty selectedRecordIds', () => {
+    const contextStoreTargetedRecordsRule: ContextStoreTargetedRecordsRule = {
+      mode: 'selection',
+      selectedRecordIds: [],
+    };
+
+    const filters = computeContextStoreFilters({
+      contextStoreTargetedRecordsRule,
+      contextStoreFilters: [],
+      contextStoreFilterGroups: [],
+      objectMetadataItem: personObjectMetadataItem,
+      filterValueDependencies: mockFilterValueDependencies,
+      contextStoreAnyFieldFilterValue: '',
+    });
+
+    expect(filters).toBeUndefined();
+  });
+
   it('should work for exclusion mode', () => {
     const contextStoreTargetedRecordsRule: ContextStoreTargetedRecordsRule = {
       mode: 'exclusion',
