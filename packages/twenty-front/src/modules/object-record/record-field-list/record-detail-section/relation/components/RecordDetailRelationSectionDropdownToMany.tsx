@@ -64,12 +64,6 @@ export const RecordDetailRelationSectionDropdownToMany = ({
   const relationFieldMetadataItem = relationObjectMetadataItem.fields.find(
     ({ id }) => id === relationFieldMetadataId,
   );
-  if (!relationFieldMetadataItem) {
-    throw new CustomError(
-      'Relation field metadata item not found',
-      'RELATION_FIELD_METADATA_ITEM_NOT_FOUND',
-    );
-  }
 
   const fieldValue = useAtomFamilySelectorValue(recordStoreFamilySelector, {
     recordId,
@@ -123,9 +117,15 @@ export const RecordDetailRelationSectionDropdownToMany = ({
     objectMetadataItem,
     relationObjectMetadataNameSingular,
     relationObjectMetadataItem,
-    relationFieldMetadataItem,
+    relationFieldMetadataItem: relationFieldMetadataItem as NonNullable<
+      typeof relationFieldMetadataItem
+    >,
     recordId,
   });
+
+  if (!isDefined(relationFieldMetadataItem)) {
+    return null;
+  }
 
   const handleOpenRelationPickerDropdown = () => {
     setMultipleRecordPickerSearchableObjectMetadataItems([
