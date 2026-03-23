@@ -713,7 +713,7 @@ export class WorkflowVersionStepOperationsWorkspaceService {
             icon: existingAgent.icon ?? undefined,
             description: existingAgent.description ?? undefined,
             prompt: existingAgent.prompt,
-            modelId: existingAgent.modelId,
+            modelId: existingAgent.modelId ?? undefined,
             responseFormat: existingAgent.responseFormat ?? undefined,
             modelConfiguration: existingAgent.modelConfiguration ?? undefined,
             isCustom: true,

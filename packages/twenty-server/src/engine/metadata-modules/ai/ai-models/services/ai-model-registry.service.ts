@@ -358,7 +358,9 @@ export class AiModelRegistryService {
     this.buildModelRegistry();
   }
 
-  resolveModelForAgent(agent: { modelId: string } | null): RegisteredAIModel {
+  resolveModelForAgent(
+    agent: { modelId: string | null } | null,
+  ): RegisteredAIModel {
     const aiModel = this.getEffectiveModelConfig(
       agent?.modelId ?? DEFAULT_SMART_MODEL,
     );

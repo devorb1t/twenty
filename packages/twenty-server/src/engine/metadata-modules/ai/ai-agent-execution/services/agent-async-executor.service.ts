@@ -117,7 +117,7 @@ export class AgentAsyncExecutorService {
           id: agent.workspaceId,
         });
 
-        if (workspace) {
+        if (workspace && isDefined(agent.modelId)) {
           this.aiModelRegistryService.validateModelAvailability(
             agent.modelId,
             workspace,
