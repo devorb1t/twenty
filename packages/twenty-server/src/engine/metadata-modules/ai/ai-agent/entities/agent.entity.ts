@@ -10,7 +10,6 @@ import {
 
 import { AgentResponseFormat } from 'src/engine/metadata-modules/ai/ai-agent/types/agent-response-format.type';
 import { ModelConfiguration } from 'src/engine/metadata-modules/ai/ai-agent/types/modelConfiguration';
-import { DEFAULT_SMART_MODEL } from 'src/engine/metadata-modules/ai/ai-models/types/default-smart-model.const';
 import { type ModelId } from 'src/engine/metadata-modules/ai/ai-models/types/model-id.type';
 import { SyncableEntity } from 'src/engine/workspace-manager/types/syncable-entity.interface';
 import { JsonbProperty } from 'src/engine/workspace-manager/workspace-migration/universal-flat-entity/types/jsonb-property.type';
@@ -43,8 +42,8 @@ export class AgentEntity
   @Column({ nullable: false, type: 'text' })
   prompt: string;
 
-  @Column({ nullable: false, type: 'varchar', default: DEFAULT_SMART_MODEL })
-  modelId: ModelId;
+  @Column({ nullable: true, type: 'varchar' })
+  modelId: ModelId | null;
 
   // Should not be nullable
   @Column({ nullable: true, type: 'jsonb', default: { type: 'text' } })

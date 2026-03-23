@@ -41,8 +41,8 @@ export class AgentDTO {
   @Field()
   prompt: string;
 
-  @Field(() => String)
-  modelId: ModelId;
+  @Field(() => String, { nullable: true })
+  modelId?: ModelId | null;
 
   @Field(() => GraphQLJSON, { nullable: true })
   responseFormat?: object;

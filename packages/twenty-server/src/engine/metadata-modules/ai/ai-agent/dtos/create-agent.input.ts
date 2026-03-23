@@ -47,9 +47,9 @@ export class CreateAgentInput {
   prompt: string;
 
   @IsString()
-  @IsNotEmpty()
-  @Field(() => String)
-  modelId: ModelId;
+  @IsOptional()
+  @Field(() => String, { nullable: true })
+  modelId?: ModelId | null;
 
   @IsUUID()
   @IsOptional()
