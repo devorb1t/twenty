@@ -111,22 +111,35 @@ export class SSOService {
     >,
     workspaceId: string,
   ) {
-    await this.isSSOEnabled(workspaceId);
+    try {
+      await this.isSSOEnabled(workspaceId);
 
-    const identityProvider =
-      await this.workspaceSSOIdentityProviderRepository.save({
-        ...data,
-        type: IdentityProviderType.SAML,
-        workspaceId,
-      });
+      const identityProvider =
+        await this.workspaceSSOIdentityProviderRepository.save({
+          ...data,
+          type: IdentityProviderType.SAML,
+          workspaceId,
+        });
 
-    return {
-      id: identityProvider.id,
-      type: identityProvider.type,
-      name: identityProvider.name,
-      issuer: this.buildIssuerURL(identityProvider),
-      status: identityProvider.status,
-    };
+      return {
+        id: identityProvider.id,
+        type: identityProvider.type,
+        name: identityProvider.name,
+        issuer: this.buildIssuerURL(identityProvider),
+        status: identityProvider.status,
+      };
+    } catch (err) {
+      if (err instanceof SSOException) {
+        return err;
+      }
+
+      this.exceptionHandlerService.captureExceptions([err]);
+
+      return new SSOException(
+        'Unknown SSO configuration error',
+        SSOExceptionCode.UNKNOWN_SSO_CONFIGURATION_ERROR,
+      );
+    }
   }
 
   async findSSOIdentityProviderById(identityProviderId: string) {

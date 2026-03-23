@@ -128,6 +128,69 @@ describe('SSOService', () => {
     });
   });
 
+  describe('createSAMLIdentityProvider', () => {
+    it('should create a SAML identity provider successfully', async () => {
+      const workspaceId = 'workspace-123';
+      const data = {
+        ssoURL: 'https://idp.example.com/sso',
+        certificate: 'test-certificate',
+        fingerprint: undefined as unknown as string,
+        id: 'provider-123',
+      };
+      const mockSavedProvider = {
+        id: 'provider-123',
+        type: 'SAML',
+        name: 'Test SAML Provider',
+        status: 'ACTIVE',
+      };
+
+      jest.spyOn(billingService, 'hasEntitlement').mockResolvedValue(true);
+      jest
+        .spyOn(repository, 'save')
+        .mockResolvedValue(mockSavedProvider as any);
+      jest
+        .spyOn(service as any, 'buildIssuerURL')
+        .mockReturnValue('https://example.com/auth/saml/login/provider-123');
+
+      const result = await service.createSAMLIdentityProvider(
+        data,
+        workspaceId,
+      );
+
+      expect(result).toEqual({
+        id: 'provider-123',
+        type: 'SAML',
+        name: 'Test SAML Provider',
+        issuer: 'https://example.com/auth/saml/login/provider-123',
+        status: 'ACTIVE',
+      });
+
+      expect(billingService.hasEntitlement).toHaveBeenCalledWith(
+        workspaceId,
+        'SSO',
+      );
+    });
+
+    it('should return an SSOException when SSO is disabled', async () => {
+      const workspaceId = 'workspace-123';
+      const data = {
+        ssoURL: 'https://idp.example.com/sso',
+        certificate: 'test-certificate',
+        fingerprint: undefined as unknown as string,
+        id: 'provider-123',
+      };
+
+      jest.spyOn(billingService, 'hasEntitlement').mockResolvedValue(false);
+
+      const result = await service.createSAMLIdentityProvider(
+        data,
+        workspaceId,
+      );
+
+      expect(result).toBeInstanceOf(SSOException);
+    });
+  });
+
   describe('deleteSSOIdentityProvider', () => {
     it('should delete the identity provider successfully', async () => {
       const identityProviderId = 'provider-123';
