@@ -23,6 +23,8 @@ import {
 } from 'src/engine/metadata-modules/message-channel/message-channel.exception';
 import { MessageChannelGraphqlApiExceptionInterceptor } from 'src/engine/metadata-modules/message-channel/interceptors/message-channel-graphql-api-exception.interceptor';
 import { MessageChannelMetadataService } from 'src/engine/metadata-modules/message-channel/message-channel-metadata.service';
+import { GlobalWorkspaceOrmManager } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-orm.manager';
+import { buildSystemAuthContext } from 'src/engine/twenty-orm/utils/build-system-auth-context.util';
 import {
   MessageChannelPendingGroupEmailsAction,
   MessageChannelSyncStage,
@@ -41,6 +43,7 @@ export class MessageChannelResolver {
     private readonly messageChannelMetadataService: MessageChannelMetadataService,
     private readonly messageFolderDataAccessService: MessageFolderDataAccessService,
     private readonly messagingProcessGroupEmailActionsService: MessagingProcessGroupEmailActionsService,
+    private readonly globalWorkspaceOrmManager: GlobalWorkspaceOrmManager,
   ) {}
 
   @Query(() => [MessageChannelDTO])
@@ -116,13 +119,19 @@ export class MessageChannelResolver {
       isDefined(input.update.excludeGroupEmails) &&
       input.update.excludeGroupEmails !== messageChannel.excludeGroupEmails
     ) {
-      // Service expects WorkspaceEntity type but only reads .id
-      await this.messagingProcessGroupEmailActionsService.markMessageChannelAsPendingGroupEmailsAction(
-        messageChannel as unknown as MessageChannelWorkspaceEntity,
-        workspace.id,
-        input.update.excludeGroupEmails
-          ? MessageChannelPendingGroupEmailsAction.GROUP_EMAILS_DELETION
-          : MessageChannelPendingGroupEmailsAction.GROUP_EMAILS_IMPORT,
+      const systemAuthContext = buildSystemAuthContext(workspace.id);
+
+      await this.globalWorkspaceOrmManager.executeInWorkspaceContext(
+        async () => {
+          await this.messagingProcessGroupEmailActionsService.markMessageChannelAsPendingGroupEmailsAction(
+            messageChannel as unknown as MessageChannelWorkspaceEntity,
+            workspace.id,
+            input.update.excludeGroupEmails
+              ? MessageChannelPendingGroupEmailsAction.GROUP_EMAILS_DELETION
+              : MessageChannelPendingGroupEmailsAction.GROUP_EMAILS_IMPORT,
+          );
+        },
+        systemAuthContext,
       );
     }
 
