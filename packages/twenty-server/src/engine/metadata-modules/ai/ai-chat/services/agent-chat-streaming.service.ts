@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import {
@@ -15,6 +15,7 @@ import { type Repository } from 'typeorm';
 
 import { type WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { AgentMessageRole } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message.entity';
+import { mapAgentMessageEntitiesToUIMessages } from 'src/engine/metadata-modules/ai/ai-agent-execution/utils/mapAgentMessageEntitiesToUIMessages';
 import {
   AgentException,
   AgentExceptionCode,
@@ -23,10 +24,10 @@ import { type BrowsingContextType } from 'src/engine/metadata-modules/ai/ai-agen
 import { computeCostBreakdown } from 'src/engine/metadata-modules/ai/ai-billing/utils/compute-cost-breakdown.util';
 import { convertDollarsToBillingCredits } from 'src/engine/metadata-modules/ai/ai-billing/utils/convert-dollars-to-billing-credits.util';
 import { extractCacheCreationTokens } from 'src/engine/metadata-modules/ai/ai-billing/utils/extract-cache-creation-tokens.util';
-import { toDisplayCredits } from 'src/engine/core-modules/usage/utils/to-display-credits.util';
-import { type AIModelConfig } from 'src/engine/metadata-modules/ai/ai-models/types/ai-model-config.type';
 import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/entities/agent-chat-thread.entity';
 
+import { toDisplayCredits } from 'src/engine/core-modules/usage/utils/to-display-credits.util';
+import { AIModelConfig } from 'src/engine/metadata-modules/ai/ai-models/types/ai-model-config.type';
 import { AgentChatResumableStreamService } from './agent-chat-resumable-stream.service';
 import { AgentChatService } from './agent-chat.service';
 import { ChatExecutionService } from './chat-execution.service';
@@ -43,6 +44,8 @@ export type StreamAgentChatOptions = {
 
 @Injectable()
 export class AgentChatStreamingService {
+  private readonly logger = new Logger(AgentChatStreamingService.name);
+
   constructor(
     @InjectRepository(AgentChatThreadEntity)
     private readonly threadRepository: Repository<AgentChatThreadEntity>,
@@ -74,11 +77,24 @@ export class AgentChatStreamingService {
       );
     }
 
-    // Fire user-message save without awaiting to avoid delaying time-to-first-letter.
-    // The promise is awaited inside onFinish where we need the turnId.
     const lastUserMessage = messages[messages.length - 1];
     const lastUserText =
       lastUserMessage?.parts.find((part) => part.type === 'text')?.text ?? '';
+
+    const historicalMessageEntities =
+      await this.agentChatService.getMessagesForThread(
+        thread.id,
+        userWorkspaceId,
+      );
+
+    const historicalUIMessages = mapAgentMessageEntitiesToUIMessages(
+      historicalMessageEntities,
+    );
+
+    const messagesWithHistory: ExtendedUIMessage[] = [
+      ...historicalUIMessages,
+      ...(lastUserMessage ? [lastUserMessage] : []),
+    ];
 
     const userMessagePromise = this.agentChatService.addMessage({
       threadId: thread.id,
@@ -119,7 +135,7 @@ export class AgentChatStreamingService {
             await this.chatExecutionService.streamChat({
               workspace,
               userWorkspaceId,
-              messages,
+              messages: messagesWithHistory,
               browsingContext,
               onCodeExecutionUpdate,
               modelId,
@@ -241,16 +257,25 @@ export class AgentChatStreamingService {
         stream: uiStream,
         response,
         consumeSseStream: async ({ stream }) => {
-          const streamId = generateId();
+          try {
+            const streamId = generateId();
 
-          await this.resumableStreamService.createResumableStream(
-            streamId,
-            () => stream,
-          );
+            this.logger.log(`consumeSseStream called, streamId: ${streamId}`);
+            await this.resumableStreamService.createResumableStream(
+              streamId,
+              () => stream,
+            );
+            this.logger.log(
+              'createResumableStream done, writing activeStreamId to DB',
+            );
 
-          await this.threadRepository.update(thread.id, {
-            activeStreamId: streamId,
-          });
+            await this.threadRepository.update(thread.id, {
+              activeStreamId: streamId,
+            });
+            this.logger.log(`activeStreamId written to DB: ${streamId}`);
+          } catch (error) {
+            this.logger.error('consumeSseStream error:', error);
+          }
         },
       });
     } catch (error) {

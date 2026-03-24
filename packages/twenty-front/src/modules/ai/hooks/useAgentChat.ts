@@ -10,6 +10,7 @@ import { currentAIChatThreadTitleState } from '@/ai/states/currentAIChatThreadTi
 
 import { AGENT_CHAT_RETRY_EVENT_NAME } from '@/ai/constants/AgentChatRetryEventName';
 import { AGENT_CHAT_STOP_EVENT_NAME } from '@/ai/constants/AgentChatStopEventName';
+import { AGENT_CHAT_UNKNOWN_THREAD_ID } from '@/ai/constants/AgentChatUnknownThreadId';
 import {
   AGENT_CHAT_NEW_THREAD_DRAFT_KEY,
   agentChatDraftsByThreadIdState,
@@ -27,7 +28,7 @@ import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomStat
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useStore } from 'jotai';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { type ExtendedUIMessage } from 'twenty-shared/ai';
 import { isDefined } from 'twenty-shared/utils';
 import { REACT_APP_SERVER_BASE_URL } from '~/config';
@@ -107,14 +108,22 @@ export const useAgentChat = (
     }
   };
 
-  const { sendMessage, messages, status, error, regenerate, stop } = useChat({
+  const {
+    sendMessage,
+    messages,
+    status,
+    error,
+    regenerate,
+    stop,
+    resumeStream,
+  } = useChat({
     transport: new DefaultChatTransport({
       api: `${REST_API_BASE_URL}/agent-chat/stream`,
       headers: () => ({
         Authorization: `Bearer ${getTokenPair()?.accessOrWorkspaceAgnosticToken.token}`,
       }),
       prepareReconnectToStreamRequest: ({ id }) => ({
-        url: `${REST_API_BASE_URL}/agent-chat/${id}/stream`,
+        api: `${REST_API_BASE_URL}/agent-chat/${id}/stream`,
         headers: {
           Authorization: `Bearer ${getTokenPair()?.accessOrWorkspaceAgnosticToken.token}`,
         },
@@ -217,8 +226,29 @@ export const useAgentChat = (
     },
   });
 
+  useEffect(() => {
+    const isRealThreadId =
+      isDefined(currentAIChatThread) &&
+      currentAIChatThread !== AGENT_CHAT_UNKNOWN_THREAD_ID &&
+      currentAIChatThread !== AGENT_CHAT_NEW_THREAD_DRAFT_KEY;
+
+    if (isRealThreadId) {
+      resumeStream();
+    }
+  }, [currentAIChatThread, resumeStream]);
+
   const isStreaming = status === 'streaming';
   const isLoading = isStreaming || agentChatSelectedFiles.length > 0;
+
+  // eslint-disable-next-line no-console
+  useEffect(() => {
+    console.log(
+      '[useAgentChat] status changed:',
+      status,
+      '| messages in useChat:',
+      messages.length,
+    );
+  }, [status, messages.length]);
 
   const handleSendMessage = useCallback(async () => {
     const draftKey =
@@ -241,6 +271,15 @@ export const useAgentChat = (
     if (!threadId) {
       return;
     }
+
+    // eslint-disable-next-line no-console
+    console.log(
+      '[useAgentChat] sendMessage — threadId:',
+      threadId,
+      '| messages being sent:',
+      messages.length,
+      messages.map((m) => ({ role: m.role, id: m.id })),
+    );
 
     if (draftKey === AGENT_CHAT_NEW_THREAD_DRAFT_KEY) {
       setPendingThreadIdAfterFirstSend(threadId);

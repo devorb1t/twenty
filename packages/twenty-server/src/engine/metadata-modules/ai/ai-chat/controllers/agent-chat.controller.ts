@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Logger,
   Param,
   Post,
   Res,
@@ -52,6 +53,8 @@ import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models
   BillingRestApiExceptionFilter,
 )
 export class AgentChatController {
+  private readonly logger = new Logger(AgentChatController.name);
+
   constructor(
     private readonly agentStreamingService: AgentChatStreamingService,
     private readonly resumableStreamService: AgentChatResumableStreamService,
@@ -122,9 +125,22 @@ export class AgentChatController {
     @AuthUserWorkspaceId() userWorkspaceId: string,
     @Res() response: Response,
   ) {
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    if (!uuidRegex.test(threadId)) {
+      response.status(204).end();
+
+      return;
+    }
+
     const thread = await this.threadRepository.findOne({
       where: { id: threadId, userWorkspaceId },
     });
+
+    this.logger.log(
+      `resume requested — thread found: ${!!thread} | activeStreamId: ${thread?.activeStreamId}`,
+    );
 
     if (!isDefined(thread) || !isDefined(thread.activeStreamId)) {
       response.status(204).end();
@@ -138,10 +154,15 @@ export class AgentChatController {
       );
 
     if (!isDefined(resumedNodeReadable)) {
+      this.logger.log(
+        'resumeExistingStream returned null — Redis stream already done or expired',
+      );
       response.status(204).end();
 
       return;
     }
+
+    this.logger.log('resuming stream from Redis');
 
     response.writeHead(200, UI_MESSAGE_STREAM_HEADERS);
 
