@@ -79,6 +79,17 @@ export class DeleteFieldActionHandlerService extends WorkspaceMigrationRunnerAct
       objectMetadata: flatObjectMetadata,
     });
 
+    const tableExists =
+      await this.workspaceSchemaManagerService.tableManager.tableExists({
+        queryRunner,
+        schemaName,
+        tableName,
+      });
+
+    if (!tableExists) {
+      return;
+    }
+
     const columnDefinitions = generateColumnDefinitions({
       flatFieldMetadata,
       flatObjectMetadata,

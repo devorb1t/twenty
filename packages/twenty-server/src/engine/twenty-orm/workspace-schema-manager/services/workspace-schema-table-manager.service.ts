@@ -49,6 +49,21 @@ export class WorkspaceSchemaTableManagerService {
     await queryRunner.query(sql);
   }
 
+  async tableExists({
+    queryRunner,
+    schemaName,
+    tableName,
+  }: {
+    queryRunner: QueryRunner;
+    schemaName: string;
+    tableName: string;
+  }): Promise<boolean> {
+    const sql = `SELECT to_regclass('${escapeIdentifier(schemaName)}.${escapeIdentifier(tableName)}') IS NOT NULL AS "exists"`;
+    const result = await queryRunner.query(sql);
+
+    return result?.[0]?.exists === true;
+  }
+
   async renameTable({
     queryRunner,
     schemaName,
