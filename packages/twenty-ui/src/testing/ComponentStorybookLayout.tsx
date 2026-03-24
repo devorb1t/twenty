@@ -29,7 +29,7 @@ const StyledLayout = styled.div<{
 
 type ComponentStorybookLayoutProps = {
   width?: number;
-  backgroundColor?: string | undefined;
+  backgroundColor?: string;
   height?: number;
   children: JSX.Element;
 };
