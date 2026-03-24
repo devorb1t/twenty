@@ -7161,6 +7161,15 @@ export default {
                     ]
                 }
             ],
+            "createManyNavigationMenuItems": [
+                145,
+                {
+                    "inputs": [
+                        369,
+                        "[CreateNavigationMenuItemInput!]!"
+                    ]
+                }
+            ],
             "createNavigationMenuItem": [
                 145,
                 {
@@ -7170,12 +7179,30 @@ export default {
                     ]
                 }
             ],
+            "updateManyNavigationMenuItems": [
+                145,
+                {
+                    "inputs": [
+                        370,
+                        "[UpdateOneNavigationMenuItemInput!]!"
+                    ]
+                }
+            ],
             "updateNavigationMenuItem": [
                 145,
                 {
                     "input": [
                         370,
                         "UpdateOneNavigationMenuItemInput!"
+                    ]
+                }
+            ],
+            "deleteManyNavigationMenuItems": [
+                145,
+                {
+                    "ids": [
+                        3,
+                        "[UUID!]!"
                     ]
                 }
             ],
