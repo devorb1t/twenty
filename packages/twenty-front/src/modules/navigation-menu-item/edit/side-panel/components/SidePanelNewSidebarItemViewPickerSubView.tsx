@@ -5,7 +5,7 @@ import { useDraftNavigationMenuItems } from '@/navigation-menu-item/edit/hooks/u
 import { useNavigationMenuObjectMetadataFromDraft } from '@/navigation-menu-item/edit/hooks/useNavigationMenuObjectMetadataFromDraft';
 import { useOpenNavigationMenuItemInSidePanel } from '@/navigation-menu-item/edit/hooks/useOpenNavigationMenuItemInSidePanel';
 import { pendingInsertionNavigationMenuItemState } from '@/navigation-menu-item/common/states/pendingInsertionNavigationMenuItemState';
-import { getStandardObjectIconColor } from '@/navigation-menu-item/common/utils/getStandardObjectIconColor';
+import { getObjectColorWithFallback } from '@/object-metadata/utils/getObjectColorWithFallback';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { SidePanelAddToNavigationDroppable } from '@/side-panel/components/SidePanelAddToNavigationDroppable';
 import { SidePanelGroup } from '@/side-panel/components/SidePanelGroup';
@@ -73,15 +73,17 @@ export const SidePanelNewSidebarItemViewPickerSubView = ({
     ? t`No results found`
     : t`No custom views available`;
 
+  const selectedObjectIconColor = isDefined(selectedObjectMetadataItem)
+    ? getObjectColorWithFallback(selectedObjectMetadataItem)
+    : undefined;
+
   const handleSelectView = (view: View) => {
     const itemId = addViewToDraft(
       view.id,
       currentDraft,
       pendingInsertionNavigationMenuItem?.folderId ?? null,
       pendingInsertionNavigationMenuItem?.position,
-      isDefined(selectedObjectMetadataItem)
-        ? getStandardObjectIconColor(selectedObjectMetadataItem.nameSingular)
-        : undefined,
+      selectedObjectIconColor,
     );
     setPendingInsertionNavigationMenuItem(null);
     openNavigationMenuItemInSidePanel({
@@ -122,9 +124,7 @@ export const SidePanelNewSidebarItemViewPickerSubView = ({
                               selectedObjectMetadataItem.icon,
                             )}
                             ViewIcon={getIcon(view.icon)}
-                            objectColor={getStandardObjectIconColor(
-                              selectedObjectMetadataItem.nameSingular,
-                            )}
+                            objectColor={selectedObjectIconColor}
                           />
                         ) : undefined
                       }
