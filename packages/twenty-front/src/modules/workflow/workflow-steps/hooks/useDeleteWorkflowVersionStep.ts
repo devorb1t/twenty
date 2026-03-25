@@ -1,6 +1,4 @@
 import { useApolloCoreClient } from '@/object-metadata/hooks/useApolloCoreClient';
-import { CoreObjectNameSingular } from 'twenty-shared/types';
-import { useFindOneRecordQuery } from '@/object-record/hooks/useFindOneRecordQuery';
 import { DELETE_WORKFLOW_VERSION_STEP } from '@/workflow/graphql/mutations/deleteWorkflowVersionStep';
 import { useUpdateWorkflowVersionCache } from '@/workflow/workflow-steps/hooks/useUpdateWorkflowVersionCache';
 import { useMutation } from '@apollo/client/react';
@@ -15,11 +13,6 @@ export const useDeleteWorkflowVersionStep = () => {
 
   const { updateWorkflowVersionCache } = useUpdateWorkflowVersionCache();
 
-  const { findOneRecordQuery: findOneWorkflowVersionQuery } =
-    useFindOneRecordQuery({
-      objectNameSingular: CoreObjectNameSingular.WorkflowVersion,
-    });
-
   const [mutate] = useMutation<
     DeleteWorkflowVersionStepMutation,
     DeleteWorkflowVersionStepMutationVariables
@@ -32,13 +25,6 @@ export const useDeleteWorkflowVersionStep = () => {
   ) => {
     const result = await mutate({
       variables: { input },
-      awaitRefetchQueries: true,
-      refetchQueries: [
-        {
-          query: findOneWorkflowVersionQuery,
-          variables: { objectRecordId: input.workflowVersionId },
-        },
-      ],
     });
 
     const workflowVersionStepChanges = result?.data?.deleteWorkflowVersionStep;
