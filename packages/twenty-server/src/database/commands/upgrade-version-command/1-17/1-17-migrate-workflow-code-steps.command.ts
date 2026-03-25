@@ -188,11 +188,17 @@ export class MigrateWorkflowCodeStepsCommand extends ActiveOrSuspendedWorkspaces
         oldLogicFunction.applicationId,
       );
 
-    const { builtContent, sourceContent } = await this.readOldFunctionFiles(
+    const oldFiles = await this.readOldFunctionFiles(
       workspaceId,
       serverlessFunctionId,
       version,
     );
+
+    if (!isDefined(oldFiles)) {
+      return null;
+    }
+
+    const { builtContent, sourceContent } = oldFiles;
 
     const checksum = crypto
       .createHash('md5')
@@ -236,7 +242,7 @@ export class MigrateWorkflowCodeStepsCommand extends ActiveOrSuspendedWorkspaces
     workspaceId: string,
     serverlessFunctionId: string,
     version: string,
-  ): Promise<{ builtContent: string; sourceContent: string }> {
+  ): Promise<{ builtContent: string; sourceContent: string } | null> {
     const workspacePrefix = `workspace-${workspaceId}`;
 
     const builtSources = await this.fileStorageService.readFolderLegacy(
@@ -255,9 +261,11 @@ export class MigrateWorkflowCodeStepsCommand extends ActiveOrSuspendedWorkspaces
     const sourceContent = sourceRoot['index.ts'] as string;
 
     if (!isDefined(builtContent) || !isDefined(sourceContent)) {
-      throw new Error(
-        `Missing index.mjs or index.ts for serverless function ${serverlessFunctionId}/${version} in workspace ${workspaceId}`,
+      this.logger.warn(
+        `Missing index.mjs or index.ts for serverless function ${serverlessFunctionId}/${version} in workspace ${workspaceId}, skipping`,
       );
+
+      return null;
     }
 
     return { builtContent, sourceContent };
