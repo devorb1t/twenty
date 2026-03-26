@@ -440,8 +440,9 @@ export class WorkflowVersionStepOperationsWorkspaceService {
 
         const newAgent = await this.agentService.createOneAgent(
           {
+            name: 'workflow-agent-' + v4(),
             label:
-              'Workflow Agent' + workflowVersion.workflowId.substring(0, 4),
+              'Workflow Agent ' + workflowVersion.workflowId.substring(0, 4),
             icon: 'IconRobot',
             description: '',
             prompt:
@@ -709,6 +710,7 @@ export class WorkflowVersionStepOperationsWorkspaceService {
 
         const clonedAgent = await this.agentService.createOneAgent(
           {
+            name: 'workflow-agent-' + v4(),
             label: existingAgent.label,
             icon: existingAgent.icon ?? undefined,
             description: existingAgent.description ?? undefined,
