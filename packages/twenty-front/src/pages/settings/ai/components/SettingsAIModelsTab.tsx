@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { styled } from '@linaria/react';
 
-import { DEFAULT_FAST_MODEL } from '@/ai/constants/DefaultFastModel';
-import { DEFAULT_SMART_MODEL } from '@/ai/constants/DefaultSmartModel';
+import {
+  AUTO_SELECT_FAST_MODEL_ID,
+  AUTO_SELECT_SMART_MODEL_ID,
+} from 'twenty-shared/constants';
+
 import { useWorkspaceAiModelAvailability } from '@/ai/hooks/useWorkspaceAiModelAvailability';
 import { currentWorkspaceState } from '@/auth/states/currentWorkspaceState';
 import { aiModelsState } from '@/client-config/states/aiModelsState';
@@ -51,46 +54,44 @@ export const SettingsAIModelsTab = () => {
   const currentSmartModel = currentWorkspace?.smartModel;
   const currentFastModel = currentWorkspace?.fastModel;
 
-  const buildVirtualModelOption = (virtualModelId: string) => {
-    const virtualModel = aiModels.find(
-      (model) => model.modelId === virtualModelId,
+  const buildPinnedOption = (autoSelectModelId: string) => {
+    const autoSelectEntry = aiModels.find(
+      (model) => model.modelId === autoSelectModelId,
     );
 
-    return virtualModel
-      ? {
-          value: virtualModelId,
-          label: virtualModel.label,
-          Icon: IconTwentyStar,
-        }
-      : null;
-  };
-
-  const smartAutoOption = buildVirtualModelOption(DEFAULT_SMART_MODEL);
-  const fastAutoOption = buildVirtualModelOption(DEFAULT_FAST_MODEL);
-
-  const modelOptions = enabledModels.map((model) => {
-    const residencyFlag = model.dataResidency
-      ? ` ${getDataResidencyDisplay(model.dataResidency)}`
-      : '';
+    if (!autoSelectEntry) {
+      return undefined;
+    }
 
     return {
-      value: model.modelId,
-      label: `${model.label}${residencyFlag}`,
-      Icon: getModelIcon(model.modelFamily, model.providerName),
+      value: autoSelectModelId,
+      label: autoSelectEntry.label,
+      Icon: getModelIcon(
+        autoSelectEntry.modelFamily,
+        autoSelectEntry.providerName,
+      ),
+      contextualText: t`Best`,
     };
-  });
+  };
 
-  const smartModelOptions = [...modelOptions];
+  const smartPinnedOption = buildPinnedOption(AUTO_SELECT_SMART_MODEL_ID);
+  const fastPinnedOption = buildPinnedOption(AUTO_SELECT_FAST_MODEL_ID);
 
-  if (smartAutoOption !== null) {
-    smartModelOptions.unshift(smartAutoOption);
-  }
+  const buildModelOptions = () =>
+    enabledModels.map((model) => {
+      const residencyFlag = model.dataResidency
+        ? ` ${getDataResidencyDisplay(model.dataResidency)}`
+        : '';
 
-  const fastModelOptions = [...modelOptions];
+      return {
+        value: model.modelId,
+        label: `${model.label}${residencyFlag}`,
+        Icon: getModelIcon(model.modelFamily, model.providerName),
+      };
+    });
 
-  if (fastAutoOption !== null) {
-    fastModelOptions.unshift(fastAutoOption);
-  }
+  const smartModelOptions = buildModelOptions();
+  const fastModelOptions = buildModelOptions();
 
   const handleModelFieldChange = async (
     field: 'smartModel' | 'fastModel',
@@ -241,6 +242,7 @@ export const SettingsAIModelsTab = () => {
               value={currentSmartModel}
               onChange={(value) => handleModelFieldChange('smartModel', value)}
               options={smartModelOptions}
+              pinnedOption={smartPinnedOption}
               selectSizeVariant="small"
               dropdownWidth={GenericDropdownContentWidth.ExtraLarge}
             />
@@ -255,6 +257,7 @@ export const SettingsAIModelsTab = () => {
               value={currentFastModel}
               onChange={(value) => handleModelFieldChange('fastModel', value)}
               options={fastModelOptions}
+              pinnedOption={fastPinnedOption}
               selectSizeVariant="small"
               dropdownWidth={GenericDropdownContentWidth.ExtraLarge}
             />
