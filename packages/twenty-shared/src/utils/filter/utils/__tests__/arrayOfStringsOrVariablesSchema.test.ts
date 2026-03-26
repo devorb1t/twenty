@@ -61,6 +61,29 @@ describe('arrayOfStringsOrVariablesSchema', () => {
     });
   });
 
+  describe('Legacy plain string handling', () => {
+    it('should wrap plain string values in an array', () => {
+      const plainStrings = ['Privat', 'Work', 'some-option-value'];
+
+      plainStrings.forEach((str) => {
+        const result = arrayOfStringsOrVariablesSchema.safeParse(str);
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data).toEqual([str]);
+        }
+      });
+    });
+
+    it('should handle plain string with special characters', () => {
+      const result =
+        arrayOfStringsOrVariablesSchema.safeParse('Privat & Geschäftlich');
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toEqual(['Privat & Geschäftlich']);
+      }
+    });
+  });
+
   describe('Edge cases', () => {
     it('should handle whitespace in variable syntax', () => {
       const result =
