@@ -14,16 +14,11 @@ import { SettingsOptionCardContentToggle } from '@/settings/components/SettingsO
 import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 import { Select } from '@/ui/input/components/Select';
 import { GenericDropdownContentWidth } from '@/ui/layout/dropdown/constants/GenericDropdownContentWidth';
-import { SettingsTextInput } from '@/ui/input/components/SettingsTextInput';
 import { useAtomState } from '@/ui/utilities/state/jotai/hooks/useAtomState';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { t } from '@lingui/core/macro';
-import {
-  H2Title,
-  IconBolt,
-  IconSearch,
-  IconTwentyStar,
-} from 'twenty-ui/display';
+import { H2Title, IconBolt, IconTwentyStar } from 'twenty-ui/display';
+import { SearchInput } from 'twenty-ui/input';
 import { Card, Section } from 'twenty-ui/layout';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 import { useMutation } from '@apollo/client/react';
@@ -281,13 +276,10 @@ export const SettingsAIModelsTab = () => {
           />
 
           <StyledSearchContainer>
-            <SettingsTextInput
-              instanceId="model-table-search"
-              LeftIcon={IconSearch}
+            <SearchInput
               placeholder={t`Search a model...`}
               value={searchQuery}
               onChange={setSearchQuery}
-              fullWidth
             />
           </StyledSearchContainer>
 
