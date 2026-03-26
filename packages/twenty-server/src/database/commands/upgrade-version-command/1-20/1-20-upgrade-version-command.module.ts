@@ -2,9 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { BackfillCommandMenuItemsCommand } from 'src/database/commands/upgrade-version-command/1-20/1-20-backfill-command-menu-items.command';
-import { BackfillFieldWidgetsCommand } from 'src/database/commands/upgrade-version-command/1-20/1-20-backfill-field-widgets.command';
 import { BackfillNavigationMenuItemTypeCommand } from 'src/database/commands/upgrade-version-command/1-20/1-20-backfill-navigation-menu-item-type.command';
-import { BackfillPageLayoutsCommand } from 'src/database/commands/upgrade-version-command/1-20/1-20-backfill-page-layouts.command';
+import { BackfillPageLayoutsAndFieldsWidgetViewFieldsCommand } from 'src/database/commands/upgrade-version-command/1-20/1-20-backfill-page-layouts-and-fields-widget-view-fields.command';
 import { BackfillSelectFieldOptionIdsCommand } from 'src/database/commands/upgrade-version-command/1-20/1-20-backfill-select-field-option-ids.command';
 import { DeleteOrphanNavigationMenuItemsCommand } from 'src/database/commands/upgrade-version-command/1-20/1-20-delete-orphan-navigation-menu-items.command';
 import { GenerateApplicationSdkClientsCommand } from 'src/database/commands/upgrade-version-command/1-20/1-20-generate-application-sdk-clients.command';
@@ -67,9 +66,8 @@ import { WorkflowCommonModule } from 'src/modules/workflow/common/workflow-commo
     IdentifyObjectPermissionMetadataCommand,
     MakeObjectPermissionUniversalIdentifierAndApplicationIdNotNullableMigrationCommand,
     BackfillCommandMenuItemsCommand,
-    BackfillFieldWidgetsCommand,
     BackfillNavigationMenuItemTypeCommand,
-    BackfillPageLayoutsCommand,
+    BackfillPageLayoutsAndFieldsWidgetViewFieldsCommand,
     BackfillSelectFieldOptionIdsCommand,
     DeleteOrphanNavigationMenuItemsCommand,
     GenerateApplicationSdkClientsCommand,
@@ -85,9 +83,8 @@ import { WorkflowCommonModule } from 'src/modules/workflow/common/workflow-commo
     IdentifyObjectPermissionMetadataCommand,
     MakeObjectPermissionUniversalIdentifierAndApplicationIdNotNullableMigrationCommand,
     BackfillCommandMenuItemsCommand,
-    BackfillFieldWidgetsCommand,
     BackfillNavigationMenuItemTypeCommand,
-    BackfillPageLayoutsCommand,
+    BackfillPageLayoutsAndFieldsWidgetViewFieldsCommand,
     BackfillSelectFieldOptionIdsCommand,
     DeleteOrphanNavigationMenuItemsCommand,
     GenerateApplicationSdkClientsCommand,
