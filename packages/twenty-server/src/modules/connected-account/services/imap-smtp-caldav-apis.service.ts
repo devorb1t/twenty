@@ -106,26 +106,35 @@ export class ImapSmtpCalDavAPIService {
               },
               manager,
             );
-
-            if (shouldCreateMessageChannel) {
-              await this.createMessageChannelService.createMessageChannel({
-                workspaceId,
-                connectedAccountId: newOrExistingAccountId,
-                handle,
-                manager,
-              });
-            }
-
-            if (shouldCreateCalendarChannel) {
-              await this.createCalendarChannelService.createCalendarChannel({
-                workspaceId,
-                connectedAccountId: newOrExistingAccountId,
-                handle,
-                manager,
-              });
-            }
           },
         );
+
+        // Channel creation is intentionally outside the transaction above.
+        // createMessageChannel triggers IMAP folder discovery (network I/O to
+        // the mail server) which can take tens of seconds. Holding an open DB
+        // transaction during that time causes the PG connection to be
+        // terminated for idle-in-transaction timeout, resulting in
+        // QueryRunnerAlreadyReleasedError (see Sentry #18767).
+        // This is safe because WorkspaceEntityManager.save() creates its own
+        // query runner internally and does not participate in the outer
+        // transaction anyway.
+        if (shouldCreateMessageChannel) {
+          await this.createMessageChannelService.createMessageChannel({
+            workspaceId,
+            connectedAccountId: newOrExistingAccountId,
+            handle,
+            manager: workspaceDataSource.manager,
+          });
+        }
+
+        if (shouldCreateCalendarChannel) {
+          await this.createCalendarChannelService.createCalendarChannel({
+            workspaceId,
+            connectedAccountId: newOrExistingAccountId,
+            handle,
+            manager: workspaceDataSource.manager,
+          });
+        }
 
         return newOrExistingAccountId;
       },
