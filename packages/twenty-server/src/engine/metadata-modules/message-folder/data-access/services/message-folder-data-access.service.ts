@@ -44,7 +44,9 @@ export class MessageFolderDataAccessService {
     const parentFolderId = coreData.parentFolderId as string | null;
     const channelId = (coreData.messageChannelId as string) ?? messageChannelId;
 
-    if (parentFolderId && !uuidValidate(parentFolderId) && channelId) {
+    if (!parentFolderId) {
+      coreData.parentFolderId = null;
+    } else if (!uuidValidate(parentFolderId) && channelId) {
       const parentFolder = await this.coreRepository.findOne({
         where: {
           workspaceId,
