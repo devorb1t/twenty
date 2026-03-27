@@ -71,8 +71,11 @@ export const computeOptimisticRecordFromInput = ({
     },
   );
   if (unknownRecordInputFields.length > 0) {
-    throw new Error(
-      `Should never occur, encountered unknown fields ${unknownRecordInputFields.join(', ')} in objectMetadataItem ${objectMetadataItem.nameSingular}`,
+    // Unknown fields can appear when SSE events include custom fields
+    // not yet present in the frontend metadata cache. The for-loop below
+    // iterates only over known fields, so unknown ones are safely skipped.
+    console.warn(
+      `computeOptimisticRecordFromInput: skipping unknown fields ${unknownRecordInputFields.join(', ')} in objectMetadataItem ${objectMetadataItem.nameSingular}`,
     );
   }
 
