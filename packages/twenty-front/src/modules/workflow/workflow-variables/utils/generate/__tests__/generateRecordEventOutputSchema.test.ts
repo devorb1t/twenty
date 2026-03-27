@@ -261,7 +261,7 @@ describe('generateRecordEventOutputSchema', () => {
       });
     });
 
-    it('should convert MORPH_RELATION fields to prefixed UUID id fields when MANY_TO_ONE', () => {
+    it('should convert MORPH_RELATION fields to per-target prefixed UUID id fields when MANY_TO_ONE', () => {
       const objectMetadataItem = createMockObjectMetadataItem({
         fields: [
           {
@@ -275,6 +275,38 @@ describe('generateRecordEventOutputSchema', () => {
             settings: {
               relationType: RelationType.MANY_TO_ONE,
             },
+            morphRelations: [
+              {
+                type: RelationType.MANY_TO_ONE,
+                targetObjectMetadata: {
+                  id: 'person-id',
+                  nameSingular: 'person',
+                  namePlural: 'people',
+                },
+                sourceObjectMetadata: {
+                  id: 'task-target-id',
+                  nameSingular: 'taskTarget',
+                  namePlural: 'taskTargets',
+                },
+                sourceFieldMetadata: { id: 's1', name: 'target' },
+                targetFieldMetadata: { id: 't1', name: 'taskTargets' },
+              },
+              {
+                type: RelationType.MANY_TO_ONE,
+                targetObjectMetadata: {
+                  id: 'company-id',
+                  nameSingular: 'company',
+                  namePlural: 'companies',
+                },
+                sourceObjectMetadata: {
+                  id: 'task-target-id',
+                  nameSingular: 'taskTarget',
+                  namePlural: 'taskTargets',
+                },
+                sourceFieldMetadata: { id: 's2', name: 'target' },
+                targetFieldMetadata: { id: 't2', name: 'taskTargets' },
+              },
+            ],
           },
         ] as any,
       });
@@ -284,8 +316,24 @@ describe('generateRecordEventOutputSchema', () => {
         DatabaseEventAction.CREATED,
       );
 
-      expect(Object.keys(result.fields)).toContain('properties.after.targetId');
-      expect(result.fields['properties.after.targetId']).toMatchObject({
+      expect(Object.keys(result.fields)).not.toContain(
+        'properties.after.targetId',
+      );
+      expect(Object.keys(result.fields)).toContain(
+        'properties.after.targetPersonId',
+      );
+      expect(
+        result.fields['properties.after.targetPersonId'],
+      ).toMatchObject({
+        isLeaf: true,
+        type: FieldMetadataType.UUID,
+      });
+      expect(Object.keys(result.fields)).toContain(
+        'properties.after.targetCompanyId',
+      );
+      expect(
+        result.fields['properties.after.targetCompanyId'],
+      ).toMatchObject({
         isLeaf: true,
         type: FieldMetadataType.UUID,
       });

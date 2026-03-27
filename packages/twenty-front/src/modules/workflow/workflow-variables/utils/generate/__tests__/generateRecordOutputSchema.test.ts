@@ -233,7 +233,7 @@ describe('generateRecordOutputSchema', () => {
     expect(result.object.icon).toBeUndefined();
   });
 
-  it('should convert MORPH_RELATION fields to UUID id fields when MANY_TO_ONE', () => {
+  it('should convert MORPH_RELATION fields to per-target UUID id fields when MANY_TO_ONE', () => {
     const objectMetadataItem = createMockObjectMetadataItem({
       fields: [
         {
@@ -247,6 +247,38 @@ describe('generateRecordOutputSchema', () => {
           settings: {
             relationType: RelationType.MANY_TO_ONE,
           },
+          morphRelations: [
+            {
+              type: RelationType.MANY_TO_ONE,
+              targetObjectMetadata: {
+                id: 'person-id',
+                nameSingular: 'person',
+                namePlural: 'people',
+              },
+              sourceObjectMetadata: {
+                id: 'task-target-id',
+                nameSingular: 'taskTarget',
+                namePlural: 'taskTargets',
+              },
+              sourceFieldMetadata: { id: 's1', name: 'target' },
+              targetFieldMetadata: { id: 't1', name: 'taskTargets' },
+            },
+            {
+              type: RelationType.MANY_TO_ONE,
+              targetObjectMetadata: {
+                id: 'company-id',
+                nameSingular: 'company',
+                namePlural: 'companies',
+              },
+              sourceObjectMetadata: {
+                id: 'task-target-id',
+                nameSingular: 'taskTarget',
+                namePlural: 'taskTargets',
+              },
+              sourceFieldMetadata: { id: 's2', name: 'target' },
+              targetFieldMetadata: { id: 't2', name: 'taskTargets' },
+            },
+          ],
         },
       ] as any,
     });
@@ -254,11 +286,20 @@ describe('generateRecordOutputSchema', () => {
     const result = generateRecordOutputSchema(objectMetadataItem);
 
     expect(result.fields).not.toHaveProperty('target');
-    expect(result.fields).toHaveProperty('targetId');
-    expect(result.fields.targetId).toMatchObject({
+    expect(result.fields).not.toHaveProperty('targetId');
+
+    expect(result.fields).toHaveProperty('targetPersonId');
+    expect(result.fields.targetPersonId).toMatchObject({
       isLeaf: true,
       type: FieldMetadataType.UUID,
-      label: 'Target Id',
+      label: 'Target Person Id',
+    });
+
+    expect(result.fields).toHaveProperty('targetCompanyId');
+    expect(result.fields.targetCompanyId).toMatchObject({
+      isLeaf: true,
+      type: FieldMetadataType.UUID,
+      label: 'Target Company Id',
     });
   });
 
@@ -275,6 +316,23 @@ describe('generateRecordOutputSchema', () => {
           settings: {
             relationType: RelationType.ONE_TO_MANY,
           },
+          morphRelations: [
+            {
+              type: RelationType.ONE_TO_MANY,
+              targetObjectMetadata: {
+                id: 'person-id',
+                nameSingular: 'person',
+                namePlural: 'people',
+              },
+              sourceObjectMetadata: {
+                id: 'task-target-id',
+                nameSingular: 'taskTarget',
+                namePlural: 'taskTargets',
+              },
+              sourceFieldMetadata: { id: 's1', name: 'targets' },
+              targetFieldMetadata: { id: 't1', name: 'taskTargets' },
+            },
+          ],
         },
       ] as any,
     });
@@ -283,6 +341,33 @@ describe('generateRecordOutputSchema', () => {
 
     expect(result.fields).not.toHaveProperty('targets');
     expect(result.fields).not.toHaveProperty('targetsId');
+    expect(result.fields).not.toHaveProperty('targetsPeopleId');
+  });
+
+  it('should handle MORPH_RELATION with empty morphRelations array', () => {
+    const objectMetadataItem = createMockObjectMetadataItem({
+      fields: [
+        {
+          id: 'morph-relation-id',
+          name: 'target',
+          label: 'Target',
+          type: FieldMetadataType.MORPH_RELATION,
+          isActive: true,
+          isSystem: false,
+          icon: 'IconLink',
+          settings: {
+            relationType: RelationType.MANY_TO_ONE,
+          },
+          morphRelations: [],
+        },
+      ] as any,
+    });
+
+    const result = generateRecordOutputSchema(objectMetadataItem);
+
+    expect(result.fields).not.toHaveProperty('target');
+    expect(result.fields).not.toHaveProperty('targetId');
+    expect(Object.keys(result.fields)).toHaveLength(0);
   });
 
   it('should handle field without icon', () => {

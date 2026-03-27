@@ -3,6 +3,8 @@ import { type FieldMetadataItem } from '@/object-metadata/types/FieldMetadataIte
 import { ObjectFilterDropdownComponentInstanceContext } from '@/object-record/object-filter-dropdown/states/contexts/ObjectFilterDropdownComponentInstanceContext';
 import { fieldMetadataItemIdUsedInDropdownComponentState } from '@/object-record/object-filter-dropdown/states/fieldMetadataItemIdUsedInDropdownComponentState';
 import { createAtomComponentSelector } from '@/ui/utilities/state/jotai/utils/createAtomComponentSelector';
+import { FieldMetadataType } from 'twenty-shared/types';
+import { isDefined } from 'twenty-shared/utils';
 
 export const fieldMetadataItemUsedInDropdownComponentSelector =
   createAtomComponentSelector<FieldMetadataItem | null | undefined>({
@@ -18,13 +20,41 @@ export const fieldMetadataItemUsedInDropdownComponentSelector =
 
         const objectMetadataItems = get(objectMetadataItemsSelector);
 
-        const correspondingFieldMetadataItem = objectMetadataItems
-          .flatMap((objectMetadataItem) => objectMetadataItem.fields)
-          .find(
-            (fieldMetadataItem) =>
-              fieldMetadataItem.id === fieldMetadataItemIdUsedInDropdown,
+        const allFields = objectMetadataItems.flatMap(
+          (objectMetadataItem) => objectMetadataItem.fields,
+        );
+
+        const correspondingFieldMetadataItem = allFields.find(
+          (fieldMetadataItem) =>
+            fieldMetadataItem.id === fieldMetadataItemIdUsedInDropdown,
+        );
+
+        if (isDefined(correspondingFieldMetadataItem)) {
+          return correspondingFieldMetadataItem;
+        }
+
+        // Morph relation targets have IDs from morphRelations[].sourceFieldMetadata.id
+        // which don't exist as standalone fields — return a virtual RELATION field
+        for (const field of allFields) {
+          if (!isDefined(field.morphRelations)) {
+            continue;
+          }
+
+          const morphRelation = field.morphRelations.find(
+            (relation) =>
+              relation.sourceFieldMetadata.id ===
+              fieldMetadataItemIdUsedInDropdown,
           );
 
-        return correspondingFieldMetadataItem;
+          if (isDefined(morphRelation)) {
+            return {
+              ...field,
+              type: FieldMetadataType.RELATION,
+              relation: morphRelation,
+            };
+          }
+        }
+
+        return undefined;
       },
   });

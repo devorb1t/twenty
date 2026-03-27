@@ -63,6 +63,7 @@ const isFilterableFieldType = (
     FieldMetadataType.ARRAY,
     FieldMetadataType.UUID,
     FieldMetadataType.RELATION,
+    FieldMetadataType.MORPH_RELATION,
     ...COMPOSITE_FIELD_METADATA_TYPES,
     'array',
     'boolean',

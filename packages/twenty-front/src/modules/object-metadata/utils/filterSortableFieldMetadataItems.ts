@@ -8,6 +8,7 @@ type SortableFieldInput = {
   name: string;
   type: FieldMetadataType;
   relation?: { type: RelationType } | null;
+  settings?: { relationType?: RelationType } | null;
 };
 
 export const filterSortableFieldMetadataItems = (field: SortableFieldInput) => {
@@ -18,8 +19,10 @@ export const filterSortableFieldMetadataItems = (field: SortableFieldInput) => {
   );
 
   const isRelationFieldSortable =
-    field.type === FieldMetadataType.RELATION &&
-    field.relation?.type === RelationType.MANY_TO_ONE;
+    (field.type === FieldMetadataType.RELATION &&
+      field.relation?.type === RelationType.MANY_TO_ONE) ||
+    (field.type === FieldMetadataType.MORPH_RELATION &&
+      field.settings?.relationType === RelationType.MANY_TO_ONE);
 
   return (
     !isHiddenSystemField(field) &&

@@ -15,10 +15,15 @@ export const getFilterFilterableFieldMetadataItems = ({
       field.type === FieldMetadataType.RELATION &&
       (field.name === 'workflow' || field.name === 'workflowVersion');
 
-    const isRelationFieldHandled = !(
-      field.type === FieldMetadataType.RELATION &&
-      field.relation?.type !== RelationType.MANY_TO_ONE
-    );
+    const isRelationFieldHandled =
+      !(
+        field.type === FieldMetadataType.RELATION &&
+        field.relation?.type !== RelationType.MANY_TO_ONE
+      ) &&
+      !(
+        field.type === FieldMetadataType.MORPH_RELATION &&
+        field.settings?.relationType !== RelationType.MANY_TO_ONE
+      );
 
     const isFieldTypeFilterable = [
       FieldMetadataType.BOOLEAN,
@@ -31,6 +36,7 @@ export const getFilterFilterableFieldMetadataItems = ({
       FieldMetadataType.FULL_NAME,
       FieldMetadataType.ADDRESS,
       FieldMetadataType.RELATION,
+      FieldMetadataType.MORPH_RELATION,
       FieldMetadataType.SELECT,
       FieldMetadataType.MULTI_SELECT,
       FieldMetadataType.CURRENCY,

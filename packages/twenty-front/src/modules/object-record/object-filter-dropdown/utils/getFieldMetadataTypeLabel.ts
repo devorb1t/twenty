@@ -8,7 +8,8 @@ export const getFieldMetadataTypeLabel = (fieldType: FieldMetadataType) => {
   //TODO: Remove ?.label > .label when we have a proper type for field (issue #1097)
   if (
     isNonCompositeField(fieldType) ||
-    fieldType === FieldMetadataType.RELATION
+    fieldType === FieldMetadataType.RELATION ||
+    fieldType === FieldMetadataType.MORPH_RELATION
   )
     return SETTINGS_NON_COMPOSITE_FIELD_TYPE_CONFIGS[
       fieldType as keyof typeof SETTINGS_NON_COMPOSITE_FIELD_TYPE_CONFIGS

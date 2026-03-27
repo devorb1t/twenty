@@ -9,10 +9,15 @@ import { useSelectableList } from '@/ui/layout/selectable-list/hooks/useSelectab
 import { useAtomComponentSelectorValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentSelectorValue';
 
 import { type FieldMetadataItem } from '@/object-metadata/types/FieldMetadataItem';
+import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { AdvancedFilterFieldSelectSearchInput } from '@/object-record/advanced-filter/components/AdvancedFilterFieldSelectSearchInput';
 import { useAdvancedFilterFieldSelectDropdown } from '@/object-record/advanced-filter/hooks/useAdvancedFilterFieldSelectDropdown';
 import { useSelectFieldUsedInAdvancedFilterDropdown } from '@/object-record/advanced-filter/hooks/useSelectFieldUsedInAdvancedFilterDropdown';
 import { AdvancedFilterContext } from '@/object-record/advanced-filter/states/context/AdvancedFilterContext';
+import {
+  type ExpandedFilterableField,
+  expandMorphRelationFieldMetadataItems,
+} from '@/object-record/advanced-filter/utils/expandMorphRelationFieldMetadataItems';
 import { ObjectFilterDropdownFilterSelectMenuItem } from '@/object-record/object-filter-dropdown/components/ObjectFilterDropdownFilterSelectMenuItem';
 import { fieldMetadataItemIdUsedInDropdownComponentState } from '@/object-record/object-filter-dropdown/states/fieldMetadataItemIdUsedInDropdownComponentState';
 import { objectFilterDropdownIsSelectingCompositeFieldComponentState } from '@/object-record/object-filter-dropdown/states/objectFilterDropdownIsSelectingCompositeFieldComponentState';
@@ -26,8 +31,8 @@ import { GenericDropdownContentWidth } from '@/ui/layout/dropdown/constants/Gene
 import { useAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentState';
 import { useSetAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useSetAtomComponentState';
 import { useLingui } from '@lingui/react/macro';
-import { useContext } from 'react';
-import { getFilterTypeFromFieldType } from 'twenty-shared/utils';
+import { useContext, useMemo } from 'react';
+import { getFilterTypeFromFieldType, isDefined } from 'twenty-shared/utils';
 
 type AdvancedFilterFieldSelectMenuProps = {
   recordFilterId: string;
@@ -50,6 +55,17 @@ export const AdvancedFilterFieldSelectMenu = ({
   const { filterableFieldMetadataItems: filterableFieldMetadataItems } =
     useFilterableFieldMetadataItems(objectMetadataItem.id);
 
+  const { objectMetadataItems } = useObjectMetadataItems();
+
+  const expandedFilterableFields = useMemo(
+    () =>
+      expandMorphRelationFieldMetadataItems(
+        filterableFieldMetadataItems,
+        objectMetadataItems,
+      ),
+    [filterableFieldMetadataItems, objectMetadataItems],
+  );
+
   const visibleRecordFields = useAtomComponentSelectorValue(
     visibleRecordFieldsComponentSelector,
   );
@@ -59,7 +75,7 @@ export const AdvancedFilterFieldSelectMenu = ({
   );
 
   const filteredSearchInputFieldMetadataItems =
-    filterableFieldMetadataItems.filter((fieldMetadataItem) =>
+    expandedFilterableFields.filter((fieldMetadataItem) =>
       fieldMetadataItem.label
         .toLocaleLowerCase()
         .includes(objectFilterDropdownSearchInput.toLocaleLowerCase()),
@@ -106,6 +122,12 @@ export const AdvancedFilterFieldSelectMenu = ({
   const handleFieldMetadataItemSelect = (
     selectedFieldMetadataItem: FieldMetadataItem,
   ) => {
+    const expandedField =
+      selectedFieldMetadataItem as ExpandedFilterableField;
+    const isMorphRelationTarget = isDefined(
+      expandedField.morphRelationTarget,
+    );
+
     resetSelectedItem();
 
     const filterType = getFilterTypeFromFieldType(
@@ -115,6 +137,9 @@ export const AdvancedFilterFieldSelectMenu = ({
     selectFieldUsedInAdvancedFilterDropdown({
       fieldMetadataItemId: selectedFieldMetadataItem.id,
       recordFilterId,
+      fieldMetadataItemOverride: isMorphRelationTarget
+        ? selectedFieldMetadataItem
+        : undefined,
     });
 
     if (isCompositeFilterableFieldType(filterType)) {

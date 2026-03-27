@@ -1,3 +1,4 @@
+import { type FieldMetadataItem } from '@/object-metadata/types/FieldMetadataItem';
 import { useGetFieldMetadataItemByIdOrThrow } from '@/object-metadata/hooks/useGetFieldMetadataItemById';
 import { useGetInitialFilterValue } from '@/object-record/object-filter-dropdown/hooks/useGetInitialFilterValue';
 import { fieldMetadataItemIdUsedInDropdownComponentState } from '@/object-record/object-filter-dropdown/states/fieldMetadataItemIdUsedInDropdownComponentState';
@@ -23,6 +24,7 @@ type SelectFilterParams = {
   fieldMetadataItemId: string;
   recordFilterId: string;
   subFieldName?: CompositeFieldSubFieldName | null | undefined;
+  fieldMetadataItemOverride?: FieldMetadataItem;
 };
 
 export const useSelectFieldUsedInAdvancedFilterDropdown = () => {
@@ -62,11 +64,13 @@ export const useSelectFieldUsedInAdvancedFilterDropdown = () => {
     fieldMetadataItemId,
     recordFilterId,
     subFieldName,
+    fieldMetadataItemOverride,
   }: SelectFilterParams) => {
     setFieldMetadataItemIdUsedInDropdown(fieldMetadataItemId);
 
-    const { fieldMetadataItem } =
-      getFieldMetadataItemByIdOrThrow(fieldMetadataItemId);
+    const fieldMetadataItem =
+      fieldMetadataItemOverride ??
+      getFieldMetadataItemByIdOrThrow(fieldMetadataItemId).fieldMetadataItem;
 
     if (!isDefined(fieldMetadataItem)) {
       return;
@@ -74,6 +78,7 @@ export const useSelectFieldUsedInAdvancedFilterDropdown = () => {
 
     if (
       fieldMetadataItem.type === 'RELATION' ||
+      fieldMetadataItem.type === 'MORPH_RELATION' ||
       fieldMetadataItem.type === 'SELECT'
     ) {
       pushFocusItemToFocusStack({

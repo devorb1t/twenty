@@ -11,7 +11,11 @@ import {
   FieldMetadataType,
   RelationType,
 } from 'twenty-shared/types';
-import { capitalize, isDefined } from 'twenty-shared/utils';
+import {
+  capitalize,
+  computeMorphRelationFieldName,
+  isDefined,
+} from 'twenty-shared/utils';
 import { DatabaseEventAction } from '~/generated-metadata/graphql';
 
 const camelToTitleCase = (camelCaseText: string): string =>
@@ -116,11 +120,33 @@ const generatePrefixedRecordFields = (
       continue;
     }
 
-    const isRelationField =
-      fieldMetadataItem.type === FieldMetadataType.RELATION ||
-      fieldMetadataItem.type === FieldMetadataType.MORPH_RELATION;
+    if (fieldMetadataItem.type === FieldMetadataType.MORPH_RELATION) {
+      for (const morphRelation of fieldMetadataItem.morphRelations ?? []) {
+        const morphFieldName = computeMorphRelationFieldName({
+          fieldName: fieldMetadataItem.name,
+          relationType: RelationType.MANY_TO_ONE,
+          targetObjectMetadataNameSingular:
+            morphRelation.targetObjectMetadata.nameSingular,
+          targetObjectMetadataNamePlural:
+            morphRelation.targetObjectMetadata.namePlural,
+        });
+        const relationIdFieldName = `${morphFieldName}Id`;
+        const relationIdFieldLabel = camelToTitleCase(relationIdFieldName);
 
-    if (isRelationField) {
+        result[`${prefix}.${relationIdFieldName}`] = {
+          isLeaf: true,
+          icon: fieldMetadataItem.icon ?? undefined,
+          type: FieldMetadataType.UUID,
+          label: relationIdFieldLabel,
+          value: generateFakeValue(
+            FieldMetadataType.UUID,
+            'FieldMetadataType',
+          ),
+          fieldMetadataId: fieldMetadataItem.id,
+          isCompositeSubField: false,
+        };
+      }
+    } else if (fieldMetadataItem.type === FieldMetadataType.RELATION) {
       const relationIdFieldName = `${fieldMetadataItem.name}Id`;
       const relationIdFieldLabel = camelToTitleCase(relationIdFieldName);
 
