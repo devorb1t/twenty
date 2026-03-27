@@ -17,7 +17,13 @@ export const RecordTableCellHoveredPortal = () => {
 
   return (
     <RecordTableCellPortalWrapper position={recordTableHoverPosition}>
-      <RecordTableCellPortalRootContainer zIndex={TABLE_Z_INDEX.hoverPortal}>
+      <RecordTableCellPortalRootContainer
+        zIndex={TABLE_Z_INDEX.hoverPortal}
+        topOffset={0}
+        leftOffset={0}
+        widthExpansion={0}
+        heightExpansion={0}
+      >
         <RecordTableCellHoveredPortalContent />
       </RecordTableCellPortalRootContainer>
     </RecordTableCellPortalWrapper>

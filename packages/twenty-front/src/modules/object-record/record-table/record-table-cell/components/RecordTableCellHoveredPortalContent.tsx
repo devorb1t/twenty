@@ -2,7 +2,6 @@ import { FieldDisplay } from '@/object-record/record-field/ui/components/FieldDi
 import { FieldContext } from '@/object-record/record-field/ui/contexts/FieldContext';
 import { FieldFocusStaticFocusedProvider } from '@/object-record/record-field/ui/contexts/FieldFocusContextProvider';
 import { useIsFieldInputOnly } from '@/object-record/record-field/ui/hooks/useIsFieldInputOnly';
-import { RECORD_TABLE_ROW_HEIGHT } from '@/object-record/record-table/constants/RecordTableRowHeight';
 import { useRecordTableRowContextOrThrow } from '@/object-record/record-table/contexts/RecordTableRowContext';
 import { RecordTableCellDisplayMode } from '@/object-record/record-table/record-table-cell/components/RecordTableCellDisplayMode';
 import { RecordTableCellEditButton } from '@/object-record/record-table/record-table-cell/components/RecordTableCellEditButton';
@@ -21,21 +20,31 @@ import { useIsMobile } from 'twenty-ui/utilities';
 const StyledRecordTableCellHoveredPortalContent = styled.div<{
   showInteractiveStyle: boolean;
   isRecordTableRowActive: boolean;
+  topExpansion: number;
+  leftExpansion: number;
+  rightExpansion: number;
+  bottomExpansion: number;
 }>`
-  align-items: center;
   background: ${themeCssVariables.background.transparent.secondary};
-  background-color: ${({ isRecordTableRowActive }) =>
+  background-color: ${({ isRecordTableRowActive, showInteractiveStyle }) =>
     isRecordTableRowActive
       ? themeCssVariables.accent.quaternary
-      : themeCssVariables.background.primary};
+      : showInteractiveStyle
+        ? themeCssVariables.background.primary
+        : themeCssVariables.background.transparent.lighter};
   border-radius: ${({ showInteractiveStyle }) =>
     showInteractiveStyle ? themeCssVariables.border.radius.sm : 'none'};
   box-sizing: border-box;
   cursor: ${({ showInteractiveStyle }) =>
     showInteractiveStyle ? 'pointer' : 'default'};
-  display: flex;
 
-  height: ${RECORD_TABLE_ROW_HEIGHT}px;
+  height: calc(
+    100% +
+      ${({ topExpansion, bottomExpansion }) => topExpansion + bottomExpansion}px
+  );
+
+  margin-left: ${({ leftExpansion }) => -leftExpansion}px;
+  margin-top: ${({ topExpansion }) => -topExpansion}px;
 
   outline: ${({ showInteractiveStyle, isRecordTableRowActive }) =>
     isRecordTableRowActive
@@ -45,7 +54,28 @@ const StyledRecordTableCellHoveredPortalContent = styled.div<{
         : `1px solid ${themeCssVariables.border.color.medium}`};
   outline-offset: -1px;
 
+  position: relative;
   user-select: none;
+  width: calc(
+    100% +
+      ${({ leftExpansion, rightExpansion }) => leftExpansion + rightExpansion}px
+  );
+`;
+
+const StyledContentWrapper = styled.div<{
+  contentTop: number;
+  contentLeft: number;
+  contentWidth: string;
+  contentHeight: string;
+}>`
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  height: ${({ contentHeight }) => contentHeight};
+  left: ${({ contentLeft }) => contentLeft}px;
+  position: absolute;
+  top: ${({ contentTop }) => contentTop}px;
+  width: ${({ contentWidth }) => contentWidth};
 `;
 
 export const RecordTableCellHoveredPortalContent = () => {
@@ -75,23 +105,51 @@ export const RecordTableCellHoveredPortalContent = () => {
     rowIndex,
   );
 
+  const isTouchingHeader = recordTableHoverPosition?.row === 0;
+  const isTouchingFirstColumn = recordTableHoverPosition?.column === 1;
+
+  const topExpansion = showInteractiveStyle ? (isTouchingHeader ? 0 : 1) : 1;
+  const leftExpansion = showInteractiveStyle
+    ? isTouchingFirstColumn
+      ? 0
+      : 1
+    : 1;
+  const rightExpansion = 1;
+  const bottomExpansion = 1;
+
+  const contentTop = topExpansion;
+  const contentLeft = leftExpansion;
+  const contentWidth = `calc(100% - ${leftExpansion + rightExpansion}px)`;
+  const contentHeight = `calc(100% - ${topExpansion + bottomExpansion}px)`;
+
   return (
     <StyledRecordTableCellHoveredPortalContent
       showInteractiveStyle={showInteractiveStyle}
       isRecordTableRowActive={isRecordTableRowActive}
+      topExpansion={topExpansion}
+      leftExpansion={leftExpansion}
+      rightExpansion={rightExpansion}
+      bottomExpansion={bottomExpansion}
     >
-      <FieldFocusStaticFocusedProvider>
-        {isFieldInputOnly ? (
-          <RecordTableCellEditMode>
-            <RecordTableCellFieldInput />
-          </RecordTableCellEditMode>
-        ) : (
-          <RecordTableCellDisplayMode>
-            <FieldDisplay />
-          </RecordTableCellDisplayMode>
-        )}
-      </FieldFocusStaticFocusedProvider>
-      {showButton && <RecordTableCellEditButton />}
+      <StyledContentWrapper
+        contentTop={contentTop}
+        contentLeft={contentLeft}
+        contentWidth={contentWidth}
+        contentHeight={contentHeight}
+      >
+        <FieldFocusStaticFocusedProvider>
+          {isFieldInputOnly ? (
+            <RecordTableCellEditMode>
+              <RecordTableCellFieldInput />
+            </RecordTableCellEditMode>
+          ) : (
+            <RecordTableCellDisplayMode>
+              <FieldDisplay />
+            </RecordTableCellDisplayMode>
+          )}
+        </FieldFocusStaticFocusedProvider>
+        {showButton && <RecordTableCellEditButton />}
+      </StyledContentWrapper>
     </StyledRecordTableCellHoveredPortalContent>
   );
 };

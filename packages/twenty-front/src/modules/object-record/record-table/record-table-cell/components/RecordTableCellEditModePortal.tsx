@@ -31,6 +31,10 @@ export const RecordTableCellEditModePortal = () => {
       {recordTableCellEditModePosition && (
         <RecordTableCellPortalRootContainer
           zIndex={TABLE_Z_INDEX.cell.editMode}
+          topOffset={0}
+          leftOffset={0}
+          widthExpansion={0}
+          heightExpansion={0}
         >
           <RecordTableCellEditMode>
             <RecordTableCellFieldInput />

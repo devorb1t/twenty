@@ -26,9 +26,23 @@ export const RecordTableCellFocusedPortal = () => {
     return null;
   }
 
+  const isTouchingHeader = recordTableFocusPosition.row === 0;
+  const isTouchingFirstColumn = recordTableFocusPosition.column === 1;
+
+  const topOffset = isTouchingHeader ? 0 : -1;
+  const leftOffset = isTouchingFirstColumn ? 0 : -1;
+  const widthExpansion = isTouchingFirstColumn ? 1 : 2;
+  const heightExpansion = isTouchingHeader ? 1 : 2;
+
   return (
     <RecordTableCellPortalWrapper position={recordTableFocusPosition}>
-      <RecordTableCellPortalRootContainer zIndex={TABLE_Z_INDEX.hoverPortal}>
+      <RecordTableCellPortalRootContainer
+        zIndex={TABLE_Z_INDEX.hoverPortal}
+        topOffset={topOffset}
+        leftOffset={leftOffset}
+        widthExpansion={widthExpansion}
+        heightExpansion={heightExpansion}
+      >
         <RecordTableCellFocusedPortalContent />
       </RecordTableCellPortalRootContainer>
     </RecordTableCellPortalWrapper>

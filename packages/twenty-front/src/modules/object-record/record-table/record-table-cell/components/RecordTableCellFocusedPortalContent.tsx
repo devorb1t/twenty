@@ -1,5 +1,4 @@
 import { FieldDisplay } from '@/object-record/record-field/ui/components/FieldDisplay';
-import { RECORD_TABLE_ROW_HEIGHT } from '@/object-record/record-table/constants/RecordTableRowHeight';
 import { useRecordTableBodyContextOrThrow } from '@/object-record/record-table/contexts/RecordTableBodyContext';
 import { useRecordTableRowContextOrThrow } from '@/object-record/record-table/contexts/RecordTableRowContext';
 import { RecordTableCellDisplayMode } from '@/object-record/record-table/record-table-cell/components/RecordTableCellDisplayMode';
@@ -16,7 +15,6 @@ import { themeCssVariables } from 'twenty-ui/theme-constants';
 const StyledRecordTableCellFocusPortalContent = styled.div<{
   isRecordTableRowActive: boolean;
 }>`
-  align-items: center;
   background: ${themeCssVariables.background.transparent.secondary};
   background-color: ${({ isRecordTableRowActive }) =>
     isRecordTableRowActive
@@ -24,14 +22,30 @@ const StyledRecordTableCellFocusPortalContent = styled.div<{
       : themeCssVariables.background.primary};
   border-radius: ${themeCssVariables.border.radius.sm};
   box-sizing: border-box;
-  display: flex;
 
-  height: ${RECORD_TABLE_ROW_HEIGHT}px;
+  height: 100%;
 
   outline: 1px solid ${themeCssVariables.color.blue8};
   outline-offset: -1px;
 
+  position: relative;
   user-select: none;
+`;
+
+const StyledFocusedContentWrapper = styled.div<{
+  contentTop: number;
+  contentLeft: number;
+  contentWidth: string;
+  contentHeight: string;
+}>`
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  height: ${({ contentHeight }) => contentHeight};
+  left: ${({ contentLeft }) => contentLeft}px;
+  position: absolute;
+  top: ${({ contentTop }) => contentTop}px;
+  width: ${({ contentWidth }) => contentWidth};
 `;
 
 export const RecordTableCellFocusedPortalContent = () => {
@@ -61,14 +75,33 @@ export const RecordTableCellFocusedPortalContent = () => {
     }
   };
 
+  const isTouchingHeader = recordTableFocusPosition?.row === 0;
+  const isTouchingFirstColumn = recordTableFocusPosition?.column === 1;
+
+  const contentTop = isTouchingHeader ? 0 : 1;
+  const contentLeft = isTouchingFirstColumn ? 0 : 1;
+  const contentWidth = isTouchingFirstColumn
+    ? 'calc(100% - 1px)'
+    : 'calc(100% - 2px)';
+  const contentHeight = isTouchingHeader
+    ? 'calc(100% - 1px)'
+    : 'calc(100% - 2px)';
+
   return (
     <StyledRecordTableCellFocusPortalContent
       isRecordTableRowActive={isRecordTableRowActive}
       onMouseMove={handleContainerMouseMove}
     >
-      <RecordTableCellDisplayMode>
-        <FieldDisplay />
-      </RecordTableCellDisplayMode>
+      <StyledFocusedContentWrapper
+        contentTop={contentTop}
+        contentLeft={contentLeft}
+        contentWidth={contentWidth}
+        contentHeight={contentHeight}
+      >
+        <RecordTableCellDisplayMode>
+          <FieldDisplay />
+        </RecordTableCellDisplayMode>
+      </StyledFocusedContentWrapper>
     </StyledRecordTableCellFocusPortalContent>
   );
 };
