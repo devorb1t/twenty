@@ -59,6 +59,19 @@ export const computeTwentyORMException = async (
     }
 
     if (
+      errorCode === POSTGRESQL_ERROR_CODES.UNDEFINED_COLUMN ||
+      errorCode === POSTGRESQL_ERROR_CODES.UNDEFINED_TABLE
+    ) {
+      return new TwentyORMException(
+        error.message,
+        TwentyORMExceptionCode.METADATA_VERSION_MISMATCH,
+        {
+          userFriendlyMessage: msg`Your workspace schema is out of date. Please refresh and try again.`,
+        },
+      );
+    }
+
+    if (
       isDefined(errorCode) &&
       Object.values(POSTGRESQL_ERROR_CODES).includes(errorCode)
     ) {
