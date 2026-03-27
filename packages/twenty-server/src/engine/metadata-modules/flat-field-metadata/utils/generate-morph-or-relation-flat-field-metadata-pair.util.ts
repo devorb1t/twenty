@@ -1,4 +1,3 @@
-import { computeMetadataNameFromLabel } from 'twenty-shared/metadata';
 import {
   FieldMetadataType,
   RelationOnDeleteAction,
@@ -9,6 +8,7 @@ import { v4 } from 'uuid';
 import { type FlatApplication } from 'src/engine/core-modules/application/types/flat-application.type';
 import { type CreateFieldInput } from 'src/engine/metadata-modules/field-metadata/dtos/create-field.input';
 import { type MorphOrRelationFieldMetadataType } from 'src/engine/metadata-modules/field-metadata/types/morph-or-relation-field-metadata-type.type';
+import { computeMetadataNameFromLabelOrThrow } from 'src/engine/metadata-modules/utils/compute-metadata-name-from-label-or-throw.util';
 import { computeMorphOrRelationFieldJoinColumnName } from 'src/engine/metadata-modules/field-metadata/utils/compute-morph-or-relation-field-join-column-name.util';
 import { type FlatFieldMetadata } from 'src/engine/metadata-modules/flat-field-metadata/types/flat-field-metadata.type';
 import { generateIndexForFlatFieldMetadata } from 'src/engine/metadata-modules/flat-field-metadata/utils/generate-index-for-flat-field-metadata.util';
@@ -143,9 +143,9 @@ export const generateMorphOrRelationFlatFieldMetadataPair = ({
     label: relationCreationPayload.targetFieldLabel,
     name:
       targetFieldName ??
-      computeMetadataNameFromLabel({
-        label: relationCreationPayload.targetFieldLabel,
-      }),
+      computeMetadataNameFromLabelOrThrow(
+        relationCreationPayload.targetFieldLabel,
+      ),
     type: FieldMetadataType.RELATION,
     isSystem: createFieldInput.isSystem ?? false,
   };

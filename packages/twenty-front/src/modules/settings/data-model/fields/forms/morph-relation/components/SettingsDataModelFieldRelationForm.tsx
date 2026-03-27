@@ -5,6 +5,7 @@ import { StyledContainer } from '@/keyboard-shortcut-menu/components/KeyboardSho
 import { SettingsMorphRelationMultiSelect } from '@/settings/components/SettingsMorphRelationMultiSelect';
 import { FIELD_NAME_MAXIMUM_LENGTH } from '@/settings/data-model/constants/FieldNameMaximumLength';
 import { RELATION_TYPES } from '@/settings/data-model/constants/RelationTypes';
+import { computeMetadataNameFromLabel } from '~/pages/settings/data-model/utils/computeMetadataNameFromLabel';
 import { useFieldMetadataItemDisableFieldEdition } from '@/settings/data-model/fields/forms/morph-relation/hooks/useFieldMetadataItemDisableFieldEdition';
 import { useRelationSettingsFormDefaultValuesTargetFieldMetadata } from '@/settings/data-model/fields/forms/morph-relation/hooks/useRelationSettingsFormDefaultValuesTargetFieldMetadata';
 import { useRelationSettingsFormInitialTargetObjectMetadatas } from '@/settings/data-model/fields/forms/morph-relation/hooks/useRelationSettingsFormInitialTargetObjectMetadatas';
@@ -54,7 +55,10 @@ export const settingsDataModelFieldMorphRelationFormSchema = z.object({
   relationType: z.enum(
     Object.keys(RELATION_TYPES) as [RelationType, ...RelationType[]],
   ),
-  targetFieldLabel: z.string().min(1),
+  targetFieldLabel: z
+    .string()
+    .min(1)
+    .refine((label) => computeMetadataNameFromLabel(label) !== ''),
   iconOnDestination: z.string().min(1),
   settings: z
     .object({
