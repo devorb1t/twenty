@@ -10,6 +10,7 @@ import { RecordTableUpdateContext } from '@/object-record/record-table/contexts/
 import { isRecordTableCellsNonEditableComponentState } from '@/object-record/record-table/states/isRecordTableCellsNonEditableComponentState';
 import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue';
 import { useContext, type ReactNode } from 'react';
+import { isDefined } from 'twenty-shared/utils';
 
 type RecordTableCellFieldContextLabelIdentifierProps = {
   children: ReactNode;
@@ -48,6 +49,10 @@ export const RecordTableCellFieldContextLabelIdentifier = ({
 
   const fieldDefinition =
     fieldDefinitionByFieldMetadataItemId[recordField.fieldMetadataItemId];
+
+  if (!isDefined(fieldDefinition)) {
+    return null;
+  }
 
   const handleChipClick = () => {
     onRecordIdentifierClick?.(rowIndex, recordId);
