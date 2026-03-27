@@ -4,6 +4,39 @@ import {
 } from 'src/modules/messaging/message-import-manager/drivers/exceptions/message-import-driver.exception';
 import { isDefined } from 'twenty-shared/utils';
 
+const isNetworkError = (error: {
+  statusCode: number;
+  message?: string;
+}): boolean => {
+  if (error instanceof TypeError) {
+    return true;
+  }
+
+  if (isDefined(error.statusCode)) {
+    return false;
+  }
+
+  const cause = (error as unknown as { cause?: { code?: string } })?.cause;
+
+  if (!isDefined(cause) || !isDefined(cause.code)) {
+    return false;
+  }
+
+  const networkErrorCodes = [
+    'ECONNRESET',
+    'ENOTFOUND',
+    'ECONNABORTED',
+    'ETIMEDOUT',
+    'ECONNREFUSED',
+    'EHOSTUNREACH',
+    'ERR_NETWORK',
+    'UND_ERR_CONNECT_TIMEOUT',
+    'UND_ERR_SOCKET',
+  ];
+
+  return networkErrorCodes.includes(cause.code);
+};
+
 export const parseMicrosoftMessagesImportError = (
   error: {
     statusCode: number;
@@ -12,6 +45,14 @@ export const parseMicrosoftMessagesImportError = (
   },
   options?: { cause?: Error },
 ): MessageImportDriverException => {
+  if (isNetworkError(error)) {
+    return new MessageImportDriverException(
+      `Microsoft Graph API network error: ${error.message}`,
+      MessageImportDriverExceptionCode.TEMPORARY_ERROR,
+      { cause: options?.cause },
+    );
+  }
+
   if (error.statusCode === 400) {
     if (!isDefined(error.message)) {
       return new MessageImportDriverException(
