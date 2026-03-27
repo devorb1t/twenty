@@ -96,6 +96,10 @@ export class AccessTokenService {
               where: {
                 userId: user.id,
               },
+              select: {
+                id: true,
+                userId: true,
+              },
             });
 
             assertIsDefinedOrThrow(
