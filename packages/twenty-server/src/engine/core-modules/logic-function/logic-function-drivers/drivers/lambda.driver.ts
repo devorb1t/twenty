@@ -16,6 +16,7 @@ import {
   type ListLayerVersionsCommandInput,
   LogType,
   PublishLayerVersionCommand,
+  ResourceConflictException,
   ResourceNotFoundException,
   waitUntilFunctionActiveV2,
 } from '@aws-sdk/client-lambda';
@@ -392,7 +393,13 @@ export class LambdaDriver implements LogicFunctionDriver {
         MemorySize: YARN_INSTALL_LAMBDA_MEMORY_MB,
       };
 
-      await lambdaClient.send(new CreateFunctionCommand(params));
+      try {
+        await lambdaClient.send(new CreateFunctionCommand(params));
+      } catch (error) {
+        if (!(error instanceof ResourceConflictException)) {
+          throw error;
+        }
+      }
     } finally {
       await temporaryDirManager.clean();
     }
@@ -481,7 +488,13 @@ export class LambdaDriver implements LogicFunctionDriver {
         MemorySize: BUILDER_LAMBDA_MEMORY_MB,
       };
 
-      await lambdaClient.send(new CreateFunctionCommand(params));
+      try {
+        await lambdaClient.send(new CreateFunctionCommand(params));
+      } catch (error) {
+        if (!(error instanceof ResourceConflictException)) {
+          throw error;
+        }
+      }
     } finally {
       await temporaryDirManager.clean();
     }
@@ -900,8 +913,6 @@ export class LambdaDriver implements LogicFunctionDriver {
       return;
     }
 
-    await this.delete(flatLogicFunction);
-
     const depsLayerArn = await this.getLayerArn({
       flatApplication,
       applicationUniversalIdentifier,
@@ -911,6 +922,22 @@ export class LambdaDriver implements LogicFunctionDriver {
       flatApplication,
       applicationUniversalIdentifier,
     });
+
+    // Re-check after layer resolution: a concurrent execution may have
+    // already rebuilt the function with the correct layers while we were
+    // waiting for ensureSdkLayer. Skipping the delete+create avoids
+    // destroying a function another execution is currently polling.
+    if (
+      await this.isAlreadyBuilt({
+        flatLogicFunction,
+        flatApplication,
+        applicationUniversalIdentifier,
+      })
+    ) {
+      return;
+    }
+
+    await this.delete(flatLogicFunction);
 
     const temporaryDirManager = new TemporaryDirManager();
 
@@ -938,7 +965,13 @@ export class LambdaDriver implements LogicFunctionDriver {
 
       const command = new CreateFunctionCommand(params);
 
-      await (await this.getLambdaClient()).send(command);
+      try {
+        await (await this.getLambdaClient()).send(command);
+      } catch (error) {
+        if (!(error instanceof ResourceConflictException)) {
+          throw error;
+        }
+      }
     } finally {
       await temporaryDirManager.clean();
     }
