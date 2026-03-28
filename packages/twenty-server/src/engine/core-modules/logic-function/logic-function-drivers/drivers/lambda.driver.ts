@@ -16,7 +16,9 @@ import {
   type ListLayerVersionsCommandInput,
   LogType,
   PublishLayerVersionCommand,
+  ResourceConflictException,
   ResourceNotFoundException,
+  TooManyRequestsException,
   waitUntilFunctionActiveV2,
 } from '@aws-sdk/client-lambda';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -392,7 +394,13 @@ export class LambdaDriver implements LogicFunctionDriver {
         MemorySize: YARN_INSTALL_LAMBDA_MEMORY_MB,
       };
 
-      await lambdaClient.send(new CreateFunctionCommand(params));
+      try {
+        await lambdaClient.send(new CreateFunctionCommand(params));
+      } catch (error) {
+        if (!(error instanceof ResourceConflictException)) {
+          throw error;
+        }
+      }
     } finally {
       await temporaryDirManager.clean();
     }
@@ -481,7 +489,13 @@ export class LambdaDriver implements LogicFunctionDriver {
         MemorySize: BUILDER_LAMBDA_MEMORY_MB,
       };
 
-      await lambdaClient.send(new CreateFunctionCommand(params));
+      try {
+        await lambdaClient.send(new CreateFunctionCommand(params));
+      } catch (error) {
+        if (!(error instanceof ResourceConflictException)) {
+          throw error;
+        }
+      }
     } finally {
       await temporaryDirManager.clean();
     }
@@ -799,7 +813,27 @@ export class LambdaDriver implements LogicFunctionDriver {
         FunctionName: flatLogicFunction.id,
       });
 
-      await (await this.getLambdaClient()).send(deleteFunctionCommand);
+      try {
+        await (await this.getLambdaClient()).send(deleteFunctionCommand);
+      } catch (error) {
+        if (
+          error instanceof ResourceNotFoundException ||
+          error instanceof ResourceConflictException
+        ) {
+          // Already deleted by another concurrent worker, or function
+          // is in a pending state — safe to proceed.
+          return;
+        }
+
+        if (error instanceof TooManyRequestsException) {
+          // Rate limited — the function may or may not still exist.
+          // The subsequent CreateFunctionCommand will handle both cases
+          // (create succeeds, or ResourceConflictException if it exists).
+          return;
+        }
+
+        throw error;
+      }
     }
   }
 
@@ -938,7 +972,14 @@ export class LambdaDriver implements LogicFunctionDriver {
 
       const command = new CreateFunctionCommand(params);
 
-      await (await this.getLambdaClient()).send(command);
+      try {
+        await (await this.getLambdaClient()).send(command);
+      } catch (error) {
+        if (!(error instanceof ResourceConflictException)) {
+          throw error;
+        }
+        // Function was concurrently created by another worker — safe to proceed.
+      }
     } finally {
       await temporaryDirManager.clean();
     }
