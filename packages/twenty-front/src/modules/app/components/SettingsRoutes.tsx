@@ -155,6 +155,12 @@ const SettingsAI = lazy(() =>
   })),
 );
 
+const SettingsAIUsageUserDetail = lazy(() =>
+  import('~/pages/settings/ai/SettingsAIUsageUserDetail').then((module) => ({
+    default: module.SettingsAIUsageUserDetail,
+  })),
+);
+
 const SettingsApplications = lazy(() =>
   import('~/pages/settings/applications/SettingsApplications').then(
     (module) => ({
@@ -535,6 +541,10 @@ export const SettingsRoutes = ({ isAdminPageEnabled }: SettingsRoutesProps) => (
         <Route
           path={SettingsPath.AISkillDetail}
           element={<SettingsSkillForm mode="edit" />}
+        />
+        <Route
+          path={SettingsPath.AIUsageUserDetail}
+          element={<SettingsAIUsageUserDetail />}
         />
         <Route
           path={SettingsPath.LogicFunctionDetail}
