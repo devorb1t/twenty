@@ -534,7 +534,7 @@ export class AuthResolver {
   }
 
   @Mutation(() => TransientTokenDTO)
-  @UseGuards(UserAuthGuard, NoPermissionGuard)
+  @UseGuards(WorkspaceAuthGuard, NoPermissionGuard)
   async generateTransientToken(
     @AuthUser() user: AuthContextUser,
     @AuthWorkspace() workspace: WorkspaceEntity,
@@ -780,7 +780,7 @@ export class AuthResolver {
   }
 
   @Mutation(() => AuthorizeAppDTO)
-  @UseGuards(UserAuthGuard, NoPermissionGuard)
+  @UseGuards(WorkspaceAuthGuard, NoPermissionGuard)
   async authorizeApp(
     @Args() authorizeAppInput: AuthorizeAppInput,
     @AuthUser() user: AuthContextUser,
