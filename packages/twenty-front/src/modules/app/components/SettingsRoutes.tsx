@@ -689,7 +689,7 @@ export const SettingsRoutes = ({ isAdminPageEnabled }: SettingsRoutesProps) => (
       <Route
         element={
           <SettingsProtectedRouteWrapper
-            requiredFeatureFlag={FeatureFlagKey.IS_APPLICATION_ENABLED}
+            settingsPermission={PermissionFlagType.APPLICATIONS}
           />
         }
       >
