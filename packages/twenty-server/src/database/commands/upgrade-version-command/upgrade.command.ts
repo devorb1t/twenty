@@ -78,6 +78,10 @@ export class UpgradeCommand extends UpgradeCommandRunner {
       coreMigrationRunnerService,
     );
 
+    const commands_1190: VersionCommands = [
+      this.migrateRichTextToTextCommand,
+    ];
+
     const commands_1200: VersionCommands = [
       this.identifyPermissionFlagMetadataCommand,
       this
@@ -101,7 +105,7 @@ export class UpgradeCommand extends UpgradeCommandRunner {
     ];
 
     this.allCommands = {
-      '1.19.0': [],
+      '1.19.0': commands_1190,
       '1.20.0': commands_1200,
     };
   }
