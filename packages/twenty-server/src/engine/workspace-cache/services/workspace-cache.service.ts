@@ -324,15 +324,29 @@ export class WorkspaceCacheService implements OnModuleInit {
       return result;
     }
 
-    const computePromises = cacheKeyNames.map(async (keyName) => {
+    if (cacheKeyNames.length > 3) {
+      this.logger.warn(
+        `Recomputing ${cacheKeyNames.length} cache keys from DB for workspace ${workspaceId}: ${cacheKeyNames.join(', ')}`,
+      );
+    }
+
+    // Serialize provider computations to avoid exhausting the pg connection
+    // pool when many cache keys need recomputation at once (e.g. after pod
+    // restart). With Promise.all, 7+ parallel DB queries can saturate a pool
+    // of 10 connections, causing ~10s pg.connect stalls.
+    const computed: Array<{
+      keyName: WorkspaceCacheKeyName;
+      data: CacheDataType;
+      hash: string;
+    }> = [];
+
+    for (const keyName of cacheKeyNames) {
       const provider = this.getProviderOrThrow(keyName);
       const data = await provider.computeForCache(workspaceId);
       const hash = crypto.randomUUID();
 
-      return { keyName, data, hash };
-    });
-
-    const computed = await Promise.all(computePromises);
+      computed.push({ keyName, data, hash });
+    }
 
     const redisEntries: Array<{ key: string; value: unknown }> = [];
 
