@@ -15,13 +15,14 @@ import {
   agentChatDraftsByThreadIdState,
 } from '@/ai/states/agentChatDraftsByThreadIdState';
 import { agentChatInputState } from '@/ai/states/agentChatInputState';
-import { agentChatQueuedMessagesByThreadIdState } from '@/ai/states/agentChatQueuedMessagesByThreadIdState';
+import { AGENT_CHAT_REFETCH_MESSAGES_EVENT_NAME } from '@/ai/constants/AgentChatRefetchMessagesEventName';
 import { useAgentChatModelId } from '@/ai/hooks/useAgentChatModelId';
 import { REST_API_BASE_URL } from '@/apollo/constant/rest-api-base-url';
 import { getTokenPair } from '@/apollo/utils/getTokenPair';
 import { renewToken } from '@/auth/services/AuthService';
 import { tokenPairState } from '@/auth/states/tokenPairState';
 import { useListenToBrowserEvent } from '@/browser-event/hooks/useListenToBrowserEvent';
+import { dispatchBrowserEvent } from '@/browser-event/utils/dispatchBrowserEvent';
 import { useAtomState } from '@/ui/utilities/state/jotai/hooks/useAtomState';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomState';
@@ -63,9 +64,6 @@ export const useAgentChat = (
   const [, setAgentChatInput] = useAtomState(agentChatInputState);
   const setAgentChatDraftsByThreadId = useSetAtomState(
     agentChatDraftsByThreadIdState,
-  );
-  const setAgentChatQueuedMessagesByThreadId = useSetAtomState(
-    agentChatQueuedMessagesByThreadIdState,
   );
 
   const retryFetchWithRenewedToken = async (
@@ -263,14 +261,38 @@ export const useAgentChat = (
     }
 
     if (isStreaming) {
-      const threadId =
-        store.get(currentAIChatThreadState.atom) ??
-        AGENT_CHAT_NEW_THREAD_DRAFT_KEY;
+      const threadId = store.get(currentAIChatThreadState.atom);
 
-      setAgentChatQueuedMessagesByThreadId((prev) => ({
-        ...prev,
-        [threadId]: [...(prev[threadId] ?? []), { text: contentToSend }],
-      }));
+      if (!isDefined(threadId) || !isValidUuid(threadId)) {
+        return;
+      }
+
+      const tokenPair = getTokenPair();
+
+      if (!isDefined(tokenPair)) {
+        return;
+      }
+
+      // Queue message on the server
+      fetch(`${REST_API_BASE_URL}/agent-chat/${threadId}/queue`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${tokenPair.accessOrWorkspaceAgnosticToken.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: contentToSend,
+          ...(isDefined(modelIdForRequest) && {
+            modelId: modelIdForRequest,
+          }),
+        }),
+      })
+        .then(() => {
+          // Refetch messages to show the queued message in the UI
+          dispatchBrowserEvent(AGENT_CHAT_REFETCH_MESSAGES_EVENT_NAME);
+        })
+        .catch(() => {});
+
       setAgentChatInput('');
       setAgentChatDraftsByThreadId((prev) => ({
         ...prev,
@@ -329,50 +351,6 @@ export const useAgentChat = (
     agentChatUploadedFiles,
     setAgentChatUploadedFiles,
     setAgentChatDraftsByThreadId,
-    setAgentChatQueuedMessagesByThreadId,
-    modelIdForRequest,
-  ]);
-
-  const flushNextQueuedMessage = useCallback(async () => {
-    const threadId = store.get(currentAIChatThreadState.atom);
-
-    if (!isDefined(threadId)) {
-      return;
-    }
-
-    const queue =
-      store.get(agentChatQueuedMessagesByThreadIdState.atom)[threadId] ?? [];
-
-    if (queue.length === 0) {
-      return;
-    }
-
-    const [nextMessage, ...remainingMessages] = queue;
-
-    setAgentChatQueuedMessagesByThreadId((prev) => ({
-      ...prev,
-      [threadId]: remainingMessages,
-    }));
-
-    const browsingContext = getBrowsingContext();
-
-    sendMessage(
-      { text: nextMessage.text },
-      {
-        body: {
-          threadId,
-          browsingContext,
-          ...(isDefined(modelIdForRequest) && {
-            modelId: modelIdForRequest,
-          }),
-        },
-      },
-    );
-  }, [
-    store,
-    sendMessage,
-    getBrowsingContext,
-    setAgentChatQueuedMessagesByThreadId,
     modelIdForRequest,
   ]);
 
@@ -419,7 +397,6 @@ export const useAgentChat = (
     handleSendMessage,
     handleStop,
     resumeStream,
-    flushNextQueuedMessage,
     isLoading,
     error,
     status,

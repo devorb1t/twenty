@@ -7,6 +7,7 @@ export const GET_CHAT_MESSAGES = gql`
       threadId
       turnId
       role
+      status
       createdAt
       parts {
         id

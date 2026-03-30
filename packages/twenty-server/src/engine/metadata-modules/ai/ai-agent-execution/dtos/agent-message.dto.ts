@@ -13,14 +13,17 @@ export class AgentMessageDTO {
   @Field(() => UUIDScalarType)
   threadId: string;
 
-  @Field(() => UUIDScalarType)
-  turnId: string;
+  @Field(() => UUIDScalarType, { nullable: true })
+  turnId: string | null;
 
   @Field(() => UUIDScalarType, { nullable: true })
   agentId: string | null;
 
   @Field()
   role: 'system' | 'user' | 'assistant';
+
+  @Field()
+  status: 'queued' | 'sent';
 
   @Field(() => [AgentMessagePartDTO])
   parts: AgentMessagePartDTO[];

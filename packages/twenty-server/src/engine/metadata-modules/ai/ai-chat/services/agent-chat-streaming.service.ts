@@ -21,6 +21,7 @@ import {
   STREAM_AGENT_CHAT_JOB_NAME,
   type StreamAgentChatJobData,
 } from 'src/engine/metadata-modules/ai/ai-chat/jobs/stream-agent-chat.job';
+import { AgentChatService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat.service';
 
 import { AgentChatResumableStreamService } from './agent-chat-resumable-stream.service';
 
@@ -47,6 +48,7 @@ export class AgentChatStreamingService {
     @InjectMessageQueue(MessageQueue.aiStreamQueue)
     private readonly messageQueueService: MessageQueueService,
     private readonly resumableStreamService: AgentChatResumableStreamService,
+    private readonly agentChatService: AgentChatService,
   ) {}
 
   async streamAgentChat({
@@ -123,6 +125,83 @@ export class AgentChatStreamingService {
       response.end();
       throw error;
     }
+  }
+
+  async flushNextQueuedMessage(
+    threadId: string,
+    userWorkspaceId: string,
+    workspaceId: string,
+  ): Promise<void> {
+    const queuedMessages =
+      await this.agentChatService.getQueuedMessages(threadId);
+
+    if (queuedMessages.length === 0) {
+      return;
+    }
+
+    const nextMessage = queuedMessages[0];
+    const textPart = nextMessage.parts?.find((part) => part.type === 'text');
+    const messageText = textPart?.textContent ?? '';
+
+    if (messageText === '') {
+      await this.agentChatService.deleteQueuedMessage(nextMessage.id, threadId);
+
+      return;
+    }
+
+    // Promote the queued message to sent status
+    await this.agentChatService.promoteQueuedMessage(nextMessage.id);
+
+    const thread = await this.threadRepository.findOne({
+      where: { id: threadId },
+    });
+
+    if (!thread) {
+      return;
+    }
+
+    // Fetch all sent messages for this thread to build full conversation
+    const allMessages = await this.agentChatService.getMessagesForThread(
+      threadId,
+      userWorkspaceId,
+    );
+
+    // Build ExtendedUIMessage array from DB messages for the stream job
+    const uiMessages = allMessages
+      .filter((message) => message.status !== 'queued')
+      .map((message) => ({
+        id: message.id,
+        role: message.role as 'user' | 'assistant' | 'system',
+        parts: (message.parts ?? []).map((part) => {
+          if (part.type === 'text') {
+            return { type: 'text' as const, text: part.textContent ?? '' };
+          }
+
+          return { type: part.type as 'text', text: '' };
+        }),
+        createdAt: message.createdAt,
+      }));
+
+    const streamId = generateId();
+
+    await this.messageQueueService.add<StreamAgentChatJobData>(
+      STREAM_AGENT_CHAT_JOB_NAME,
+      {
+        threadId,
+        streamId,
+        userWorkspaceId,
+        workspaceId,
+        messages: uiMessages,
+        browsingContext: null,
+        lastUserMessageText: messageText,
+        lastUserMessageParts: [{ type: 'text', text: messageText }],
+        hasTitle: !!thread.title,
+      },
+    );
+
+    await this.threadRepository.update(threadId, {
+      activeStreamId: streamId,
+    });
   }
 
   private async waitForResumableStream(

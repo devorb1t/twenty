@@ -10,6 +10,7 @@ import { AgentMessagePartEntity } from 'src/engine/metadata-modules/ai/ai-agent-
 import {
   AgentMessageEntity,
   AgentMessageRole,
+  AgentMessageStatus,
 } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message.entity';
 import { AgentTurnEntity } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-turn.entity';
 import { mapUIMessagePartsToDBParts } from 'src/engine/metadata-modules/ai/ai-agent-execution/utils/mapUIMessagePartsToDBParts';
@@ -126,6 +127,67 @@ export class AgentChatService {
       where: { threadId },
       order: { createdAt: 'ASC' },
       relations: ['parts', 'parts.file'],
+    });
+  }
+
+  async queueMessage({
+    threadId,
+    text,
+    modelId,
+  }: {
+    threadId: string;
+    text: string;
+    modelId?: string;
+  }): Promise<AgentMessageEntity> {
+    const message = this.messageRepository.create({
+      threadId,
+      turnId: null,
+      role: AgentMessageRole.USER,
+      agentId: null,
+      status: AgentMessageStatus.QUEUED,
+    });
+
+    const savedMessage = await this.messageRepository.save(message);
+
+    const part = this.messagePartRepository.create({
+      messageId: savedMessage.id,
+      orderIndex: 0,
+      type: 'text',
+      textContent: text,
+    });
+
+    await this.messagePartRepository.save(part);
+
+    return savedMessage;
+  }
+
+  async getQueuedMessages(threadId: string): Promise<AgentMessageEntity[]> {
+    return this.messageRepository.find({
+      where: {
+        threadId,
+        status: AgentMessageStatus.QUEUED,
+      },
+      order: { createdAt: 'ASC' },
+      relations: ['parts'],
+    });
+  }
+
+  async deleteQueuedMessage(
+    messageId: string,
+    threadId: string,
+  ): Promise<boolean> {
+    const result = await this.messageRepository.delete({
+      id: messageId,
+      threadId,
+      status: AgentMessageStatus.QUEUED,
+    });
+
+    return (result.affected ?? 0) > 0;
+  }
+
+  async promoteQueuedMessage(messageId: string): Promise<void> {
+    await this.messageRepository.update(messageId, {
+      status: AgentMessageStatus.SENT,
     });
   }
 

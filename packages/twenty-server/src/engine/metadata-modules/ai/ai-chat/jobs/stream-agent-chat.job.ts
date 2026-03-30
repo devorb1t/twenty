@@ -16,6 +16,7 @@ import { Process } from 'src/engine/core-modules/message-queue/decorators/proces
 import { Processor } from 'src/engine/core-modules/message-queue/decorators/processor.decorator';
 import { MessageQueue } from 'src/engine/core-modules/message-queue/message-queue.constants';
 import { AgentMessageRole } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message.entity';
+import { AgentChatStreamingService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat-streaming.service';
 import type { BrowsingContextType } from 'src/engine/metadata-modules/ai/ai-agent/types/browsingContext.type';
 import { computeCostBreakdown } from 'src/engine/metadata-modules/ai/ai-billing/utils/compute-cost-breakdown.util';
 import { convertDollarsToBillingCredits } from 'src/engine/metadata-modules/ai/ai-billing/utils/convert-dollars-to-billing-credits.util';
@@ -55,6 +56,7 @@ export class StreamAgentChatJob {
     private readonly chatExecutionService: ChatExecutionService,
     private readonly resumableStreamService: AgentChatResumableStreamService,
     private readonly cancelSubscriberService: AgentChatCancelSubscriberService,
+    private readonly agentChatStreamingService: AgentChatStreamingService,
   ) {}
 
   @Process(STREAM_AGENT_CHAT_JOB_NAME)
@@ -105,6 +107,19 @@ export class StreamAgentChatJob {
         })
         .execute()
         .catch(() => {});
+
+      // Auto-flush the next queued message for this thread
+      await this.agentChatStreamingService
+        .flushNextQueuedMessage(
+          data.threadId,
+          data.userWorkspaceId,
+          data.workspaceId,
+        )
+        .catch((error) => {
+          this.logger.error(
+            `Failed to flush queued message for thread ${data.threadId}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        });
     }
   }
 
@@ -150,7 +165,7 @@ export class StreamAgentChatJob {
   }: {
     workspace: WorkspaceEntity;
     data: StreamAgentChatJobData;
-    userMessagePromise: Promise<{ turnId: string }>;
+    userMessagePromise: Promise<{ turnId: string | null }>;
     titlePromise: Promise<string | null>;
     abortSignal: AbortSignal;
   }): Promise<void> {
@@ -358,7 +373,7 @@ export class StreamAgentChatJob {
     };
     lastStepConversationSize: number;
     modelConfig: AIModelConfig;
-    userMessagePromise: Promise<{ turnId: string }>;
+    userMessagePromise: Promise<{ turnId: string | null }>;
   }): Promise<void> {
     if (responseMessage.parts.length === 0) {
       return;
@@ -369,7 +384,7 @@ export class StreamAgentChatJob {
     await this.agentChatService.addMessage({
       threadId,
       uiMessage: responseMessage,
-      turnId: userMessage.turnId,
+      turnId: userMessage.turnId ?? undefined,
     });
 
     await this.threadRepository.update(threadId, {

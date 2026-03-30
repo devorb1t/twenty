@@ -45,6 +45,7 @@ import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/en
 import { getCancelChannel } from 'src/engine/metadata-modules/ai/ai-chat/utils/get-cancel-channel.util';
 import { AgentChatResumableStreamService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat-resumable-stream.service';
 import { AgentChatStreamingService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat-streaming.service';
+import { AgentChatService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat.service';
 import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 
 @Controller('rest/agent-chat')
@@ -58,6 +59,7 @@ export class AgentChatController {
   constructor(
     private readonly agentStreamingService: AgentChatStreamingService,
     private readonly resumableStreamService: AgentChatResumableStreamService,
+    private readonly agentChatService: AgentChatService,
     private readonly billingService: BillingService,
     private readonly twentyConfigService: TwentyConfigService,
     private readonly aiModelRegistryService: AiModelRegistryService,
@@ -179,5 +181,58 @@ export class AgentChatController {
     );
 
     return { success: true };
+  }
+
+  @Post(':threadId/queue')
+  @UseGuards(SettingsPermissionGuard(PermissionFlagType.AI))
+  async queueMessage(
+    @Param('threadId') threadId: string,
+    @Body() body: { text: string; modelId?: string },
+    @AuthUserWorkspaceId() userWorkspaceId: string,
+  ) {
+    const thread = await this.threadRepository.findOne({
+      where: { id: threadId, userWorkspaceId },
+    });
+
+    if (!isDefined(thread)) {
+      throw new AgentException(
+        'Thread not found',
+        AgentExceptionCode.AGENT_EXECUTION_FAILED,
+      );
+    }
+
+    const message = await this.agentChatService.queueMessage({
+      threadId,
+      text: body.text,
+      modelId: body.modelId,
+    });
+
+    return { id: message.id, threadId, status: 'queued' };
+  }
+
+  @Delete(':threadId/queue/:messageId')
+  @UseGuards(SettingsPermissionGuard(PermissionFlagType.AI))
+  async deleteQueuedMessage(
+    @Param('threadId') threadId: string,
+    @Param('messageId') messageId: string,
+    @AuthUserWorkspaceId() userWorkspaceId: string,
+  ) {
+    const thread = await this.threadRepository.findOne({
+      where: { id: threadId, userWorkspaceId },
+    });
+
+    if (!isDefined(thread)) {
+      throw new AgentException(
+        'Thread not found',
+        AgentExceptionCode.AGENT_EXECUTION_FAILED,
+      );
+    }
+
+    const deleted = await this.agentChatService.deleteQueuedMessage(
+      messageId,
+      threadId,
+    );
+
+    return { success: deleted };
   }
 }
