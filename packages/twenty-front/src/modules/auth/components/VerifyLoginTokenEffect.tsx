@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { AppPath } from 'twenty-shared/types';
+import { isDefined } from 'twenty-shared/utils';
 
 import { useHasAccessTokenPair } from '@/auth/hooks/useHasAccessTokenPair';
 import { useVerifyLogin } from '@/auth/hooks/useVerifyLogin';
-import { clientConfigApiStatusState } from '@/client-config/states/clientConfigApiStatusState';
-import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
-import { AppPath } from 'twenty-shared/types';
-import { isDefined } from 'twenty-shared/utils';
+import { tokenPairState } from '@/auth/states/tokenPairState';
+import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomState';
 import { useNavigateApp } from '~/hooks/useNavigateApp';
 
 export const VerifyLoginTokenEffect = () => {
@@ -15,25 +15,18 @@ export const VerifyLoginTokenEffect = () => {
 
   const hasAccessTokenPair = useHasAccessTokenPair();
   const navigate = useNavigateApp();
+  const setTokenPair = useSetAtomState(tokenPairState);
   const { verifyLoginToken } = useVerifyLogin();
 
-  const { isSaved: clientConfigLoaded } = useAtomStateValue(
-    clientConfigApiStatusState,
-  );
-
   useEffect(() => {
-    if (!clientConfigLoaded) {
-      return;
-    }
-
     if (isDefined(loginToken)) {
+      setTokenPair(null);
       verifyLoginToken(loginToken);
     } else if (!hasAccessTokenPair) {
       navigate(AppPath.SignInUp);
     }
-    // Verify only needs to run once at mount
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientConfigLoaded]);
+  }, []);
 
-  return <></>;
+  return null;
 };

@@ -1,23 +1,29 @@
 import { availableWorkspacesState } from '@/auth/states/availableWorkspacesState';
 import { currentUserState } from '@/auth/states/currentUserState';
 import { currentUserWorkspaceState } from '@/auth/states/currentUserWorkspaceState';
+import { currentWorkspaceDeletedMembersState } from '@/auth/states/currentWorkspaceDeletedMembersState';
 import { currentWorkspaceMemberState } from '@/auth/states/currentWorkspaceMemberState';
 import { currentWorkspaceMembersState } from '@/auth/states/currentWorkspaceMembersState';
 import { currentWorkspaceState } from '@/auth/states/currentWorkspaceState';
+import { isCurrentUserLoadedState } from '@/auth/states/isCurrentUserLoadedState';
 import { authProvidersState } from '@/client-config/states/authProvidersState';
 import { useIsCurrentLocationOnAWorkspace } from '@/domain-manager/hooks/useIsCurrentLocationOnAWorkspace';
 import { useLastAuthenticatedWorkspaceDomain } from '@/domain-manager/hooks/useLastAuthenticatedWorkspaceDomain';
 import { useInitializeFormatPreferences } from '@/localization/hooks/useInitializeFormatPreferences';
+import { getDateFnsLocale } from '@/ui/field/display/utils/getDateFnsLocale';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomState';
 import { workspaceAuthBypassProvidersState } from '@/workspace/states/workspaceAuthBypassProvidersState';
+import { useApolloClient } from '@apollo/client/react';
+import { enUS } from 'date-fns/locale';
+import { useStore } from 'jotai';
 import { useCallback } from 'react';
 import { SOURCE_LOCALE, type APP_LOCALES } from 'twenty-shared/translations';
 import { type ObjectPermissions } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { type ColorScheme } from 'twenty-ui/input';
-import { useApolloClient } from '@apollo/client/react';
 import { GetCurrentUserDocument } from '~/generated-metadata/graphql';
+import { dateLocaleState } from '~/localization/states/dateLocaleState';
 import { getWorkspaceUrl } from '~/utils/getWorkspaceUrl';
 import { dynamicActivate } from '~/utils/i18n/dynamicActivate';
 
@@ -33,7 +39,11 @@ export const useLoadCurrentUser = () => {
   const setCurrentWorkspaceMembers = useSetAtomState(
     currentWorkspaceMembersState,
   );
+  const setCurrentWorkspaceDeletedMembers = useSetAtomState(
+    currentWorkspaceDeletedMembersState,
+  );
   const setCurrentWorkspace = useSetAtomState(currentWorkspaceState);
+  const setIsCurrentUserLoaded = useSetAtomState(isCurrentUserLoadedState);
   const { initializeFormatPreferences } = useInitializeFormatPreferences();
   const setWorkspaceAuthBypassProviders = useSetAtomState(
     workspaceAuthBypassProvidersState,
@@ -43,6 +53,7 @@ export const useLoadCurrentUser = () => {
   const { isOnAWorkspace } = useIsCurrentLocationOnAWorkspace();
 
   const client = useApolloClient();
+  const store = useStore();
 
   const loadCurrentUser = useCallback(async () => {
     const currentUserResult = await client.query({
@@ -84,25 +95,42 @@ export const useLoadCurrentUser = () => {
       });
     }
 
+    if (isDefined(user.deletedWorkspaceMembers)) {
+      setCurrentWorkspaceDeletedMembers(user.deletedWorkspaceMembers);
+    }
+
     if (isDefined(user.workspaceMember)) {
+      const memberLocale =
+        (user.workspaceMember.locale as keyof typeof APP_LOCALES) ??
+        SOURCE_LOCALE;
+
       workspaceMember = {
         ...user.workspaceMember,
-        colorScheme: user.workspaceMember?.colorScheme as ColorScheme,
-        locale: user.workspaceMember?.locale ?? SOURCE_LOCALE,
+        colorScheme:
+          (user.workspaceMember.colorScheme as ColorScheme) ?? 'System',
+        locale: memberLocale,
       };
 
       setCurrentWorkspaceMember(workspaceMember);
-
-      // Initialize unified format preferences state
       initializeFormatPreferences(workspaceMember);
-      dynamicActivate(
-        (workspaceMember.locale as keyof typeof APP_LOCALES) ?? SOURCE_LOCALE,
-      );
+      dynamicActivate(memberLocale);
+
+      const currentLocale = store.get(dateLocaleState.atom);
+
+      if (currentLocale.locale !== memberLocale) {
+        getDateFnsLocale(memberLocale).then((localeCatalog) => {
+          store.set(dateLocaleState.atom, {
+            locale: memberLocale,
+            localeCatalog: localeCatalog || enUS,
+          });
+        });
+      }
     }
 
     const workspace = isDefined(user.currentWorkspace)
       ? {
           ...user.currentWorkspace,
+          defaultRole: user.currentWorkspace.defaultRole ?? null,
           workspaceCustomApplication:
             user.currentWorkspace.workspaceCustomApplication ?? null,
         }
@@ -127,6 +155,8 @@ export const useLoadCurrentUser = () => {
       });
     }
 
+    setIsCurrentUserLoaded(true);
+
     return {
       user,
       workspaceMember,
@@ -134,13 +164,16 @@ export const useLoadCurrentUser = () => {
     };
   }, [
     client,
+    store,
     setCurrentUser,
     setCurrentWorkspace,
     isOnAWorkspace,
     setCurrentWorkspaceMembers,
+    setCurrentWorkspaceDeletedMembers,
     setAvailableWorkspaces,
     setCurrentUserWorkspace,
     setCurrentWorkspaceMember,
+    setIsCurrentUserLoaded,
     initializeFormatPreferences,
     setLastAuthenticateWorkspaceDomain,
     authProviders,
