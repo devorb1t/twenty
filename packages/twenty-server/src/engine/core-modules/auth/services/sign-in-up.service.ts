@@ -593,16 +593,18 @@ export class SignInUpService {
       );
 
       await queryRunner.commitTransaction();
-      await this.workspaceCacheService.invalidateAndRecompute(workspaceId, [
-        'flatApplicationMaps',
-      ]);
 
       return { user, workspace };
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      if (queryRunner.isTransactionActive) {
+        await queryRunner.rollbackTransaction();
+      }
       throw error;
     } finally {
       await queryRunner.release();
+      await this.workspaceCacheService.invalidateAndRecompute(workspaceId, [
+        'flatApplicationMaps',
+      ]);
     }
   }
 

@@ -49,12 +49,14 @@ const createSignInUpServiceForTests = () => {
   const queryRunnerMock = {
     manager: {
       save: jest.fn(),
+      update: jest.fn(),
     },
     connect: jest.fn(),
     startTransaction: jest.fn(),
     commitTransaction: jest.fn(),
     rollbackTransaction: jest.fn(),
     release: jest.fn(),
+    isTransactionActive: true,
   };
 
   const service = new SignInUpService(
@@ -276,6 +278,72 @@ describe('SignInUpService workspace-creation policy', () => {
     ).rejects.toMatchObject({
       code: AuthExceptionCode.SIGNUP_DISABLED,
     });
+  });
+
+  it('should not attempt rollback when cache recompute fails after committed transaction', async () => {
+    const {
+      service,
+      mockUserRepository,
+      mockWorkspaceRepository,
+      mockConfigurationValues,
+    } = createSignInUpServiceForTests();
+
+    mockConfigurationValues.IS_MULTIWORKSPACE_ENABLED = true;
+    mockConfigurationValues.IS_WORKSPACE_CREATION_LIMITED_TO_SERVER_ADMINS =
+      false;
+    mockWorkspaceRepository.count.mockResolvedValue(0);
+    mockWorkspaceRepository.create.mockReturnValue({
+      id: 'workspace-id',
+      subdomain: 'test',
+    });
+    mockUserRepository.count.mockResolvedValue(0);
+
+    const queryRunner = (service as any).dataSource.createQueryRunner();
+
+    queryRunner.manager.save.mockResolvedValue({
+      id: 'workspace-id',
+      universalIdentifier: 'test-uid',
+    });
+
+    jest
+      .spyOn((service as any).applicationService, 'createWorkspaceCustomApplication')
+      .mockResolvedValue({ universalIdentifier: 'custom-app-uid' });
+    jest
+      .spyOn((service as any).userWorkspaceService, 'create')
+      .mockResolvedValue(undefined);
+    jest
+      .spyOn((service as any).onboardingService, 'setOnboardingConnectAccountPending')
+      .mockResolvedValue(undefined);
+    jest
+      .spyOn((service as any).onboardingService, 'setOnboardingInviteTeamPending')
+      .mockResolvedValue(undefined);
+
+    const cacheError = new Error('Query read timeout');
+
+    jest
+      .spyOn((service as any).workspaceCacheService, 'invalidateAndRecompute')
+      .mockRejectedValue(cacheError);
+
+    queryRunner.commitTransaction.mockImplementation(() => {
+      queryRunner.isTransactionActive = false;
+    });
+
+    await expect(
+      service.signUpOnNewWorkspace({
+        type: 'newUserWithPicture',
+        newUserWithPicture: {
+          email: 'test@example.com',
+          firstName: 'Test',
+          lastName: 'User',
+          picture: '',
+          locale: 'en',
+          isEmailVerified: true,
+        },
+      }),
+    ).rejects.toThrow(cacheError);
+
+    expect(queryRunner.rollbackTransaction).not.toHaveBeenCalled();
+    expect(queryRunner.release).toHaveBeenCalled();
   });
 
   it('keeps single-workspace SIGNUP_DISABLED behavior after first workspace exists', async () => {
