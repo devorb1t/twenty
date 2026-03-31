@@ -162,7 +162,6 @@ const triggerUpdateRelationOptimisticEffect = ({
   const noDiff = isDeeplyEqual(
     currentFieldValueOnSourceRecord,
     updatedFieldValueOnSourceRecord,
-    { strict: true },
   );
   if (noDiff && !isDeletion) {
     return;
@@ -326,10 +325,9 @@ const triggerUpdateMorphRelationOptimisticEffect = ({
       | null = updatedSourceRecord?.[gqlFieldMorphRelation];
 
     const noDiff = isDeeplyEqual(
-      currentFieldValueOnSourceRecord,
-      updatedFieldValueOnSourceRecord,
-      { strict: true },
-    );
+    currentFieldValueOnSourceRecord,
+    updatedFieldValueOnSourceRecord,
+  );
     if (noDiff && !isDeletion) {
       return;
     }

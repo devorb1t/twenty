@@ -1,4 +1,3 @@
-import deepEqual from 'deep-equal';
+import fastDeepEqual from 'fast-deep-equal';
 
-export const isDeeplyEqual = <T>(a: T, b: T, options?: { strict: boolean }) =>
-  deepEqual(a, b, options);
+export const isDeeplyEqual = <T>(a: T, b: T) => fastDeepEqual(a, b);

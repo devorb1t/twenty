@@ -5,7 +5,7 @@ import { returnToPathState } from '@/auth/states/returnToPathState';
 import { type BillingCheckoutSession } from '@/auth/types/billingCheckoutSession.type';
 import { isValidReturnToPath } from '@/auth/utils/isValidReturnToPath';
 import { BILLING_CHECKOUT_SESSION_DEFAULT_VALUE } from '@/settings/billing/constants/BillingCheckoutSessionDefaultValue';
-import deepEqual from 'deep-equal';
+import fastDeepEqual from 'fast-deep-equal';
 import { useStore } from 'jotai';
 
 export const useInitializeQueryParamState = () => {
@@ -26,7 +26,7 @@ export const useInitializeQueryParamState = () => {
             'plan' in parsedValue &&
             'interval' in parsedValue &&
             'requirePaymentMethod' in parsedValue &&
-            !deepEqual(billingCheckoutSession, parsedValue)
+            !fastDeepEqual(billingCheckoutSession, parsedValue)
           ) {
             store.set(
               billingCheckoutSessionState.atom,
