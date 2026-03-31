@@ -3,7 +3,6 @@ import { contextStoreCurrentObjectMetadataItemIdComponentState } from '@/context
 import { contextStoreCurrentViewIdComponentState } from '@/context-store/states/contextStoreCurrentViewIdComponentState';
 import { contextStoreCurrentViewTypeComponentState } from '@/context-store/states/contextStoreCurrentViewTypeComponentState';
 import { getViewType } from '@/context-store/utils/getViewType';
-import { useSetLastVisitedObjectMetadataId } from '@/navigation/hooks/useSetLastVisitedObjectMetadataId';
 import { useSetLastVisitedViewForObjectMetadataNamePlural } from '@/navigation/hooks/useSetLastVisitedViewForObjectMetadataNamePlural';
 import { type EnrichedObjectMetadataItem } from '@/object-metadata/types/EnrichedObjectMetadataItem';
 import { useAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentState';
@@ -28,9 +27,6 @@ export const MainContextStoreProviderEffect = ({
 }: MainContextStoreProviderEffectProps) => {
   const { setLastVisitedViewForObjectMetadataNamePlural } =
     useSetLastVisitedViewForObjectMetadataNamePlural();
-
-  const { setLastVisitedObjectMetadataId } =
-    useSetLastVisitedObjectMetadataId();
 
   const [contextStoreCurrentViewId, setContextStoreCurrentViewId] =
     useAtomComponentState(
@@ -69,15 +65,10 @@ export const MainContextStoreProviderEffect = ({
       objectNamePlural: objectMetadataItem.namePlural,
       viewId: viewId ?? '',
     });
-
-    setLastVisitedObjectMetadataId({
-      objectMetadataItemId: objectMetadataItem.id,
-    });
   }, [
     contextStoreCurrentObjectMetadataItemId,
     objectMetadataItem,
     setContextStoreCurrentObjectMetadataItemId,
-    setLastVisitedObjectMetadataId,
     setLastVisitedViewForObjectMetadataNamePlural,
     viewId,
   ]);

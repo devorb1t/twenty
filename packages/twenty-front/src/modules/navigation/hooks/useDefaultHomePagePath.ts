@@ -1,91 +1,84 @@
+import { isNonEmptyString } from '@sniptt/guards';
+import { useMemo } from 'react';
+import {
+  AppPath,
+  NavigationMenuItemType,
+  SettingsPath,
+} from 'twenty-shared/types';
+import { getSettingsPath, isDefined } from 'twenty-shared/utils';
+
 import { currentUserState } from '@/auth/states/currentUserState';
-import { lastVisitedObjectMetadataItemIdState } from '@/navigation/states/lastVisitedObjectMetadataItemIdState';
-import { type ObjectPathInfo } from '@/navigation/types/ObjectPathInfo';
-import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
-import { filterReadableActiveObjectMetadataItems } from '@/object-metadata/utils/filterReadableActiveObjectMetadataItems';
+import { isMinimalMetadataReadyState } from '@/metadata-store/states/isMinimalMetadataReadyState';
+import { navigationMenuItemsSelector } from '@/navigation-menu-item/common/states/navigationMenuItemsSelector';
+import { filterAndSortNavigationMenuItems } from '@/navigation-menu-item/common/utils/filterAndSortNavigationMenuItems';
+import { filterWorkspaceNavigationMenuItems } from '@/navigation-menu-item/common/utils/filterWorkspaceNavigationMenuItems';
+import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/display/object/utils/getObjectMetadataForNavigationMenuItem';
+import { getNavigationMenuItemComputedLink } from '@/navigation-menu-item/display/utils/getNavigationMenuItemComputedLink';
+import { objectMetadataItemsSelector } from '@/object-metadata/states/objectMetadataItemsSelector';
+import { getObjectPermissionsForObject } from '@/object-metadata/utils/getObjectPermissionsForObject';
 import { useObjectPermissions } from '@/object-record/hooks/useObjectPermissions';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { viewsSelector } from '@/views/states/selectors/viewsSelector';
-import isEmpty from 'lodash.isempty';
-import { useCallback, useMemo } from 'react';
-import { AppPath, SettingsPath } from 'twenty-shared/types';
-import { getAppPath, getSettingsPath, isDefined } from 'twenty-shared/utils';
-import { useStore } from 'jotai';
 
 export const useDefaultHomePagePath = () => {
-  const store = useStore();
   const currentUser = useAtomStateValue(currentUserState);
   const { objectPermissionsByObjectMetadataId } = useObjectPermissions();
-
-  const { activeObjectMetadataItems } = useFilteredObjectMetadataItems();
-
-  const readableNonSystemObjectMetadataItems = useMemo(
-    () =>
-      filterReadableActiveObjectMetadataItems(
-        activeObjectMetadataItems,
-        objectPermissionsByObjectMetadataId,
-      )
-        .filter((item) => !item.isSystem)
-        .sort((a, b) => a.nameSingular.localeCompare(b.nameSingular)),
-    [activeObjectMetadataItems, objectPermissionsByObjectMetadataId],
-  );
-
-  const getActiveObjectMetadataItemMatchingId = useCallback(
-    (objectMetadataId: string) => {
-      return readableNonSystemObjectMetadataItems.find(
-        (item) => item.id === objectMetadataId,
-      );
-    },
-    [readableNonSystemObjectMetadataItems],
-  );
-
+  const navigationMenuItems = useAtomStateValue(navigationMenuItemsSelector);
+  const objectMetadataItems = useAtomStateValue(objectMetadataItemsSelector);
   const views = useAtomStateValue(viewsSelector);
+  const isMinimalMetadataReady = useAtomStateValue(isMinimalMetadataReadyState);
 
-  const getFirstView = useCallback(
-    (objectMetadataItemId: string | undefined | null) => {
-      return views.find(
-        (view) => view.objectMetadataId === objectMetadataItemId,
-      );
-    },
-    [views],
-  );
+  const firstNavigableLink = useMemo(() => {
+    const workspaceItems =
+      filterWorkspaceNavigationMenuItems(navigationMenuItems);
 
-  const firstObjectPathInfo = useMemo<ObjectPathInfo | null>(() => {
-    const [firstObjectMetadataItem] = readableNonSystemObjectMetadataItems;
-
-    if (!isDefined(firstObjectMetadataItem)) {
-      return null;
-    }
-
-    const view = getFirstView(firstObjectMetadataItem?.id);
-
-    return { objectMetadataItem: firstObjectMetadataItem, view };
-  }, [getFirstView, readableNonSystemObjectMetadataItems]);
-
-  const getDefaultObjectPathInfo = useCallback(() => {
-    const lastVisitedObjectMetadataItemId = store.get(
-      lastVisitedObjectMetadataItemIdState.atom,
+    const sortedItems = filterAndSortNavigationMenuItems(
+      workspaceItems,
+      views,
+      objectMetadataItems,
     );
 
-    const lastVisitedObjectMetadataItem = isDefined(
-      lastVisitedObjectMetadataItemId,
-    )
-      ? getActiveObjectMetadataItemMatchingId(lastVisitedObjectMetadataItemId)
-      : undefined;
+    for (const item of sortedItems) {
+      if (
+        item.type !== NavigationMenuItemType.OBJECT &&
+        item.type !== NavigationMenuItemType.VIEW
+      ) {
+        continue;
+      }
 
-    if (isDefined(lastVisitedObjectMetadataItem)) {
-      return {
-        view: getFirstView(lastVisitedObjectMetadataItemId),
-        objectMetadataItem: lastVisitedObjectMetadataItem,
-      };
+      const objectMetadataItem = getObjectMetadataForNavigationMenuItem(
+        item,
+        objectMetadataItems,
+        views,
+      );
+
+      if (
+        !isDefined(objectMetadataItem) ||
+        !getObjectPermissionsForObject(
+          objectPermissionsByObjectMetadataId,
+          objectMetadataItem.id,
+        ).canReadObjectRecords
+      ) {
+        continue;
+      }
+
+      const link = getNavigationMenuItemComputedLink(
+        item,
+        objectMetadataItems,
+        views,
+      );
+
+      if (isNonEmptyString(link)) {
+        return link;
+      }
     }
 
-    return firstObjectPathInfo;
+    return null;
   }, [
-    firstObjectPathInfo,
-    getActiveObjectMetadataItemMatchingId,
-    getFirstView,
-    store,
+    navigationMenuItems,
+    objectMetadataItems,
+    objectPermissionsByObjectMetadataId,
+    views,
   ]);
 
   const defaultHomePagePath = useMemo(() => {
@@ -93,29 +86,16 @@ export const useDefaultHomePagePath = () => {
       return AppPath.SignInUp;
     }
 
-    if (isEmpty(readableNonSystemObjectMetadataItems)) {
-      return getSettingsPath(SettingsPath.ProfilePage);
+    if (isNonEmptyString(firstNavigableLink)) {
+      return firstNavigableLink;
     }
 
-    const defaultObjectPathInfo = getDefaultObjectPathInfo();
-
-    if (!isDefined(defaultObjectPathInfo)) {
-      return AppPath.NotFound;
+    if (!isMinimalMetadataReady) {
+      return undefined;
     }
 
-    const namePlural = defaultObjectPathInfo.objectMetadataItem?.namePlural;
-    const viewId = defaultObjectPathInfo.view?.id;
-
-    return getAppPath(
-      AppPath.RecordIndexPage,
-      { objectNamePlural: namePlural },
-      viewId ? { viewId } : undefined,
-    );
-  }, [
-    currentUser,
-    getDefaultObjectPathInfo,
-    readableNonSystemObjectMetadataItems,
-  ]);
+    return getSettingsPath(SettingsPath.ProfilePage);
+  }, [currentUser, firstNavigableLink, isMinimalMetadataReady]);
 
   return { defaultHomePagePath };
 };

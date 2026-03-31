@@ -9,11 +9,12 @@ import { useOpenRecordsSearchPageInSidePanel } from '@/side-panel/hooks/useOpenR
 import { useSidePanelMenu } from '@/side-panel/hooks/useSidePanelMenu';
 import { isSidePanelOpenedState } from '@/side-panel/states/isSidePanelOpenedState';
 import { isNavigationDrawerExpandedState } from '@/ui/navigation/states/isNavigationDrawerExpanded';
-import { useSetAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useSetAtomComponentState';
 import { useAtomState } from '@/ui/utilities/state/jotai/hooks/useAtomState';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
+import { useSetAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useSetAtomComponentState';
 import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
 import { useNavigate } from 'react-router-dom';
+import { isDefined } from 'twenty-shared/utils';
 import {
   type IconComponent,
   IconList,
@@ -67,7 +68,7 @@ export const MobileNavigationBar = () => {
         );
         setCurrentMobileNavigationDrawer('main');
 
-        if (isSettingsPage) {
+        if (isSettingsPage && isDefined(defaultHomePagePath)) {
           navigate(defaultHomePagePath);
         }
       },

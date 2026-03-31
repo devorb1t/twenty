@@ -23,6 +23,12 @@ export const IsMinimalMetadataReadyEffect = () => {
     metadataStoreState,
     'views',
   );
+  // oxlint-disable-next-line twenty/matching-state-variable
+  const metadataStoreNavigationMenuItems = useAtomFamilyStateValue(
+    metadataStoreState,
+    'navigationMenuItems',
+  );
+
   const setIsMinimalMetadataReady = useSetAtomState(
     isMinimalMetadataReadyState,
   );
@@ -32,11 +38,15 @@ export const IsMinimalMetadataReadyEffect = () => {
 
     const areObjectsLoaded = metadataStore.status === 'up-to-date';
     const areViewsLoaded = metadataStoreViews.status === 'up-to-date';
+    const areNavigationMenuItemsLoaded =
+      metadataStoreNavigationMenuItems.status === 'up-to-date';
 
     const isReady = !areObjectsLoaded
       ? false
       : !hasAccessTokenPair ||
-        (isDefined(currentUser) && (!hasActiveWorkspace || areViewsLoaded));
+        (isDefined(currentUser) &&
+          (!hasActiveWorkspace ||
+            (areViewsLoaded && areNavigationMenuItemsLoaded)));
 
     if (!areObjectsLoaded) {
       setIsMinimalMetadataReady(false);
@@ -52,6 +62,7 @@ export const IsMinimalMetadataReadyEffect = () => {
     currentWorkspace,
     metadataStore.status,
     metadataStoreViews.status,
+    metadataStoreNavigationMenuItems.status,
     setIsMinimalMetadataReady,
   ]);
 
