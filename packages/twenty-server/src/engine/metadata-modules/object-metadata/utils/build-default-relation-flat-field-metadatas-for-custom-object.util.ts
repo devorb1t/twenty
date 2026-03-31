@@ -21,6 +21,20 @@ import { STANDARD_OBJECT_ICONS } from 'src/engine/workspace-manager/workspace-mi
 import { type UniversalFlatFieldMetadata } from 'src/engine/workspace-manager/workspace-migration/universal-flat-entity/types/universal-flat-field-metadata.type';
 import { type UniversalFlatObjectMetadata } from 'src/engine/workspace-manager/workspace-migration/universal-flat-entity/types/universal-flat-object-metadata.type';
 
+const sourceFieldOverridesByRelationObjectNameSingular: Record<
+  (typeof DEFAULT_RELATIONS_OBJECTS_STANDARD_IDS)[number],
+  { label: string; icon: string }
+> = {
+  noteTarget: { label: 'Notes', icon: 'IconNotes' },
+  taskTarget: { label: 'Tasks', icon: 'IconCheckbox' },
+  attachment: { label: 'Attachments', icon: 'IconFileImport' },
+  timelineActivity: {
+    label: 'Timeline Activities',
+    icon: 'IconTimelineEvent',
+  },
+  favorite: { label: 'Favorites', icon: 'IconHeart' },
+};
+
 const morphIdByRelationObjectNameSingular = {
   timelineActivity:
     STANDARD_OBJECTS.timelineActivity.morphIds.targetMorphId.morphId,
@@ -120,10 +134,16 @@ export const buildDefaultRelationFlatFieldMetadatasForCustomObject = ({
             morphId,
             targetFieldName: fieldName,
             createFieldInput: {
-              icon: 'IconBuildingSkyscraper',
+              icon:
+                sourceFieldOverridesByRelationObjectNameSingular[
+                  objectMetadataNameSingular
+                ].icon,
               type: FieldMetadataType.RELATION,
               name: targetFlatObjectMetadata.namePlural,
-              label: capitalize(targetFlatObjectMetadata.labelPlural),
+              label:
+                sourceFieldOverridesByRelationObjectNameSingular[
+                  objectMetadataNameSingular
+                ].label,
               isSystem: false,
               relationCreationPayload: {
                 type: RelationType.ONE_TO_MANY,
