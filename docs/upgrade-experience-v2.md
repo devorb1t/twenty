@@ -296,6 +296,71 @@ This recap is also the foundation for the "report-a-problem" template and the se
 
 ---
 
+## Upgrade History
+
+### `workspace_upgrade_history` Table
+
+A new table in the **core schema** (shared, not per-workspace) that records every step execution. This provides persistent audit trail, enables skipping already-completed steps, and feeds the workspace recap tooling and report-a-problem template.
+
+**Columns**:
+
+- `id` (uuid, PK)
+- `workspaceId` (uuid, nullable -- null for global steps)
+- `version` (varchar -- the version bundle this step belongs to, e.g. `1.20.0`)
+- `stepName` (varchar -- unique identifier for the step, e.g. `backfillCommandMenuItems`)
+- `stepType` (varchar -- `global` or `per-workspace`)
+- `status` (varchar -- `started` / `completed` / `failed`)
+- `runByVersion` (varchar -- the `APP_VERSION` of the Twenty instance that executed this step, e.g. `1.20.1`. Useful for debugging: if a step was completed by a buggy version, this tells you which build ran it.)
+- `startedAt` (timestamp)
+- `completedAt` (timestamp, nullable)
+- `errorMessage` (text, nullable -- captured on failure)
+- `createdAt` / `updatedAt` (timestamps)
+
+**Lifecycle**: the orchestrator writes a `started` row before executing a step, then updates it to `completed` or `failed` when it finishes. This means a crash mid-step leaves a `started` row with no `completedAt` -- the orchestrator treats this as "not completed" on re-run.
+
+### Skip vs Re-Run Behavior
+
+Two layers control whether a previously completed step is re-run:
+
+**1. Per-step configuration (`skipIfCompleted`)**:
+
+Each step declares whether it's safe to skip when already recorded as `completed` in the history table:
+
+```typescript
+{ type: 'per-workspace', command: this.backfillCommandMenuItems, skipIfCompleted: true }
+{ type: 'per-workspace', command: this.recomputeDerivedData, skipIfCompleted: false }
+```
+
+- `skipIfCompleted: true` (default for most steps): if the history table shows this step completed successfully for this workspace (or globally), the orchestrator skips it. Suitable for backfills and one-time migrations.
+- `skipIfCompleted: false`: the step always re-runs regardless of history. Suitable for steps that recompute derived data that may have drifted, or steps where idempotent re-execution is cheap and correctness matters more than speed.
+
+**2. Global override flag (`--force-rerun`)**:
+
+Overrides all per-step `skipIfCompleted` settings -- every step runs regardless of history. Useful for debugging, or when a previous "successful" run is suspected of leaving inconsistent state.
+
+**Decision flow**:
+
+```mermaid
+flowchart TD
+  Step["Step to execute"] --> ForceFlag{"--force-rerun flag?"}
+  ForceFlag -->|yes| Run["Run the step"]
+  ForceFlag -->|no| CheckConfig{"skipIfCompleted?"}
+  CheckConfig -->|false| Run
+  CheckConfig -->|true| CheckHistory{"History shows completed?"}
+  CheckHistory -->|no| Run
+  CheckHistory -->|yes| Skip["Skip the step (log as skipped)"]
+```
+
+### Impact on the Real-World Example
+
+With the history table, re-running the upgrade after a partial failure becomes much faster. If Workspace B failed during `steps_1190.slow` and the operator re-runs:
+
+- Phase 1 fast commands: all skip (already completed in history)
+- Workspace A and C: all steps skip (already completed)
+- Workspace B: `steps_1180.slow` steps skip (completed), `steps_1190.slow` resumes from the failed step
+
+---
+
 ## Post-Upgrade Health Check
 
 After all version bundles complete, the orchestrator runs a health check per workspace:
@@ -312,10 +377,11 @@ Health check results are included in the upgrade report. Failures are warnings (
 
 ### Structured Upgrade Report
 
-Replace raw stack traces with a structured report:
+Replace raw stack traces with a structured report, built from the `workspace_upgrade_history` table:
 
 - Per-workspace status: success / failure / skipped (already at target version) / refused (below range).
 - For failures: the step that failed, a human-readable error message, and the full stack trace captured (not dumped to stdout).
+- For skipped steps: reason (already completed in history, or workspace already at target).
 - Summary: total workspaces, succeeded, failed, skipped.
 
 ### Report-a-Problem Template (follow-up)
