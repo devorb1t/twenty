@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { FieldMetadataType } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
@@ -22,6 +22,8 @@ type RelationFieldMetadata = EntitySchemaFieldMetadata<
 
 @Injectable()
 export class EntitySchemaRelationFactory {
+  private readonly logger = new Logger(EntitySchemaRelationFactory.name);
+
   constructor() {}
 
   create(
@@ -37,6 +39,22 @@ export class EntitySchemaRelationFactory {
 
     for (const fieldMetadata of fieldMetadatas) {
       if (!this.isRelationField(fieldMetadata)) {
+        continue;
+      }
+
+      // Parallel queries without a shared transaction can observe different
+      // snapshots under READ COMMITTED isolation. A concurrent ObjectMetadata
+      // hard-delete (with FK CASCADE on FieldMetadata) that commits between
+      // the ObjectMetadata and FieldMetadata queries leaves orphaned relation
+      // fields in the result set. Skip them to avoid failing the entire cache.
+      if (
+        !fieldMetadata.relationTargetObjectMetadataId ||
+        !objectMetadataMaps.byId[fieldMetadata.relationTargetObjectMetadataId]
+      ) {
+        this.logger.warn(
+          `Skipping orphaned relation field ${fieldMetadata.id}: target ObjectMetadata ${fieldMetadata.relationTargetObjectMetadataId ?? 'null'} not found`,
+        );
+
         continue;
       }
 
