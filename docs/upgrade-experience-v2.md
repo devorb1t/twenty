@@ -358,7 +358,16 @@ A new table in the **core schema** (shared, not per-workspace) that records ever
 - `logs` (text, nullable -- all log output correlated to this command execution via correlation ID. Includes the command's own logs, ORM queries, SQL errors, service calls, and framework context -- one unified stream. Tail-truncated to last 5,000 lines if exceeded; when truncated, a `[TRUNCATED - showing last 5000 of N total lines]` header is prepended. Stored on failure only.)
 - `createdAt` / `updatedAt` (timestamps)
 
-**Lifecycle**: the orchestrator writes a `started` row before executing a command, then updates it to `completed` or `failed` when it finishes. This means a crash mid-command leaves a `started` row with no `completedAt` -- the orchestrator treats this as "not completed" on re-run.
+**Lifecycle**: one row per (`commandName`, `version`, `workspaceId`) combination, upserted across re-runs:
+
+- First execution: insert with `status: started`.
+- On completion: update to `completed`, clear `error` and `logs`.
+- On failure: update to `failed`, store `error` and `logs`.
+- On re-run: update the same row back to `started` (clearing previous `error`/`logs`), then to `completed` or `failed`.
+
+A crash mid-command leaves a `started` row with no `completedAt` -- the orchestrator treats this as "not completed" on re-run.
+
+Previous failure logs are overwritten when a command is re-run. This is intentional -- the table reflects the **current state** of each command, not a full execution history. Failure logs serve their purpose in real-time (the operator reads them, fixes the issue, re-runs). Once the command succeeds, old failure context is no longer relevant.
 
 ### Re-Run Behavior
 
