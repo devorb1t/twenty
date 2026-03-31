@@ -38,6 +38,55 @@ Replace the current deep inheritance chain with two explicit base classes and an
 - **GlobalCommand**: Runs once, globally, workspace-agnostic. Example: running pending TypeORM core migrations (`transaction: 'each'`), applying a breaking schema change.
 - **PerWorkspaceCommand**: Iterates over all active/suspended workspaces and executes per-workspace logic. Example: backfilling data, migrating workspace schemas.
 
+### Step Contract
+
+Every step (both `GlobalCommand` and `PerWorkspaceCommand`) must follow a strict contract:
+
+**Return type -- discriminated union**:
+
+```typescript
+type UpgradeStepResult =
+  | { status: 'success' }
+  | { status: 'failure'; error: string };
+```
+
+- Steps must **never throw**. They return `{ status: 'failure', error }` instead.
+- The orchestrator wraps each step execution in a try/catch to handle unexpected exceptions -- these are converted into a `failure` result with the caught error message and stack.
+
+**Log capture**:
+
+Steps use the standard NestJS `Logger` (`this.logger`) -- no custom callback or API change. The orchestrator intercepts log output at two levels:
+
+**Step logger -- signal** (full capture, tail-truncated):
+- The orchestrator wraps the step's own `Logger` instance to tee its output into a per-step buffer, in addition to normal stdout behavior.
+- This captures the step's own narrative: progress, warnings, decisions. No change needed in step code.
+- Tail-truncated to last 5,000 lines if exceeded. A `[TRUNCATED]` header is prepended when truncation occurs.
+- On **failure**: the buffer is stored in the `stepLogs` column of the `workspace_upgrade_history` table.
+- On **success**: the buffer is discarded (already written to stdout).
+
+**Global NestJS logger -- noise/context** (rolling buffer):
+- During each step execution, the orchestrator captures a rolling buffer of the last 500 lines from the global NestJS `LoggerService`, all log levels. This includes ORM queries, SQL errors, service-level logs, and framework context from other services the step calls.
+- A `[TRUNCATED]` header is prepended when the buffer wraps.
+- On **failure**: the buffer is stored in the `serverLogs` column of the history table.
+- On **success**: the buffer is discarded.
+
+The two columns are a **signal-to-noise separation**: `stepLogs` is the clean story of what the step was doing; `serverLogs` is the system-level context underneath. Debuggers read `stepLogs` first, then `serverLogs` only if they need to dig deeper.
+
+**Orchestrator error handling**:
+
+```typescript
+let result: UpgradeStepResult;
+
+try {
+  result = await step.command.execute(context);
+} catch (unexpectedError) {
+  result = {
+    status: 'failure',
+    error: `${unexpectedError.message}\n${unexpectedError.stack}`,
+  };
+}
+```
+
 ### Version Bundles and Steps
 
 **Terminology**:
@@ -313,7 +362,11 @@ A new table in the **core schema** (shared, not per-workspace) that records ever
 - `runByVersion` (varchar -- the `APP_VERSION` of the Twenty instance that executed this step, e.g. `1.20.1`. Useful for debugging: if a step was completed by a buggy version, this tells you which build ran it.)
 - `startedAt` (timestamp)
 - `completedAt` (timestamp, nullable)
-- `errorMessage` (text, nullable -- captured on failure)
+- `error` (text, nullable -- full error string from `UpgradeStepResult.error` on failure, including stack trace)
+- `stepLogs` (text, nullable -- **signal**: the step's own narrative via `StepLogger` callback. Contains progress, warnings, decisions made by the step. Tail-truncated to last 5,000 lines if exceeded; when truncated, a `[TRUNCATED - showing last 5000 of N total lines]` header is prepended. Stored on failure only.)
+- `serverLogs` (text, nullable -- **noise/context**: rolling buffer of the last 500 lines from the global NestJS logger during the step's execution window, all log levels. Contains ORM queries, SQL errors, framework-level context. When the buffer is full, oldest lines are dropped and a `[TRUNCATED - showing last 500 of N total lines]` header is prepended. Stored on failure only.)
+
+**Debugging workflow**: read `stepLogs` first -- it tells you what the step was doing and where it went wrong. Only dig into `serverLogs` if you need deeper system-level context (e.g. the actual SQL query that failed, connection errors, framework exceptions).
 - `createdAt` / `updatedAt` (timestamps)
 
 **Lifecycle**: the orchestrator writes a `started` row before executing a step, then updates it to `completed` or `failed` when it finishes. This means a crash mid-step leaves a `started` row with no `completedAt` -- the orchestrator treats this as "not completed" on re-run.
