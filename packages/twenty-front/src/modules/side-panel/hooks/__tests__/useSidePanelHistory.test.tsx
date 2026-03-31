@@ -100,10 +100,14 @@ describe('useSidePanelHistory', () => {
 
     act(() => {
       result.current.commandMenuHistory.goBackFromSidePanel();
-      result.current.sidePanelCloseAnimationCompleteCleanup.sidePanelCloseAnimationCompleteCleanup();
     });
 
     expect(jotaiStore.get(sidePanelNavigationStackState.atom)).toEqual([]);
+
+    act(() => {
+      result.current.sidePanelCloseAnimationCompleteCleanup.sidePanelCloseAnimationCompleteCleanup();
+    });
+
     expect(jotaiStore.get(sidePanelPageState.atom)).toBe(
       SidePanelPages.CommandMenuDisplay,
     );
