@@ -13,12 +13,15 @@ const StyledWorkflowStepBody = styled.div<{
   gridTemplateRows?: string;
 }>`
   background: ${themeCssVariables.background.primary};
+  box-sizing: border-box;
   display: ${({ display }) => display ?? 'flex'};
   flex: 1 1 auto;
   flex-direction: column;
   grid-template-rows: ${({ gridTemplateRows }) => gridTemplateRows ?? 'none'};
   height: 100%;
+  min-width: 0;
   overflow: ${({ overflow }) => overflow ?? 'hidden scroll'};
+  width: 100%;
   padding-block: ${({ paddingBlock }) =>
     paddingBlock ?? themeCssVariables.spacing[4]};
   padding-inline: ${({ paddingInline }) =>

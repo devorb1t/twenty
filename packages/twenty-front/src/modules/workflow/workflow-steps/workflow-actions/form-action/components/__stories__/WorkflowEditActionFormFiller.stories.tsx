@@ -69,7 +69,6 @@ const mockAction: WorkflowFormAction = {
         name: 'date',
         label: 'Date',
         type: FieldMetadataType.DATE,
-        placeholder: 'mm/dd/yyyy',
         settings: {},
       },
     ],
@@ -158,7 +157,9 @@ export const ReadonlyMode: Story = {
     const numberInput = await canvas.findByPlaceholderText('Enter number');
     expect(numberInput).toBeDisabled();
 
-    const dateInput = await canvas.findByPlaceholderText('mm/dd/yyyy');
+    const dateInput = await canvas.findByPlaceholderText(
+      /^(dd\/MM\/yyyy|MM\/dd\/yyyy|yyyy-MM-dd)$/,
+    );
     expect(dateInput).toBeDisabled();
 
     const submitButton = canvas.queryByText('Submit');

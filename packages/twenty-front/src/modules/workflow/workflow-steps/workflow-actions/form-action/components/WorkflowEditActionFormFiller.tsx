@@ -1,21 +1,43 @@
-import { WorkflowStepCmdEnterButton } from '@/workflow/workflow-steps/components/WorkflowStepCmdEnterButton';
-import { useSidePanelHistory } from '@/side-panel/hooks/useSidePanelHistory';
+import { useDateTimeFormat } from '@/localization/hooks/useDateTimeFormat';
 import { FormFieldInput } from '@/object-record/record-field/ui/components/FormFieldInput';
 import { FormSingleRecordPicker } from '@/object-record/record-field/ui/form-types/components/FormSingleRecordPicker';
 import { type FieldMetadata } from '@/object-record/record-field/ui/types/FieldMetadata';
+import { useSidePanelHistory } from '@/side-panel/hooks/useSidePanelHistory';
 import { SidePanelFooter } from '@/ui/layout/side-panel/components/SidePanelFooter';
 import { useWorkflowRunIdOrThrow } from '@/workflow/hooks/useWorkflowRunIdOrThrow';
 import { type WorkflowFormAction } from '@/workflow/types/Workflow';
 import { WorkflowStepBody } from '@/workflow/workflow-steps/components/WorkflowStepBody';
+import { WorkflowStepCmdEnterButton } from '@/workflow/workflow-steps/components/WorkflowStepCmdEnterButton';
 import { useUpdateWorkflowRunStep } from '@/workflow/workflow-steps/hooks/useUpdateWorkflowRunStep';
 import { WorkflowFormFieldInput } from '@/workflow/workflow-steps/workflow-actions/components/WorkflowFormFieldInput';
 import { useSubmitFormStep } from '@/workflow/workflow-steps/workflow-actions/form-action/hooks/useSubmitFormStep';
 import { type WorkflowFormActionField } from '@/workflow/workflow-steps/workflow-actions/form-action/types/WorkflowFormActionField';
-import { getDefaultFormFieldSettings } from '@/workflow/workflow-steps/workflow-actions/form-action/utils/getDefaultFormFieldSettings';
+import { getWorkflowFormFieldPlaceholder } from '@/workflow/workflow-steps/workflow-actions/form-action/utils/getWorkflowFormFieldPlaceholder';
 import { useLingui } from '@lingui/react/macro';
+import { styled } from '@linaria/react';
 import { useEffect, useState } from 'react';
 import { isDefined } from 'twenty-shared/utils';
+import { themeCssVariables } from 'twenty-ui/theme-constants';
 import { useDebouncedCallback } from 'use-debounce';
+
+const StyledWorkflowFormFillerRoot = styled.div`
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+`;
+
+const StyledWorkflowFormFillerFields = styled.div`
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: ${themeCssVariables.spacing[4]};
+  min-width: 0;
+  width: 100%;
+`;
 
 export type WorkflowEditActionFormFillerProps = {
   action: WorkflowFormAction;
@@ -31,6 +53,7 @@ export const WorkflowEditActionFormFiller = ({
   actionOptions,
 }: WorkflowEditActionFormFillerProps) => {
   const { t } = useLingui();
+  const { dateFormat } = useDateTimeFormat();
   const { submitFormStep } = useSubmitFormStep();
   const [formData, setFormData] = useState<FormData>(action.settings.input);
   const workflowRunId = useWorkflowRunIdOrThrow();
@@ -99,8 +122,9 @@ export const WorkflowEditActionFormFiller = ({
   }, [saveAction]);
 
   return (
-    <>
+    <StyledWorkflowFormFillerRoot>
       <WorkflowStepBody>
+        <StyledWorkflowFormFillerFields>
         {formData.map((field) => {
           if (field.type === 'RECORD') {
             const objectNameSingular = field.settings?.objectName;
@@ -156,6 +180,7 @@ export const WorkflowEditActionFormFiller = ({
           return (
             <FormFieldInput
               key={field.id}
+              defaultValue={field.value}
               field={{
                 label: field.label,
                 type: field.type,
@@ -167,18 +192,18 @@ export const WorkflowEditActionFormFiller = ({
                   value,
                 });
               }}
-              defaultValue={field.value}
-              readonly={actionOptions.readonly}
-              placeholder={
-                field.placeholder ??
-                getDefaultFormFieldSettings(field.type).placeholder
-              }
               onError={(error) => {
                 setError(error);
               }}
+              placeholder={getWorkflowFormFieldPlaceholder({
+                field,
+                dateFormat,
+              })}
+              readonly={actionOptions.readonly}
             />
           );
         })}
+        </StyledWorkflowFormFillerFields>
       </WorkflowStepBody>
       {!actionOptions.readonly && (
         <SidePanelFooter
@@ -191,6 +216,6 @@ export const WorkflowEditActionFormFiller = ({
           ]}
         />
       )}
-    </>
+    </StyledWorkflowFormFillerRoot>
   );
 };

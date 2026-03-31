@@ -1,9 +1,11 @@
+import { t } from '@lingui/core/macro';
 import { useDateTimeFormat } from '@/localization/hooks/useDateTimeFormat';
 import { FormFieldInputContainer } from '@/object-record/record-field/ui/form-types/components/FormFieldInputContainer';
 import { FormFieldInputInnerContainer } from '@/object-record/record-field/ui/form-types/components/FormFieldInputInnerContainer';
 import { FormFieldInputRowContainer } from '@/object-record/record-field/ui/form-types/components/FormFieldInputRowContainer';
 import { VariableChipStandalone } from '@/object-record/record-field/ui/form-types/components/VariableChipStandalone';
 import { type VariablePickerComponent } from '@/object-record/record-field/ui/form-types/types/VariablePickerComponent';
+import { InputHint } from '@/ui/input/components/InputHint';
 import { InputLabel } from '@/ui/input/components/InputLabel';
 import { DatePicker } from '@/ui/input/components/internal/date/components/DatePicker';
 import {
@@ -31,14 +33,20 @@ import { Key } from 'ts-key-enum';
 import { isDefined } from 'twenty-shared/utils';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 import { type Nullable } from 'twenty-ui/utilities';
-import { getDateFormatStringForDatePickerInputMask } from '~/utils/date-utils';
+import {
+  getDateFormatStringForDatePickerInputMask,
+  isCompleteDatePickerMaskInput,
+} from '~/utils/date-utils';
 
-const StyledInputContainerWrapper = styled.div`
+const StyledInputContainerWrapper = styled.div<{ fullWidth?: boolean }>`
   display: grid;
+  flex: ${({ fullWidth }) => (fullWidth === true ? '1 1 auto' : 'none')};
   grid-template-columns: 1fr;
   grid-template-rows: 1fr 0;
+  min-width: ${({ fullWidth }) => (fullWidth === true ? '0' : 'auto')};
   overflow: visible;
   position: relative;
+  width: ${({ fullWidth }) => (fullWidth === true ? '100%' : 'auto')};
 `;
 
 const StyledDateInputAbsoluteContainer = styled.div`
@@ -46,18 +54,23 @@ const StyledDateInputAbsoluteContainer = styled.div`
   top: ${themeCssVariables.spacing[1]};
 `;
 
-const StyledDateInput = styled.input<{ hasError?: boolean }>`
+const StyledDateInput = styled.input<{
+  fullWidth?: boolean;
+  hasError?: boolean;
+}>`
   background-color: transparent;
   border: none;
   color: ${({ hasError }) =>
     hasError
       ? themeCssVariables.color.red
       : themeCssVariables.font.color.primary};
-  color: ${themeCssVariables.font.color.primary};
   font-family: ${themeCssVariables.font.family};
   font-size: inherit;
   font-weight: inherit;
+  min-width: ${({ fullWidth }) => (fullWidth === true ? '0' : 'auto')};
   outline: none;
+  padding: ${themeCssVariables.spacing[0]} ${themeCssVariables.spacing[2]};
+  width: ${({ fullWidth }) => (fullWidth === true ? '100%' : 'auto')};
 
   &::placeholder,
   &::-webkit-input-placeholder {
@@ -69,8 +82,6 @@ const StyledDateInput = styled.input<{ hasError?: boolean }>`
   &:disabled {
     color: ${themeCssVariables.font.color.tertiary};
   }
-
-  padding: ${themeCssVariables.spacing[0]} ${themeCssVariables.spacing[2]};
 `;
 
 const StyledDateInputContainer = styled.div`
@@ -90,21 +101,27 @@ type DraftValue =
     };
 
 type FormDateFieldInputProps = {
-  label?: string;
   defaultValue: string | undefined;
+  error?: string;
+  fullWidth?: boolean;
+  label?: string;
   onChange: (value: string | null) => void;
+  onError?: (error: string | undefined) => void;
   placeholder?: string;
-  VariablePicker?: VariablePickerComponent;
   readonly?: boolean;
+  VariablePicker?: VariablePickerComponent;
 };
 
 export const FormDateFieldInput = ({
-  label,
   defaultValue,
+  error: errorFromProps,
+  fullWidth = true,
+  label,
   onChange,
-  VariablePicker,
-  readonly,
+  onError,
   placeholder,
+  readonly,
+  VariablePicker,
 }: FormDateFieldInputProps) => {
   const instanceId = useId();
   const { dateFormat } = useDateTimeFormat();
@@ -113,6 +130,10 @@ export const FormDateFieldInput = ({
     useParsePlainDateToDateInputString();
   const { parseDateInputStringToPlainDate } =
     useParseDateInputStringToPlainDate();
+
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(
+    undefined,
+  );
 
   const [draftValue, setDraftValue] = useState<DraftValue>(
     isStandaloneVariableString(defaultValue)
@@ -182,6 +203,9 @@ export const FormDateFieldInput = ({
   });
 
   const handlePickerChange = (newDate: Nullable<string>) => {
+    setErrorMessage(undefined);
+    onError?.(undefined);
+
     setDraftValue({
       type: 'static',
       mode: 'edit',
@@ -216,6 +240,9 @@ export const FormDateFieldInput = ({
   };
 
   const handlePickerClear = () => {
+    setErrorMessage(undefined);
+    onError?.(undefined);
+
     setDraftValue({
       type: 'static',
       value: null,
@@ -229,7 +256,52 @@ export const FormDateFieldInput = ({
     persistDate(null);
   };
 
+  const persistTypedDate = (rawTrimmed: string) => {
+    if (readonly === true) {
+      return;
+    }
+
+    if (rawTrimmed === '') {
+      handlePickerClear();
+      return;
+    }
+
+    if (!isCompleteDatePickerMaskInput(rawTrimmed, dateFormat)) {
+      setErrorMessage(undefined);
+      onError?.(undefined);
+      return;
+    }
+
+    const parsedInputPlainDate = parseDateInputStringToPlainDate(rawTrimmed);
+
+    if (!isDefined(parsedInputPlainDate)) {
+      setErrorMessage(t`Invalid date`);
+      onError?.(t`Invalid date`);
+      return;
+    }
+
+    setErrorMessage(undefined);
+    onError?.(undefined);
+
+    const validatedDate = parsedInputPlainDate;
+
+    setDraftValue({
+      type: 'static',
+      value: validatedDate,
+      mode: 'edit',
+    });
+
+    setPickerDate(validatedDate);
+
+    setInputDate(parsePlainDateToDateInputString(validatedDate));
+
+    persistDate(validatedDate);
+  };
+
   const handlePickerMouseSelect = (newDate: Nullable<string>) => {
+    setErrorMessage(undefined);
+    onError?.(undefined);
+
     setDraftValue({
       type: 'static',
       value: newDate ?? null,
@@ -254,43 +326,23 @@ export const FormDateFieldInput = ({
   };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setInputDate(event.target.value);
+    const nextValue = event.target.value;
+    setInputDate(nextValue);
+    persistTypedDate(nextValue.trim());
   };
 
   const handleInputKeydown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== 'Enter') {
+    if (event.key !== Key.Enter) {
       return;
     }
 
-    const inputDateTime = inputDate.trim();
-
-    if (inputDateTime === '') {
-      handlePickerClear();
-      return;
-    }
-
-    const parsedInputPlainDate = parseDateInputStringToPlainDate(inputDateTime);
-
-    if (!isDefined(parsedInputPlainDate)) {
-      return;
-    }
-
-    let validatedDate = parsedInputPlainDate;
-
-    setDraftValue({
-      type: 'static',
-      value: validatedDate,
-      mode: 'edit',
-    });
-
-    setPickerDate(validatedDate);
-
-    setInputDate(parsePlainDateToDateInputString(validatedDate));
-
-    persistDate(validatedDate);
+    persistTypedDate(event.currentTarget.value.trim());
   };
 
   const handleVariableTagInsert = (variableName: string) => {
+    setErrorMessage(undefined);
+    onError?.(undefined);
+
     setDraftValue({
       type: 'variable',
       value: variableName,
@@ -302,6 +354,9 @@ export const FormDateFieldInput = ({
   };
 
   const handleUnlinkVariable = () => {
+    setErrorMessage(undefined);
+    onError?.(undefined);
+
     setDraftValue({
       type: 'static',
       value: null,
@@ -312,6 +367,8 @@ export const FormDateFieldInput = ({
 
     onChange(null);
   };
+
+  const error = errorMessage ?? errorFromProps;
 
   useHotkeysOnFocusedElement({
     keys: [Key.Escape],
@@ -325,7 +382,10 @@ export const FormDateFieldInput = ({
       {label ? <InputLabel>{label}</InputLabel> : null}
 
       <FormFieldInputRowContainer>
-        <StyledInputContainerWrapper ref={datePickerWrapperRef}>
+        <StyledInputContainerWrapper
+          ref={datePickerWrapperRef}
+          fullWidth={fullWidth}
+        >
           <FormFieldInputInnerContainer
             formFieldInputInstanceId={instanceId}
             hasRightElement={isDefined(VariablePicker) && !readonly}
@@ -333,9 +393,11 @@ export const FormDateFieldInput = ({
             {draftValue.type === 'static' ? (
               <>
                 <StyledDateInput
+                  fullWidth={fullWidth}
                   type="text"
                   placeholder={placeholderToDisplay}
                   value={inputDate}
+                  hasError={isDefined(error)}
                   onFocus={handleInputFocus}
                   onChange={handleInputChange}
                   onKeyDown={handleInputKeydown}
@@ -377,6 +439,8 @@ export const FormDateFieldInput = ({
           />
         ) : null}
       </FormFieldInputRowContainer>
+
+      {error ? <InputHint danger>{error}</InputHint> : null}
     </FormFieldInputContainer>
   );
 };

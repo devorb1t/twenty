@@ -37,7 +37,7 @@ describe('getDefaultFormFieldSettings', () => {
       id: 'test-uuid-123',
       name: 'date',
       label: 'Date',
-      placeholder: 'mm/dd/yyyy',
+      placeholder: '',
     });
   });
 
@@ -107,7 +107,7 @@ describe('getDefaultFormFieldSettings', () => {
     const dateResult = getDefaultFormFieldSettings(FieldMetadataType.DATE);
     expect(dateResult.name).toBe('date');
     expect(dateResult.label).toBe('Date');
-    expect(dateResult.placeholder).toBe('mm/dd/yyyy');
+    expect(dateResult.placeholder).toBe('');
 
     const recordResult = getDefaultFormFieldSettings('RECORD');
     expect(recordResult.name).toBe('record');

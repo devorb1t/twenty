@@ -26,12 +26,15 @@ import { isDefined } from 'twenty-shared/utils';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 import { type Nullable } from 'twenty-ui/utilities';
 
-const StyledInputContainerWrapper = styled.div`
+const StyledInputContainerWrapper = styled.div<{ fullWidth?: boolean }>`
   display: grid;
+  flex: ${({ fullWidth }) => (fullWidth === true ? '1 1 auto' : 'none')};
   grid-template-columns: 1fr;
   grid-template-rows: 1fr 0;
+  min-width: ${({ fullWidth }) => (fullWidth === true ? '0' : 'auto')};
   overflow: visible;
   position: relative;
+  width: ${({ fullWidth }) => (fullWidth === true ? '100%' : 'auto')};
 `;
 
 const StyledDateInputAbsoluteContainer = styled.div`
@@ -39,9 +42,11 @@ const StyledDateInputAbsoluteContainer = styled.div`
   top: ${themeCssVariables.spacing[1]};
 `;
 
-const StyledDateInputTextContainer = styled.div`
+const StyledDateInputTextContainer = styled.div<{ fullWidth?: boolean }>`
   align-items: center;
   display: flex;
+  min-width: ${({ fullWidth }) => (fullWidth === true ? '0' : 'auto')};
+  width: ${({ fullWidth }) => (fullWidth === true ? '100%' : 'auto')};
 `;
 
 const StyledDateInputContainer = styled.div`
@@ -61,22 +66,24 @@ type DraftValue =
     };
 
 type FormDateTimeFieldInputProps = {
-  label?: string;
   defaultValue: string | undefined;
+  fullWidth?: boolean;
+  label?: string;
   onChange: (value: string | null) => void;
   placeholder?: string;
-  VariablePicker?: VariablePickerComponent;
   readonly?: boolean;
   timeZone?: string;
+  VariablePicker?: VariablePickerComponent;
 };
 
 export const FormDateTimeFieldInput = ({
-  label,
   defaultValue,
+  fullWidth = true,
+  label,
   onChange,
-  VariablePicker,
   readonly,
   timeZone,
+  VariablePicker,
 }: FormDateTimeFieldInputProps) => {
   const instanceId = useId();
 
@@ -249,16 +256,20 @@ export const FormDateTimeFieldInput = ({
       {label ? <InputLabel>{label}</InputLabel> : null}
 
       <FormFieldInputRowContainer>
-        <StyledInputContainerWrapper ref={datePickerWrapperRef}>
+        <StyledInputContainerWrapper
+          ref={datePickerWrapperRef}
+          fullWidth={fullWidth}
+        >
           <FormFieldInputInnerContainer
             formFieldInputInstanceId={instanceId}
             hasRightElement={isDefined(VariablePicker) && !readonly}
           >
             {draftValue.type === 'static' ? (
               <>
-                <StyledDateInputTextContainer>
+                <StyledDateInputTextContainer fullWidth={fullWidth}>
                   <DateTimePickerInput
                     date={dateValue}
+                    fullWidth={fullWidth}
                     onChange={handleInputChange}
                     onFocus={handleInputFocus}
                     readonly={readonly}

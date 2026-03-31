@@ -20,30 +20,33 @@ import { isDefined } from 'twenty-shared/utils';
 import { isDifferentZonedDateTime } from '~/utils/dates/isDifferentZonedDateTime';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
-const StyledInputContainer = styled.div`
+const StyledInputContainer = styled.div<{ fullWidth?: boolean }>`
   align-items: center;
-
   border-top-left-radius: ${themeCssVariables.border.radius.md};
   border-top-right-radius: ${themeCssVariables.border.radius.md};
   display: flex;
   height: ${themeCssVariables.spacing[8]};
+  min-width: ${({ fullWidth }) => (fullWidth === true ? '0' : 'auto')};
   width: 100%;
 `;
 
-const StyledInput = styled.input<{ hasError?: boolean }>`
+const StyledInput = styled.input<{ fullWidth?: boolean; hasError?: boolean }>`
   background: transparent;
   border: none;
   color: ${themeCssVariables.font.color.primary};
+  flex: ${({ fullWidth }) => (fullWidth === true ? '1 1 auto' : 'none')};
   font-size: ${themeCssVariables.font.size.md};
   font-weight: 500;
+  min-width: ${({ fullWidth }) => (fullWidth === true ? '0' : 'auto')};
   outline: none;
   padding-left: ${themeCssVariables.spacing[2]};
-  width: 140px;
+  width: ${({ fullWidth }) => (fullWidth === true ? '100%' : '140px')};
 `;
 
 type DateTimePickerInputProps = {
-  onChange?: (date: Temporal.ZonedDateTime | null) => void;
   date: Temporal.ZonedDateTime | null;
+  fullWidth?: boolean;
+  onChange?: (date: Temporal.ZonedDateTime | null) => void;
   onFocus?: () => void;
   readonly?: boolean;
   timeZone?: string;
@@ -51,6 +54,7 @@ type DateTimePickerInputProps = {
 
 export const DateTimePickerInput = ({
   date,
+  fullWidth = false,
   onChange,
   onFocus,
   readonly,
@@ -167,9 +171,10 @@ export const DateTimePickerInput = ({
     internalDate?.toInstant() ?? Temporal.Now.instant();
 
   return (
-    <StyledInputContainer>
+    <StyledInputContainer fullWidth={fullWidth}>
       <StyledInput
         disabled={shouldDisplayReadOnly}
+        fullWidth={fullWidth}
         type="text"
         ref={ref as any}
         onFocus={!shouldDisplayReadOnly ? onFocus : undefined}

@@ -24,7 +24,7 @@ export const getDefaultFormFieldSettings = (type: WorkflowFormFieldType) => {
         id: v4(),
         name: 'date',
         label: 'Date',
-        placeholder: 'mm/dd/yyyy',
+        placeholder: '',
       };
     case 'RECORD':
       return {

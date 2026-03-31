@@ -30,9 +30,13 @@ import { IconLogin2, IconLogout, IconStepInto } from 'twenty-ui/display';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
 const StyledContainer = styled.div`
+  align-items: stretch;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-width: 0;
+  width: 100%;
 `;
 
 const StyledTabListContainer = styled.div`

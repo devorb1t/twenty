@@ -56,29 +56,31 @@ import { FieldMetadataType } from 'twenty-shared/types';
 import { type JsonValue } from 'type-fest';
 
 type FormFieldInputProps = {
-  field: Pick<FieldDefinition<FieldMetadata>, 'label' | 'metadata' | 'type'>;
   defaultValue: JsonValue;
+  error?: string;
+  field: Pick<FieldDefinition<FieldMetadata>, 'label' | 'metadata' | 'type'>;
+  fullWidth?: boolean;
   onChange: (value: JsonValue) => void;
   onClear?: () => void;
-  VariablePicker?: VariablePickerComponent;
-  readonly?: boolean;
-  placeholder?: string;
-  error?: string;
   onError?: (error: string | undefined) => void;
+  placeholder?: string;
+  readonly?: boolean;
   timeZone?: string;
+  VariablePicker?: VariablePickerComponent;
 };
 
 export const FormFieldInput = ({
-  field,
   defaultValue,
+  error,
+  field,
+  fullWidth,
   onChange,
   onClear,
-  VariablePicker,
-  readonly,
-  placeholder,
-  error,
   onError,
+  placeholder,
+  readonly,
   timeZone,
+  VariablePicker,
 }: FormFieldInputProps) => {
   return isFieldNumber(field) || field.type === FieldMetadataType.NUMERIC ? (
     <FormNumberFieldInput
@@ -168,21 +170,25 @@ export const FormFieldInput = ({
     />
   ) : isFieldDate(field) ? (
     <FormDateFieldInput
-      label={field.label}
       defaultValue={defaultValue as string | undefined}
+      error={error}
+      fullWidth={fullWidth ?? true}
+      label={field.label}
       onChange={onChange}
-      VariablePicker={VariablePicker}
-      readonly={readonly}
+      onError={onError}
       placeholder={placeholder}
+      readonly={readonly}
+      VariablePicker={VariablePicker}
     />
   ) : isFieldDateTime(field) ? (
     <FormDateTimeFieldInput
-      label={field.label}
       defaultValue={defaultValue as string | undefined}
+      fullWidth={fullWidth ?? true}
+      label={field.label}
       onChange={onChange}
-      VariablePicker={VariablePicker}
       readonly={readonly}
       timeZone={timeZone}
+      VariablePicker={VariablePicker}
     />
   ) : isFieldMultiSelect(field) ? (
     <FormMultiSelectFieldInput
