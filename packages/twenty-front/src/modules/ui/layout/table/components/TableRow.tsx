@@ -21,7 +21,8 @@ const StyledTableRow = styled.div<{
         ? themeCssVariables.background.transparent.light
         : 'transparent'};
   border-radius: ${themeCssVariables.border.radius.sm};
-  cursor: ${({ cursor }) => cursor ?? 'default'};
+  cursor: ${({ cursor, onClick, to }) =>
+    cursor ?? (onClick || to ? 'pointer' : 'default')};
   display: grid;
   grid-auto-columns: ${({ gridAutoColumns }) => gridAutoColumns ?? '1fr'};
   grid-auto-flow: column;
