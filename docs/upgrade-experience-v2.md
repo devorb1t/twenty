@@ -339,15 +339,14 @@ Tracks execution of `GlobalCommand` entries from `instanceCommands` arrays.
 - `id` (uuid, PK)
 - `version` (varchar -- the version bundle this command belongs to, e.g. `1.20.0`)
 - `commandName` (varchar -- unique identifier for the command, e.g. `typeOrmMigration`)
-- `status` (varchar -- `started` / `completed` / `failed`)
+- `status` (varchar -- `completed` / `failed`)
+- `retry` (integer, NOT NULL, default `0` -- zero-indexed retry counter. The first execution is `0`, the first re-run is `1`, etc.)
 - `runByVersion` (varchar -- the `APP_VERSION` of the Twenty instance that executed this command, e.g. `1.20.1`. Useful for debugging: if a command was completed by a buggy version, this tells you which build ran it.)
-- `startedAt` (timestamp)
-- `completedAt` (timestamp, nullable)
 - `error` (text, nullable -- full error string from `UpgradeCommandResult.error` on failure, including stack trace)
 - `logs` (text, nullable -- all log output correlated to this command execution via correlation ID. Tail-truncated to last 5,000 lines if exceeded; when truncated, a `[TRUNCATED - showing last 5000 of N total lines]` header is prepended. Stored on failure only.)
 - `createdAt` / `updatedAt` (timestamps)
 
-**Unique key**: `(commandName, version)`.
+**Index**: `(commandName, version)` -- not unique, since multiple rows can exist for the same command across retries.
 
 ### `workspace_upgrade_history` Table
 
@@ -359,32 +358,30 @@ Tracks execution of `PerWorkspaceCommand` entries from `perWorkspaceCommands` ar
 - `workspaceId` (uuid, NOT NULL)
 - `version` (varchar -- the version bundle this command belongs to, e.g. `1.20.0`)
 - `commandName` (varchar -- unique identifier for the command, e.g. `backfillCommandMenuItems`)
-- `status` (varchar -- `started` / `completed` / `failed`)
+- `status` (varchar -- `completed` / `failed`)
+- `retry` (integer, NOT NULL, default `0` -- zero-indexed retry counter. The first execution is `0`, the first re-run is `1`, etc.)
 - `runByVersion` (varchar -- the `APP_VERSION` of the Twenty instance that executed this command, e.g. `1.20.1`.)
-- `startedAt` (timestamp)
-- `completedAt` (timestamp, nullable)
 - `error` (text, nullable -- full error string from `UpgradeCommandResult.error` on failure, including stack trace)
 - `logs` (text, nullable -- all log output correlated to this command execution via correlation ID. Tail-truncated to last 5,000 lines if exceeded; when truncated, a `[TRUNCATED - showing last 5000 of N total lines]` header is prepended. Stored on failure only.)
 - `createdAt` / `updatedAt` (timestamps)
 
-**Unique key**: `(commandName, version, workspaceId)`.
+**Index**: `(commandName, version, workspaceId)` -- not unique, since multiple rows can exist for the same command across retries.
 
 ### Shared Lifecycle
 
-Both tables follow the same upsert model -- one row per unique key, updated across re-runs:
+Both tables are **append-only and immutable** -- rows are inserted once and never updated:
 
-- First execution: insert with `status: started`.
-- On completion: update to `completed`, clear `error` and `logs`.
-- On failure: update to `failed`, store `error` and `logs`.
-- On re-run: update the same row back to `started` (clearing previous `error`/`logs`), then to `completed` or `failed`.
+- On completion: insert a row with `status: completed`, `retry: 0`.
+- On failure: insert a row with `status: failed`, `error`, and `logs`, `retry: 0`.
+- On re-run: insert a **new row** with `retry` incremented. The new row gets its own final `status` (`completed` or `failed`). Previous rows are never touched.
 
-A crash mid-command leaves a `started` row with no `completedAt` -- the orchestrator treats this as "not completed" on re-run.
+There is no `started` status. A row is only written once the command finishes (successfully or not). A crash mid-command leaves no row at all -- the orchestrator treats the absence of a `completed` row as "not completed" on re-run.
 
-Previous failure logs are overwritten when a command is re-run. This is intentional -- the tables reflect the **current state** of each command, not a full execution history. Failure logs serve their purpose in real-time (the operator reads them, fixes the issue, re-runs). Once the command succeeds, old failure context is no longer relevant.
+Previous failure rows are preserved across retries. This gives operators a full execution history for debugging: they can see every attempt, what error occurred, and which `runByVersion` executed it. The orchestrator determines the current state of a command by looking at the row with the **highest `retry` value** for a given `(commandName, version)` or `(commandName, version, workspaceId)` tuple.
 
 ### Re-Run Behavior and Skip-If-Completed
 
-The orchestrator uses the history tables as a **control mechanism**: before running a command, it checks whether the command is already recorded as `completed` in the relevant history table and skips it if so. This is essential for two reasons:
+The orchestrator uses the history tables as a **control mechanism**: before running a command, it checks whether the **latest row** (highest `retry`) for that command is `completed` in the relevant history table and skips it if so. This is essential for two reasons:
 
 1. **Partial failure recovery**: on re-run after a failure, already-completed commands are skipped rather than re-executed. This avoids redundant work on expensive commands (e.g. full table scans that would no-op row by row).
 2. **Cloud development workflow**: during incremental cloud deploys, commands may be run individually before the stable release. When the release owner runs the full orchestrator, the history tables tell it exactly which commands have already been applied. See "Deploying a Partial Next Version to Cloud Production" for the full workflow.
@@ -501,7 +498,7 @@ After all version bundles complete, the orchestrator runs a health check:
 
 - **Instance version**: confirm `instanceVersion` matches `APP_VERSION`.
 - **Workspace versions**: confirm all workspace versions match `APP_VERSION`.
-- **Command completion**: verify all commands in both `instance_upgrade_history` and `workspace_upgrade_history` are `completed` (no `started` rows without `completedAt`, which would indicate a crash mid-command).
+- **Command completion**: verify all expected commands have a `completed` row (highest `retry`) in both `instance_upgrade_history` and `workspace_upgrade_history`. A missing row for an expected command indicates a crash mid-execution.
 
 Health check results are included in the upgrade report. Failures are warnings (the upgrade itself already succeeded), not rollback triggers.
 
