@@ -114,30 +114,6 @@ const bundle_1200: UpgradeVersionBundle = {
 3. **Phase 1**: run `fast` arrays (global-only) for all intermediate version bundles up to the target.
 4. **Phase 2**: for each workspace (sorted by version desc), walk through missing version bundles running each `slow` array as-is (global + per-workspace commands interleaved).
 
-### Diagram
-
-```mermaid
-flowchart TD
-  CLI["CLI: upgrade command"] --> Orchestrator["UpgradeCommandOrchestrator"]
-  Orchestrator --> ResolveTarget["Resolve target version + supported range"]
-  ResolveTarget --> FastLoop["Phase 1: for each version, run fast array (global only)"]
-  FastLoop --> SortWs["Phase 2: sort workspaces by version desc"]
-  SortWs --> WsLoop["For each workspace"]
-  WsLoop --> DetectGap["Detect version gap"]
-  DetectGap --> BundleLoop["For each missing version bundle"]
-  BundleLoop --> SlowCmd["For each command in slow array"]
-  SlowCmd --> IsGlobal{Command type?}
-  IsGlobal -->|global| RunGlobal["Execute GlobalCommand (idempotent)"]
-  IsGlobal -->|per-workspace| RunPerWs["Execute for this workspace"]
-  RunGlobal --> SlowCmd
-  RunPerWs --> SlowCmd
-  SlowCmd --> StampVersion["Stamp workspace version"]
-  StampVersion --> BundleLoop
-  BundleLoop --> WsLoop
-  WsLoop --> HealthCheck["Post-upgrade health check"]
-  HealthCheck --> Report["Generate upgrade report"]
-```
-
 ---
 
 ## Cross-Version Upgrade
@@ -269,25 +245,6 @@ Sorted: A (`1.18.0`), C (`1.18.0`), then B (`1.17.0`).
 ### Failure Isolation
 
 If a workspace fails during any slow command, the orchestrator logs the failure and continues to the next workspace. The failed workspace keeps the version stamp of the last completed version bundle. The final report includes per-workspace status (success / failure / skipped / refused).
-
-### Diagram
-
-```mermaid
-flowchart TD
-  Start["Orchestrator starts"] --> FindOldest["Find oldest workspace version in supported range"]
-  FindOldest --> FastLoop["For each version from oldest+1 to target"]
-  FastLoop --> RunFast["Run fast array (global commands)"]
-  RunFast --> FastLoop
-  FastLoop --> SortWs["Sort workspaces by version desc"]
-  SortWs --> WsLoop["For each workspace"]
-  WsLoop --> DetectGap["Detect version gap: workspace version -> target"]
-  DetectGap --> BundleLoop["For each missing version bundle"]
-  BundleLoop --> RunSlow["Run slow array for this version bundle"]
-  RunSlow --> StampVersion["Stamp workspace to this version"]
-  StampVersion --> BundleLoop
-  BundleLoop -->|"failure: log and continue"| WsLoop
-  WsLoop --> Report["Generate upgrade report"]
-```
 
 ### Cloud Production Mode
 
