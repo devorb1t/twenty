@@ -416,11 +416,12 @@ With the history table, re-running the upgrade after a partial failure becomes m
 
 After all version bundles complete, the orchestrator runs a health check per workspace:
 
-- **Schema consistency**: verify expected tables/columns exist after migrations.
 - **Version stamp**: confirm `workspace.version` was updated to the target version.
-- **Metadata sync**: verify metadata is consistent with the new version's expectations.
+- **Command completion**: verify all commands in the `workspace_upgrade_history` table for this workspace are `completed` (no `started` rows without `completedAt`, which would indicate a crash mid-command).
 
 Health check results are included in the upgrade report. Failures are warnings (the upgrade itself already succeeded), not rollback triggers.
+
+Note: broader workspace health (metadata consistency, runtime checks, etc.) is a separate concern from upgrade validation and is out of scope here.
 
 ---
 
@@ -477,6 +478,8 @@ The refactor is designed to be shipped incrementally, phase by phase, without re
 - `UpgradeCommand` remains the nest-commander entry point, delegating to the orchestrator.
 - Version comparison still uses major.minor (patch support comes in Phase 2).
 - Only the current version bundle is refactored; older version entries (e.g. `1.19.0: []`) are left as-is or trivially wrapped.
+
+**Going forward**: the next version's upgrade commands (e.g. `1.21.0`) should be written directly against the new pattern -- extending `GlobalCommand` or `PerWorkspaceCommand` and registered in an `UpgradeVersionBundle`. This validates the new taxonomy on a real upgrade cycle.
 
 **Validation**: the upgrade command produces the same outcome as before -- same TypeORM migrations run, same per-workspace commands execute in the same order.
 
