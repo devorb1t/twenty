@@ -46,12 +46,12 @@ const StyledQueuedText = styled.span`
 
 export const AIChatQueuedMessages = () => {
   const currentAIChatThread = useAtomStateValue(currentAIChatThreadState);
-  const queuedMessages = useAtomComponentFamilyStateValue(
+  const agentChatQueuedMessages = useAtomComponentFamilyStateValue(
     agentChatQueuedMessagesComponentFamilyState,
     { threadId: currentAIChatThread },
   );
 
-  if (!isDefined(currentAIChatThread) || queuedMessages.length === 0) {
+  if (!isDefined(currentAIChatThread) || agentChatQueuedMessages.length === 0) {
     return null;
   }
 
@@ -79,8 +79,10 @@ export const AIChatQueuedMessages = () => {
 
   return (
     <StyledQueueContainer>
-      <StyledQueueLabel>{queuedMessages.length} Queued</StyledQueueLabel>
-      {queuedMessages.map((message) => {
+      <StyledQueueLabel>
+        {agentChatQueuedMessages.length} Queued
+      </StyledQueueLabel>
+      {agentChatQueuedMessages.map((message) => {
         const textPart = message.parts?.find((part) => part.type === 'text');
         const displayText = textPart && 'text' in textPart ? textPart.text : '';
 

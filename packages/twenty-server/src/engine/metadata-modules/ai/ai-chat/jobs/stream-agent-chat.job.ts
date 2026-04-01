@@ -1,7 +1,7 @@
 import { Logger, Scope } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { createUIMessageStream, JsonToSseTransformStream } from 'ai';
+import { createUIMessageStream } from 'ai';
 import type {
   CodeExecutionData,
   ExtendedUIMessage,
@@ -10,6 +10,7 @@ import type {
 import { Repository } from 'typeorm';
 
 import { AgentChatCancelSubscriberService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat-cancel-subscriber.service';
+import { AgentChatEventPublisherService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat-event-publisher.service';
 import { toDisplayCredits } from 'src/engine/core-modules/usage/utils/to-display-credits.util';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { Process } from 'src/engine/core-modules/message-queue/decorators/process.decorator';
@@ -22,7 +23,6 @@ import { convertDollarsToBillingCredits } from 'src/engine/metadata-modules/ai/a
 import { extractCacheCreationTokens } from 'src/engine/metadata-modules/ai/ai-billing/utils/extract-cache-creation-tokens.util';
 import type { AIModelConfig } from 'src/engine/metadata-modules/ai/ai-models/types/ai-model-config.type';
 import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/entities/agent-chat-thread.entity';
-import { AgentChatResumableStreamService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat-resumable-stream.service';
 import { AgentChatService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat.service';
 import { ChatExecutionService } from 'src/engine/metadata-modules/ai/ai-chat/services/chat-execution.service';
 import { getCancelChannel } from 'src/engine/metadata-modules/ai/ai-chat/utils/get-cancel-channel.util';
@@ -45,7 +45,7 @@ export class StreamAgentChatJob {
     private readonly workspaceRepository: Repository<WorkspaceEntity>,
     private readonly agentChatService: AgentChatService,
     private readonly chatExecutionService: ChatExecutionService,
-    private readonly resumableStreamService: AgentChatResumableStreamService,
+    private readonly eventPublisherService: AgentChatEventPublisherService,
     private readonly cancelSubscriberService: AgentChatCancelSubscriberService,
     private readonly agentChatStreamingService: AgentChatStreamingService,
   ) {}
@@ -58,9 +58,14 @@ export class StreamAgentChatJob {
 
     if (!workspace) {
       this.logger.error(`Workspace ${data.workspaceId} not found`);
-      await this.resumableStreamService.writeStreamError(data.streamId, {
-        code: 'WORKSPACE_NOT_FOUND',
-        message: `Workspace ${data.workspaceId} not found`,
+      await this.eventPublisherService.publish({
+        threadId: data.threadId,
+        workspaceId: data.workspaceId,
+        event: {
+          type: 'stream-error',
+          code: 'WORKSPACE_NOT_FOUND',
+          message: `Workspace ${data.workspaceId} not found`,
+        },
       });
 
       return;
@@ -79,11 +84,18 @@ export class StreamAgentChatJob {
       this.logger.error(
         `Stream ${data.streamId} failed: ${error instanceof Error ? error.message : String(error)}`,
       );
-      await this.resumableStreamService
-        .writeStreamError(data.streamId, {
-          code: 'STREAM_EXECUTION_FAILED',
-          message:
-            error instanceof Error ? error.message : 'Stream execution failed',
+      await this.eventPublisherService
+        .publish({
+          threadId: data.threadId,
+          workspaceId: data.workspaceId,
+          event: {
+            type: 'stream-error',
+            code: 'STREAM_EXECUTION_FAILED',
+            message:
+              error instanceof Error
+                ? error.message
+                : 'Stream execution failed',
+          },
         })
         .catch(() => {});
     } finally {
@@ -120,16 +132,20 @@ export class StreamAgentChatJob {
     workspace: WorkspaceEntity,
     abortSignal: AbortSignal,
   ): Promise<void> {
-    const userMessagePromise = this.agentChatService.addMessage({
-      threadId: data.threadId,
-      uiMessage: {
-        role: AgentMessageRole.USER,
-        parts: data.lastUserMessageParts.filter(
-          (part): part is ExtendedUIMessagePart =>
-            part.type === 'text' || part.type === 'file',
-        ),
-      },
-    });
+    // When processing a promoted queued message, the user message already
+    // exists in the DB with a turn — skip persisting it again.
+    const userMessagePromise = data.existingTurnId
+      ? Promise.resolve({ turnId: data.existingTurnId })
+      : this.agentChatService.addMessage({
+          threadId: data.threadId,
+          uiMessage: {
+            role: AgentMessageRole.USER,
+            parts: data.lastUserMessageParts.filter(
+              (part): part is ExtendedUIMessagePart =>
+                part.type === 'text' || part.type === 'file',
+            ),
+          },
+        });
 
     userMessagePromise.catch(() => {});
 
@@ -139,7 +155,7 @@ export class StreamAgentChatJob {
           .generateTitleIfNeeded(data.threadId, data.lastUserMessageText)
           .catch(() => null);
 
-    await this.buildAndPipeStream({
+    await this.buildAndPublishStream({
       workspace,
       data,
       userMessagePromise,
@@ -148,7 +164,7 @@ export class StreamAgentChatJob {
     });
   }
 
-  private async buildAndPipeStream({
+  private async buildAndPublishStream({
     workspace,
     data,
     userMessagePromise,
@@ -170,6 +186,14 @@ export class StreamAgentChatJob {
       };
       let lastStepConversationSize = 0;
       let totalCacheCreationTokens = 0;
+
+      // onFinish fires before the uiStream is fully drained. We use this
+      // promise to coordinate: the IIFE waits for DB persist to complete
+      // before publishing message-persisted (after all chunks).
+      let resolveStreamFinished: () => void;
+      const streamFinishedPromise = new Promise<void>((res) => {
+        resolveStreamFinished = res;
+      });
 
       abortSignal.addEventListener('abort', () => resolve(), { once: true });
 
@@ -240,7 +264,7 @@ export class StreamAgentChatJob {
                     userMessagePromise,
                   });
                   await titleWritePromise;
-                  resolve();
+                  resolveStreamFinished();
                 } catch (error) {
                   reject(error);
                 }
@@ -251,11 +275,34 @@ export class StreamAgentChatJob {
         },
       });
 
-      const sseStream = uiStream.pipeThrough(new JsonToSseTransformStream());
+      // Publish all chunks first, then signal completion. This guarantees
+      // message-persisted arrives after every stream-chunk on the client.
+      (async () => {
+        try {
+          for await (const chunk of uiStream) {
+            await this.eventPublisherService.publish({
+              threadId: data.threadId,
+              workspaceId: data.workspaceId,
+              event: {
+                type: 'stream-chunk',
+                chunk: chunk as Record<string, unknown>,
+              },
+            });
+          }
 
-      this.resumableStreamService
-        .createResumableStream(data.streamId, () => sseStream)
-        .catch(reject);
+          await streamFinishedPromise;
+
+          await this.eventPublisherService.publish({
+            threadId: data.threadId,
+            workspaceId: data.workspaceId,
+            event: { type: 'message-persisted', messageId: data.threadId },
+          });
+
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      })();
     });
   }
 

@@ -2,10 +2,8 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   Param,
   Post,
-  Res,
   UseFilters,
   UseGuards,
 } from '@nestjs/common';
@@ -13,8 +11,6 @@ import {
 import { PermissionFlagType } from 'twenty-shared/constants';
 
 import { InjectRepository } from '@nestjs/typeorm';
-import { UI_MESSAGE_STREAM_HEADERS } from 'ai';
-import type { Response } from 'express';
 import type { ExtendedUIMessage } from 'twenty-shared/ai';
 import { isDefined } from 'twenty-shared/utils';
 import type { Repository } from 'typeorm';
@@ -43,7 +39,7 @@ import { AgentRestApiExceptionFilter } from 'src/engine/metadata-modules/ai/ai-a
 import type { BrowsingContextType } from 'src/engine/metadata-modules/ai/ai-agent/types/browsingContext.type';
 import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/entities/agent-chat-thread.entity';
 import { getCancelChannel } from 'src/engine/metadata-modules/ai/ai-chat/utils/get-cancel-channel.util';
-import { AgentChatResumableStreamService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat-resumable-stream.service';
+import { AgentChatEventPublisherService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat-event-publisher.service';
 import { AgentChatStreamingService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat-streaming.service';
 import { AgentChatService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat.service';
 import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
@@ -58,8 +54,8 @@ import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models
 export class AgentChatController {
   constructor(
     private readonly agentStreamingService: AgentChatStreamingService,
-    private readonly resumableStreamService: AgentChatResumableStreamService,
     private readonly agentChatService: AgentChatService,
+    private readonly eventPublisherService: AgentChatEventPublisherService,
     private readonly billingService: BillingService,
     private readonly twentyConfigService: TwentyConfigService,
     private readonly aiModelRegistryService: AiModelRegistryService,
@@ -68,19 +64,19 @@ export class AgentChatController {
     private readonly threadRepository: Repository<AgentChatThreadEntity>,
   ) {}
 
-  @Post('stream')
+  @Post(':threadId/message')
   @UseGuards(SettingsPermissionGuard(PermissionFlagType.AI))
-  async streamAgentChat(
+  async sendMessage(
+    @Param('threadId') threadId: string,
     @Body()
     body: {
-      threadId: string;
-      messages: ExtendedUIMessage[];
+      text: string;
+      messages?: ExtendedUIMessage[];
       browsingContext?: BrowsingContextType | null;
       modelId?: string;
     },
     @AuthUserWorkspaceId() userWorkspaceId: string,
     @AuthWorkspace() workspace: WorkspaceEntity,
-    @Res() response: Response,
   ) {
     if (this.aiModelRegistryService.getAvailableModels().length === 0) {
       throw new AgentException(
@@ -110,47 +106,44 @@ export class AgentChatController {
       }
     }
 
-    return this.agentStreamingService.streamAgentChat({
-      threadId: body.threadId,
-      messages: body.messages,
-      browsingContext: body.browsingContext ?? null,
-      modelId: body.modelId,
-      userWorkspaceId,
-      workspace,
-      response,
-    });
-  }
-
-  @Get(':threadId/stream')
-  @UseGuards(SettingsPermissionGuard(PermissionFlagType.AI))
-  async resumeAgentChatStream(
-    @Param('threadId') threadId: string,
-    @AuthUserWorkspaceId() userWorkspaceId: string,
-    @Res() response: Response,
-  ) {
     const thread = await this.threadRepository.findOne({
       where: { id: threadId, userWorkspaceId },
     });
 
-    if (!isDefined(thread) || !isDefined(thread.activeStreamId)) {
-      response.status(204).end();
-
-      return;
-    }
-
-    const resumedNodeReadable =
-      await this.resumableStreamService.resumeExistingStreamAsNodeReadable(
-        thread.activeStreamId,
+    if (!isDefined(thread)) {
+      throw new AgentException(
+        'Thread not found',
+        AgentExceptionCode.AGENT_EXECUTION_FAILED,
       );
-
-    if (!isDefined(resumedNodeReadable)) {
-      response.status(204).end();
-
-      return;
     }
 
-    response.writeHead(200, UI_MESSAGE_STREAM_HEADERS);
-    resumedNodeReadable.pipe(response);
+    // Server decides: if the thread has an active stream, queue the message;
+    // otherwise start streaming immediately.
+    if (isDefined(thread.activeStreamId)) {
+      const message = await this.agentChatService.queueMessage({
+        threadId,
+        text: body.text,
+      });
+
+      await this.eventPublisherService.publish({
+        threadId,
+        workspaceId: workspace.id,
+        event: { type: 'queue-updated' },
+      });
+
+      return { messageId: message.id, queued: true };
+    }
+
+    const result = await this.agentStreamingService.streamAgentChat({
+      threadId,
+      messages: body.messages ?? [],
+      browsingContext: body.browsingContext ?? null,
+      modelId: body.modelId,
+      userWorkspaceId,
+      workspace,
+    });
+
+    return { messageId: threadId, queued: false, streamId: result.streamId };
   }
 
   @Delete(':threadId/stream')
@@ -167,10 +160,6 @@ export class AgentChatController {
       return { success: true };
     }
 
-    // Publish a cancel signal via Redis pub/sub. The BullMQ worker
-    // processing this thread's stream subscribes to this channel and
-    // will abort the LLM connection when the message arrives — stopping
-    // token generation and billing immediately.
     const redis = this.redisClientService.getClient();
 
     await redis.publish(getCancelChannel(threadId), 'cancel');
@@ -183,38 +172,13 @@ export class AgentChatController {
     return { success: true };
   }
 
-  @Post(':threadId/queue')
-  @UseGuards(SettingsPermissionGuard(PermissionFlagType.AI))
-  async queueMessage(
-    @Param('threadId') threadId: string,
-    @Body() body: { text: string },
-    @AuthUserWorkspaceId() userWorkspaceId: string,
-  ) {
-    const thread = await this.threadRepository.findOne({
-      where: { id: threadId, userWorkspaceId },
-    });
-
-    if (!isDefined(thread)) {
-      throw new AgentException(
-        'Thread not found',
-        AgentExceptionCode.AGENT_EXECUTION_FAILED,
-      );
-    }
-
-    const message = await this.agentChatService.queueMessage({
-      threadId,
-      text: body.text,
-    });
-
-    return { id: message.id, threadId, status: message.status };
-  }
-
   @Delete(':threadId/queue/:messageId')
   @UseGuards(SettingsPermissionGuard(PermissionFlagType.AI))
   async deleteQueuedMessage(
     @Param('threadId') threadId: string,
     @Param('messageId') messageId: string,
     @AuthUserWorkspaceId() userWorkspaceId: string,
+    @AuthWorkspace() workspace: WorkspaceEntity,
   ) {
     const thread = await this.threadRepository.findOne({
       where: { id: threadId, userWorkspaceId },
@@ -231,6 +195,14 @@ export class AgentChatController {
       messageId,
       threadId,
     );
+
+    if (deleted) {
+      await this.eventPublisherService.publish({
+        threadId,
+        workspaceId: workspace.id,
+        event: { type: 'queue-updated' },
+      });
+    }
 
     return { success: deleted };
   }

@@ -1,9 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { type Readable } from 'stream';
 
-import { generateId, UI_MESSAGE_STREAM_HEADERS } from 'ai';
-import { type Response } from 'express';
+import { generateId } from 'ai';
 import { type ExtendedUIMessage } from 'twenty-shared/ai';
 import { type Repository } from 'typeorm';
 
@@ -23,22 +21,17 @@ import {
   STREAM_AGENT_CHAT_JOB_NAME,
   type StreamAgentChatJobData,
 } from 'src/engine/metadata-modules/ai/ai-chat/jobs/stream-agent-chat-job.types';
+import { AgentChatEventPublisherService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat-event-publisher.service';
 import { AgentChatService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat.service';
-
-import { AgentChatResumableStreamService } from './agent-chat-resumable-stream.service';
 
 export type StreamAgentChatOptions = {
   threadId: string;
   userWorkspaceId: string;
   workspace: WorkspaceEntity;
-  response: Response;
   messages: ExtendedUIMessage[];
   browsingContext: BrowsingContextType | null;
   modelId?: string;
 };
-
-const STREAM_READY_TIMEOUT_MS = 5_000;
-const STREAM_READY_POLL_INTERVAL_MS = 50;
 
 @Injectable()
 export class AgentChatStreamingService {
@@ -49,8 +42,8 @@ export class AgentChatStreamingService {
     private readonly threadRepository: Repository<AgentChatThreadEntity>,
     @InjectMessageQueue(MessageQueue.aiStreamQueue)
     private readonly messageQueueService: MessageQueueService,
-    private readonly resumableStreamService: AgentChatResumableStreamService,
     private readonly agentChatService: AgentChatService,
+    private readonly eventPublisherService: AgentChatEventPublisherService,
   ) {}
 
   async streamAgentChat({
@@ -59,9 +52,8 @@ export class AgentChatStreamingService {
     workspace,
     messages,
     browsingContext,
-    response,
     modelId,
-  }: StreamAgentChatOptions) {
+  }: StreamAgentChatOptions): Promise<{ streamId: string }> {
     const thread = await this.threadRepository.findOne({
       where: {
         id: threadId,
@@ -101,32 +93,7 @@ export class AgentChatStreamingService {
       activeStreamId: streamId,
     });
 
-    try {
-      const result = await this.waitForResumableStream(streamId);
-
-      if ('error' in result) {
-        response.status(500).json(result.error);
-
-        return;
-      }
-
-      if (!result.readable) {
-        this.logger.error(
-          `Stream ${streamId} did not become available within timeout`,
-        );
-        response
-          .status(500)
-          .json({ code: 'WORKER_UNREACHABLE', message: 'Stream timed out' });
-
-        return;
-      }
-
-      response.writeHead(200, UI_MESSAGE_STREAM_HEADERS);
-      result.readable.pipe(response);
-    } catch (error) {
-      response.end();
-      throw error;
-    }
+    return { streamId };
   }
 
   async flushNextQueuedMessage(
@@ -135,7 +102,6 @@ export class AgentChatStreamingService {
     workspaceId: string,
     hasTitle: boolean,
   ): Promise<void> {
-    // Lightweight check: only query queued messages first
     const queuedMessages =
       await this.agentChatService.getQueuedMessages(threadId);
 
@@ -154,15 +120,28 @@ export class AgentChatStreamingService {
       return;
     }
 
-    await this.agentChatService.promoteQueuedMessage(nextQueued.id, threadId);
+    const turnId = await this.agentChatService.promoteQueuedMessage(
+      nextQueued.id,
+      threadId,
+    );
 
-    // Only load full conversation when we actually need to stream
+    await this.eventPublisherService.publish({
+      threadId,
+      workspaceId,
+      event: { type: 'queue-updated' },
+    });
+
+    await this.eventPublisherService.publish({
+      threadId,
+      workspaceId,
+      event: { type: 'message-persisted', messageId: nextQueued.id },
+    });
+
     const allMessages = await this.agentChatService.getMessagesForThread(
       threadId,
       userWorkspaceId,
     );
 
-    // Build conversation context from sent messages (using proper mapper)
     const uiMessages = allMessages
       .filter((message) => message.status !== AgentMessageStatus.QUEUED)
       .map((message) => ({
@@ -186,47 +165,12 @@ export class AgentChatStreamingService {
         lastUserMessageText: messageText,
         lastUserMessageParts: [{ type: 'text', text: messageText }],
         hasTitle,
+        existingTurnId: turnId,
       },
     );
 
     await this.threadRepository.update(threadId, {
       activeStreamId: streamId,
     });
-  }
-
-  private async waitForResumableStream(
-    streamId: string,
-  ): Promise<
-    | { readable: Readable }
-    | { error: { code: string; message: string } }
-    | { readable: null }
-  > {
-    const maxAttempts = Math.ceil(
-      STREAM_READY_TIMEOUT_MS / STREAM_READY_POLL_INTERVAL_MS,
-    );
-
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const streamError =
-        await this.resumableStreamService.readStreamError(streamId);
-
-      if (streamError) {
-        return { error: streamError };
-      }
-
-      const readable =
-        await this.resumableStreamService.resumeExistingStreamAsNodeReadable(
-          streamId,
-        );
-
-      if (readable) {
-        return { readable };
-      }
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, STREAM_READY_POLL_INTERVAL_MS),
-      );
-    }
-
-    return { readable: null };
   }
 }

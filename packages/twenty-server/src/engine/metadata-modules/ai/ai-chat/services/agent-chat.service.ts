@@ -187,11 +187,24 @@ export class AgentChatService {
   async promoteQueuedMessage(
     messageId: string,
     threadId: string,
-  ): Promise<void> {
+  ): Promise<string> {
+    const turn = this.turnRepository.create({
+      threadId,
+      agentId: null,
+    });
+
+    const savedTurn = await this.turnRepository.save(turn);
+
     await this.messageRepository.update(
       { id: messageId, threadId, status: AgentMessageStatus.QUEUED },
-      { status: AgentMessageStatus.SENT, processedAt: new Date() },
+      {
+        status: AgentMessageStatus.SENT,
+        processedAt: new Date(),
+        turnId: savedTurn.id,
+      },
     );
+
+    return savedTurn.id;
   }
 
   async generateTitleIfNeeded(
