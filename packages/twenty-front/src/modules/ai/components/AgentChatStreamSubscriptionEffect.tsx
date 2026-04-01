@@ -40,7 +40,6 @@ export const AgentChatStreamSubscriptionEffect = () => {
 
   useAgentChat(ensureThreadIdForSend);
 
-  // Subscribe to the thread's event stream
   const subscriptionThreadId =
     currentAIChatThread !== null && isValidUuid(currentAIChatThread)
       ? currentAIChatThread
@@ -48,7 +47,6 @@ export const AgentChatStreamSubscriptionEffect = () => {
 
   useAgentChatSubscription(subscriptionThreadId);
 
-  // Sync fetched messages to the displayed messages atom when no stream is active
   const agentChatFetchedMessages = useAtomComponentFamilyStateValue(
     agentChatFetchedMessagesComponentFamilyState,
     { threadId: currentAIChatThread },

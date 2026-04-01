@@ -68,8 +68,6 @@ export class AgentChatStreamingService {
       );
     }
 
-    // Persist the user message before enqueuing the job so the frontend
-    // refetch (triggered when the controller returns) finds it in the DB.
     const savedUserMessage = await this.agentChatService.addMessage({
       threadId,
       uiMessage: {

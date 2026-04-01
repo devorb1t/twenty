@@ -115,8 +115,6 @@ export class AgentChatController {
       );
     }
 
-    // Server decides: if the thread has an active stream, queue the message;
-    // otherwise start streaming immediately.
     if (isDefined(thread.activeStreamId)) {
       const message = await this.agentChatService.queueMessage({
         threadId,

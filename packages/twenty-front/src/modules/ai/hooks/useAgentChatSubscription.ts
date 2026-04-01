@@ -162,8 +162,6 @@ export const useAgentChatSubscription = (threadId: string | null) => {
         agentChatMessagesComponentFamilyState.atomFamily(atomKey),
       );
 
-      // Find and replace the streaming assistant message by ID, or append it.
-      // This preserves optimistic user messages that aren't yet in fetched data.
       const streamingMsgIndex = currentMessages.findIndex(
         (message) => message.id === messageToFlush.id,
       );
@@ -188,13 +186,10 @@ export const useAgentChatSubscription = (threadId: string | null) => {
       latestMessage = message;
 
       if (!isDefined(throttleTimer)) {
-        // Leading edge: flush immediately so the first chunk renders instantly
         flushToAtom();
 
-        // Then suppress further flushes for THROTTLE_MS
         throttleTimer = setTimeout(() => {
           throttleTimer = null;
-          // Trailing edge: flush whatever accumulated during the window
           flushToAtom();
         }, THROTTLE_MS);
       }
@@ -206,7 +201,6 @@ export const useAgentChatSubscription = (threadId: string | null) => {
       for await (const message of messageStream) {
         const extendedMessage = message as ExtendedUIMessage;
 
-        // Extract usage and title from data parts
         const titlePart = extendedMessage.parts.find(
           (part) => part.type === 'data-thread-title',
         );
@@ -255,7 +249,6 @@ export const useAgentChatSubscription = (threadId: string | null) => {
         scheduleAtomUpdate(extendedMessage);
       }
 
-      // Stream finished -- flush last message immediately
       if (isDefined(throttleTimer)) {
         clearTimeout(throttleTimer);
         throttleTimer = null;
@@ -299,7 +292,6 @@ export const useAgentChatSubscription = (threadId: string | null) => {
         }
 
         case 'message-persisted': {
-          // Close the current stream writer so readUIMessageStream finishes
           if (isDefined(writerRef.current)) {
             writerRef.current.close().catch(() => {});
             writerRef.current = null;

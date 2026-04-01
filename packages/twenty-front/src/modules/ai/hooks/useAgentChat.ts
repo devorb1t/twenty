@@ -89,9 +89,6 @@ export const useAgentChat = (
 
     const browsingContext = getBrowsingContext();
 
-    // Optimistic user message — always placed in the main messages atom.
-    // The next REFETCH_MESSAGES event will reconcile with server state,
-    // moving it to the queued list if the server queued it.
     const optimisticUserMessage: ExtendedUIMessage = {
       id: v4(),
       role: 'user',
@@ -145,9 +142,6 @@ export const useAgentChat = (
 
       const responseBody = await response.json();
 
-      // If the server queued the message (stream was active), remove the
-      // optimistic entry from the main conversation — the refetch below will
-      // place it in the dedicated queue list instead.
       if (responseBody.queued) {
         const latestMessages = store.get(
           agentChatMessagesComponentFamilyState.atomFamily(atomKey),
