@@ -1,5 +1,4 @@
-import { useAtomValue } from 'jotai';
-import { useStore } from 'jotai';
+import { useAtomValue, useStore } from 'jotai';
 import { useEffect, useRef } from 'react';
 import { isDefined } from 'twenty-shared/utils';
 
@@ -35,6 +34,7 @@ export const AgentChatThreadInitializationEffect = () => {
   const storeEntry = useAtomValue(
     metadataStoreState.atomFamily('agentChatThreads'),
   );
+  // oxlint-disable-next-line twenty/no-state-useref
   const hasInitializedRef = useRef(false);
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export const AgentChatThreadInitializationEffect = () => {
 
     hasInitializedRef.current = true;
 
-    const sortedThreads = [...threads].sort(
+    const sortedThreads = [...agentChatThreads].sort(
       (a: FlatAgentChatThread, b: FlatAgentChatThread) =>
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     );
@@ -95,14 +95,15 @@ export const AgentChatThreadInitializationEffect = () => {
       setAgentChatUsage(null);
     }
   }, [
-	currentAIChatThread,
-	storeEntry.status,
-	setCurrentAIChatThread,
-	setAgentChatInput,
-	setCurrentAIChatThreadTitle,
-	setAgentChatUsage,
-	store
-]);
+    agentChatThreads,
+    currentAIChatThread,
+    storeEntry.status,
+    setCurrentAIChatThread,
+    setAgentChatInput,
+    setCurrentAIChatThreadTitle,
+    setAgentChatUsage,
+    store,
+  ]);
 
   return null;
 };

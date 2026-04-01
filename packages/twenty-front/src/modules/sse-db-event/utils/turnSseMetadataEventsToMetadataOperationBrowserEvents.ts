@@ -1,7 +1,10 @@
 import { type BroadcastEntityName } from '@/browser-event/types/BroadcastEntityName';
 import { type MetadataOperationBrowserEventDetail } from '@/browser-event/types/MetadataOperationBrowserEventDetail';
 import { isDefined } from 'twenty-shared/utils';
-import { MetadataEventAction, type MetadataEvent } from '~/generated-metadata/graphql';
+import {
+  MetadataEventAction,
+  type MetadataEvent,
+} from '~/generated-metadata/graphql';
 
 export const turnSseMetadataEventsToMetadataOperationBrowserEvents = <
   T extends Record<string, unknown>,
