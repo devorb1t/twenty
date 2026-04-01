@@ -25,6 +25,8 @@ export class AddStatusToAgentMessage1774776000000
     await queryRunner.query(
       `ALTER TABLE "core"."agentMessage" DROP COLUMN "processedAt"`,
     );
+    // Queued messages have turnId=NULL. They must be deleted before
+    // restoring the NOT NULL constraint on turnId.
     await queryRunner.query(
       `DELETE FROM "core"."agentMessage" WHERE "turnId" IS NULL`,
     );

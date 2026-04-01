@@ -52,7 +52,7 @@ import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models
 )
 export class AgentChatController {
   constructor(
-    private readonly agentStreamingService: AgentChatStreamingService,
+    private readonly agentChatStreamingService: AgentChatStreamingService,
     private readonly agentChatService: AgentChatService,
     private readonly eventPublisherService: AgentChatEventPublisherService,
     private readonly billingService: BillingService,
@@ -132,7 +132,7 @@ export class AgentChatController {
       return { messageId: message.id, queued: true };
     }
 
-    const result = await this.agentStreamingService.streamAgentChat({
+    const result = await this.agentChatStreamingService.streamAgentChat({
       threadId,
       browsingContext: body.browsingContext ?? null,
       modelId: body.modelId,
