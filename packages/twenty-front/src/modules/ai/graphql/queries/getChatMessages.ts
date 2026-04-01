@@ -38,5 +38,9 @@ export const GET_CHAT_MESSAGES = gql`
         createdAt
       }
     }
+    chatStreamCatchupChunks(threadId: $threadId) {
+      chunks
+      maxSeq
+    }
   }
 `;

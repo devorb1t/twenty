@@ -152,7 +152,11 @@ export class StreamAgentChatJob {
     const titlePromise = data.hasTitle
       ? Promise.resolve(null)
       : this.agentChatService
-          .generateTitleIfNeeded(data.threadId, data.lastUserMessageText)
+          .generateTitleIfNeeded({
+            threadId: data.threadId,
+            messageContent: data.lastUserMessageText,
+            workspaceId: data.workspaceId,
+          })
           .catch(() => null);
 
     await this.buildAndPublishStream({

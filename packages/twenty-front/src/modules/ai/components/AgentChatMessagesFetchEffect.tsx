@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { useStore } from 'jotai';
 import { isDefined } from 'twenty-shared/utils';
 
 import { AGENT_CHAT_REFETCH_MESSAGES_EVENT_NAME } from '@/ai/constants/AgentChatRefetchMessagesEventName';
@@ -9,6 +10,7 @@ import { agentChatMessagesLoadingState } from '@/ai/states/agentChatMessagesLoad
 import { agentChatQueuedMessagesComponentFamilyState } from '@/ai/states/agentChatQueuedMessagesComponentFamilyState';
 import { currentAIChatThreadState } from '@/ai/states/currentAIChatThreadState';
 import { skipMessagesSkeletonUntilLoadedState } from '@/ai/states/skipMessagesSkeletonUntilLoadedState';
+import { agentChatCatchupChunksState } from '@/ai/states/agentChatCatchupChunksState';
 import { mapDBMessagesToUIMessages } from '@/ai/utils/mapDBMessagesToUIMessages';
 import { useQueryWithCallbacks } from '@/apollo/hooks/useQueryWithCallbacks';
 import { useListenToBrowserEvent } from '@/browser-event/hooks/useListenToBrowserEvent';
@@ -21,6 +23,7 @@ import {
 } from '~/generated-metadata/graphql';
 
 export const AgentChatMessagesFetchEffect = () => {
+  const store = useStore();
   const currentAIChatThread = useAtomStateValue(currentAIChatThreadState);
 
   const isNewThread = useMemo(
@@ -64,8 +67,17 @@ export const AgentChatMessagesFetchEffect = () => {
       setAgentChatQueuedMessages(
         uiMessages.filter((message) => message.status === 'queued'),
       );
+
+      const catchup = data.chatStreamCatchupChunks;
+
+      if (isDefined(catchup) && catchup.chunks.length > 0) {
+        store.set(agentChatCatchupChunksState.atom, {
+          chunks: catchup.chunks as Record<string, unknown>[],
+          maxSeq: catchup.maxSeq,
+        });
+      }
     },
-    [setAgentChatFetchedMessages, setAgentChatQueuedMessages],
+    [setAgentChatFetchedMessages, setAgentChatQueuedMessages, store],
   );
 
   const handleLoadingChange = useCallback(

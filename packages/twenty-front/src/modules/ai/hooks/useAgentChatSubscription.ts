@@ -8,10 +8,12 @@ import {
   type ExtendedUIMessage,
 } from 'twenty-shared/ai';
 import { isDefined } from 'twenty-shared/utils';
+import { v4 } from 'uuid';
 
 import { AGENT_CHAT_INSTANCE_ID } from '@/ai/constants/AgentChatInstanceId';
 import { AGENT_CHAT_REFETCH_MESSAGES_EVENT_NAME } from '@/ai/constants/AgentChatRefetchMessagesEventName';
 import { ON_AGENT_CHAT_EVENT } from '@/ai/graphql/subscriptions/OnAgentChatEvent';
+import { agentChatCatchupChunksState } from '@/ai/states/agentChatCatchupChunksState';
 import { agentChatErrorState } from '@/ai/states/agentChatErrorState';
 import { agentChatIsStreamingState } from '@/ai/states/agentChatIsStreamingState';
 import { agentChatMessagesComponentFamilyState } from '@/ai/states/agentChatMessagesComponentFamilyState';
@@ -23,6 +25,65 @@ import { sseClientState } from '@/sse-db-event/states/sseClientState';
 
 const THROTTLE_MS = 100;
 
+// readUIMessageStream requires initialization chunks (start, start-step,
+// text-start) before content chunks. When reconnecting to a thread mid-stream,
+// those chunks were already sent before we subscribed. This adapter injects
+// synthetic initialization chunks so the reader can process mid-stream content.
+const createMidStreamAdapter = () => {
+  let hasSeenStart = false;
+  const knownTextPartIds = new Set<string>();
+  const knownReasoningPartIds = new Set<string>();
+  const knownToolCallIds = new Set<string>();
+
+  return new TransformStream<UIMessageChunk, UIMessageChunk>({
+    transform(chunk, controller) {
+      if (!hasSeenStart) {
+        hasSeenStart = true;
+        if (chunk.type !== 'start') {
+          controller.enqueue({ type: 'start', messageId: v4() });
+          controller.enqueue({ type: 'start-step' });
+        }
+      }
+
+      if (chunk.type === 'text-start') {
+        knownTextPartIds.add(chunk.id);
+      } else if (
+        (chunk.type === 'text-delta' || chunk.type === 'text-end') &&
+        !knownTextPartIds.has(chunk.id)
+      ) {
+        controller.enqueue({ type: 'text-start', id: chunk.id });
+        knownTextPartIds.add(chunk.id);
+      }
+
+      if (chunk.type === 'reasoning-start') {
+        knownReasoningPartIds.add(chunk.id);
+      } else if (
+        (chunk.type === 'reasoning-delta' || chunk.type === 'reasoning-end') &&
+        !knownReasoningPartIds.has(chunk.id)
+      ) {
+        controller.enqueue({ type: 'reasoning-start', id: chunk.id });
+        knownReasoningPartIds.add(chunk.id);
+      }
+
+      if (chunk.type === 'tool-input-start') {
+        knownToolCallIds.add(chunk.toolCallId);
+      } else if (
+        chunk.type === 'tool-input-delta' &&
+        !knownToolCallIds.has(chunk.toolCallId)
+      ) {
+        controller.enqueue({
+          type: 'tool-input-start',
+          toolCallId: chunk.toolCallId,
+          toolName: 'unknown',
+        });
+        knownToolCallIds.add(chunk.toolCallId);
+      }
+
+      controller.enqueue(chunk);
+    },
+  });
+};
+
 type AgentChatEventPayload = {
   onAgentChatEvent: {
     threadId: string;
@@ -33,6 +94,7 @@ type AgentChatEventPayload = {
 export const useAgentChatSubscription = (threadId: string | null) => {
   const store = useStore();
   const sseClient = useAtomStateValue(sseClientState);
+  const agentChatCatchupChunks = useAtomStateValue(agentChatCatchupChunksState);
   // These refs hold imperative handles (subscription dispose, stream writer)
   // and a non-reactive flag mirroring the atom to avoid stale closures in
   // the async stream loop — they are not used for rendering state.
@@ -44,6 +106,13 @@ export const useAgentChatSubscription = (threadId: string | null) => {
   );
   // oxlint-disable-next-line twenty/no-state-useref
   const isStreamingRef = useRef(false);
+  const handleEventRef =
+    // oxlint-disable-next-line twenty/no-state-useref
+    useRef<((event: AgentChatSubscriptionEvent) => void) | null>(null);
+  // Tracks the seq of the first chunk received via live SSE so we know
+  // which catchup chunks to replay and which to skip (already seen).
+  // oxlint-disable-next-line twenty/no-state-useref
+  const firstLiveSeqRef = useRef<number | null>(null);
 
   const cleanup = useCallback(() => {
     if (writerRef.current) {
@@ -74,6 +143,8 @@ export const useAgentChatSubscription = (threadId: string | null) => {
     let bridge: TransformStream<UIMessageChunk> | null = null;
     let throttleTimer: ReturnType<typeof setTimeout> | null = null;
     let latestMessage: ExtendedUIMessage | null = null;
+
+    firstLiveSeqRef.current = null;
 
     const flushToAtom = () => {
       const messageToFlush = latestMessage;
@@ -198,6 +269,10 @@ export const useAgentChatSubscription = (threadId: string | null) => {
     const handleEvent = (event: AgentChatSubscriptionEvent) => {
       switch (event.type) {
         case 'stream-chunk': {
+          if (isDefined(event.seq) && firstLiveSeqRef.current === null) {
+            firstLiveSeqRef.current = event.seq;
+          }
+
           if (!isStreamingRef.current) {
             isStreamingRef.current = true;
             store.set(agentChatIsStreamingState.atom, true);
@@ -205,7 +280,11 @@ export const useAgentChatSubscription = (threadId: string | null) => {
             bridge = new TransformStream<UIMessageChunk>();
             writerRef.current = bridge.writable.getWriter();
 
-            startReadLoop(bridge.readable).catch(() => {
+            const adaptedReadable = bridge.readable.pipeThrough(
+              createMidStreamAdapter(),
+            );
+
+            startReadLoop(adaptedReadable).catch(() => {
               isStreamingRef.current = false;
               store.set(agentChatIsStreamingState.atom, false);
             });
@@ -255,6 +334,8 @@ export const useAgentChatSubscription = (threadId: string | null) => {
       }
     };
 
+    handleEventRef.current = handleEvent;
+
     const dispose = sseClient.subscribe<AgentChatEventPayload>(
       {
         query: print(ON_AGENT_CHAT_EVENT),
@@ -280,10 +361,44 @@ export const useAgentChatSubscription = (threadId: string | null) => {
     disposeRef.current = dispose;
 
     return () => {
+      handleEventRef.current = null;
       if (isDefined(throttleTimer)) {
         clearTimeout(throttleTimer);
       }
       cleanup();
     };
   }, [threadId, sseClient, store, cleanup]);
+
+  // Replay accumulated stream chunks from Redis when the messages query
+  // includes catchup data (e.g. reconnecting to an active stream).
+  useEffect(() => {
+    if (
+      !isDefined(agentChatCatchupChunks) ||
+      agentChatCatchupChunks.chunks.length === 0
+    ) {
+      return;
+    }
+
+    if (!isDefined(handleEventRef.current)) {
+      return;
+    }
+
+    const firstLiveSeq = firstLiveSeqRef.current;
+
+    for (let index = 0; index < agentChatCatchupChunks.chunks.length; index++) {
+      const chunkSeq = index + 1;
+
+      if (firstLiveSeq !== null && chunkSeq >= firstLiveSeq) {
+        break;
+      }
+
+      handleEventRef.current({
+        type: 'stream-chunk',
+        chunk: agentChatCatchupChunks.chunks[index],
+        seq: chunkSeq,
+      });
+    }
+
+    store.set(agentChatCatchupChunksState.atom, null);
+  }, [agentChatCatchupChunks, store]);
 };

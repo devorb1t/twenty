@@ -19,6 +19,7 @@ import {
   FindFieldsWidgetViewsDocument,
   FindManyLogicFunctionsDocument,
   FindManyNavigationMenuItemsDocument,
+  GetChatThreadsDocument,
   type ObjectMetadataItemsQuery,
   ViewType,
 } from '~/generated-metadata/graphql';
@@ -60,6 +61,7 @@ export const useLoadStaleMetadataEntities = () => {
   const isCommandMenuItemEnabled = useIsFeatureEnabled(
     FeatureFlagKey.IS_COMMAND_MENU_ITEM_ENABLED,
   );
+  const isAiEnabled = useIsFeatureEnabled(FeatureFlagKey.IS_AI_ENABLED);
 
   const loadStaleMetadataEntities = useCallback(
     async (staleEntityKeys: MetadataEntityKey[]) => {
@@ -219,10 +221,39 @@ export const useLoadStaleMetadataEntities = () => {
         );
       }
 
+      if (staleEntityKeys.includes('agentChatThreads') && isAiEnabled) {
+        fetchPromises.push(
+          client
+            .query({
+              query: GetChatThreadsDocument,
+              variables: { paging: { first: 500 } },
+              fetchPolicy: 'network-only',
+            })
+            .then((result) => {
+              if (!isDefined(result.data?.chatThreads?.edges)) {
+                return;
+              }
+
+              const threads = result.data.chatThreads.edges.map(
+                (edge) => edge.node,
+              );
+
+              replaceDraft('agentChatThreads', threads);
+            }),
+        );
+      }
+
       await Promise.all(fetchPromises);
       applyChanges();
     },
-    [client, store, replaceDraft, applyChanges, isCommandMenuItemEnabled],
+    [
+      client,
+      store,
+      replaceDraft,
+      applyChanges,
+      isCommandMenuItemEnabled,
+      isAiEnabled,
+    ],
   );
 
   return { loadStaleMetadataEntities };

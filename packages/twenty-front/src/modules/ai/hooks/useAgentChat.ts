@@ -143,8 +143,24 @@ export const useAgentChat = (
         throw new Error('Failed to send message');
       }
 
-      // Server returns authoritative state — refetch to reconcile
-      // optimistic message with actual queued/sent status.
+      const responseBody = await response.json();
+
+      // If the server queued the message (stream was active), remove the
+      // optimistic entry from the main conversation — the refetch below will
+      // place it in the dedicated queue list instead.
+      if (responseBody.queued) {
+        const latestMessages = store.get(
+          agentChatMessagesComponentFamilyState.atomFamily(atomKey),
+        );
+
+        store.set(
+          agentChatMessagesComponentFamilyState.atomFamily(atomKey),
+          latestMessages.filter(
+            (message) => message.id !== optimisticUserMessage.id,
+          ),
+        );
+      }
+
       dispatchBrowserEvent(AGENT_CHAT_REFETCH_MESSAGES_EVENT_NAME);
 
       // Handle pending thread ID for first send

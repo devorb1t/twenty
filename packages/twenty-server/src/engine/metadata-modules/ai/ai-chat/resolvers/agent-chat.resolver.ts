@@ -26,7 +26,9 @@ import { WorkspaceAuthGuard } from 'src/engine/guards/workspace-auth.guard';
 import { AgentMessageDTO } from 'src/engine/metadata-modules/ai/ai-agent-execution/dtos/agent-message.dto';
 import { AgentChatThreadDTO } from 'src/engine/metadata-modules/ai/ai-chat/dtos/agent-chat-thread.dto';
 import { AISystemPromptPreviewDTO } from 'src/engine/metadata-modules/ai/ai-chat/dtos/ai-system-prompt-preview.dto';
+import { ChatStreamCatchupChunksDTO } from 'src/engine/metadata-modules/ai/ai-chat/dtos/chat-stream-catchup-chunks.dto';
 import { type AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/entities/agent-chat-thread.entity';
+import { AgentChatEventPublisherService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat-event-publisher.service';
 import { AgentChatService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat.service';
 import { SystemPromptBuilderService } from 'src/engine/metadata-modules/ai/ai-chat/services/system-prompt-builder.service';
 
@@ -39,6 +41,7 @@ import { SystemPromptBuilderService } from 'src/engine/metadata-modules/ai/ai-ch
 export class AgentChatResolver {
   constructor(
     private readonly agentChatService: AgentChatService,
+    private readonly eventPublisherService: AgentChatEventPublisherService,
     private readonly systemPromptBuilderService: SystemPromptBuilderService,
   ) {}
 
@@ -63,10 +66,24 @@ export class AgentChatResolver {
     );
   }
 
+  @Query(() => ChatStreamCatchupChunksDTO)
+  @RequireFeatureFlag(FeatureFlagKey.IS_AI_ENABLED)
+  async chatStreamCatchupChunks(
+    @Args('threadId', { type: () => UUIDScalarType }) threadId: string,
+  ) {
+    return this.eventPublisherService.getAccumulatedChunks(threadId);
+  }
+
   @Mutation(() => AgentChatThreadDTO)
   @RequireFeatureFlag(FeatureFlagKey.IS_AI_ENABLED)
-  async createChatThread(@AuthUserWorkspaceId() userWorkspaceId: string) {
-    return this.agentChatService.createThread(userWorkspaceId);
+  async createChatThread(
+    @AuthUserWorkspaceId() userWorkspaceId: string,
+    @AuthWorkspace() workspace: WorkspaceEntity,
+  ) {
+    return this.agentChatService.createThread({
+      userWorkspaceId,
+      workspaceId: workspace.id,
+    });
   }
 
   @Query(() => AISystemPromptPreviewDTO)

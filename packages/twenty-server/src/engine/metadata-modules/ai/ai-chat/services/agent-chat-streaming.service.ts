@@ -13,7 +13,10 @@ import {
   AgentExceptionCode,
 } from 'src/engine/metadata-modules/ai/ai-agent/agent.exception';
 import { type BrowsingContextType } from 'src/engine/metadata-modules/ai/ai-agent/types/browsingContext.type';
-import { AgentMessageStatus } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message.entity';
+import {
+  AgentMessageRole,
+  AgentMessageStatus,
+} from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message.entity';
 import { mapDBPartsToUIMessageParts } from 'src/engine/metadata-modules/ai/ai-agent-execution/utils/mapDBPartsToUIMessageParts';
 import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/entities/agent-chat-thread.entity';
 import {
@@ -67,7 +70,20 @@ export class AgentChatStreamingService {
       );
     }
 
-    const messages = await this.loadMessagesFromDB(threadId, userWorkspaceId);
+    // Persist the user message before enqueuing the job so the frontend
+    // refetch (triggered when the controller returns) finds it in the DB.
+    const savedUserMessage = await this.agentChatService.addMessage({
+      threadId,
+      uiMessage: {
+        role: AgentMessageRole.USER,
+        parts: [{ type: 'text' as const, text }],
+      },
+    });
+
+    const previousMessages = await this.loadMessagesFromDB(
+      threadId,
+      userWorkspaceId,
+    );
 
     const streamId = generateId();
 
@@ -78,12 +94,13 @@ export class AgentChatStreamingService {
         streamId,
         userWorkspaceId,
         workspaceId: workspace.id,
-        messages,
+        messages: previousMessages,
         browsingContext,
         modelId,
         lastUserMessageText: text,
         lastUserMessageParts: [{ type: 'text', text }],
         hasTitle: !!thread.title,
+        existingTurnId: savedUserMessage.turnId ?? undefined,
       },
     );
 
