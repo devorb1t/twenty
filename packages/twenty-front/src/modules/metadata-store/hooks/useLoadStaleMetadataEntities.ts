@@ -6,13 +6,11 @@ import { splitViewWithRelated } from '@/metadata-store/utils/splitViewWithRelate
 import { FIND_MANY_OBJECT_METADATA_ITEMS } from '@/object-metadata/graphql/queries';
 import { transformPageLayout } from '@/page-layout/utils/transformPageLayout';
 import { logicFunctionsState } from '@/settings/logic-functions/states/logicFunctionsState';
-import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
 import { useApolloClient } from '@apollo/client/react';
 import { useStore } from 'jotai';
 import { useCallback } from 'react';
 import { isDefined } from 'twenty-shared/utils';
 import {
-  FeatureFlagKey,
   FindAllViewsDocument,
   FindManyCommandMenuItemsDocument,
   FindAllRecordPageLayoutsDocument,
@@ -58,10 +56,13 @@ export const useLoadStaleMetadataEntities = () => {
   const client = useApolloClient();
   const store = useStore();
   const { replaceDraft, applyChanges } = useUpdateMetadataStoreDraft();
+<<<<<<< HEAD
   const isCommandMenuItemEnabled = useIsFeatureEnabled(
     FeatureFlagKey.IS_COMMAND_MENU_ITEM_ENABLED,
   );
   const isAiEnabled = useIsFeatureEnabled(FeatureFlagKey.IS_AI_ENABLED);
+=======
+>>>>>>> 6aedeb1cb2a3124cb39fb4cff8e9678e02595dbd
 
   const loadStaleMetadataEntities = useCallback(
     async (staleEntityKeys: MetadataEntityKey[]) => {
@@ -201,10 +202,7 @@ export const useLoadStaleMetadataEntities = () => {
         );
       }
 
-      if (
-        staleEntityKeys.includes('commandMenuItems') &&
-        isCommandMenuItemEnabled
-      ) {
+      if (staleEntityKeys.includes('commandMenuItems')) {
         fetchPromises.push(
           client
             .query({
@@ -246,6 +244,7 @@ export const useLoadStaleMetadataEntities = () => {
       await Promise.all(fetchPromises);
       applyChanges();
     },
+<<<<<<< HEAD
     [
       client,
       store,
@@ -254,6 +253,9 @@ export const useLoadStaleMetadataEntities = () => {
       isCommandMenuItemEnabled,
       isAiEnabled,
     ],
+=======
+    [client, store, replaceDraft, applyChanges],
+>>>>>>> 6aedeb1cb2a3124cb39fb4cff8e9678e02595dbd
   );
 
   return { loadStaleMetadataEntities };
