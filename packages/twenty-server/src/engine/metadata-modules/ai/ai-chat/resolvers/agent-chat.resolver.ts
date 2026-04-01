@@ -70,7 +70,10 @@ export class AgentChatResolver {
   @RequireFeatureFlag(FeatureFlagKey.IS_AI_ENABLED)
   async chatStreamCatchupChunks(
     @Args('threadId', { type: () => UUIDScalarType }) threadId: string,
+    @AuthUserWorkspaceId() userWorkspaceId: string,
   ) {
+    await this.agentChatService.getThreadById(threadId, userWorkspaceId);
+
     return this.eventPublisherService.getAccumulatedChunks(threadId);
   }
 
