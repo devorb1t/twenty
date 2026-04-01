@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddStatusToAgentMessage1774776000000
+export class AddStatusToAgentMessage1775001600000
   implements MigrationInterface
 {
   public async up(queryRunner: QueryRunner): Promise<void> {
