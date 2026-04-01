@@ -31,7 +31,7 @@ export const AgentChatThreadInitializationEffect = () => {
     agentChatThreadsLoadingState,
   );
   const store = useStore();
-  const threads = useAtomStateValue(agentChatThreadsSelector);
+  const agentChatThreads = useAtomStateValue(agentChatThreadsSelector);
   const storeEntry = useAtomValue(
     metadataStoreState.atomFamily('agentChatThreads'),
   );
@@ -95,15 +95,14 @@ export const AgentChatThreadInitializationEffect = () => {
       setAgentChatUsage(null);
     }
   }, [
-    currentAIChatThread,
-    threads,
-    storeEntry.status,
-    setCurrentAIChatThread,
-    setAgentChatInput,
-    setCurrentAIChatThreadTitle,
-    setAgentChatUsage,
-    store,
-  ]);
+	currentAIChatThread,
+	storeEntry.status,
+	setCurrentAIChatThread,
+	setAgentChatInput,
+	setCurrentAIChatThreadTitle,
+	setAgentChatUsage,
+	store
+]);
 
   return null;
 };
