@@ -125,7 +125,8 @@ export class AgentChatResolver {
     @Args('messageId', { type: () => UUIDScalarType }) messageId: string,
     @Args('browsingContext', { type: () => GraphQLJSON, nullable: true })
     browsingContext: BrowsingContextType | null,
-    @Args('modelId', { nullable: true }) modelId: string | undefined,
+    @Args('modelId', { type: () => String, nullable: true })
+    modelId: string | undefined,
     @AuthUserWorkspaceId() userWorkspaceId: string,
     @AuthWorkspace() workspace: WorkspaceEntity,
   ): Promise<SendChatMessageResultDTO> {
