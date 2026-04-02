@@ -11,14 +11,13 @@ import {
   UpgradeCommandRunner,
   type AllCommands,
 } from 'src/database/commands/command-runners/upgrade.command-runner';
+import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 import { CoreMigrationRunnerService } from 'src/database/commands/core-migration-runner/services/core-migration-runner.service';
 import { UPGRADE_COMMAND_SUPPORTED_VERSIONS } from 'src/engine/constants/upgrade-command-supported-versions.constant';
 import { CoreEngineVersionService } from 'src/engine/core-engine-version/services/core-engine-version.service';
 import { type ConfigVariables } from 'src/engine/core-modules/twenty-config/config-variables';
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
-import { DataSourceService } from 'src/engine/metadata-modules/data-source/data-source.service';
-import { GlobalWorkspaceOrmManager } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-orm.manager';
 import { WorkspaceVersionService } from 'src/engine/workspace-manager/workspace-version/services/workspace-version.service';
 
 const CURRENT_VERSION =
@@ -32,7 +31,10 @@ const PREVIOUS_VERSION =
 
 class BasicUpgradeCommandRunner extends UpgradeCommandRunner {
   allCommands = Object.fromEntries(
-    UPGRADE_COMMAND_SUPPORTED_VERSIONS.map((version) => [version, []]),
+    UPGRADE_COMMAND_SUPPORTED_VERSIONS.map((version) => [
+      version,
+      { instanceCommands: [], perWorkspaceCommands: [] },
+    ]),
   ) as unknown as AllCommands;
 }
 
@@ -66,10 +68,6 @@ const buildUpgradeCommandModule = async ({
   appVersion,
   commandRunner,
 }: BuildUpgradeCommandModuleArgs) => {
-  const mockDataSourceService = {
-    getLastDataSourceMetadataFromWorkspaceId: jest.fn(),
-  };
-
   const module: TestingModule = await Test.createTestingModule({
     providers: [
       {
@@ -77,30 +75,27 @@ const buildUpgradeCommandModule = async ({
         useFactory: (
           workspaceRepository: Repository<WorkspaceEntity>,
           twentyConfigService: TwentyConfigService,
-          globalWorkspaceOrmManager: GlobalWorkspaceOrmManager,
-          dataSourceService: DataSourceService,
           coreEngineVersionService: CoreEngineVersionService,
           workspaceVersionService: WorkspaceVersionService,
           coreMigrationRunnerService: CoreMigrationRunnerService,
+          workspaceIteratorService: WorkspaceIteratorService,
         ) => {
           return new commandRunner(
             workspaceRepository,
             twentyConfigService,
-            globalWorkspaceOrmManager,
-            dataSourceService,
             coreEngineVersionService,
             workspaceVersionService,
             coreMigrationRunnerService,
+            workspaceIteratorService,
           );
         },
         inject: [
           getRepositoryToken(WorkspaceEntity),
           TwentyConfigService,
-          GlobalWorkspaceOrmManager,
-          DataSourceService,
           CoreEngineVersionService,
           WorkspaceVersionService,
           CoreMigrationRunnerService,
+          WorkspaceIteratorService,
         ],
       },
       {
@@ -131,26 +126,48 @@ const buildUpgradeCommandModule = async ({
           }),
         },
       },
-      {
-        provide: GlobalWorkspaceOrmManager,
-        useValue: {
-          connect: jest.fn(),
-          destroyDataSourceForWorkspace: jest.fn(),
-          getDataSourceForWorkspace: jest.fn(),
-          executeInWorkspaceContext: jest
-            .fn()
-            .mockImplementation((fn: () => any, _authContext?: any) => fn()),
-        },
-      },
-      {
-        provide: DataSourceService,
-        useValue: mockDataSourceService,
-      },
       CoreEngineVersionService,
       WorkspaceVersionService,
       {
         provide: CoreMigrationRunnerService,
         useValue: { run: jest.fn().mockResolvedValue(undefined) },
+      },
+      {
+        provide: WorkspaceIteratorService,
+        useValue: {
+          iterate: jest
+            .fn()
+            .mockImplementation(
+              async (
+                options: any,
+                callback: (context: any) => Promise<void>,
+              ) => {
+                const workspaceIds =
+                  options.workspaceIds ??
+                  workspaces.map((workspace) => workspace.id);
+
+                const report = {
+                  fail: [] as any[],
+                  success: [] as any[],
+                };
+
+                for (const [index, workspaceId] of workspaceIds.entries()) {
+                  try {
+                    await callback({
+                      workspaceId,
+                      index,
+                      total: workspaceIds.length,
+                    });
+                    report.success.push({ workspaceId });
+                  } catch (error) {
+                    report.fail.push({ error, workspaceId });
+                  }
+                }
+
+                return report;
+              },
+            ),
+        },
       },
     ],
   }).compile();
@@ -161,7 +178,6 @@ const buildUpgradeCommandModule = async ({
 describe('UpgradeCommandRunner', () => {
   let upgradeCommandRunner: BasicUpgradeCommandRunner;
   let workspaceRepository: Repository<WorkspaceEntity>;
-  let coreMigrationRunnerService: CoreMigrationRunnerService;
 
   type BuildModuleAndSetupSpiesArgs = {
     numberOfWorkspace?: number;
@@ -197,10 +213,6 @@ describe('UpgradeCommandRunner', () => {
     jest.spyOn(upgradeCommandRunner['logger'], 'error').mockImplementation();
     jest.spyOn(upgradeCommandRunner['logger'], 'warn').mockImplementation();
 
-    jest.spyOn(upgradeCommandRunner, 'runOnWorkspace');
-
-    coreMigrationRunnerService = module.get(CoreMigrationRunnerService);
-
     workspaceRepository = module.get<Repository<WorkspaceEntity>>(
       getRepositoryToken(WorkspaceEntity),
     );
@@ -229,10 +241,6 @@ describe('UpgradeCommandRunner', () => {
     expect(successReport.length).toBe(1);
     expect(failReport.length).toBe(0);
 
-    [upgradeCommandRunner.runOnWorkspace].forEach((fn) =>
-      expect(fn).toHaveBeenCalledTimes(1),
-    );
-
     [workspaceRepository.update].forEach((fn) =>
       expect(fn).not.toHaveBeenCalled(),
     );
@@ -251,9 +259,6 @@ describe('UpgradeCommandRunner', () => {
     // @ts-expect-error legacy noImplicitAny
     await upgradeCommandRunner.run(passedParams, options);
 
-    [upgradeCommandRunner.runOnWorkspace].forEach((fn) =>
-      expect(fn).toHaveBeenCalledTimes(numberOfWorkspace),
-    );
     expect(workspaceRepository.update).toHaveBeenNthCalledWith(
       numberOfWorkspace,
       { id: expect.any(String) },
@@ -320,9 +325,6 @@ describe('UpgradeCommandRunner', () => {
 
         expect(failReport.length).toBe(0);
         expect(successReport.length).toBe(1);
-        expect(
-          coreMigrationRunnerService.runAllPendingMigrations,
-        ).toHaveBeenCalledTimes(1);
         const { workspaceId } = successReport[0];
 
         expect(workspaceId).toBe('workspace_0');

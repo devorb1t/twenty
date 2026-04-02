@@ -1,0 +1,138 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+
+import chalk from 'chalk';
+import { isDefined } from 'twenty-shared/utils';
+import { WorkspaceActivationStatus } from 'twenty-shared/workspace';
+import { In, MoreThanOrEqual, Repository } from 'typeorm';
+
+import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
+import { DataSourceService } from 'src/engine/metadata-modules/data-source/data-source.service';
+import { GlobalWorkspaceDataSource } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-datasource';
+import { GlobalWorkspaceOrmManager } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-orm.manager';
+import { buildSystemAuthContext } from 'src/engine/twenty-orm/utils/build-system-auth-context.util';
+
+export type WorkspaceIteratorOptions = {
+  workspaceIds?: string[];
+  startFromWorkspaceId?: string;
+  workspaceCountLimit?: number;
+  dryRun?: boolean;
+};
+
+export type WorkspaceIteratorContext = {
+  workspaceId: string;
+  dataSource?: GlobalWorkspaceDataSource;
+  index: number;
+  total: number;
+};
+
+export type WorkspaceIteratorReport = {
+  fail: {
+    workspaceId: string;
+    error: Error;
+  }[];
+  success: {
+    workspaceId: string;
+  }[];
+};
+
+@Injectable()
+export class WorkspaceIteratorService {
+  private readonly logger = new Logger(WorkspaceIteratorService.name);
+
+  constructor(
+    @InjectRepository(WorkspaceEntity)
+    private readonly workspaceRepository: Repository<WorkspaceEntity>,
+    private readonly globalWorkspaceOrmManager: GlobalWorkspaceOrmManager,
+    private readonly dataSourceService: DataSourceService,
+  ) {}
+
+  async iterate(
+    options: WorkspaceIteratorOptions,
+    callback: (context: WorkspaceIteratorContext) => Promise<void>,
+  ): Promise<WorkspaceIteratorReport> {
+    const report: WorkspaceIteratorReport = {
+      fail: [],
+      success: [],
+    };
+
+    const workspaceIdsToProcess =
+      options.workspaceIds && options.workspaceIds.length > 0
+        ? options.workspaceIds
+        : await this.fetchActiveOrSuspendedWorkspaceIds(options);
+
+    if (options.dryRun) {
+      this.logger.log(
+        chalk.yellow('Dry run mode: No changes will be applied'),
+      );
+    }
+
+    for (const [index, workspaceId] of workspaceIdsToProcess.entries()) {
+      this.logger.log(
+        `Upgrading workspace ${workspaceId} ${index + 1}/${workspaceIdsToProcess.length}`,
+      );
+
+      try {
+        const authContext = buildSystemAuthContext(workspaceId);
+
+        await this.globalWorkspaceOrmManager.executeInWorkspaceContext(
+          async () => {
+            const workspaceHasDataSource =
+              await this.dataSourceService.getLastDataSourceMetadataFromWorkspaceId(
+                workspaceId,
+              );
+
+            const dataSource = isDefined(workspaceHasDataSource)
+              ? await this.globalWorkspaceOrmManager.getGlobalWorkspaceDataSource()
+              : undefined;
+
+            await callback({
+              workspaceId,
+              dataSource,
+              index,
+              total: workspaceIdsToProcess.length,
+            });
+          },
+          authContext,
+        );
+
+        report.success.push({ workspaceId });
+      } catch (error) {
+        report.fail.push({ error, workspaceId });
+        this.logger.warn(
+          chalk.red(`Error in workspace ${workspaceId}: ${error.message}`),
+        );
+      }
+    }
+
+    report.fail.forEach(({ error, workspaceId }) =>
+      this.logger.error(
+        `Error in workspace ${workspaceId}: ${error.message}`,
+        error.stack,
+      ),
+    );
+
+    return report;
+  }
+
+  private async fetchActiveOrSuspendedWorkspaceIds(
+    options: WorkspaceIteratorOptions,
+  ): Promise<string[]> {
+    const workspaces = await this.workspaceRepository.find({
+      select: ['id'],
+      where: {
+        activationStatus: In([
+          WorkspaceActivationStatus.ACTIVE,
+          WorkspaceActivationStatus.SUSPENDED,
+        ]),
+        ...(options.startFromWorkspaceId
+          ? { id: MoreThanOrEqual(options.startFromWorkspaceId) }
+          : {}),
+      },
+      order: { id: 'ASC' },
+      take: options.workspaceCountLimit,
+    });
+
+    return workspaces.map((workspace) => workspace.id);
+  }
+}
