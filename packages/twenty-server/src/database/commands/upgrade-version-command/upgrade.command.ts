@@ -5,7 +5,6 @@ import { type Repository } from 'typeorm';
 
 import {
   type AllCommands,
-  type UpgradeCommandOptions,
   UpgradeCommandRunner,
   type VersionCommands,
 } from 'src/database/commands/command-runners/upgrade.command-runner';
@@ -110,12 +109,5 @@ export class UpgradeCommand extends UpgradeCommandRunner {
       '1.20.0': commands_1200,
       '1.21.0': commands_1210,
     };
-  }
-
-  override async runMigrationCommand(
-    passedParams: string[],
-    options: UpgradeCommandOptions,
-  ): Promise<void> {
-    return await super.runMigrationCommand(passedParams, options);
   }
 }

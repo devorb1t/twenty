@@ -226,12 +226,6 @@ describe('UpgradeCommandRunner', () => {
     // @ts-expect-error legacy noImplicitAny
     await upgradeCommandRunner.run(passedParams, options);
 
-    const { fail: failReport, success: successReport } =
-      upgradeCommandRunner.migrationReport;
-
-    expect(successReport.length).toBe(1);
-    expect(failReport.length).toBe(0);
-
     [workspaceRepository.update].forEach((fn) =>
       expect(fn).not.toHaveBeenCalled(),
     );
@@ -255,8 +249,7 @@ describe('UpgradeCommandRunner', () => {
       { id: expect.any(String) },
       { version: CURRENT_VERSION },
     );
-    expect(upgradeCommandRunner.migrationReport.success.length).toBe(42);
-    expect(upgradeCommandRunner.migrationReport.fail.length).toBe(0);
+    expect(workspaceRepository.update).toHaveBeenCalledTimes(numberOfWorkspace);
   });
 
   describe('Workspace upgrade should succeed ', () => {
@@ -311,14 +304,10 @@ describe('UpgradeCommandRunner', () => {
         // @ts-expect-error legacy noImplicitAny
         await upgradeCommandRunner.run(passedParams, options);
 
-        const { fail: failReport, success: successReport } =
-          upgradeCommandRunner.migrationReport;
-
-        expect(failReport.length).toBe(0);
-        expect(successReport.length).toBe(1);
-        const { workspaceId } = successReport[0];
-
-        expect(workspaceId).toBe('workspace_0');
+        expect(workspaceRepository.update).toHaveBeenCalledWith(
+          { id: 'workspace_0' },
+          { version: expect.any(String) },
+        );
       },
     );
   });
@@ -326,10 +315,7 @@ describe('UpgradeCommandRunner', () => {
   describe('Workspace upgrade should fail', () => {
     const failingTestUseCases: EachTestingContext<{
       input: Omit<BuildModuleAndSetupSpiesArgs, 'numberOfWorkspace'>;
-      output?: {
-        failReportWorkspaceId: string;
-        expectedErrorMessage: string;
-      };
+      expectedErrorMessage: string;
     }>[] = [
       {
         title: 'when workspace version is not equal to fromVersion',
@@ -339,10 +325,8 @@ describe('UpgradeCommandRunner', () => {
               version: '0.1.0',
             },
           },
-          output: {
-            failReportWorkspaceId: 'workspace_0',
-            expectedErrorMessage: `Unable to run the upgrade command. Aborting the upgrade process.\nPlease ensure that all workspaces are on at least the previous minor version (${PREVIOUS_VERSION}).\nIf any workspaces are not on the previous minor version, roll back to that version and run the upgrade command again.`,
-          },
+          expectedErrorMessage:
+            'Unable to run the upgrade command. Aborting the upgrade process.',
         },
       },
       {
@@ -353,10 +337,8 @@ describe('UpgradeCommandRunner', () => {
               version: null,
             },
           },
-          output: {
-            failReportWorkspaceId: 'workspace_0',
-            expectedErrorMessage: `Unable to run the upgrade command. Aborting the upgrade process.\nPlease ensure that all workspaces are on at least the previous minor version (${PREVIOUS_VERSION}).\nIf any workspaces are not on the previous minor version, roll back to that version and run the upgrade command again.`,
-          },
+          expectedErrorMessage:
+            'Unable to run the upgrade command. Aborting the upgrade process.',
         },
       },
       {
@@ -365,11 +347,8 @@ describe('UpgradeCommandRunner', () => {
           input: {
             appVersion: null,
           },
-          output: {
-            failReportWorkspaceId: 'global',
-            expectedErrorMessage:
-              'APP_VERSION is not defined, please double check your env variables',
-          },
+          expectedErrorMessage:
+            'APP_VERSION is not defined, please double check your env variables',
         },
       },
       {
@@ -378,11 +357,8 @@ describe('UpgradeCommandRunner', () => {
           input: {
             appVersion: '42.0.0',
           },
-          output: {
-            failReportWorkspaceId: 'global',
-            expectedErrorMessage:
-              'No command found for version 42.0.0. Please check the commands record.',
-          },
+          expectedErrorMessage:
+            'No command found for version 42.0.0. Please check the commands record.',
         },
       },
       {
@@ -391,33 +367,22 @@ describe('UpgradeCommandRunner', () => {
           input: {
             appVersion: UPGRADE_COMMAND_SUPPORTED_VERSIONS[0],
           },
-          output: {
-            failReportWorkspaceId: 'global',
-            expectedErrorMessage: `No previous version found for version ${UPGRADE_COMMAND_SUPPORTED_VERSIONS[0]}. Available versions: ${UPGRADE_COMMAND_SUPPORTED_VERSIONS.join(', ')}`,
-          },
+          expectedErrorMessage: `No previous version found for version ${UPGRADE_COMMAND_SUPPORTED_VERSIONS[0]}`,
         },
       },
     ];
 
     it.each(eachTestingContextFilter(failingTestUseCases))(
       '$title',
-      async ({ context: { input, output } }) => {
+      async ({ context: { input, expectedErrorMessage } }) => {
         await buildModuleAndSetupSpies(input);
 
         const passedParams: string[] = [];
         const options = {};
 
-        await upgradeCommandRunner.run(passedParams, options);
-
-        const { fail: failReport, success: successReport } =
-          upgradeCommandRunner.migrationReport;
-
-        expect(successReport.length).toBe(0);
-        expect(failReport.length).toBe(1);
-        const { workspaceId, error } = failReport[0];
-
-        expect(workspaceId).toBe(output?.failReportWorkspaceId ?? 'global');
-        expect(error).toEqual(new Error(output?.expectedErrorMessage ?? ''));
+        await expect(
+          upgradeCommandRunner.run(passedParams, options),
+        ).rejects.toThrow(expectedErrorMessage);
       },
     );
   });

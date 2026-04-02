@@ -120,7 +120,7 @@ export class WorkspaceIteratorService {
   }
 
   private async fetchWorkspaceIds(
-    options: WorkspaceIteratorOptions,
+    options: Omit<WorkspaceIteratorArgs, 'callback'>,
   ): Promise<string[]> {
     const activationStatuses =
       options.activationStatuses ?? DEFAULT_ACTIVATION_STATUSES;
