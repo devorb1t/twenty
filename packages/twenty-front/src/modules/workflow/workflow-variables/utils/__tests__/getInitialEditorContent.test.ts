@@ -303,4 +303,63 @@ describe('getInitialEditorContent', () => {
 }
 `);
   });
+
+  it('should coerce non-string values to string without throwing', () => {
+    expect(
+      getInitialEditorContent(42 as unknown as string),
+    ).toMatchInlineSnapshot(`
+{
+  "content": [
+    {
+      "content": [
+        {
+          "text": "42",
+          "type": "text",
+        },
+      ],
+      "type": "paragraph",
+    },
+  ],
+  "type": "doc",
+}
+`);
+
+    expect(
+      getInitialEditorContent(true as unknown as string),
+    ).toMatchInlineSnapshot(`
+{
+  "content": [
+    {
+      "content": [
+        {
+          "text": "true",
+          "type": "text",
+        },
+      ],
+      "type": "paragraph",
+    },
+  ],
+  "type": "doc",
+}
+`);
+
+    expect(
+      getInitialEditorContent({ key: 'value' } as unknown as string),
+    ).toMatchInlineSnapshot(`
+{
+  "content": [
+    {
+      "content": [
+        {
+          "text": "[object Object]",
+          "type": "text",
+        },
+      ],
+      "type": "paragraph",
+    },
+  ],
+  "type": "doc",
+}
+`);
+  });
 });
