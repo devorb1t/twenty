@@ -3,13 +3,14 @@ import React from 'react';
 import { CardContent } from 'twenty-ui/layout';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
-const StyledRowContentContainer = styled.div`
+const StyledRowContentContainer = styled.div<{ disabled?: boolean }>`
   > div {
     align-items: center;
     box-sizing: border-box;
     display: flex;
     gap: ${themeCssVariables.spacing[2]};
     height: ${themeCssVariables.spacing[12]};
+    opacity: ${({ disabled }) => (disabled ? '0.5' : '1')};
     padding: ${themeCssVariables.spacing[0]} ${themeCssVariables.spacing[4]};
   }
 
@@ -33,7 +34,7 @@ export const ActivityRow = ({
   };
 
   return (
-    <StyledRowContentContainer>
+    <StyledRowContentContainer disabled={disabled}>
       <CardContent onClick={handleClick} isClickable={disabled !== true}>
         {children}
       </CardContent>
