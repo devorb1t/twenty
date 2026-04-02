@@ -1,7 +1,7 @@
 import { Command } from 'nest-commander';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 import { ApplicationRegistrationService } from 'src/engine/core-modules/application/application-registration/application-registration.service';
 
@@ -10,7 +10,7 @@ import { ApplicationRegistrationService } from 'src/engine/core-modules/applicat
   description:
     'Seed the Twenty CLI application registration for OAuth-based CLI login',
 })
-export class SeedCliApplicationRegistrationCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class SeedCliApplicationRegistrationCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   private hasRun = false;
 
   constructor(

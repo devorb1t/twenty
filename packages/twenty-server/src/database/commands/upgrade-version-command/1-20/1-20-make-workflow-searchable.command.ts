@@ -3,8 +3,8 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { Command } from 'nest-commander';
 import { DataSource } from 'typeorm';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 import { WorkspaceMetadataVersionService } from 'src/engine/metadata-modules/workspace-metadata-version/services/workspace-metadata-version.service';
 import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
@@ -14,7 +14,7 @@ import { WorkspaceCacheService } from 'src/engine/workspace-cache/services/works
   name: 'upgrade:1-20:make-workflow-searchable',
   description: 'Set isSearchable to true on the workflow object metadata',
 })
-export class MakeWorkflowSearchableCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class MakeWorkflowSearchableCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   constructor(
     protected readonly workspaceIteratorService: WorkspaceIteratorService,
     @InjectDataSource()

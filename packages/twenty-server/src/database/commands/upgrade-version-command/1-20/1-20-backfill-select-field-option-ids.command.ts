@@ -5,8 +5,8 @@ import { isDefined } from 'twenty-shared/utils';
 import { v4 } from 'uuid';
 import { DataSource } from 'typeorm';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 
 @Command({
@@ -14,7 +14,7 @@ import { WorkspaceIteratorService } from 'src/database/commands/command-runners/
   description:
     'Backfill missing ids on SELECT and MULTI_SELECT field metadata options',
 })
-export class BackfillSelectFieldOptionIdsCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class BackfillSelectFieldOptionIdsCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   constructor(
     protected readonly workspaceIteratorService: WorkspaceIteratorService,
     @InjectDataSource()

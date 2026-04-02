@@ -6,9 +6,9 @@ import { Command, Option } from 'nest-commander';
 import { isDefined } from 'twenty-shared/utils';
 import { Repository } from 'typeorm';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { BillingSubscriptionEntity } from 'src/engine/core-modules/billing/entities/billing-subscription.entity';
 import { BillingSubscriptionService } from 'src/engine/core-modules/billing/services/billing-subscription.service';
 import { StripeSubscriptionItemService } from 'src/engine/core-modules/billing/stripe/services/stripe-subscription-item.service';
@@ -17,7 +17,7 @@ import { StripeSubscriptionItemService } from 'src/engine/core-modules/billing/s
   name: 'billing:update-subscription-price',
   description: 'Update subscription price',
 })
-export class BillingUpdateSubscriptionPriceCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class BillingUpdateSubscriptionPriceCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   private stripePriceIdToUpdate: string;
   private newStripePriceId: string;
   private clearUsage = false;

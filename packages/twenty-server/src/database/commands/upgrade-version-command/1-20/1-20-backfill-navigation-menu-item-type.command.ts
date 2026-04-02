@@ -3,8 +3,8 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { Command } from 'nest-commander';
 import { DataSource } from 'typeorm';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 import { makeNavigationMenuItemTypeNotNullQueries } from 'src/database/typeorm/core/migrations/utils/1773681736596-makeNavigationMenuItemTypeNotNull.util';
 
@@ -13,7 +13,7 @@ import { makeNavigationMenuItemTypeNotNullQueries } from 'src/database/typeorm/c
   description:
     'Backfill navigation menu item type based on existing columns, then apply NOT NULL and CHECK constraints',
 })
-export class BackfillNavigationMenuItemTypeCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class BackfillNavigationMenuItemTypeCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   private hasRunOnce = false;
 
   constructor(

@@ -5,8 +5,8 @@ import { In, Repository } from 'typeorm';
 import { isDefined } from 'twenty-shared/utils';
 import { NavigationMenuItemType } from 'twenty-shared/types';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 import { NavigationMenuItemEntity } from 'src/engine/metadata-modules/navigation-menu-item/entities/navigation-menu-item.entity';
 import { WorkspaceCacheService } from 'src/engine/workspace-cache/services/workspace-cache.service';
@@ -15,7 +15,7 @@ import { WorkspaceCacheService } from 'src/engine/workspace-cache/services/works
   name: 'upgrade:1-20:delete-orphan-navigation-menu-items',
   description: 'Delete navigation menu items pointing to deleted views',
 })
-export class DeleteOrphanNavigationMenuItemsCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class DeleteOrphanNavigationMenuItemsCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   constructor(
     protected readonly workspaceIteratorService: WorkspaceIteratorService,
     @InjectRepository(NavigationMenuItemEntity)

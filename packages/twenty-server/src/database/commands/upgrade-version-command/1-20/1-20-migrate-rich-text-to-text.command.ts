@@ -4,8 +4,8 @@ import { Command } from 'nest-commander';
 import { FeatureFlagKey } from 'twenty-shared/types';
 import { DataSource } from 'typeorm';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 import { FeatureFlagService } from 'src/engine/core-modules/feature-flag/services/feature-flag.service';
 import { getMetadataFlatEntityMapsKey } from 'src/engine/metadata-modules/flat-entity/utils/get-metadata-flat-entity-maps-key.util';
@@ -20,7 +20,7 @@ import { type WorkspaceCacheKeyName } from 'src/engine/workspace-cache/types/wor
   description:
     'Migrate deprecated RICH_TEXT (V1) to TEXT and rename RICH_TEXT_V2 to RICH_TEXT. The underlying column type is already text, so only the metadata needs updating.',
 })
-export class MigrateRichTextToTextCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class MigrateRichTextToTextCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   constructor(
     protected readonly workspaceIteratorService: WorkspaceIteratorService,
     @InjectDataSource()

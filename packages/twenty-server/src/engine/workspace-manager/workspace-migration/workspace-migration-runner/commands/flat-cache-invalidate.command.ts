@@ -5,27 +5,26 @@ import {
 } from 'twenty-shared/metadata';
 
 import {
-  ActiveOrSuspendedWorkspacesMigrationCommandRunner,
-  type ActiveOrSuspendedWorkspacesMigrationCommandOptions,
-} from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
-import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+  ActiveOrSuspendedWorkspaceCommandRunner,
+  type ActiveOrSuspendedWorkspaceCommandOptions,
+} from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { type AllFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/types/all-flat-entity-maps.type';
 import { getMetadataFlatEntityMapsKey } from 'src/engine/metadata-modules/flat-entity/utils/get-metadata-flat-entity-maps-key.util';
 import { getMetadataRelatedMetadataNames } from 'src/engine/metadata-modules/flat-entity/utils/get-metadata-related-metadata-names.util';
 import { WorkspaceMigrationRunnerService } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-runner/services/workspace-migration-runner.service';
 
-type FlatCacheFlushCommandOptions =
-  ActiveOrSuspendedWorkspacesMigrationCommandOptions & {
-    allMetadata?: boolean;
-  };
+type FlatCacheFlushCommandOptions = ActiveOrSuspendedWorkspaceCommandOptions & {
+  allMetadata?: boolean;
+};
 
 @Command({
   name: 'cache:flat-cache-invalidate',
   description:
     'Flush flat entity cache for specific metadata names and workspaces',
 })
-export class FlatCacheInvalidateCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner<FlatCacheFlushCommandOptions> {
+export class FlatCacheInvalidateCommand extends ActiveOrSuspendedWorkspaceCommandRunner<FlatCacheFlushCommandOptions> {
   private metadataNames: string[] = [];
   private flatMapsKeysToFlush: (keyof AllFlatEntityMaps)[] = [];
 

@@ -3,8 +3,8 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { Command } from 'nest-commander';
 import { DataSource } from 'typeorm';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 import { makeFieldPermissionUniversalIdentifierAndApplicationIdNotNullQueries } from 'src/database/typeorm/core/migrations/utils/1773400000000-make-field-permission-universal-identifier-and-application-id-not-null.util';
 
@@ -13,7 +13,7 @@ import { makeFieldPermissionUniversalIdentifierAndApplicationIdNotNullQueries } 
   description:
     'Set NOT NULL on fieldPermission universalIdentifier and applicationId, add unique index and FK (run identify-field-permission-metadata first)',
 })
-export class MakeFieldPermissionUniversalIdentifierAndApplicationIdNotNullableMigrationCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class MakeFieldPermissionUniversalIdentifierAndApplicationIdNotNullableMigrationCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   private hasRunOnce = false;
 
   constructor(

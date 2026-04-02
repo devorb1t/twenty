@@ -1,9 +1,9 @@
 import { Command, Option } from 'nest-commander';
 import { LessThan } from 'typeorm';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { GlobalWorkspaceOrmManager } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-orm.manager';
 import { buildSystemAuthContext } from 'src/engine/twenty-orm/utils/build-system-auth-context.util';
 import { type WorkflowRunWorkspaceEntity } from 'src/modules/workflow/common/standard-objects/workflow-run.workspace-entity';
@@ -12,7 +12,7 @@ import { type WorkflowRunWorkspaceEntity } from 'src/modules/workflow/common/sta
   name: 'workflow:delete-workflow-runs',
   description: 'Delete all workflow runs',
 })
-export class DeleteWorkflowRunsCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class DeleteWorkflowRunsCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   private createdBeforeDate: string | undefined;
 
   constructor(

@@ -3,8 +3,8 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { Command } from 'nest-commander';
 import { DataSource } from 'typeorm';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 
 @Command({
@@ -12,7 +12,7 @@ import { WorkspaceIteratorService } from 'src/database/commands/command-runners/
   description:
     'Update standard index view names to use translatable template placeholders',
 })
-export class UpdateStandardIndexViewNamesCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class UpdateStandardIndexViewNamesCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   constructor(
     protected readonly workspaceIteratorService: WorkspaceIteratorService,
     @InjectDataSource()

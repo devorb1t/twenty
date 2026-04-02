@@ -5,9 +5,9 @@ import { Command } from 'nest-commander';
 import { FeatureFlagKey } from 'twenty-shared/types';
 import { Repository } from 'typeorm';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
-import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
 import { FeatureFlagService } from 'src/engine/core-modules/feature-flag/services/feature-flag.service';
 import { UserWorkspaceEntity } from 'src/engine/core-modules/user-workspace/user-workspace.entity';
 import { CalendarChannelEntity } from 'src/engine/metadata-modules/calendar-channel/entities/calendar-channel.entity';
@@ -26,7 +26,7 @@ import { type WorkspaceMemberWorkspaceEntity } from 'src/modules/workspace-membe
   description:
     'Backfill connectedAccount, messageChannel, calendarChannel, and messageFolder to core metadata schema',
 })
-export class MigrateMessagingInfrastructureToMetadataCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class MigrateMessagingInfrastructureToMetadataCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   constructor(
     private readonly twentyORMGlobalManager: GlobalWorkspaceOrmManager,
     @InjectRepository(ConnectedAccountEntity)

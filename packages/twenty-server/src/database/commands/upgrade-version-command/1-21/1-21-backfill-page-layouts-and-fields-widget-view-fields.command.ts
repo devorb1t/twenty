@@ -9,9 +9,9 @@ import {
 import { isDefined } from 'twenty-shared/utils';
 import { v4 } from 'uuid';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { ApplicationService } from 'src/engine/core-modules/application/application.service';
 import { type FlatApplication } from 'src/engine/core-modules/application/types/flat-application.type';
 import { FeatureFlagService } from 'src/engine/core-modules/feature-flag/services/feature-flag.service';
@@ -86,7 +86,7 @@ const isRelationTargetAvailable = (
   description:
     'Backfill RECORD_PAGE page layouts, sync FIELDS_WIDGET view fields, create FIELD widgets, and enable IS_RECORD_PAGE_LAYOUT_EDITING_ENABLED',
 })
-export class BackfillPageLayoutsAndFieldsWidgetViewFieldsCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class BackfillPageLayoutsAndFieldsWidgetViewFieldsCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   constructor(
     protected readonly workspaceIteratorService: WorkspaceIteratorService,
     private readonly applicationService: ApplicationService,

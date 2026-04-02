@@ -4,9 +4,9 @@ import { FeatureFlagKey } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { v4 as uuidv4 } from 'uuid';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
 import { ApplicationService } from 'src/engine/core-modules/application/application.service';
 import { type FlatApplication } from 'src/engine/core-modules/application/types/flat-application.type';
 import { FeatureFlagService } from 'src/engine/core-modules/feature-flag/services/feature-flag.service';
@@ -34,7 +34,7 @@ import {
   description:
     'Backfill missing standard and trigger workflow version command menu items for existing workspaces and enable IS_COMMAND_MENU_ITEM_ENABLED feature flag',
 })
-export class BackfillCommandMenuItemsCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class BackfillCommandMenuItemsCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   constructor(
     private readonly twentyORMGlobalManager: GlobalWorkspaceOrmManager,
     private readonly applicationService: ApplicationService,

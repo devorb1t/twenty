@@ -6,9 +6,9 @@ import chalk from 'chalk';
 import { Command } from 'nest-commander';
 import { Repository } from 'typeorm';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { BillingCustomerEntity } from 'src/engine/core-modules/billing/entities/billing-customer.entity';
 import { StripeSubscriptionService } from 'src/engine/core-modules/billing/stripe/services/stripe-subscription.service';
 
@@ -16,7 +16,7 @@ import { StripeSubscriptionService } from 'src/engine/core-modules/billing/strip
   name: 'billing:sync-customer-data',
   description: 'Sync customer data from Stripe for all active workspaces',
 })
-export class BillingSyncCustomerDataCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class BillingSyncCustomerDataCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   constructor(
     protected readonly workspaceIteratorService: WorkspaceIteratorService,
     private readonly stripeSubscriptionService: StripeSubscriptionService,

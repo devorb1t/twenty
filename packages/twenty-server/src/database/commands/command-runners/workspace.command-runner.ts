@@ -9,7 +9,7 @@ import {
 import { CommandLogger } from 'src/database/commands/logger';
 import { GlobalWorkspaceDataSource } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-datasource';
 
-export type WorkspacesMigrationCommandOptions = {
+export type WorkspaceCommandOptions = {
   workspaceIds: string[];
   startFromWorkspaceId?: string;
   workspaceCountLimit?: number;
@@ -18,25 +18,24 @@ export type WorkspacesMigrationCommandOptions = {
 };
 
 export type RunOnWorkspaceArgs = {
-  options: WorkspacesMigrationCommandOptions;
+  options: WorkspaceCommandOptions;
   workspaceId: string;
   dataSource?: GlobalWorkspaceDataSource;
   index: number;
   total: number;
 };
 
-export type WorkspaceMigrationReport = WorkspaceIteratorReport;
+export type WorkspaceCommandReport = WorkspaceIteratorReport;
 
-export abstract class WorkspacesMigrationCommandRunner<
-  Options extends
-    WorkspacesMigrationCommandOptions = WorkspacesMigrationCommandOptions,
+export abstract class WorkspaceCommandRunner<
+  Options extends WorkspaceCommandOptions = WorkspaceCommandOptions,
 > extends CommandRunner {
   protected logger: CommandLogger;
 
   protected workspaceIds: Set<string> = new Set();
   private startFromWorkspaceId: string | undefined;
   private workspaceCountLimit: number | undefined;
-  public migrationReport: WorkspaceMigrationReport = {
+  public migrationReport: WorkspaceCommandReport = {
     fail: [],
     success: [],
   };

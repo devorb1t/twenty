@@ -6,8 +6,8 @@ import { v4 } from 'uuid';
 
 import { isDefined } from 'twenty-shared/utils';
 
-import { ActiveOrSuspendedWorkspacesMigrationCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspaces-migration.command-runner';
-import { RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspaces-migration.command-runner';
+import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
+import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 import { ObjectPermissionEntity } from 'src/engine/metadata-modules/object-permission/object-permission.entity';
 
@@ -16,7 +16,7 @@ import { ObjectPermissionEntity } from 'src/engine/metadata-modules/object-permi
   description:
     'Identify object permission metadata (backfill universalIdentifier and applicationId)',
 })
-export class IdentifyObjectPermissionMetadataCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
+export class IdentifyObjectPermissionMetadataCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   private hasRunOnce = false;
 
   constructor(
