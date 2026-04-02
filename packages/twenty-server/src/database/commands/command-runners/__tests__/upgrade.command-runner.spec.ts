@@ -71,7 +71,6 @@ const buildUpgradeCommandModule = async ({
         provide: commandRunner,
         useFactory: (
           workspaceRepository: Repository<WorkspaceEntity>,
-          twentyConfigService: TwentyConfigService,
           coreEngineVersionService: CoreEngineVersionService,
           workspaceVersionService: WorkspaceVersionService,
           coreMigrationRunnerService: CoreMigrationRunnerService,
@@ -79,7 +78,6 @@ const buildUpgradeCommandModule = async ({
         ) => {
           return new commandRunner(
             workspaceRepository,
-            twentyConfigService,
             coreEngineVersionService,
             workspaceVersionService,
             coreMigrationRunnerService,
@@ -88,7 +86,6 @@ const buildUpgradeCommandModule = async ({
         },
         inject: [
           getRepositoryToken(WorkspaceEntity),
-          TwentyConfigService,
           CoreEngineVersionService,
           WorkspaceVersionService,
           CoreMigrationRunnerService,

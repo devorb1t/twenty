@@ -1,4 +1,3 @@
-import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Command } from 'nest-commander';
@@ -17,10 +16,6 @@ import { WorkspaceCacheService } from 'src/engine/workspace-cache/services/works
   description: 'Delete navigation menu items pointing to deleted views',
 })
 export class DeleteOrphanNavigationMenuItemsCommand extends ActiveOrSuspendedWorkspacesMigrationCommandRunner {
-  protected readonly logger = new Logger(
-    DeleteOrphanNavigationMenuItemsCommand.name,
-  );
-
   constructor(
     protected readonly workspaceIteratorService: WorkspaceIteratorService,
     @InjectRepository(NavigationMenuItemEntity)

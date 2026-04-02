@@ -58,7 +58,7 @@ export class FlatCacheInvalidateCommand extends ActiveOrSuspendedWorkspacesMigra
     return true;
   }
 
-  override async runMigrationCommand(
+  override async run(
     passedParams: string[],
     options: FlatCacheFlushCommandOptions,
   ): Promise<void> {
@@ -87,7 +87,7 @@ export class FlatCacheInvalidateCommand extends ActiveOrSuspendedWorkspacesMigra
       `Will flush cache for the following flat maps keys: ${this.flatMapsKeysToFlush.join(', ')}`,
     );
 
-    await super.runMigrationCommand(passedParams, options);
+    await super.run(passedParams, options);
   }
 
   override async runOnWorkspace({

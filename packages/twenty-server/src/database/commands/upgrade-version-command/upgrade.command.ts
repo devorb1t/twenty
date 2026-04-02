@@ -28,7 +28,6 @@ import { UpdateStandardIndexViewNamesCommand } from 'src/database/commands/upgra
 import { BackfillDatasourceToWorkspaceCommand } from 'src/database/commands/upgrade-version-command/1-21/1-21-backfill-datasource-to-workspace.command';
 import { BackfillPageLayoutsAndFieldsWidgetViewFieldsCommand } from 'src/database/commands/upgrade-version-command/1-21/1-21-backfill-page-layouts-and-fields-widget-view-fields.command';
 import { CoreEngineVersionService } from 'src/engine/core-engine-version/services/core-engine-version.service';
-import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { WorkspaceVersionService } from 'src/engine/workspace-manager/workspace-version/services/workspace-version.service';
 
@@ -42,7 +41,6 @@ export class UpgradeCommand extends UpgradeCommandRunner {
   constructor(
     @InjectRepository(WorkspaceEntity)
     protected readonly workspaceRepository: Repository<WorkspaceEntity>,
-    protected readonly twentyConfigService: TwentyConfigService,
     protected readonly coreEngineVersionService: CoreEngineVersionService,
     protected readonly workspaceVersionService: WorkspaceVersionService,
     protected readonly coreMigrationRunnerService: CoreMigrationRunnerService,

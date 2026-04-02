@@ -1,11 +1,12 @@
-import { Option } from 'nest-commander';
+import chalk from 'chalk';
+import { CommandRunner, Option } from 'nest-commander';
 import { WorkspaceActivationStatus } from 'twenty-shared/workspace';
 
-import { MigrationCommandRunner } from 'src/database/commands/command-runners/migration.command-runner';
 import {
   type WorkspaceIteratorReport,
   WorkspaceIteratorService,
 } from 'src/database/commands/command-runners/workspace-iterator.service';
+import { CommandLogger } from 'src/database/commands/logger';
 import { GlobalWorkspaceDataSource } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-datasource';
 
 export type WorkspacesMigrationCommandOptions = {
@@ -29,7 +30,9 @@ export type WorkspaceMigrationReport = WorkspaceIteratorReport;
 export abstract class WorkspacesMigrationCommandRunner<
   Options extends
     WorkspacesMigrationCommandOptions = WorkspacesMigrationCommandOptions,
-> extends MigrationCommandRunner {
+> extends CommandRunner {
+  protected logger: CommandLogger;
+
   protected workspaceIds: Set<string> = new Set();
   private startFromWorkspaceId: string | undefined;
   private workspaceCountLimit: number | undefined;
@@ -43,6 +46,28 @@ export abstract class WorkspacesMigrationCommandRunner<
     protected readonly activationStatuses: WorkspaceActivationStatus[],
   ) {
     super();
+    this.logger = new CommandLogger({
+      verbose: false,
+      constructorName: this.constructor.name,
+    });
+  }
+
+  @Option({
+    flags: '-d, --dry-run',
+    description: 'Simulate the command without making actual changes',
+    required: false,
+  })
+  parseDryRun(): boolean {
+    return true;
+  }
+
+  @Option({
+    flags: '-v, --verbose',
+    description: 'Verbose output',
+    required: false,
+  })
+  parseVerbose(): boolean {
+    return true;
   }
 
   @Option({
@@ -89,27 +114,40 @@ export abstract class WorkspacesMigrationCommandRunner<
     return this.workspaceIds;
   }
 
-  override async runMigrationCommand(
-    _passedParams: string[],
-    options: Options,
-  ) {
-    this.migrationReport = await this.workspaceIteratorService.iterate({
-      workspaceIds:
-        this.workspaceIds.size > 0 ? Array.from(this.workspaceIds) : undefined,
-      activationStatuses: this.activationStatuses,
-      startFromWorkspaceId: this.startFromWorkspaceId,
-      workspaceCountLimit: this.workspaceCountLimit,
-      dryRun: options.dryRun,
-      callback: async (context) => {
-        await this.runOnWorkspace({
-          options,
-          workspaceId: context.workspaceId,
-          dataSource: context.dataSource,
-          index: context.index,
-          total: context.total,
-        });
-      },
-    });
+  override async run(_passedParams: string[], options: Options): Promise<void> {
+    if (options.verbose) {
+      this.logger = new CommandLogger({
+        verbose: true,
+        constructorName: this.constructor.name,
+      });
+    }
+
+    try {
+      this.migrationReport = await this.workspaceIteratorService.iterate({
+        workspaceIds:
+          this.workspaceIds.size > 0
+            ? Array.from(this.workspaceIds)
+            : undefined,
+        activationStatuses: this.activationStatuses,
+        startFromWorkspaceId: this.startFromWorkspaceId,
+        workspaceCountLimit: this.workspaceCountLimit,
+        dryRun: options.dryRun,
+        callback: async (context) => {
+          await this.runOnWorkspace({
+            options,
+            workspaceId: context.workspaceId,
+            dataSource: context.dataSource,
+            index: context.index,
+            total: context.total,
+          });
+        },
+      });
+    } catch (error) {
+      this.logger.error(chalk.red(`Command failed`));
+      throw error;
+    } finally {
+      this.logger.log(chalk.blue('Command completed!'));
+    }
   }
 
   public abstract runOnWorkspace(args: RunOnWorkspaceArgs): Promise<void>;
