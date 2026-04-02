@@ -10,7 +10,9 @@ export const useDeleteQueuedMessage = () => {
 
   const deleteQueuedMessage = useCallback(
     async (messageId: string) => {
-      const { data } = await apolloClient.mutate({
+      const { data } = await apolloClient.mutate<{
+        deleteQueuedChatMessage: boolean;
+      }>({
         mutation: DELETE_QUEUED_CHAT_MESSAGE,
         variables: { messageId },
       });

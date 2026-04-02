@@ -122,7 +122,13 @@ export const useAgentChat = (
     setAgentChatUploadedFiles([]);
 
     try {
-      const { data } = await apolloClient.mutate({
+      const { data } = await apolloClient.mutate<{
+        sendChatMessage: {
+          messageId: string;
+          queued: boolean;
+          streamId?: string;
+        };
+      }>({
         mutation: SEND_CHAT_MESSAGE,
         variables: {
           threadId,
