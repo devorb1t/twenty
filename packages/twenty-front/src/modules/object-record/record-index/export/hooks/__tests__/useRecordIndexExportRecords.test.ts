@@ -4,9 +4,14 @@ import { CSV_INJECTION_PREVENTION_ZWJ } from '@/spreadsheet-import/constants/Csv
 
 import { FieldMetadataType, RelationType } from '~/generated-metadata/graphql';
 import {
+  csvDownloader,
   displayedExportProgress,
   generateCsv,
 } from '@/object-record/record-index/export/hooks/useRecordIndexExportRecords';
+
+jest.mock('file-saver', () => ({
+  saveAs: jest.fn(),
+}));
 
 jest.useFakeTimers();
 
@@ -433,6 +438,36 @@ describe('generateCsv', () => {
         'This is a normal description with = and + symbols in the middle',
       );
     });
+  });
+});
+
+describe('csvDownloader', () => {
+  it('should prepend UTF-8 BOM to the exported CSV file', async () => {
+    const { saveAs } = await import('file-saver');
+
+    const columns: Pick<
+      ColumnDefinition<FieldMetadata>,
+      'size' | 'label' | 'type' | 'metadata'
+    >[] = [
+      {
+        label: 'Name',
+        size: 100,
+        type: FieldMetadataType.TEXT,
+        metadata: { fieldName: 'name' },
+      },
+    ];
+
+    const rows = [{ id: '1', name: 'محمد' }];
+
+    csvDownloader('test.csv', { rows, columns });
+
+    expect(saveAs).toHaveBeenCalledTimes(1);
+
+    const blob: Blob = (saveAs as jest.Mock).mock.calls[0][0];
+    const text = await blob.text();
+
+    expect(text.charCodeAt(0)).toBe(0xfeff);
+    expect(text).toContain('محمد');
   });
 });
 
