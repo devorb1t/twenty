@@ -4,7 +4,7 @@ import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomState
 import { UserContext } from '@/users/contexts/UserContext';
 import { styled } from '@linaria/react';
 import { isNonEmptyString } from '@sniptt/guards';
-import { useContext } from 'react';
+import { useContext, useMemo } from 'react';
 import { Temporal } from 'temporal-polyfill';
 import { dateLocaleState } from '~/localization/states/dateLocaleState';
 import { formatDateTimeString } from '~/utils/string/formatDateTimeString';
@@ -36,14 +36,26 @@ export const DateTimeDisplay = ({
     localeCatalog: dateLocale.localeCatalog,
   });
 
+  const instant = useMemo(() => {
+    if (!isNonEmptyString(value)) {
+      return undefined;
+    }
+
+    try {
+      return Temporal.Instant.from(value);
+    } catch {
+      return undefined;
+    }
+  }, [value]);
+
   return (
     <EllipsisDisplay>
       {formattedDate}
       <span></span>
-      {isNonEmptyString(value) && (
+      {instant !== undefined && (
         <>
           <StyledTimeZoneSpacer />
-          <TimeZoneAbbreviation instant={Temporal.Instant.from(value)} />
+          <TimeZoneAbbreviation instant={instant} />
         </>
       )}
     </EllipsisDisplay>
