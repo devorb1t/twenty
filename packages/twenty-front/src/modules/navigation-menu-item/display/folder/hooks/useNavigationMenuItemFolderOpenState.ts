@@ -6,6 +6,7 @@ import { isNonEmptyString } from '@sniptt/guards';
 import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
 import { openNavigationMenuItemFolderIdsState } from '@/navigation-menu-item/common/states/openNavigationMenuItemFolderIdsState';
+import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/display/object/utils/getObjectMetadataForNavigationMenuItem';
 import { getNavigationMenuItemComputedLink } from '@/navigation-menu-item/display/utils/getNavigationMenuItemComputedLink';
 import { isLocationMatchingNavigationMenuItem } from '@/navigation-menu-item/common/utils/isLocationMatchingNavigationMenuItem';
 import { objectMetadataItemsSelector } from '@/object-metadata/states/objectMetadataItemsSelector';
@@ -85,11 +86,18 @@ export const useNavigationMenuItemFolderOpenState = ({
         objectMetadataItems,
         views,
       );
+      const objectMetadataItem = getObjectMetadataForNavigationMenuItem(
+        item,
+        objectMetadataItems,
+        views,
+      );
+
       return isLocationMatchingNavigationMenuItem(
         currentPath,
         currentViewPath,
         item.type,
         computedLink,
+        objectMetadataItem?.nameSingular ?? null,
       );
     },
   );

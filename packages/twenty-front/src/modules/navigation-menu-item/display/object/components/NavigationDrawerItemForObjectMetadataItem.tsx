@@ -3,6 +3,7 @@ import { isNonEmptyString } from '@sniptt/guards';
 import { Fragment, type ReactNode, useContext } from 'react';
 
 import { isLayoutCustomizationModeEnabledState } from '@/layout-customization/states/isLayoutCustomizationModeEnabledState';
+import { isLocationMatchingNavigationMenuItem } from '@/navigation-menu-item/common/utils/isLocationMatchingNavigationMenuItem';
 import { recordIdentifierToObjectRecordIdentifier } from '@/navigation-menu-item/common/utils/recordIdentifierToObjectRecordIdentifier';
 import { getNavigationMenuItemComputedLink } from '@/navigation-menu-item/display/utils/getNavigationMenuItemComputedLink';
 import { getNavigationMenuItemLabel } from '@/navigation-menu-item/display/utils/getNavigationMenuItemLabel';
@@ -91,17 +92,22 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
   const computedLink = hasCustomLink ? navigationPath : '';
 
   const isActive = hasCustomLink
-    ? (isView || isObject ? currentPathWithSearch : currentPath) ===
-      computedLink
+    ? isLocationMatchingNavigationMenuItem(
+        currentPath,
+        currentPathWithSearch,
+        navigationMenuItem!.type,
+        computedLink,
+        isObject || isView ? objectMetadataItem.nameSingular : null,
+      )
     : currentPath ===
         getAppPath(AppPath.RecordIndexPage, {
           objectNamePlural: objectMetadataItem.namePlural,
         }) ||
-      currentPath.includes(
-        getAppPath(AppPath.RecordShowPage, {
+      currentPath.startsWith(
+        `${getAppPath(AppPath.RecordShowPage, {
           objectNameSingular: objectMetadataItem.nameSingular,
           objectRecordId: '',
-        }) + '/',
+        })}/`,
       );
 
   const handleClick = isLayoutCustomizationModeEnabled

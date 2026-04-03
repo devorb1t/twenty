@@ -39,4 +39,36 @@ describe('isLocationMatchingNavigationMenuItem', () => {
       ),
     ).toBe(false);
   });
+
+  it('should match object or view nav item when on a record show page for that object', () => {
+    expect(
+      isLocationMatchingNavigationMenuItem(
+        '/object/company/rec-1',
+        '/object/company/rec-1',
+        NavigationMenuItemType.OBJECT,
+        '/objects/companies?viewId=idx',
+        'company',
+      ),
+    ).toBe(true);
+
+    expect(
+      isLocationMatchingNavigationMenuItem(
+        '/object/person/rec-1',
+        '/object/person/rec-1',
+        NavigationMenuItemType.VIEW,
+        '/objects/people?viewId=v1',
+        'person',
+      ),
+    ).toBe(true);
+
+    expect(
+      isLocationMatchingNavigationMenuItem(
+        '/object/person/rec-1',
+        '/object/person/rec-1',
+        NavigationMenuItemType.OBJECT,
+        '/objects/companies?viewId=idx',
+        'company',
+      ),
+    ).toBe(false);
+  });
 });
