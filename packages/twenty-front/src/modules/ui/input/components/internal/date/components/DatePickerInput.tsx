@@ -42,9 +42,14 @@ const StyledInput = styled.input<{ hasError?: boolean }>`
 type DatePickerInputProps = {
   onChange?: (date: string | null) => void;
   date: string | null;
+  readonly?: boolean;
 };
 
-export const DatePickerInput = ({ date, onChange }: DatePickerInputProps) => {
+export const DatePickerInput = ({
+  date,
+  onChange,
+  readonly,
+}: DatePickerInputProps) => {
   const { dateFormat } = useDateTimeFormat();
 
   const [internalDate, setInternalDate] = useState(date);
@@ -104,6 +109,7 @@ export const DatePickerInput = ({ date, onChange }: DatePickerInputProps) => {
   return (
     <StyledInputContainer>
       <StyledInput
+        disabled={readonly === true}
         type="text"
         ref={ref as any}
         value={value}
