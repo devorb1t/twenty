@@ -15,6 +15,11 @@ import { MetadataResolver } from 'src/engine/api/graphql/graphql-config/decorato
 import { NoPermissionGuard } from 'src/engine/guards/no-permission.guard';
 import { SettingsPermissionGuard } from 'src/engine/guards/settings-permission.guard';
 import { WorkspaceAuthGuard } from 'src/engine/guards/workspace-auth.guard';
+<<<<<<< HEAD
+=======
+import { PageLayoutTabDTO } from 'src/engine/metadata-modules/page-layout-tab/dtos/page-layout-tab.dto';
+import { PageLayoutWidgetDTO } from 'src/engine/metadata-modules/page-layout-widget/dtos/page-layout-widget.dto';
+>>>>>>> f1d999af93 (Reset page layout tabs)
 import { CreatePageLayoutInput } from 'src/engine/metadata-modules/page-layout/dtos/inputs/create-page-layout.input';
 import { UpdatePageLayoutWithTabsInput } from 'src/engine/metadata-modules/page-layout/dtos/inputs/update-page-layout-with-tabs.input';
 import { UpdatePageLayoutInput } from 'src/engine/metadata-modules/page-layout/dtos/inputs/update-page-layout.input';
@@ -121,4 +126,31 @@ export class PageLayoutResolver {
       input,
     });
   }
+<<<<<<< HEAD
+=======
+
+  @Mutation(() => PageLayoutWidgetDTO)
+  @UseGuards(SettingsPermissionGuard(PermissionFlagType.LAYOUTS))
+  async resetPageLayoutWidgetToDefault(
+    @Args('id', { type: () => String }) id: string,
+    @AuthWorkspace() workspace: WorkspaceEntity,
+  ): Promise<PageLayoutWidgetDTO> {
+    return this.pageLayoutResetService.resetPageLayoutWidgetToDefault({
+      id,
+      workspaceId: workspace.id,
+    });
+  }
+
+  @Mutation(() => PageLayoutTabDTO)
+  @UseGuards(SettingsPermissionGuard(PermissionFlagType.LAYOUTS))
+  async resetPageLayoutTabToDefault(
+    @Args('id', { type: () => String }) id: string,
+    @AuthWorkspace() workspace: WorkspaceEntity,
+  ): Promise<Omit<PageLayoutTabDTO, 'widgets'>> {
+    return this.pageLayoutResetService.resetPageLayoutTabToDefault({
+      id,
+      workspaceId: workspace.id,
+    });
+  }
+>>>>>>> f1d999af93 (Reset page layout tabs)
 }

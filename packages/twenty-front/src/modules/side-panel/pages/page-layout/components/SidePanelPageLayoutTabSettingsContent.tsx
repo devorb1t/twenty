@@ -2,6 +2,7 @@ import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { useDeletePageLayoutTab } from '@/page-layout/hooks/useDeletePageLayoutTab';
 import { useDuplicatePageLayoutTab } from '@/page-layout/hooks/useDuplicatePageLayoutTab';
 import { useMovePageLayoutTab } from '@/page-layout/hooks/useMovePageLayoutTab';
+import { useResetPageLayoutTabToDefault } from '@/page-layout/hooks/useResetPageLayoutTabToDefault';
 import { useSetAsPinnedTab } from '@/page-layout/hooks/useSetAsPinnedTab';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutTabSettingsOpenTabIdComponentState } from '@/page-layout/states/pageLayoutTabSettingsOpenTabIdComponentState';
@@ -11,6 +12,8 @@ import { SidePanelGroup } from '@/side-panel/components/SidePanelGroup';
 import { SidePanelList } from '@/side-panel/components/SidePanelList';
 import { useSidePanelMenu } from '@/side-panel/hooks/useSidePanelMenu';
 import { TAB_SETTINGS_SELECTABLE_ITEM_IDS } from '@/side-panel/pages/page-layout/constants/settings/TabSettingsSelectableItemIds';
+import { ConfirmationModal } from '@/ui/layout/modal/components/ConfirmationModal';
+import { useModal } from '@/ui/layout/modal/hooks/useModal';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { useAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentState';
 import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue';
@@ -21,9 +24,12 @@ import {
   IconChevronRight,
   IconCopyPlus,
   IconPinned,
+  IconRefreshDot,
   IconTrash,
 } from 'twenty-ui/display';
 import { PageLayoutType } from '~/generated-metadata/graphql';
+
+const RESET_TAB_TO_DEFAULT_MODAL_ID = 'reset-tab-to-default-modal';
 
 type SidePanelPageLayoutTabSettingsContentProps = {
   pageLayoutId: string;
@@ -63,6 +69,9 @@ export const SidePanelPageLayoutTabSettingsContent = ({
     tabListInstanceId,
   });
   const { setAsPinnedTab } = useSetAsPinnedTab(pageLayoutId);
+  const { resetPageLayoutTabToDefault } =
+    useResetPageLayoutTabToDefault(pageLayoutId);
+  const { openModal } = useModal();
 
   if (!isDefined(pageLayoutTabSettingsOpenTabId)) {
     return null;
@@ -83,6 +92,14 @@ export const SidePanelPageLayoutTabSettingsContent = ({
   const canSetAsPinned =
     isRecordPage && !isAlreadyPinned && tabsSorted.length > 1;
 
+  const handleResetToDefault = () => {
+    openModal(RESET_TAB_TO_DEFAULT_MODAL_ID);
+  };
+
+  const handleConfirmReset = () => {
+    resetPageLayoutTabToDefault(tab.id);
+  };
+
   const handleDelete = () => {
     deleteTab(tab.id);
     setPageLayoutTabSettingsOpenTabId(null);
@@ -94,6 +111,7 @@ export const SidePanelPageLayoutTabSettingsContent = ({
     ...(canMoveRight ? [TAB_SETTINGS_SELECTABLE_ITEM_IDS.MOVE_RIGHT] : []),
     ...(canSetAsPinned ? [TAB_SETTINGS_SELECTABLE_ITEM_IDS.SET_AS_PINNED] : []),
     TAB_SETTINGS_SELECTABLE_ITEM_IDS.DUPLICATE,
+    TAB_SETTINGS_SELECTABLE_ITEM_IDS.RESET_TO_DEFAULT,
     ...(canDelete ? [TAB_SETTINGS_SELECTABLE_ITEM_IDS.DELETE] : []),
   ];
 
@@ -151,6 +169,17 @@ export const SidePanelPageLayoutTabSettingsContent = ({
               onClick={() => duplicateTab(tab.id)}
             />
           </SelectableListItem>
+          <SelectableListItem
+            itemId={TAB_SETTINGS_SELECTABLE_ITEM_IDS.RESET_TO_DEFAULT}
+            onEnter={handleResetToDefault}
+          >
+            <CommandMenuItem
+              id={TAB_SETTINGS_SELECTABLE_ITEM_IDS.RESET_TO_DEFAULT}
+              Icon={IconRefreshDot}
+              label={t`Reset to default`}
+              onClick={handleResetToDefault}
+            />
+          </SelectableListItem>
           {canDelete && (
             <SelectableListItem
               itemId={TAB_SETTINGS_SELECTABLE_ITEM_IDS.DELETE}
@@ -166,6 +195,14 @@ export const SidePanelPageLayoutTabSettingsContent = ({
           )}
         </SidePanelGroup>
       </SidePanelList>
+      <ConfirmationModal
+        modalInstanceId={RESET_TAB_TO_DEFAULT_MODAL_ID}
+        title={t`Reset to default`}
+        subtitle={t`This will cancel all modifications done on the tab and its widgets. This action cannot be undone.`}
+        onConfirmClick={handleConfirmReset}
+        confirmButtonText={t`Reset`}
+        confirmButtonAccent="blue"
+      />
     </>
   );
 };
