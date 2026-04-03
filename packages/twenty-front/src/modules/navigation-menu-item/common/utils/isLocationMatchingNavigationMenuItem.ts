@@ -1,7 +1,7 @@
 import { isNonEmptyString } from '@sniptt/guards';
+import { NavigationMenuItemType } from 'twenty-shared/types';
 
-import { AppPath, NavigationMenuItemType } from 'twenty-shared/types';
-import { getAppPath } from 'twenty-shared/utils';
+import { matchesRecordShowPathForObject } from '@/navigation-menu-item/common/utils/matchesRecordShowPathForObject';
 
 export const isLocationMatchingNavigationMenuItem = (
   currentPath: string,
@@ -26,12 +26,10 @@ export const isLocationMatchingNavigationMenuItem = (
     isViewBasedItem &&
     isNonEmptyString(objectNameSingularForRecordShowMatch)
   ) {
-    const recordShowBase = getAppPath(AppPath.RecordShowPage, {
-      objectNameSingular: objectNameSingularForRecordShowMatch,
-      objectRecordId: '',
-    });
-
-    return currentPath.startsWith(`${recordShowBase}/`);
+    return matchesRecordShowPathForObject(
+      currentPath,
+      objectNameSingularForRecordShowMatch,
+    );
   }
 
   return false;

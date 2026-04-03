@@ -4,6 +4,7 @@ import { Fragment, type ReactNode, useContext } from 'react';
 
 import { isLayoutCustomizationModeEnabledState } from '@/layout-customization/states/isLayoutCustomizationModeEnabledState';
 import { isLocationMatchingNavigationMenuItem } from '@/navigation-menu-item/common/utils/isLocationMatchingNavigationMenuItem';
+import { matchesRecordShowPathForObject } from '@/navigation-menu-item/common/utils/matchesRecordShowPathForObject';
 import { recordIdentifierToObjectRecordIdentifier } from '@/navigation-menu-item/common/utils/recordIdentifierToObjectRecordIdentifier';
 import { getNavigationMenuItemComputedLink } from '@/navigation-menu-item/display/utils/getNavigationMenuItemComputedLink';
 import { getNavigationMenuItemLabel } from '@/navigation-menu-item/display/utils/getNavigationMenuItemLabel';
@@ -103,11 +104,9 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
         getAppPath(AppPath.RecordIndexPage, {
           objectNamePlural: objectMetadataItem.namePlural,
         }) ||
-      currentPath.startsWith(
-        `${getAppPath(AppPath.RecordShowPage, {
-          objectNameSingular: objectMetadataItem.nameSingular,
-          objectRecordId: '',
-        })}/`,
+      matchesRecordShowPathForObject(
+        currentPath,
+        objectMetadataItem.nameSingular,
       );
 
   const handleClick = isLayoutCustomizationModeEnabled
