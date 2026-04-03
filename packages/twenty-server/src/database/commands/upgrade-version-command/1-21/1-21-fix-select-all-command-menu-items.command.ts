@@ -10,31 +10,18 @@ import { STANDARD_COMMAND_MENU_ITEMS } from 'src/engine/workspace-manager/twenty
 import { computeTwentyStandardApplicationAllFlatEntityMaps } from 'src/engine/workspace-manager/twenty-standard-application/utils/twenty-standard-application-all-flat-entity-maps.constant';
 import { WorkspaceMigrationValidateBuildAndRunService } from 'src/engine/workspace-manager/workspace-migration/services/workspace-migration-validate-build-and-run-service';
 
-const OLD_UNIVERSAL_IDENTIFIERS_TO_DELETE = new Set([
-  '6652773f-b9a9-4fa3-a52c-e2f2e259e430', // deleteSingleRecord
-  'cde86f1f-2c13-42b1-812b-f2b2b468cb83', // deleteMultipleRecords
-  '8b3a1cae-3e4d-43c1-a71f-48592b2e47ff', // restoreSingleRecord
-  '8b740c9d-d99a-45a8-812f-809caaf420ac', // restoreMultipleRecords
-  '44a78417-c394-4bc8-961f-98b503030ddb', // destroySingleRecord
-  'c630b3fb-7920-40d1-9906-77d0aa797608', // destroyMultipleRecords
-  'a934ba8a-ac8f-487d-9cd9-06dfdaec1f49', // exportFromRecordIndex
-  'ba339455-f3c2-4ed1-bf77-3e316d7d6a66', // exportFromRecordShow
-  'f71f68e5-7b6e-4c03-8161-c48434d7777c', // exportMultipleRecords
-]);
-
-const NEW_UNIVERSAL_IDENTIFIERS = new Set<string>([
+const UNIVERSAL_IDENTIFIERS_TO_FIX = new Set<string>([
   STANDARD_COMMAND_MENU_ITEMS.deleteRecords.universalIdentifier,
   STANDARD_COMMAND_MENU_ITEMS.restoreRecords.universalIdentifier,
   STANDARD_COMMAND_MENU_ITEMS.destroyRecords.universalIdentifier,
-  STANDARD_COMMAND_MENU_ITEMS.exportRecords.universalIdentifier,
 ]);
 
 @Command({
-  name: 'upgrade:1-21:deduplicate-engine-commands',
+  name: 'upgrade:1-21:fix-select-all-command-menu-items',
   description:
-    'Merge single/multiple record engine command menu items into unified commands (delete, restore, destroy, export)',
+    'Fix delete/restore/destroy command menu items to work in select-all (exclusion) mode',
 })
-export class DeduplicateEngineCommandsCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
+export class FixSelectAllCommandMenuItemsCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   constructor(
     protected readonly workspaceIteratorService: WorkspaceIteratorService,
     private readonly applicationService: ApplicationService,
@@ -51,7 +38,7 @@ export class DeduplicateEngineCommandsCommand extends ActiveOrSuspendedWorkspace
     const isDryRun = options.dryRun ?? false;
 
     this.logger.log(
-      `${isDryRun ? '[DRY RUN] ' : ''}Starting deduplication of engine commands for workspace ${workspaceId}`,
+      `${isDryRun ? '[DRY RUN] ' : ''}Starting select-all expression fix for workspace ${workspaceId}`,
     );
 
     const { twentyStandardFlatApplication } =
@@ -64,14 +51,6 @@ export class DeduplicateEngineCommandsCommand extends ActiveOrSuspendedWorkspace
         'flatCommandMenuItemMaps',
       ]);
 
-    const itemsToDelete = Object.values(
-      existingFlatCommandMenuItemMaps.byUniversalIdentifier,
-    )
-      .filter(isDefined)
-      .filter((item) =>
-        OLD_UNIVERSAL_IDENTIFIERS_TO_DELETE.has(item.universalIdentifier),
-      );
-
     const { allFlatEntityMaps: standardAllFlatEntityMaps } =
       computeTwentyStandardApplicationAllFlatEntityMaps({
         shouldIncludeRecordPageLayouts: true,
@@ -80,37 +59,49 @@ export class DeduplicateEngineCommandsCommand extends ActiveOrSuspendedWorkspace
         twentyStandardApplicationId: twentyStandardFlatApplication.id,
       });
 
-    const itemsToCreate = Object.values(
-      standardAllFlatEntityMaps.flatCommandMenuItemMaps.byUniversalIdentifier,
-    )
-      .filter(isDefined)
-      .filter((item) => NEW_UNIVERSAL_IDENTIFIERS.has(item.universalIdentifier))
-      .filter(
-        (item) =>
-          !isDefined(
-            existingFlatCommandMenuItemMaps.byUniversalIdentifier[
-              item.universalIdentifier
-            ],
-          ),
-      );
+    const itemsToUpdate = [...UNIVERSAL_IDENTIFIERS_TO_FIX]
+      .map((universalIdentifier) => {
+        const standardItem =
+          standardAllFlatEntityMaps.flatCommandMenuItemMaps
+            .byUniversalIdentifier[universalIdentifier];
+        const existingItem =
+          existingFlatCommandMenuItemMaps.byUniversalIdentifier[
+            universalIdentifier
+          ];
 
-    const totalChanges = itemsToDelete.length + itemsToCreate.length;
+        if (
+          !isDefined(standardItem) ||
+          !isDefined(existingItem) ||
+          existingItem.conditionalAvailabilityExpression ===
+            standardItem.conditionalAvailabilityExpression
+        ) {
+          return undefined;
+        }
 
-    if (totalChanges === 0) {
+        return {
+          ...existingItem,
+          conditionalAvailabilityExpression:
+            standardItem.conditionalAvailabilityExpression,
+          updatedAt: new Date().toISOString(),
+        };
+      })
+      .filter(isDefined);
+
+    if (itemsToUpdate.length === 0) {
       this.logger.log(
-        `No engine command deduplication needed for workspace ${workspaceId}`,
+        `Select-all command menu item expressions already up to date for workspace ${workspaceId}`,
       );
 
       return;
     }
 
     this.logger.log(
-      `Found ${itemsToDelete.length} old command menu item(s) to delete and ${itemsToCreate.length} unified item(s) to create for workspace ${workspaceId}`,
+      `Found ${itemsToUpdate.length} command menu item(s) to update for workspace ${workspaceId}`,
     );
 
     if (isDryRun) {
       this.logger.log(
-        `[DRY RUN] Would delete ${itemsToDelete.length} and create ${itemsToCreate.length} command menu item(s) for workspace ${workspaceId}`,
+        `[DRY RUN] Would update ${itemsToUpdate.length} command menu item expression(s) for workspace ${workspaceId}`,
       );
 
       return;
@@ -121,9 +112,9 @@ export class DeduplicateEngineCommandsCommand extends ActiveOrSuspendedWorkspace
         {
           allFlatEntityOperationByMetadataName: {
             commandMenuItem: {
-              flatEntityToCreate: itemsToCreate,
-              flatEntityToDelete: itemsToDelete,
-              flatEntityToUpdate: [],
+              flatEntityToCreate: [],
+              flatEntityToDelete: [],
+              flatEntityToUpdate: itemsToUpdate,
             },
           },
           workspaceId,
@@ -134,16 +125,16 @@ export class DeduplicateEngineCommandsCommand extends ActiveOrSuspendedWorkspace
 
     if (validateAndBuildResult.status === 'fail') {
       this.logger.error(
-        `Failed to deduplicate engine commands:\n${JSON.stringify(validateAndBuildResult, null, 2)}`,
+        `Failed to fix select-all expressions:\n${JSON.stringify(validateAndBuildResult, null, 2)}`,
       );
 
       throw new Error(
-        `Failed to deduplicate engine commands for workspace ${workspaceId}`,
+        `Failed to fix select-all command menu item expressions for workspace ${workspaceId}`,
       );
     }
 
     this.logger.log(
-      `Successfully deduplicated engine commands for workspace ${workspaceId} (deleted ${itemsToDelete.length}, created ${itemsToCreate.length})`,
+      `Successfully updated ${itemsToUpdate.length} command menu item expression(s) for workspace ${workspaceId}`,
     );
   }
 }
