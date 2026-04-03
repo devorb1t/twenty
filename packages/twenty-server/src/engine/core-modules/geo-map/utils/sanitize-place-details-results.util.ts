@@ -4,6 +4,7 @@ export type AddressComponent = {
   types: string[];
 };
 export type AddressFields = {
+  street?: string;
   state?: string;
   postcode?: string;
   city?: string;
@@ -21,6 +22,8 @@ export const sanitizePlaceDetailsResults = (
   if (!AddressComponents || AddressComponents.length === 0) return {};
 
   const address: AddressFields = {};
+  let streetNumber: string | undefined;
+  let route: string | undefined;
 
   for (const AddressComponent of AddressComponents) {
     for (const type of AddressComponent.types) {
@@ -30,6 +33,14 @@ export const sanitizePlaceDetailsResults = (
             AddressComponent.long_name + (address.postcode ?? '');
           break;
         }
+
+        case 'street_number':
+          streetNumber = AddressComponent.long_name;
+          break;
+
+        case 'route':
+          route = AddressComponent.long_name;
+          break;
 
         case 'postal_code_suffix': {
           address.postcode =
@@ -72,6 +83,13 @@ export const sanitizePlaceDetailsResults = (
       }
     }
   }
+
+  const street = [streetNumber, route].filter(Boolean).join(' ');
+
+  if (street.length > 0) {
+    address.street = street;
+  }
+
   address.location = location;
 
   return address;
