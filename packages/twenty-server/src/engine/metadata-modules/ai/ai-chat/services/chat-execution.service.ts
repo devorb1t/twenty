@@ -342,7 +342,14 @@ export class ChatExecutionService {
         billUsageFromSteps(steps);
       })
       .catch((error) => {
-        if (error?.name === 'AbortError') {
+        if (
+          error?.name === 'AbortError' ||
+          error?.name === 'AI_NoOutputGeneratedError'
+        ) {
+          this.logger.warn(
+            `AI stream ended without output: ${error?.message}`,
+          );
+
           return;
         }
         this.exceptionHandlerService.captureExceptions([error]);
@@ -435,50 +442,59 @@ export class ChatExecutionService {
       return empty;
     }
 
-    switch (model.sdkPackage) {
-      case AI_SDK_ANTHROPIC: {
-        const provider =
-          this.sdkProviderFactory.getRawAnthropicProvider(providerName);
+    try {
+      switch (model.sdkPackage) {
+        case AI_SDK_ANTHROPIC: {
+          const provider =
+            this.sdkProviderFactory.getRawAnthropicProvider(providerName);
 
-        if (!provider) {
-          return empty;
+          if (!provider) {
+            return empty;
+          }
+
+          return {
+            tools: { web_search: provider.tools.webSearch_20250305() },
+            callableToolNames: ['web_search'],
+          };
         }
+        case AI_SDK_BEDROCK: {
+          const provider =
+            this.sdkProviderFactory.getRawBedrockProvider(providerName);
 
-        return {
-          tools: { web_search: provider.tools.webSearch_20250305() },
-          callableToolNames: ['web_search'],
-        };
-      }
-      case AI_SDK_BEDROCK: {
-        const provider =
-          this.sdkProviderFactory.getRawBedrockProvider(providerName);
+          if (!provider) {
+            return empty;
+          }
 
-        if (!provider) {
-          return empty;
+          return {
+            tools: {
+              web_search:
+                provider.tools.webSearch_20250305() as ToolSet[string],
+            },
+            callableToolNames: ['web_search'],
+          };
         }
+        case AI_SDK_OPENAI: {
+          const provider =
+            this.sdkProviderFactory.getRawOpenAIProvider(providerName);
 
-        return {
-          tools: {
-            web_search: provider.tools.webSearch_20250305() as ToolSet[string],
-          },
-          callableToolNames: ['web_search'],
-        };
-      }
-      case AI_SDK_OPENAI: {
-        const provider =
-          this.sdkProviderFactory.getRawOpenAIProvider(providerName);
+          if (!provider) {
+            return empty;
+          }
 
-        if (!provider) {
-          return empty;
+          return {
+            tools: { web_search: provider.tools.webSearch() },
+            callableToolNames: ['web_search'],
+          };
         }
-
-        return {
-          tools: { web_search: provider.tools.webSearch() },
-          callableToolNames: ['web_search'],
-        };
+        default:
+          return empty;
       }
-      default:
-        return empty;
+    } catch (error) {
+      this.logger.warn(
+        `Native web search tools unavailable for model ${model.modelId}: ${error instanceof Error ? error.message : 'unknown error'}`,
+      );
+
+      return empty;
     }
   }
 

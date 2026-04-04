@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { ProviderOptions } from '@ai-sdk/provider-utils';
 import { ToolSet } from 'ai';
@@ -19,6 +19,8 @@ import { FlatAgentWithRoleId } from 'src/engine/metadata-modules/flat-agent/type
 
 @Injectable()
 export class AgentModelConfigService {
+  private readonly logger = new Logger(AgentModelConfigService.name);
+
   constructor(
     private readonly aiModelRegistryService: AiModelRegistryService,
     private readonly sdkProviderFactory: SdkProviderFactoryService,
@@ -50,44 +52,52 @@ export class AgentModelConfigService {
       return tools;
     }
 
-    switch (model.sdkPackage) {
-      case AI_SDK_ANTHROPIC:
-        if (agent.modelConfiguration.webSearch?.enabled) {
-          const anthropicProvider = model.providerName
-            ? this.sdkProviderFactory.getRawAnthropicProvider(
-                model.providerName,
-              )
-            : undefined;
+    try {
+      switch (model.sdkPackage) {
+        case AI_SDK_ANTHROPIC:
+          if (agent.modelConfiguration.webSearch?.enabled) {
+            const anthropicProvider = model.providerName
+              ? this.sdkProviderFactory.getRawAnthropicProvider(
+                  model.providerName,
+                )
+              : undefined;
 
-          if (anthropicProvider) {
-            tools.web_search = anthropicProvider.tools.webSearch_20250305();
+            if (anthropicProvider) {
+              tools.web_search = anthropicProvider.tools.webSearch_20250305();
+            }
           }
-        }
-        break;
-      case AI_SDK_BEDROCK: {
-        if (agent.modelConfiguration.webSearch?.enabled) {
-          const bedrockProvider = model.providerName
-            ? this.sdkProviderFactory.getRawBedrockProvider(model.providerName)
-            : undefined;
+          break;
+        case AI_SDK_BEDROCK: {
+          if (agent.modelConfiguration.webSearch?.enabled) {
+            const bedrockProvider = model.providerName
+              ? this.sdkProviderFactory.getRawBedrockProvider(
+                  model.providerName,
+                )
+              : undefined;
 
-          if (bedrockProvider) {
-            tools.web_search =
-              bedrockProvider.tools.webSearch_20250305() as ToolSet[string];
+            if (bedrockProvider) {
+              tools.web_search =
+                bedrockProvider.tools.webSearch_20250305() as ToolSet[string];
+            }
           }
+          break;
         }
-        break;
+        case AI_SDK_OPENAI:
+          if (agent.modelConfiguration.webSearch?.enabled) {
+            const openaiProvider = model.providerName
+              ? this.sdkProviderFactory.getRawOpenAIProvider(model.providerName)
+              : undefined;
+
+            if (openaiProvider) {
+              tools.web_search = openaiProvider.tools.webSearch();
+            }
+          }
+          break;
       }
-      case AI_SDK_OPENAI:
-        if (agent.modelConfiguration.webSearch?.enabled) {
-          const openaiProvider = model.providerName
-            ? this.sdkProviderFactory.getRawOpenAIProvider(model.providerName)
-            : undefined;
-
-          if (openaiProvider) {
-            tools.web_search = openaiProvider.tools.webSearch();
-          }
-        }
-        break;
+    } catch (error) {
+      this.logger.warn(
+        `Native model tools unavailable for model ${model.modelId}: ${error instanceof Error ? error.message : 'unknown error'}`,
+      );
     }
 
     return tools;
