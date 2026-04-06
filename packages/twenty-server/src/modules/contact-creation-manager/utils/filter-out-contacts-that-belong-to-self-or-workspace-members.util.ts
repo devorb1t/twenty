@@ -18,11 +18,13 @@ export function filterOutContactsThatBelongToSelfOrWorkspaceMembers(
     connectedAccount.handle,
   ).toLowerCase();
 
+  const handleAliases = Array.isArray(connectedAccount.handleAliases)
+    ? connectedAccount.handleAliases
+    : [];
+
   const allHandles = [
     connectedAccount.handle.toLowerCase(),
-    ...(connectedAccount.handleAliases || []).map((handle) =>
-      handle.toLowerCase(),
-    ),
+    ...handleAliases.map((handle) => handle.toLowerCase()),
   ];
 
   const workspaceMembersMap = workspaceMembers.reduce(

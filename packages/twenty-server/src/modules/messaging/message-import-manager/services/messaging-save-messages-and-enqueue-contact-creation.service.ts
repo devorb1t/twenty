@@ -49,7 +49,9 @@ export class MessagingSaveMessagesAndEnqueueContactCreationService {
     connectedAccount: ConnectedAccountEntity,
     workspaceId: string,
   ) {
-    const handleAliases = connectedAccount.handleAliases || [];
+    const handleAliases = Array.isArray(connectedAccount.handleAliases)
+      ? connectedAccount.handleAliases
+      : [];
     const authContext = buildSystemAuthContext(workspaceId);
 
     const participantsWithMessageId =
