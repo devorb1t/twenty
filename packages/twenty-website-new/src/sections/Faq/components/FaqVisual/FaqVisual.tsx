@@ -1,13 +1,18 @@
 'use client';
 
-import type { IllustrationType } from '@/design-system/components/Illustration/types/Illustration';
 import { theme } from '@/theme';
 import { styled } from '@linaria/react';
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-const QUOTE_VISUAL_MODEL_FIT_SCALE = 3.05;
+const FAQ_VISUAL_MODEL_FIT_SCALE = 4;
+const FAQ_VISUAL_ROTATION_RADIANS_PER_SECOND = 0.5;
+const FAQ_VISUAL_WORLD_OFFSET_Y = 0.52;
+
+// World spin axis (x, y, z). Camera on +Z: (0,0,1) = spinner in the view plane.
+// Try (0,1,0) or (1,0,0) if motion or framing looks wrong.
+const FAQ_VISUAL_SPIN_AXIS_XYZ: readonly [number, number, number] = [0, 0, 1];
 
 const scanlineVertexShader = /* glsl */ `
   varying vec3 vWorldPosition;
@@ -98,12 +103,6 @@ function disposeObjectSubtree(root: THREE.Object3D) {
   });
 }
 
-type MeshRestPose = {
-  position: THREE.Vector3;
-  quaternion: THREE.Quaternion;
-  wobblePhase: number;
-};
-
 function applyScanlineMaterials(
   modelRoot: THREE.Object3D,
   lightDirection: THREE.Vector3,
@@ -114,49 +113,45 @@ function applyScanlineMaterials(
     }
 
     sceneObject.material = createScanlineMaterial(lightDirection);
-
-    const mesh = sceneObject;
-    const rest: MeshRestPose = {
-      position: mesh.position.clone(),
-      quaternion: mesh.quaternion.clone(),
-      wobblePhase: mesh.position.y * 4.2 + mesh.position.x * 1.7,
-    };
-    mesh.userData.quoteVisualRest = rest;
   });
 }
 
-const VisualContainer = styled.div`
-  background-color: transparent;
-  border-radius: ${theme.radius(1)};
-  height: min(544px, 70vw);
-  min-height: ${theme.spacing(80)};
+const FaqVisualShell = styled.div`
+  bottom: 0;
+  display: block;
+  left: auto;
+  opacity: 0.45;
   overflow: hidden;
-  position: relative;
-  width: 100%;
+  pointer-events: none;
+  position: absolute;
+  right: -5%;
+  top: 0;
+  transform: translateY(-11%);
+  width: min(70vw, 750px);
 
   @media (min-width: ${theme.breakpoints.md}px) {
-    height: 544px;
-    max-width: 646px;
+    right: -10%;
+    transform: translateY(-12%);
+    width: min(60vw, 900px);
   }
 `;
 
-const CanvasMount = styled.div`
+const FaqVisualCanvasMount = styled.div`
   display: block;
   height: 100%;
-  inset: 0;
   min-width: 0;
-  position: absolute;
   width: 100%;
 `;
 
-type VisualProps = {
-  illustration: IllustrationType;
+export type FaqVisualProps = {
+  src: string;
+  title: string;
 };
 
-export function Visual({ illustration }: VisualProps) {
+export function FaqVisual({ src, title }: FaqVisualProps) {
   const mountReference = useRef<HTMLDivElement>(null);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const container = mountReference.current;
     if (!container) {
       return;
@@ -165,8 +160,6 @@ export function Visual({ illustration }: VisualProps) {
     let cancelled = false;
     let animationFrameId = 0;
 
-    const pointer = { x: 0, y: 0, inside: false };
-    const targetRotation = { x: 0, y: 0 };
     const lightDirectionWorld = new THREE.Vector3(4, 8, 6).normalize();
 
     const scene = new THREE.Scene();
@@ -182,21 +175,25 @@ export function Visual({ illustration }: VisualProps) {
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     const canvas = renderer.domElement;
-    canvas.style.cursor = 'pointer';
     canvas.style.display = 'block';
     canvas.style.height = '100%';
-    canvas.style.touchAction = 'none';
     canvas.style.width = '100%';
     container.appendChild(canvas);
 
-    const pivot = new THREE.Group();
-    scene.add(pivot);
+    const wheel = new THREE.Group();
+    scene.add(wheel);
+
+    const spinAxisWorld = new THREE.Vector3(
+      FAQ_VISUAL_SPIN_AXIS_XYZ[0],
+      FAQ_VISUAL_SPIN_AXIS_XYZ[1],
+      FAQ_VISUAL_SPIN_AXIS_XYZ[2],
+    ).normalize();
 
     const clock = new THREE.Clock();
 
     const loader = new GLTFLoader();
     loader.load(
-      illustration.src,
+      src,
       (gltf) => {
         if (cancelled) {
           disposeObjectSubtree(gltf.scene);
@@ -208,13 +205,14 @@ export function Visual({ illustration }: VisualProps) {
         const center = bounds.getCenter(new THREE.Vector3());
         const size = bounds.getSize(new THREE.Vector3());
         const maxAxis = Math.max(size.x, size.y, size.z, 0.001);
-        const scale = QUOTE_VISUAL_MODEL_FIT_SCALE / maxAxis;
+        const scale = FAQ_VISUAL_MODEL_FIT_SCALE / maxAxis;
 
         modelRoot.position.sub(center);
         modelRoot.scale.setScalar(scale);
 
         applyScanlineMaterials(modelRoot, lightDirectionWorld);
-        pivot.add(modelRoot);
+        wheel.add(modelRoot);
+        wheel.position.y = FAQ_VISUAL_WORLD_OFFSET_Y;
 
         const renderFrame = () => {
           if (cancelled) {
@@ -223,59 +221,10 @@ export function Visual({ illustration }: VisualProps) {
 
           animationFrameId = window.requestAnimationFrame(renderFrame);
           const delta = Math.min(clock.getDelta(), 0.1);
-
-          const rotationDamp = 6.8;
-          const influence = pointer.inside ? 1 : 0.38;
-          targetRotation.y = pointer.x * 0.78 * influence;
-          targetRotation.x = pointer.y * 0.62 * influence;
-
-          pivot.rotation.y = THREE.MathUtils.damp(
-            pivot.rotation.y,
-            targetRotation.y,
-            rotationDamp,
-            delta,
+          wheel.rotateOnWorldAxis(
+            spinAxisWorld,
+            -delta * FAQ_VISUAL_ROTATION_RADIANS_PER_SECOND,
           );
-          pivot.rotation.x = THREE.MathUtils.damp(
-            pivot.rotation.x,
-            targetRotation.x,
-            rotationDamp,
-            delta,
-          );
-
-          const hoverLift = pointer.inside ? 1 : 0;
-          pivot.scale.setScalar(
-            THREE.MathUtils.damp(pivot.scale.x, 1 + hoverLift * 0.12, 7, delta),
-          );
-
-          const mx = pointer.x * (pointer.inside ? 1 : 0.32);
-          const my = pointer.y * (pointer.inside ? 1 : 0.32);
-
-          modelRoot.traverse((sceneObject) => {
-            if (!(sceneObject instanceof THREE.Mesh)) {
-              return;
-            }
-
-            const rest = sceneObject.userData.quoteVisualRest as
-              | MeshRestPose
-              | undefined;
-            if (!rest) {
-              return;
-            }
-
-            const phase = rest.wobblePhase;
-            const wobble = pointer.inside ? 1 : 0.36;
-            sceneObject.position.x =
-              rest.position.x + mx * 0.22 * Math.sin(phase * 1.8);
-            sceneObject.position.z =
-              rest.position.z + my * 0.19 * Math.cos(phase * 1.4);
-            sceneObject.position.y =
-              rest.position.y + (mx + my) * 0.055 * Math.sin(phase * 2.5);
-
-            const twist = (mx * 0.34 + my * 0.24) * wobble * Math.sin(phase);
-            sceneObject.quaternion.copy(rest.quaternion);
-            sceneObject.rotateY(twist);
-          });
-
           renderer.render(scene, camera);
         };
 
@@ -285,32 +234,6 @@ export function Visual({ illustration }: VisualProps) {
       undefined,
     );
 
-    const setPointerFromEvent = (event: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const normalizedX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      const normalizedY = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
-      pointer.x = THREE.MathUtils.clamp(normalizedX, -1, 1);
-      pointer.y = THREE.MathUtils.clamp(normalizedY, -1, 1);
-    };
-
-    const handlePointerEnter = () => {
-      pointer.inside = true;
-    };
-
-    const handlePointerLeave = () => {
-      pointer.inside = false;
-      pointer.x = 0;
-      pointer.y = 0;
-    };
-
-    const handlePointerMove = (event: PointerEvent) => {
-      setPointerFromEvent(event);
-    };
-
-    canvas.addEventListener('pointerenter', handlePointerEnter);
-    canvas.addEventListener('pointerleave', handlePointerLeave);
-    canvas.addEventListener('pointermove', handlePointerMove);
-
     const handleResize = () => {
       if (!mountReference.current || cancelled) {
         return;
@@ -318,6 +241,9 @@ export function Visual({ illustration }: VisualProps) {
 
       const nextWidth = mountReference.current.clientWidth;
       const nextHeight = mountReference.current.clientHeight;
+      if (nextWidth < 1 || nextHeight < 1) {
+        return;
+      }
       camera.aspect = nextWidth / nextHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(nextWidth, nextHeight);
@@ -328,9 +254,6 @@ export function Visual({ illustration }: VisualProps) {
     return () => {
       cancelled = true;
       window.removeEventListener('resize', handleResize);
-      canvas.removeEventListener('pointerenter', handlePointerEnter);
-      canvas.removeEventListener('pointerleave', handlePointerLeave);
-      canvas.removeEventListener('pointermove', handlePointerMove);
       window.cancelAnimationFrame(animationFrameId);
       disposeObjectSubtree(scene);
       renderer.dispose();
@@ -339,15 +262,15 @@ export function Visual({ illustration }: VisualProps) {
         container.removeChild(canvas);
       }
     };
-  }, [illustration.src]);
+  }, [src]);
 
   return (
-    <VisualContainer>
-      <CanvasMount
-        aria-label={illustration.title}
+    <FaqVisualShell>
+      <FaqVisualCanvasMount
+        aria-label={title}
         ref={mountReference}
         role="img"
       />
-    </VisualContainer>
+    </FaqVisualShell>
   );
 }

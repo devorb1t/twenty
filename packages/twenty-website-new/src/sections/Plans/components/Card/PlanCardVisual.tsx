@@ -1,13 +1,15 @@
 'use client';
 
-import type { IllustrationType } from '@/design-system/components/Illustration/types/Illustration';
-import { theme } from '@/theme';
-import { styled } from '@linaria/react';
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-const QUOTE_VISUAL_MODEL_FIT_SCALE = 3.05;
+const PLAN_CARD_VISUAL_MODEL_FIT_SCALE = 2.35;
+const PLAN_CARD_IDLE_TILT_INFLUENCE = 0.22;
+const PLAN_CARD_HOVER_SCALE_LIFT = 0.06;
+const PLAN_CARD_ROTATION_DAMP = 8.2;
+const PLAN_CARD_TILT_X = 0.42;
+const PLAN_CARD_TILT_Y = 0.52;
 
 const scanlineVertexShader = /* glsl */ `
   varying vec3 vWorldPosition;
@@ -121,42 +123,27 @@ function applyScanlineMaterials(
       quaternion: mesh.quaternion.clone(),
       wobblePhase: mesh.position.y * 4.2 + mesh.position.x * 1.7,
     };
-    mesh.userData.quoteVisualRest = rest;
+    mesh.userData.planCardVisualRest = rest;
   });
 }
 
-const VisualContainer = styled.div`
-  background-color: transparent;
-  border-radius: ${theme.radius(1)};
-  height: min(544px, 70vw);
-  min-height: ${theme.spacing(80)};
-  overflow: hidden;
-  position: relative;
-  width: 100%;
-
-  @media (min-width: ${theme.breakpoints.md}px) {
-    height: 544px;
-    max-width: 646px;
-  }
-`;
-
-const CanvasMount = styled.div`
-  display: block;
-  height: 100%;
-  inset: 0;
-  min-width: 0;
-  position: absolute;
-  width: 100%;
-`;
-
-type VisualProps = {
-  illustration: IllustrationType;
+// Plain div + stable inline style: Linaria on this node caused SSR/client className mismatches.
+const planCardVisualMountStyle = {
+  display: 'block' as const,
+  height: '100%',
+  minWidth: 0,
+  width: '100%',
 };
 
-export function Visual({ illustration }: VisualProps) {
+type PlanCardVisualProps = {
+  src: string;
+  title: string;
+};
+
+export function PlanCardVisual({ src, title }: PlanCardVisualProps) {
   const mountReference = useRef<HTMLDivElement>(null);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const container = mountReference.current;
     if (!container) {
       return;
@@ -170,8 +157,16 @@ export function Visual({ illustration }: VisualProps) {
     const lightDirectionWorld = new THREE.Vector3(4, 8, 6).normalize();
 
     const scene = new THREE.Scene();
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+    const readSize = () => {
+      const nextWidth = container.clientWidth;
+      const nextHeight = container.clientHeight;
+      return {
+        width: Math.max(nextWidth, 1),
+        height: Math.max(nextHeight, 1),
+      };
+    };
+
+    const { width, height } = readSize();
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
     camera.position.set(0, 0, 5.05);
@@ -182,7 +177,7 @@ export function Visual({ illustration }: VisualProps) {
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     const canvas = renderer.domElement;
-    canvas.style.cursor = 'pointer';
+    canvas.style.cursor = 'default';
     canvas.style.display = 'block';
     canvas.style.height = '100%';
     canvas.style.touchAction = 'none';
@@ -196,7 +191,7 @@ export function Visual({ illustration }: VisualProps) {
 
     const loader = new GLTFLoader();
     loader.load(
-      illustration.src,
+      src,
       (gltf) => {
         if (cancelled) {
           disposeObjectSubtree(gltf.scene);
@@ -208,7 +203,7 @@ export function Visual({ illustration }: VisualProps) {
         const center = bounds.getCenter(new THREE.Vector3());
         const size = bounds.getSize(new THREE.Vector3());
         const maxAxis = Math.max(size.x, size.y, size.z, 0.001);
-        const scale = QUOTE_VISUAL_MODEL_FIT_SCALE / maxAxis;
+        const scale = PLAN_CARD_VISUAL_MODEL_FIT_SCALE / maxAxis;
 
         modelRoot.position.sub(center);
         modelRoot.scale.setScalar(scale);
@@ -224,38 +219,44 @@ export function Visual({ illustration }: VisualProps) {
           animationFrameId = window.requestAnimationFrame(renderFrame);
           const delta = Math.min(clock.getDelta(), 0.1);
 
-          const rotationDamp = 6.8;
-          const influence = pointer.inside ? 1 : 0.38;
-          targetRotation.y = pointer.x * 0.78 * influence;
-          targetRotation.x = pointer.y * 0.62 * influence;
+          const influence = pointer.inside ? 1 : PLAN_CARD_IDLE_TILT_INFLUENCE;
+          targetRotation.y = pointer.x * PLAN_CARD_TILT_Y * influence;
+          targetRotation.x = pointer.y * PLAN_CARD_TILT_X * influence;
 
           pivot.rotation.y = THREE.MathUtils.damp(
             pivot.rotation.y,
             targetRotation.y,
-            rotationDamp,
+            PLAN_CARD_ROTATION_DAMP,
             delta,
           );
           pivot.rotation.x = THREE.MathUtils.damp(
             pivot.rotation.x,
             targetRotation.x,
-            rotationDamp,
+            PLAN_CARD_ROTATION_DAMP,
             delta,
           );
 
           const hoverLift = pointer.inside ? 1 : 0;
           pivot.scale.setScalar(
-            THREE.MathUtils.damp(pivot.scale.x, 1 + hoverLift * 0.12, 7, delta),
+            THREE.MathUtils.damp(
+              pivot.scale.x,
+              1 + hoverLift * PLAN_CARD_HOVER_SCALE_LIFT,
+              7,
+              delta,
+            ),
           );
 
-          const mx = pointer.x * (pointer.inside ? 1 : 0.32);
-          const my = pointer.y * (pointer.inside ? 1 : 0.32);
+          const mx =
+            pointer.x * (pointer.inside ? 1 : PLAN_CARD_IDLE_TILT_INFLUENCE);
+          const my =
+            pointer.y * (pointer.inside ? 1 : PLAN_CARD_IDLE_TILT_INFLUENCE);
 
           modelRoot.traverse((sceneObject) => {
             if (!(sceneObject instanceof THREE.Mesh)) {
               return;
             }
 
-            const rest = sceneObject.userData.quoteVisualRest as
+            const rest = sceneObject.userData.planCardVisualRest as
               | MeshRestPose
               | undefined;
             if (!rest) {
@@ -263,15 +264,15 @@ export function Visual({ illustration }: VisualProps) {
             }
 
             const phase = rest.wobblePhase;
-            const wobble = pointer.inside ? 1 : 0.36;
+            const wobble = pointer.inside ? 0.55 : 0.22;
             sceneObject.position.x =
-              rest.position.x + mx * 0.22 * Math.sin(phase * 1.8);
+              rest.position.x + mx * 0.12 * Math.sin(phase * 1.8);
             sceneObject.position.z =
-              rest.position.z + my * 0.19 * Math.cos(phase * 1.4);
+              rest.position.z + my * 0.1 * Math.cos(phase * 1.4);
             sceneObject.position.y =
-              rest.position.y + (mx + my) * 0.055 * Math.sin(phase * 2.5);
+              rest.position.y + (mx + my) * 0.03 * Math.sin(phase * 2.5);
 
-            const twist = (mx * 0.34 + my * 0.24) * wobble * Math.sin(phase);
+            const twist = (mx * 0.18 + my * 0.14) * wobble * Math.sin(phase);
             sceneObject.quaternion.copy(rest.quaternion);
             sceneObject.rotateY(twist);
           });
@@ -311,23 +312,37 @@ export function Visual({ illustration }: VisualProps) {
     canvas.addEventListener('pointerleave', handlePointerLeave);
     canvas.addEventListener('pointermove', handlePointerMove);
 
-    const handleResize = () => {
+    const syncCanvasToContainer = () => {
       if (!mountReference.current || cancelled) {
         return;
       }
 
       const nextWidth = mountReference.current.clientWidth;
       const nextHeight = mountReference.current.clientHeight;
+      if (nextWidth < 1 || nextHeight < 1) {
+        return;
+      }
+
       camera.aspect = nextWidth / nextHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(nextWidth, nextHeight);
     };
 
-    window.addEventListener('resize', handleResize);
+    const resizeObserver = new ResizeObserver(() => {
+      syncCanvasToContainer();
+    });
+    resizeObserver.observe(container);
+
+    const handleWindowResize = () => {
+      syncCanvasToContainer();
+    };
+
+    window.addEventListener('resize', handleWindowResize);
 
     return () => {
       cancelled = true;
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', handleWindowResize);
       canvas.removeEventListener('pointerenter', handlePointerEnter);
       canvas.removeEventListener('pointerleave', handlePointerLeave);
       canvas.removeEventListener('pointermove', handlePointerMove);
@@ -339,15 +354,14 @@ export function Visual({ illustration }: VisualProps) {
         container.removeChild(canvas);
       }
     };
-  }, [illustration.src]);
+  }, [src]);
 
   return (
-    <VisualContainer>
-      <CanvasMount
-        aria-label={illustration.title}
-        ref={mountReference}
-        role="img"
-      />
-    </VisualContainer>
+    <div
+      aria-label={title}
+      ref={mountReference}
+      role="img"
+      style={planCardVisualMountStyle}
+    />
   );
 }

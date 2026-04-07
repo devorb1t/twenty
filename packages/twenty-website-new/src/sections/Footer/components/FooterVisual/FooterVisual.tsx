@@ -1,13 +1,19 @@
 'use client';
 
-import type { IllustrationType } from '@/design-system/components/Illustration/types/Illustration';
-import { theme } from '@/theme';
 import { styled } from '@linaria/react';
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-const QUOTE_VISUAL_MODEL_FIT_SCALE = 3.05;
+// Framing for the extruded “ZO” hero shot (low angle, centered, room below for links).
+const FOOTER_VISUAL_MODEL_FIT_SCALE = 5;
+const FOOTER_VISUAL_MODEL_OFFSET_Y = 0.42;
+const FOOTER_VISUAL_CAMERA_POSITION: readonly [number, number, number] = [
+  0, -1.35, 7.4,
+];
+const FOOTER_VISUAL_CAMERA_LOOK_AT: readonly [number, number, number] = [
+  0, 0.55, 0,
+];
 
 const scanlineVertexShader = /* glsl */ `
   varying vec3 vWorldPosition;
@@ -65,10 +71,10 @@ const scanlineFragmentShader = /* glsl */ `
   }
 `;
 
-function createScanlineMaterial(lightDirection: THREE.Vector3) {
+function createFooterScanlineMaterial(lightDirection: THREE.Vector3) {
   return new THREE.ShaderMaterial({
     uniforms: {
-      uColor: { value: new THREE.Color('#1e5bff') },
+      uColor: { value: new THREE.Color('#b0b0b0') },
       uLightDir: { value: lightDirection.clone() },
       uStripeScale: { value: 16.0 },
     },
@@ -104,7 +110,7 @@ type MeshRestPose = {
   wobblePhase: number;
 };
 
-function applyScanlineMaterials(
+function applyFooterScanlineMaterials(
   modelRoot: THREE.Object3D,
   lightDirection: THREE.Vector3,
 ) {
@@ -113,7 +119,7 @@ function applyScanlineMaterials(
       return;
     }
 
-    sceneObject.material = createScanlineMaterial(lightDirection);
+    sceneObject.material = createFooterScanlineMaterial(lightDirection);
 
     const mesh = sceneObject;
     const rest: MeshRestPose = {
@@ -121,42 +127,26 @@ function applyScanlineMaterials(
       quaternion: mesh.quaternion.clone(),
       wobblePhase: mesh.position.y * 4.2 + mesh.position.x * 1.7,
     };
-    mesh.userData.quoteVisualRest = rest;
+    mesh.userData.footerVisualRest = rest;
   });
 }
 
-const VisualContainer = styled.div`
-  background-color: transparent;
-  border-radius: ${theme.radius(1)};
-  height: min(544px, 70vw);
-  min-height: ${theme.spacing(80)};
-  overflow: hidden;
-  position: relative;
-  width: 100%;
-
-  @media (min-width: ${theme.breakpoints.md}px) {
-    height: 544px;
-    max-width: 646px;
-  }
-`;
-
-const CanvasMount = styled.div`
+const FooterVisualCanvasMount = styled.div`
   display: block;
   height: 100%;
-  inset: 0;
   min-width: 0;
-  position: absolute;
   width: 100%;
 `;
 
-type VisualProps = {
-  illustration: IllustrationType;
+export type FooterVisualProps = {
+  src: string;
+  title: string;
 };
 
-export function Visual({ illustration }: VisualProps) {
+export function FooterVisual({ src, title }: FooterVisualProps) {
   const mountReference = useRef<HTMLDivElement>(null);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const container = mountReference.current;
     if (!container) {
       return;
@@ -167,14 +157,25 @@ export function Visual({ illustration }: VisualProps) {
 
     const pointer = { x: 0, y: 0, inside: false };
     const targetRotation = { x: 0, y: 0 };
-    const lightDirectionWorld = new THREE.Vector3(4, 8, 6).normalize();
+    const lightDirectionWorld = new THREE.Vector3(2, 10, 5).normalize();
 
     const scene = new THREE.Scene();
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 0, 5.05);
+    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
+    camera.position.set(
+      FOOTER_VISUAL_CAMERA_POSITION[0],
+      FOOTER_VISUAL_CAMERA_POSITION[1],
+      FOOTER_VISUAL_CAMERA_POSITION[2],
+    );
+    camera.lookAt(
+      new THREE.Vector3(
+        FOOTER_VISUAL_CAMERA_LOOK_AT[0],
+        FOOTER_VISUAL_CAMERA_LOOK_AT[1],
+        FOOTER_VISUAL_CAMERA_LOOK_AT[2],
+      ),
+    );
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -196,7 +197,7 @@ export function Visual({ illustration }: VisualProps) {
 
     const loader = new GLTFLoader();
     loader.load(
-      illustration.src,
+      src,
       (gltf) => {
         if (cancelled) {
           disposeObjectSubtree(gltf.scene);
@@ -208,12 +209,13 @@ export function Visual({ illustration }: VisualProps) {
         const center = bounds.getCenter(new THREE.Vector3());
         const size = bounds.getSize(new THREE.Vector3());
         const maxAxis = Math.max(size.x, size.y, size.z, 0.001);
-        const scale = QUOTE_VISUAL_MODEL_FIT_SCALE / maxAxis;
+        const scale = FOOTER_VISUAL_MODEL_FIT_SCALE / maxAxis;
 
         modelRoot.position.sub(center);
         modelRoot.scale.setScalar(scale);
+        modelRoot.position.y += FOOTER_VISUAL_MODEL_OFFSET_Y;
 
-        applyScanlineMaterials(modelRoot, lightDirectionWorld);
+        applyFooterScanlineMaterials(modelRoot, lightDirectionWorld);
         pivot.add(modelRoot);
 
         const renderFrame = () => {
@@ -255,7 +257,7 @@ export function Visual({ illustration }: VisualProps) {
               return;
             }
 
-            const rest = sceneObject.userData.quoteVisualRest as
+            const rest = sceneObject.userData.footerVisualRest as
               | MeshRestPose
               | undefined;
             if (!rest) {
@@ -339,15 +341,13 @@ export function Visual({ illustration }: VisualProps) {
         container.removeChild(canvas);
       }
     };
-  }, [illustration.src]);
+  }, [src]);
 
   return (
-    <VisualContainer>
-      <CanvasMount
-        aria-label={illustration.title}
-        ref={mountReference}
-        role="img"
-      />
-    </VisualContainer>
+    <FooterVisualCanvasMount
+      aria-label={title}
+      ref={mountReference}
+      role="img"
+    />
   );
 }

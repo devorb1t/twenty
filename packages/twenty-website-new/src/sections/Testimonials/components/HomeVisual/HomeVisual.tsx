@@ -1,13 +1,15 @@
 'use client';
 
-import type { IllustrationType } from '@/design-system/components/Illustration/types/Illustration';
 import { theme } from '@/theme';
 import { styled } from '@linaria/react';
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-const QUOTE_VISUAL_MODEL_FIT_SCALE = 3.05;
+const HOME_TESTIMONIALS_VISUAL_GLB_URL =
+  '/illustrations/home/testimonials/testimonials.glb';
+const HOME_TESTIMONIALS_VISUAL_TITLE = 'Testimonials illustration';
+const HOME_TESTIMONIALS_VISUAL_MODEL_FIT_SCALE = 2.85;
 
 const scanlineVertexShader = /* glsl */ `
   varying vec3 vWorldPosition;
@@ -121,22 +123,21 @@ function applyScanlineMaterials(
       quaternion: mesh.quaternion.clone(),
       wobblePhase: mesh.position.y * 4.2 + mesh.position.x * 1.7,
     };
-    mesh.userData.quoteVisualRest = rest;
+    mesh.userData.homeTestimonialsVisualRest = rest;
   });
 }
 
-const VisualContainer = styled.div`
+const VisualFrame = styled.div`
   background-color: transparent;
   border-radius: ${theme.radius(1)};
-  height: min(544px, 70vw);
-  min-height: ${theme.spacing(80)};
+  height: 279px;
   overflow: hidden;
   position: relative;
-  width: 100%;
+  width: 198px;
 
   @media (min-width: ${theme.breakpoints.md}px) {
-    height: 544px;
-    max-width: 646px;
+    height: 476px;
+    width: 336px;
   }
 `;
 
@@ -149,11 +150,7 @@ const CanvasMount = styled.div`
   width: 100%;
 `;
 
-type VisualProps = {
-  illustration: IllustrationType;
-};
-
-export function Visual({ illustration }: VisualProps) {
+export function HomeVisual() {
   const mountReference = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -196,7 +193,7 @@ export function Visual({ illustration }: VisualProps) {
 
     const loader = new GLTFLoader();
     loader.load(
-      illustration.src,
+      HOME_TESTIMONIALS_VISUAL_GLB_URL,
       (gltf) => {
         if (cancelled) {
           disposeObjectSubtree(gltf.scene);
@@ -208,7 +205,7 @@ export function Visual({ illustration }: VisualProps) {
         const center = bounds.getCenter(new THREE.Vector3());
         const size = bounds.getSize(new THREE.Vector3());
         const maxAxis = Math.max(size.x, size.y, size.z, 0.001);
-        const scale = QUOTE_VISUAL_MODEL_FIT_SCALE / maxAxis;
+        const scale = HOME_TESTIMONIALS_VISUAL_MODEL_FIT_SCALE / maxAxis;
 
         modelRoot.position.sub(center);
         modelRoot.scale.setScalar(scale);
@@ -255,7 +252,7 @@ export function Visual({ illustration }: VisualProps) {
               return;
             }
 
-            const rest = sceneObject.userData.quoteVisualRest as
+            const rest = sceneObject.userData.homeTestimonialsVisualRest as
               | MeshRestPose
               | undefined;
             if (!rest) {
@@ -339,15 +336,15 @@ export function Visual({ illustration }: VisualProps) {
         container.removeChild(canvas);
       }
     };
-  }, [illustration.src]);
+  }, []);
 
   return (
-    <VisualContainer>
+    <VisualFrame>
       <CanvasMount
-        aria-label={illustration.title}
+        aria-label={HOME_TESTIMONIALS_VISUAL_TITLE}
         ref={mountReference}
         role="img"
       />
-    </VisualContainer>
+    </VisualFrame>
   );
 }
