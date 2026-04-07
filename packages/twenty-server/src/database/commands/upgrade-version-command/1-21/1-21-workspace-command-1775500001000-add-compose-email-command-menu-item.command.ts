@@ -4,6 +4,7 @@ import { isDefined } from 'twenty-shared/utils';
 import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
+import { RegisteredWorkspaceCommand } from 'src/engine/core-modules/upgrade/decorators/registered-workspace-command.decorator';
 import { ApplicationService } from 'src/engine/core-modules/application/application.service';
 import { WorkspaceCacheService } from 'src/engine/workspace-cache/services/workspace-cache.service';
 import { STANDARD_COMMAND_MENU_ITEMS } from 'src/engine/workspace-manager/twenty-standard-application/constants/standard-command-menu-item.constant';
@@ -13,6 +14,7 @@ import { WorkspaceMigrationValidateBuildAndRunService } from 'src/engine/workspa
 const COMPOSE_EMAIL_UNIVERSAL_IDENTIFIER =
   STANDARD_COMMAND_MENU_ITEMS.composeEmail.universalIdentifier;
 
+@RegisteredWorkspaceCommand('1.21.0', 1775500001000)
 @Command({
   name: 'upgrade:1-21:add-compose-email-command-menu-item',
   description: 'Add the Compose Email command menu item to existing workspaces',

@@ -6,10 +6,12 @@ import { DataSource } from 'typeorm';
 import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
+import { RegisteredWorkspaceCommand } from 'src/engine/core-modules/upgrade/decorators/registered-workspace-command.decorator';
 
 const EDIT_RECORD_PAGE_LAYOUT_UNIVERSAL_IDENTIFIER =
   'd9794c67-1799-424f-8871-5ea771dd4a6d';
 
+@RegisteredWorkspaceCommand('1.21.0', 1775500009000)
 @Command({
   name: 'upgrade:1-21:update-edit-layout-command-menu-item-label',
   description: 'Update Edit Page Layout command menu item label to Edit Layout',

@@ -6,8 +6,10 @@ import { DataSource } from 'typeorm';
 import { ActiveOrSuspendedWorkspaceCommandRunner } from 'src/database/commands/command-runners/active-or-suspended-workspace.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
 import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
+import { RegisteredWorkspaceCommand } from 'src/engine/core-modules/upgrade/decorators/registered-workspace-command.decorator';
 import { addGlobalKeyValuePairUniqueIndexQueries } from 'src/database/typeorm/core/migrations/utils/1774700000000-add-global-key-value-pair-unique-index.util';
 
+@RegisteredWorkspaceCommand('1.21.0', 1775500002000)
 @Command({
   name: 'upgrade:1-21:add-global-key-value-pair-unique-index',
   description:

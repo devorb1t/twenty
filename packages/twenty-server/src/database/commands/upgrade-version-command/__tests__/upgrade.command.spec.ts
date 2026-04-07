@@ -11,20 +11,19 @@ import {
 
 import { getDataSourceToken } from '@nestjs/typeorm';
 
-import {
-  UpgradeCommandOptions,
-  UpgradeCommandRunner,
-  type AllCommands,
-} from 'src/database/commands/command-runners/upgrade.command-runner';
 import { WorkspaceIteratorService } from 'src/database/commands/command-runners/workspace-iterator.service';
-import { RegisteredInstanceMigrationService } from 'src/engine/core-modules/upgrade/services/registered-instance-migration-registry.service';
-import { WorkspaceUpgradeService } from 'src/engine/core-modules/upgrade/services/workspace-upgrade.service';
-import { RegisteredInstanceMigration } from 'src/database/typeorm/core/decorators/registered-instance-migration.decorator';
+import { RegisteredInstanceCommand } from 'src/engine/core-modules/upgrade/decorators/registered-instance-command.decorator';
+import {
+  UpgradeCommand,
+  UpgradeCommandOptions,
+} from 'src/database/commands/upgrade-version-command/upgrade.command';
 import { UPGRADE_COMMAND_SUPPORTED_VERSIONS } from 'src/engine/constants/upgrade-command-supported-versions.constant';
 import { CoreEngineVersionService } from 'src/engine/core-engine-version/services/core-engine-version.service';
 import { type ConfigVariables } from 'src/engine/core-modules/twenty-config/config-variables';
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 import { InstanceUpgradeService } from 'src/engine/core-modules/upgrade/services/instance-upgrade.service';
+import { UpgradeCommandRegistryService } from 'src/engine/core-modules/upgrade/services/upgrade-command-registry.service';
+import { WorkspaceUpgradeService } from 'src/engine/core-modules/upgrade/services/workspace-upgrade.service';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { WorkspaceVersionService } from 'src/engine/workspace-manager/workspace-version/services/workspace-version.service';
 import { compareVersionMajorAndMinor } from 'src/utils/version/compare-version-minor-and-major';
@@ -38,13 +37,7 @@ const PREVIOUS_VERSION =
     UPGRADE_COMMAND_SUPPORTED_VERSIONS.length - 2
   ];
 
-class BasicUpgradeCommandRunner extends UpgradeCommandRunner {
-  allCommands = Object.fromEntries(
-    UPGRADE_COMMAND_SUPPORTED_VERSIONS.map((version) => [version, []]),
-  ) as unknown as AllCommands;
-}
-
-type CommandRunnerValues = typeof BasicUpgradeCommandRunner;
+type CommandRunnerValues = typeof UpgradeCommand;
 
 const generateMockWorkspace = (overrides?: Partial<WorkspaceEntity>) =>
   ({
@@ -78,7 +71,7 @@ const buildUpgradeCommandModule = async ({
 }: BuildUpgradeCommandModuleArgs) => {
   const registryProvider = migrations
     ? {
-        provide: RegisteredInstanceMigrationService,
+        provide: UpgradeCommandRegistryService,
         useFactory: () => {
           const fakeDiscoveryService = {
             getProviders: () =>
@@ -87,7 +80,7 @@ const buildUpgradeCommandModule = async ({
                 metatype: migration.constructor,
               })),
           } as unknown as import('@nestjs/core').DiscoveryService;
-          const registry = new RegisteredInstanceMigrationService(
+          const registry = new UpgradeCommandRegistryService(
             fakeDiscoveryService,
           );
 
@@ -97,9 +90,10 @@ const buildUpgradeCommandModule = async ({
         },
       }
     : {
-        provide: RegisteredInstanceMigrationService,
+        provide: UpgradeCommandRegistryService,
         useValue: {
           getInstanceCommandsForVersion: jest.fn().mockReturnValue([]),
+          getWorkspaceCommandsForVersion: jest.fn().mockReturnValue([]),
         },
       };
 
@@ -116,7 +110,7 @@ const buildUpgradeCommandModule = async ({
         useFactory: (
           coreEngineVersionService: CoreEngineVersionService,
           workspaceVersionService: WorkspaceVersionService,
-          registeredInstanceMigrationService: RegisteredInstanceMigrationService,
+          upgradeCommandRegistryService: UpgradeCommandRegistryService,
           instanceUpgradeService: InstanceUpgradeService,
           workspaceIteratorService: WorkspaceIteratorService,
           workspaceUpgradeService: WorkspaceUpgradeService,
@@ -125,7 +119,7 @@ const buildUpgradeCommandModule = async ({
           return new commandRunner(
             coreEngineVersionService,
             workspaceVersionService,
-            registeredInstanceMigrationService,
+            upgradeCommandRegistryService,
             instanceUpgradeService,
             workspaceIteratorService,
             workspaceUpgradeService,
@@ -135,7 +129,7 @@ const buildUpgradeCommandModule = async ({
         inject: [
           CoreEngineVersionService,
           WorkspaceVersionService,
-          RegisteredInstanceMigrationService,
+          UpgradeCommandRegistryService,
           InstanceUpgradeService,
           WorkspaceIteratorService,
           WorkspaceUpgradeService,
@@ -240,7 +234,7 @@ const buildUpgradeCommandModule = async ({
 };
 
 describe('UpgradeCommandRunner', () => {
-  let upgradeCommandRunner: BasicUpgradeCommandRunner;
+  let upgradeCommandRunner: UpgradeCommand;
 
   type BuildModuleAndSetupSpiesArgs = {
     numberOfWorkspace?: number;
@@ -254,7 +248,7 @@ describe('UpgradeCommandRunner', () => {
     numberOfWorkspace = 1,
     workspaceOverride,
     workspaces,
-    commandRunner = BasicUpgradeCommandRunner,
+    commandRunner = UpgradeCommand,
     appVersion = CURRENT_VERSION,
     migrations,
   }: BuildModuleAndSetupSpiesArgs) => {
@@ -372,19 +366,19 @@ describe('UpgradeCommandRunner', () => {
   });
 
   it('should call runSingleMigration for each current-version instance command', async () => {
-    @RegisteredInstanceMigration(CURRENT_VERSION, 1770000000000)
+    @RegisteredInstanceCommand(CURRENT_VERSION, 1770000000000)
     class AddIndexToUsers1770000000000 implements MigrationInterface {
       async up(_queryRunner: QueryRunner) {}
       async down(_queryRunner: QueryRunner) {}
     }
 
-    @RegisteredInstanceMigration(CURRENT_VERSION, 1771000000000)
+    @RegisteredInstanceCommand(CURRENT_VERSION, 1771000000000)
     class AddColumnToAccounts1771000000000 implements MigrationInterface {
       async up(_queryRunner: QueryRunner) {}
       async down(_queryRunner: QueryRunner) {}
     }
 
-    @RegisteredInstanceMigration(PREVIOUS_VERSION, 1769000000000)
+    @RegisteredInstanceCommand(PREVIOUS_VERSION, 1769000000000)
     class DropLegacyTable1769000000000 implements MigrationInterface {
       async up(_queryRunner: QueryRunner) {}
       async down(_queryRunner: QueryRunner) {}
@@ -423,7 +417,7 @@ describe('UpgradeCommandRunner', () => {
   });
 
   it('should skip already-executed instance commands', async () => {
-    @RegisteredInstanceMigration(CURRENT_VERSION, 1770000000000)
+    @RegisteredInstanceCommand(CURRENT_VERSION, 1770000000000)
     class AlreadyRunMigration1770000000000 implements MigrationInterface {
       async up(_queryRunner: QueryRunner) {}
       async down(_queryRunner: QueryRunner) {}
@@ -452,7 +446,7 @@ describe('UpgradeCommandRunner', () => {
   });
 
   it('should throw when a migration fails', async () => {
-    @RegisteredInstanceMigration(CURRENT_VERSION, 1770000000000)
+    @RegisteredInstanceCommand(CURRENT_VERSION, 1770000000000)
     class FailingMigration1770000000000 implements MigrationInterface {
       async up(_queryRunner: QueryRunner) {}
       async down(_queryRunner: QueryRunner) {}
@@ -480,7 +474,7 @@ describe('UpgradeCommandRunner', () => {
   });
 
   it('should log success when a migration succeeds', async () => {
-    @RegisteredInstanceMigration(CURRENT_VERSION, 1770000000000)
+    @RegisteredInstanceCommand(CURRENT_VERSION, 1770000000000)
     class SuccessMigration1770000000000 implements MigrationInterface {
       async up(_queryRunner: QueryRunner) {}
       async down(_queryRunner: QueryRunner) {}
@@ -544,16 +538,6 @@ describe('UpgradeCommandRunner', () => {
           },
           expectedErrorMessage:
             'APP_VERSION is not defined, please double check your env variables',
-        },
-      },
-      {
-        title: 'when current version commands are not found',
-        context: {
-          input: {
-            appVersion: '42.0.0',
-          },
-          expectedErrorMessage:
-            'No command found for version 42.0.0. Please check the commands record.',
         },
       },
       {

@@ -13,6 +13,7 @@ import {
 } from 'src/database/commands/command-runners/workspace.command-runner';
 import { addPayloadCheckConstraintToCommandMenuItem } from 'src/database/typeorm/core/migrations/utils/1775129635528-add-payload-to-command-menu-item.util';
 import { ApplicationService } from 'src/engine/core-modules/application/application.service';
+import { RegisteredWorkspaceCommand } from 'src/engine/core-modules/upgrade/decorators/registered-workspace-command.decorator';
 import { EngineComponentKey } from 'src/engine/metadata-modules/command-menu-item/enums/engine-component-key.enum';
 import { type FlatCommandMenuItem } from 'src/engine/metadata-modules/flat-command-menu-item/types/flat-command-menu-item.type';
 import {
@@ -57,6 +58,7 @@ const SETTINGS_NAVIGATION_ITEM_KEYS = [
   'goToSettingsUpdates',
 ] as const satisfies ReadonlyArray<keyof typeof STANDARD_COMMAND_MENU_ITEMS>;
 
+@RegisteredWorkspaceCommand('1.21.0', 1775500013000)
 @Command({
   name: 'upgrade:1-21:refactor-navigation-commands',
   description:
