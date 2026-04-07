@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkspaceIteratorModule } from 'src/database/commands/command-runners/workspace-iterator.module';
 import { AddComposeEmailCommandMenuItemCommand } from 'src/database/commands/upgrade-version-command/1-21/1-21-add-compose-email-command-menu-item.command';
 import { MigrateMessagingInfrastructureToMetadataCommand } from 'src/database/commands/upgrade-version-command/1-21/1-21-migrate-messaging-infrastructure-to-metadata.command';
+import { RefactorNavigationCommandsCommand } from 'src/database/commands/upgrade-version-command/1-21/1-21-refactor-navigation-commands.command';
 import { AddGlobalKeyValuePairUniqueIndexCommand } from 'src/database/commands/upgrade-version-command/1-21/1-21-workspace-command-add-global-key-value-pair-unique-index.command';
 import { BackfillDatasourceToWorkspaceCommand } from 'src/database/commands/upgrade-version-command/1-21/1-21-workspace-command-backfill-datasource-to-workspace.command';
 import { BackfillMessageThreadSubjectCommand } from 'src/database/commands/upgrade-version-command/1-21/1-21-workspace-command-backfill-message-thread-subject.command';
@@ -59,6 +60,7 @@ import { WorkspaceMigrationModule } from 'src/engine/workspace-manager/workspace
     FixSelectAllCommandMenuItemsCommand,
     MigrateAiAgentTextToJsonResponseFormatCommand,
     UpdateEditLayoutCommandMenuItemLabelCommand,
+    RefactorNavigationCommandsCommand,
     DropWorkspaceMessagingFksCommand,
     MigrateMessageFolderParentIdToExternalIdCommand,
     MigrateMessagingInfrastructureToMetadataCommand,
@@ -73,6 +75,7 @@ import { WorkspaceMigrationModule } from 'src/engine/workspace-manager/workspace
     FixSelectAllCommandMenuItemsCommand,
     MigrateAiAgentTextToJsonResponseFormatCommand,
     UpdateEditLayoutCommandMenuItemLabelCommand,
+    RefactorNavigationCommandsCommand,
     DropWorkspaceMessagingFksCommand,
     MigrateMessageFolderParentIdToExternalIdCommand,
     MigrateMessagingInfrastructureToMetadataCommand,
