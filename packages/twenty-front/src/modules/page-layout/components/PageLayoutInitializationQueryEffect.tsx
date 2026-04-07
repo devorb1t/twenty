@@ -94,6 +94,20 @@ export const PageLayoutInitializationQueryEffect = ({
 
   useEffect(() => {
     if (!pageLayoutIsInitialized && isDefined(pageLayout)) {
+      const currentPersisted = store.get(
+        pageLayoutPersistedComponentCallbackState,
+      );
+
+      // After a reset, pageLayoutIsInitialized is set to false while the
+      // metadata store refetches. Skip re-initialization when the data
+      // hasn't actually changed yet to avoid overwriting with stale data.
+      if (
+        isDefined(currentPersisted) &&
+        isDeeplyEqual(pageLayout, currentPersisted)
+      ) {
+        return;
+      }
+
       initializePageLayout(pageLayout);
       setPageLayoutIsInitialized(true);
     }
@@ -102,6 +116,8 @@ export const PageLayoutInitializationQueryEffect = ({
     pageLayoutIsInitialized,
     pageLayout,
     setPageLayoutIsInitialized,
+    store,
+    pageLayoutPersistedComponentCallbackState,
   ]);
 
   return null;

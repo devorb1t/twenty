@@ -1,4 +1,5 @@
 import { type AllMetadataName } from 'twenty-shared/metadata';
+import { isDefined } from 'twenty-shared/utils';
 
 import { ALL_ENTITY_PROPERTIES_CONFIGURATION_BY_METADATA_NAME } from 'src/engine/metadata-modules/flat-entity/constant/all-entity-properties-configuration-by-metadata-name.constant';
 import { type MetadataEntity } from 'src/engine/metadata-modules/flat-entity/types/metadata-entity.type';
@@ -19,6 +20,18 @@ export const flatEntityToScalarFlatEntity = <T extends AllMetadataName>({
 
   for (const key of Object.keys(config)) {
     result[key] = flatEntityRecord[key];
+  }
+
+  const overrides = flatEntityRecord.overrides;
+
+  if (isDefined(overrides) && typeof overrides === 'object') {
+    for (const [key, value] of Object.entries(
+      overrides as Record<string, unknown>,
+    )) {
+      if (key in config) {
+        result[key] = value;
+      }
+    }
   }
 
   result.id = flatEntityRecord.id;

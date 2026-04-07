@@ -136,6 +136,21 @@ export const SidePanelPageLayoutFieldsSettings = () => {
             />
           </SidePanelGroup>
           <SidePanelGroup heading={t`Manage`}>
+<<<<<<< HEAD
+=======
+            <SelectableListItem
+              itemId="reset-to-default"
+              onEnter={handleResetToDefault}
+            >
+              <CommandMenuItem
+                id="reset-to-default"
+                Icon={IconRefreshDot}
+                label={t`Reset to default`}
+                onClick={handleResetToDefault}
+                disabled={!widgetInEditMode.isOverridden}
+              />
+            </SelectableListItem>
+>>>>>>> 0bfe094270 (reset tab)
             <SelectableListItem itemId="delete" onEnter={handleDelete}>
               <CommandMenuItem
                 id="delete"

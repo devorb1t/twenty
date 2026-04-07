@@ -133,6 +133,13 @@ export const useFieldsWidgetEditorGroupsData = ({
         };
       });
 
+      const viewFieldByFieldMetadataId = new Map(
+        (view.viewFields ?? []).map((viewField) => [
+          viewField.fieldMetadataId,
+          viewField,
+        ]),
+      );
+
       const lastGroup = groups[groups.length - 1];
       const lastFieldPosition =
         lastGroup.fields.length > 0
@@ -145,8 +152,23 @@ export const useFieldsWidgetEditorGroupsData = ({
         startPosition: lastFieldPosition,
       });
 
-      if (missingFields.length > 0) {
-        lastGroup.fields = [...lastGroup.fields, ...missingFields];
+      const missingFieldsWithViewFieldId = missingFields.map((field) => {
+        const existingViewField = viewFieldByFieldMetadataId.get(
+          field.fieldMetadataItem.id,
+        );
+
+        if (isDefined(existingViewField)) {
+          return { ...field, viewFieldId: existingViewField.id };
+        }
+
+        return field;
+      });
+
+      if (missingFieldsWithViewFieldId.length > 0) {
+        lastGroup.fields = [
+          ...lastGroup.fields,
+          ...missingFieldsWithViewFieldId,
+        ];
       }
 
       return { groups, ungroupedFields: [], editorMode: 'grouped' };

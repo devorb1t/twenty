@@ -41,12 +41,14 @@ export const pageLayoutsWithRelationsSelector = createAtomSelector<
       }
     }
 
-    return flatPageLayouts.map((flatPageLayout) => ({
+    const result = flatPageLayouts.map((flatPageLayout) => ({
       ...flatPageLayout,
       tabs: (tabsByPageLayoutId.get(flatPageLayout.id) ?? []).map((tab) => ({
         ...tab,
         widgets: widgetsByTabId.get(tab.id) ?? [],
       })),
     }));
+
+    return result;
   },
 });

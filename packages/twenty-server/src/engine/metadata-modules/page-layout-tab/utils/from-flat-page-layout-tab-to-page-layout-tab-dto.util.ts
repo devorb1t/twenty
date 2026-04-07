@@ -5,19 +5,26 @@ import { type PageLayoutTabDTO } from 'src/engine/metadata-modules/page-layout-t
 
 export const fromFlatPageLayoutTabToPageLayoutTabDto = (
   flatPageLayoutTab: FlatPageLayoutTab,
+  isOverriddenOverride?: boolean,
 ): Omit<PageLayoutTabDTO, 'widgets'> => {
   const {
     createdAt,
     updatedAt,
     deletedAt,
     widgetIds: _widgetIds,
+    overrides,
     ...rest
   } = flatPageLayoutTab;
 
+  const resolvedOverrides = isDefined(overrides) ? overrides : {};
+
   return {
     ...rest,
+    ...resolvedOverrides,
+    overrides,
     isOverridden:
-      isDefined(rest.overrides) && Object.keys(rest.overrides).length > 0,
+      isOverriddenOverride ??
+      (isDefined(overrides) && Object.keys(overrides).length > 0),
     createdAt: new Date(createdAt),
     updatedAt: new Date(updatedAt),
     deletedAt: deletedAt ? new Date(deletedAt) : null,

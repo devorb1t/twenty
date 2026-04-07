@@ -5,11 +5,14 @@ import { isDefined } from 'twenty-shared/utils';
 
 import { ApplicationService } from 'src/engine/core-modules/application/application.service';
 import { WorkspaceManyOrAllFlatEntityMapsCacheService } from 'src/engine/metadata-modules/flat-entity/services/workspace-many-or-all-flat-entity-maps-cache.service';
+import { type CascadingIsOverriddenContext } from 'src/engine/metadata-modules/flat-entity/types/cascading-is-overridden-context.type';
 import { findFlatEntityByIdInFlatEntityMapsOrThrow } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-id-in-flat-entity-maps-or-throw.util';
 import { findFlatEntityByIdInFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-id-in-flat-entity-maps.util';
 import { type FlatPageLayoutTabMaps } from 'src/engine/metadata-modules/flat-page-layout-tab/types/flat-page-layout-tab-maps.type';
 import { type FlatPageLayoutWidgetMaps } from 'src/engine/metadata-modules/flat-page-layout-widget/types/flat-page-layout-widget-maps.type';
 import { type FlatPageLayoutMaps } from 'src/engine/metadata-modules/flat-page-layout/types/flat-page-layout-maps.type';
+import { type FlatViewFieldGroupMaps } from 'src/engine/metadata-modules/flat-view-field-group/types/flat-view-field-group-maps.type';
+import { type FlatViewFieldMaps } from 'src/engine/metadata-modules/flat-view-field/types/flat-view-field-maps.type';
 import { fromCreatePageLayoutInputToFlatPageLayoutToCreate } from 'src/engine/metadata-modules/flat-page-layout/utils/from-create-page-layout-input-to-flat-page-layout-to-create.util';
 import { fromDestroyPageLayoutInputToFlatPageLayoutOrThrow } from 'src/engine/metadata-modules/flat-page-layout/utils/from-destroy-page-layout-input-to-flat-page-layout-or-throw.util';
 import {
@@ -50,7 +53,16 @@ export class PageLayoutService {
       flatPageLayoutMaps,
       flatPageLayoutTabMaps,
       flatPageLayoutWidgetMaps,
+      flatViewFieldGroupMaps,
+      flatViewFieldMaps,
     } = await this.getPageLayoutFlatEntityMaps(workspaceId);
+
+    const cascadingContext = await this.buildCascadingIsOverriddenContext({
+      workspaceId,
+      flatPageLayoutWidgetMaps,
+      flatViewFieldGroupMaps,
+      flatViewFieldMaps,
+    });
 
     const activeLayouts = Object.values(
       flatPageLayoutMaps.byUniversalIdentifier,
@@ -65,6 +77,7 @@ export class PageLayoutService {
           flatPageLayoutTabMaps,
           flatPageLayoutWidgetMaps,
         }),
+        cascadingContext,
       ),
     );
   }
@@ -83,7 +96,16 @@ export class PageLayoutService {
       flatPageLayoutMaps,
       flatPageLayoutTabMaps,
       flatPageLayoutWidgetMaps,
+      flatViewFieldGroupMaps,
+      flatViewFieldMaps,
     } = await this.getPageLayoutFlatEntityMaps(workspaceId);
+
+    const cascadingContext = await this.buildCascadingIsOverriddenContext({
+      workspaceId,
+      flatPageLayoutWidgetMaps,
+      flatViewFieldGroupMaps,
+      flatViewFieldMaps,
+    });
 
     const activeLayouts = Object.values(
       flatPageLayoutMaps.byUniversalIdentifier,
@@ -108,6 +130,7 @@ export class PageLayoutService {
           flatPageLayoutTabMaps,
           flatPageLayoutWidgetMaps,
         }),
+        cascadingContext,
       ),
     );
   }
@@ -123,7 +146,16 @@ export class PageLayoutService {
       flatPageLayoutMaps,
       flatPageLayoutTabMaps,
       flatPageLayoutWidgetMaps,
+      flatViewFieldGroupMaps,
+      flatViewFieldMaps,
     } = await this.getPageLayoutFlatEntityMaps(workspaceId);
+
+    const cascadingContext = await this.buildCascadingIsOverriddenContext({
+      workspaceId,
+      flatPageLayoutWidgetMaps,
+      flatViewFieldGroupMaps,
+      flatViewFieldMaps,
+    });
 
     const flatLayout = findFlatEntityByIdInFlatEntityMaps({
       flatEntityId: id,
@@ -149,6 +181,7 @@ export class PageLayoutService {
         flatPageLayoutTabMaps,
         flatPageLayoutWidgetMaps,
       }),
+      cascadingContext,
     );
   }
 
@@ -156,6 +189,8 @@ export class PageLayoutService {
     flatPageLayoutMaps: FlatPageLayoutMaps;
     flatPageLayoutTabMaps: FlatPageLayoutTabMaps;
     flatPageLayoutWidgetMaps: FlatPageLayoutWidgetMaps;
+    flatViewFieldGroupMaps: FlatViewFieldGroupMaps;
+    flatViewFieldMaps: FlatViewFieldMaps;
   }> {
     return this.workspaceManyOrAllFlatEntityMapsCacheService.getOrRecomputeManyOrAllFlatEntityMaps(
       {
@@ -164,9 +199,36 @@ export class PageLayoutService {
           'flatPageLayoutMaps',
           'flatPageLayoutTabMaps',
           'flatPageLayoutWidgetMaps',
+          'flatViewFieldGroupMaps',
+          'flatViewFieldMaps',
         ],
       },
     );
+  }
+
+  private async buildCascadingIsOverriddenContext({
+    workspaceId,
+    flatPageLayoutWidgetMaps,
+    flatViewFieldGroupMaps,
+    flatViewFieldMaps,
+  }: {
+    workspaceId: string;
+    flatPageLayoutWidgetMaps: FlatPageLayoutWidgetMaps;
+    flatViewFieldGroupMaps: FlatViewFieldGroupMaps;
+    flatViewFieldMaps: FlatViewFieldMaps;
+  }): Promise<CascadingIsOverriddenContext> {
+    const { workspaceCustomFlatApplication } =
+      await this.applicationService.findWorkspaceTwentyStandardAndCustomApplicationOrThrow(
+        { workspaceId },
+      );
+
+    return {
+      flatPageLayoutWidgetMaps,
+      flatViewFieldGroupMaps,
+      flatViewFieldMaps,
+      workspaceCustomApplicationUniversalIdentifier:
+        workspaceCustomFlatApplication.universalIdentifier,
+    };
   }
 
   async create({

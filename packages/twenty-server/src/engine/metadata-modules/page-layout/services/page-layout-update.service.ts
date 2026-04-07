@@ -10,13 +10,13 @@ import { AllFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/types
 import { addFlatEntityToFlatEntityMapsOrThrow } from 'src/engine/metadata-modules/flat-entity/utils/add-flat-entity-to-flat-entity-maps-or-throw.util';
 import { findFlatEntityByIdInFlatEntityMapsOrThrow } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-id-in-flat-entity-maps-or-throw.util';
 import { findFlatEntityByIdInFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-id-in-flat-entity-maps.util';
+import { resolveEntityRelationUniversalIdentifiers } from 'src/engine/metadata-modules/flat-entity/utils/resolve-entity-relation-universal-identifiers.util';
 import { splitEntitiesByRemovalStrategy } from 'src/engine/metadata-modules/flat-entity/utils/split-entities-by-removal-strategy.util';
 import { FLAT_PAGE_LAYOUT_TAB_EDITABLE_PROPERTIES } from 'src/engine/metadata-modules/flat-page-layout-tab/constants/flat-page-layout-tab-editable-properties.constant';
 import { type FlatPageLayoutTabMaps } from 'src/engine/metadata-modules/flat-page-layout-tab/types/flat-page-layout-tab-maps.type';
 import { type FlatPageLayoutTab } from 'src/engine/metadata-modules/flat-page-layout-tab/types/flat-page-layout-tab.type';
 import { FLAT_PAGE_LAYOUT_WIDGET_EDITABLE_PROPERTIES } from 'src/engine/metadata-modules/flat-page-layout-widget/constants/flat-page-layout-widget-editable-properties.constant';
 import { type FlatPageLayoutWidget } from 'src/engine/metadata-modules/flat-page-layout-widget/types/flat-page-layout-widget.type';
-import { buildFlatPageLayoutWidgetCommonProperties } from 'src/engine/metadata-modules/flat-page-layout-widget/utils/build-flat-page-layout-widget-common-properties.util';
 import { fromPageLayoutWidgetConfigurationToUniversalConfiguration } from 'src/engine/metadata-modules/flat-page-layout-widget/utils/from-page-layout-widget-configuration-to-universal-configuration.util';
 import { type FlatPageLayout } from 'src/engine/metadata-modules/flat-page-layout/types/flat-page-layout.type';
 import { reconstructFlatPageLayoutWithTabsAndWidgets } from 'src/engine/metadata-modules/flat-page-layout/utils/reconstruct-flat-page-layout-with-tabs-and-widgets.util';
@@ -33,9 +33,12 @@ import {
   generatePageLayoutExceptionMessage,
 } from 'src/engine/metadata-modules/page-layout/exceptions/page-layout.exception';
 import { fromFlatPageLayoutWithTabsAndWidgetsToPageLayoutDto } from 'src/engine/metadata-modules/page-layout/utils/from-flat-page-layout-with-tabs-and-widgets-to-page-layout-dto.util';
+import { isCallerOverridingEntity } from 'src/engine/metadata-modules/utils/is-caller-overriding-entity.util';
+import { sanitizeOverridableEntityInput } from 'src/engine/metadata-modules/utils/sanitize-overridable-entity-input.util';
 import { ViewService } from 'src/engine/metadata-modules/view/services/view.service';
 import { WorkspaceMigrationBuilderException } from 'src/engine/workspace-manager/workspace-migration/exceptions/workspace-migration-builder-exception';
 import { WorkspaceMigrationValidateBuildAndRunService } from 'src/engine/workspace-manager/workspace-migration/services/workspace-migration-validate-build-and-run-service';
+import { mergeUpdateInExistingRecord } from 'src/utils/merge-update-in-existing-record.util';
 import { DashboardSyncService } from 'src/modules/dashboard-sync/services/dashboard-sync.service';
 
 type UpdatePageLayoutWithTabsParams = {
@@ -322,39 +325,61 @@ export class PageLayoutUpdateService {
       },
     );
 
-    const tabsToUpdate: FlatPageLayoutTab[] = entitiesToUpdate.map(
-      (tabInput) => {
-        const existingTab = findFlatEntityByIdInFlatEntityMapsOrThrow({
-          flatEntityId: tabInput.id,
-          flatEntityMaps: flatPageLayoutTabMaps,
+    const buildTabUpdateWithOverrides = (
+      tabInput: UpdatePageLayoutTabWithWidgetsInput,
+      additionalProps?: Partial<FlatPageLayoutTab>,
+    ): FlatPageLayoutTab => {
+      const existingTab = findFlatEntityByIdInFlatEntityMapsOrThrow({
+        flatEntityId: tabInput.id,
+        flatEntityMaps: flatPageLayoutTabMaps,
+      });
+
+      const editableProperties: Record<string, unknown> = {
+        title: tabInput.title,
+        position: tabInput.position,
+        ...(tabInput.icon !== undefined ? { icon: tabInput.icon } : {}),
+        ...(tabInput.layoutMode !== undefined
+          ? { layoutMode: tabInput.layoutMode }
+          : {}),
+      };
+
+      const shouldOverride = isCallerOverridingEntity({
+        callerApplicationUniversalIdentifier:
+          workspaceCustomApplicationUniversalIdentifier,
+        entityApplicationUniversalIdentifier:
+          existingTab.applicationUniversalIdentifier,
+        workspaceCustomApplicationUniversalIdentifier,
+      });
+
+      const { overrides, updatedEditableProperties } =
+        sanitizeOverridableEntityInput({
+          metadataName: 'pageLayoutTab',
+          existingFlatEntity: existingTab,
+          updatedEditableProperties: editableProperties,
+          shouldOverride,
         });
 
-        return {
-          ...existingTab,
-          title: tabInput.title,
-          position: tabInput.position,
-          layoutMode: tabInput.layoutMode ?? existingTab.layoutMode,
-          updatedAt: now.toISOString(),
-        };
-      },
-    );
+      return {
+        ...mergeUpdateInExistingRecord({
+          existing: existingTab,
+          properties: [...FLAT_PAGE_LAYOUT_TAB_EDITABLE_PROPERTIES],
+          update: updatedEditableProperties,
+        }),
+        overrides,
+        updatedAt: now.toISOString(),
+        ...additionalProps,
+      } as FlatPageLayoutTab;
+    };
+
+    const tabsToUpdate: FlatPageLayoutTab[] =
+      entitiesToUpdate.map((tabInput) =>
+        buildTabUpdateWithOverrides(tabInput),
+      );
 
     const tabsToRestoreAndUpdate: FlatPageLayoutTab[] =
-      entitiesToRestoreAndUpdate.map((tabInput) => {
-        const existingTab = findFlatEntityByIdInFlatEntityMapsOrThrow({
-          flatEntityId: tabInput.id,
-          flatEntityMaps: flatPageLayoutTabMaps,
-        });
-
-        return {
-          ...existingTab,
-          title: tabInput.title,
-          position: tabInput.position,
-          layoutMode: tabInput.layoutMode ?? existingTab.layoutMode,
-          isActive: true,
-          updatedAt: now.toISOString(),
-        };
-      });
+      entitiesToRestoreAndUpdate.map((tabInput) =>
+        buildTabUpdateWithOverrides(tabInput, { isActive: true }),
+      );
 
     const tabsToRemove = idsToRemove
       .map((tabId) =>
@@ -548,77 +573,103 @@ export class PageLayoutUpdateService {
       },
     );
 
-    const widgetsToUpdate: FlatPageLayoutWidget[] = entitiesToUpdate.map(
-      (widgetInput) => {
-        const existingWidget = findFlatEntityByIdInFlatEntityMapsOrThrow({
-          flatEntityId: widgetInput.id,
-          flatEntityMaps: flatPageLayoutWidgetMaps,
+    const buildWidgetUpdateWithOverrides = (
+      widgetInput: UpdatePageLayoutWidgetWithIdInput,
+      additionalProps?: Partial<FlatPageLayoutWidget>,
+    ): FlatPageLayoutWidget => {
+      const existingWidget = findFlatEntityByIdInFlatEntityMapsOrThrow({
+        flatEntityId: widgetInput.id,
+        flatEntityMaps: flatPageLayoutWidgetMaps,
+      });
+
+      const editableProperties: Record<string, unknown> = {
+        title: widgetInput.title,
+        type: widgetInput.type,
+        objectMetadataId: widgetInput.objectMetadataId,
+        gridPosition: widgetInput.gridPosition,
+        position: widgetInput.position,
+        ...(widgetInput.configuration !== undefined
+          ? { configuration: widgetInput.configuration }
+          : {}),
+        ...(widgetInput.conditionalDisplay !== undefined
+          ? { conditionalDisplay: widgetInput.conditionalDisplay }
+          : {}),
+      };
+
+      const shouldOverride = isCallerOverridingEntity({
+        callerApplicationUniversalIdentifier:
+          workspaceCustomApplicationUniversalIdentifier,
+        entityApplicationUniversalIdentifier:
+          existingWidget.applicationUniversalIdentifier,
+        workspaceCustomApplicationUniversalIdentifier,
+      });
+
+      const { overrides, updatedEditableProperties } =
+        sanitizeOverridableEntityInput({
+          metadataName: 'pageLayoutWidget',
+          existingFlatEntity: existingWidget,
+          updatedEditableProperties: editableProperties,
+          shouldOverride,
         });
 
-        const updatedConfiguration = widgetInput.configuration ?? null;
+      const {
+        pageLayoutTabUniversalIdentifier,
+        objectMetadataUniversalIdentifier,
+      } = resolveEntityRelationUniversalIdentifiers({
+        metadataName: 'pageLayoutWidget',
+        foreignKeyValues: {
+          pageLayoutTabId: widgetInput.pageLayoutTabId,
+          objectMetadataId: widgetInput.objectMetadataId,
+        },
+        flatEntityMaps: { flatPageLayoutTabMaps, flatObjectMetadataMaps },
+      });
 
-        return {
-          ...existingWidget,
-          ...buildFlatPageLayoutWidgetCommonProperties({
-            widgetInput,
-            flatPageLayoutTabMaps,
-            flatObjectMetadataMaps,
-          }),
-          configuration: updatedConfiguration,
-          updatedAt: now.toISOString(),
-          ...(isDefined(updatedConfiguration) && {
-            universalConfiguration:
-              fromPageLayoutWidgetConfigurationToUniversalConfiguration({
-                configuration: updatedConfiguration,
-                fieldMetadataUniversalIdentifierById:
-                  flatFieldMetadataMaps.universalIdentifierById,
-                frontComponentUniversalIdentifierById:
-                  flatFrontComponentMaps.universalIdentifierById,
-                viewFieldGroupUniversalIdentifierById:
-                  flatViewFieldGroupMaps.universalIdentifierById,
-                viewUniversalIdentifierById:
-                  flatViewMaps.universalIdentifierById,
-              }),
-          }),
-        };
-      },
-    );
+      const mergedWidget = {
+        ...mergeUpdateInExistingRecord({
+          existing: existingWidget,
+          properties: [
+            ...FLAT_PAGE_LAYOUT_WIDGET_EDITABLE_PROPERTIES,
+          ],
+          update: updatedEditableProperties,
+        }),
+        overrides,
+        pageLayoutTabId: widgetInput.pageLayoutTabId,
+        pageLayoutTabUniversalIdentifier,
+        objectMetadataUniversalIdentifier,
+        updatedAt: now.toISOString(),
+        ...additionalProps,
+      } as FlatPageLayoutWidget;
+
+      const resolvedConfiguration =
+        mergedWidget.configuration ?? existingWidget.configuration;
+
+      if (isDefined(resolvedConfiguration)) {
+        mergedWidget.universalConfiguration =
+          fromPageLayoutWidgetConfigurationToUniversalConfiguration({
+            configuration: resolvedConfiguration,
+            fieldMetadataUniversalIdentifierById:
+              flatFieldMetadataMaps.universalIdentifierById,
+            frontComponentUniversalIdentifierById:
+              flatFrontComponentMaps.universalIdentifierById,
+            viewFieldGroupUniversalIdentifierById:
+              flatViewFieldGroupMaps.universalIdentifierById,
+            viewUniversalIdentifierById:
+              flatViewMaps.universalIdentifierById,
+          });
+      }
+
+      return mergedWidget;
+    };
+
+    const widgetsToUpdate: FlatPageLayoutWidget[] =
+      entitiesToUpdate.map((widgetInput) =>
+        buildWidgetUpdateWithOverrides(widgetInput),
+      );
 
     const widgetsToRestoreAndUpdate: FlatPageLayoutWidget[] =
-      entitiesToRestoreAndUpdate.map((widgetInput) => {
-        const existingWidget = findFlatEntityByIdInFlatEntityMapsOrThrow({
-          flatEntityId: widgetInput.id,
-          flatEntityMaps: flatPageLayoutWidgetMaps,
-        });
-
-        const restoredConfiguration = widgetInput.configuration ?? null;
-
-        return {
-          ...existingWidget,
-          ...buildFlatPageLayoutWidgetCommonProperties({
-            widgetInput,
-            flatPageLayoutTabMaps,
-            flatObjectMetadataMaps,
-          }),
-          configuration: restoredConfiguration,
-          isActive: true,
-          updatedAt: now.toISOString(),
-          ...(isDefined(restoredConfiguration) && {
-            universalConfiguration:
-              fromPageLayoutWidgetConfigurationToUniversalConfiguration({
-                configuration: restoredConfiguration,
-                fieldMetadataUniversalIdentifierById:
-                  flatFieldMetadataMaps.universalIdentifierById,
-                frontComponentUniversalIdentifierById:
-                  flatFrontComponentMaps.universalIdentifierById,
-                viewFieldGroupUniversalIdentifierById:
-                  flatViewFieldGroupMaps.universalIdentifierById,
-                viewUniversalIdentifierById:
-                  flatViewMaps.universalIdentifierById,
-              }),
-          }),
-        };
-      });
+      entitiesToRestoreAndUpdate.map((widgetInput) =>
+        buildWidgetUpdateWithOverrides(widgetInput, { isActive: true }),
+      );
 
     const widgetsToRemove = idsToRemove
       .map((widgetId) =>

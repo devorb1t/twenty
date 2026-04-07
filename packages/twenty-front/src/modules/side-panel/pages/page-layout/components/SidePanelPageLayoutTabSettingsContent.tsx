@@ -178,6 +178,7 @@ export const SidePanelPageLayoutTabSettingsContent = ({
               Icon={IconRefreshDot}
               label={t`Reset to default`}
               onClick={handleResetToDefault}
+              disabled={!tab.isOverridden}
             />
           </SelectableListItem>
           {canDelete && (

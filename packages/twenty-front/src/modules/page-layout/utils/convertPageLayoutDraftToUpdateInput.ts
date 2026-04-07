@@ -13,14 +13,9 @@ const buildWidgetPosition = (
 ) => {
   switch (tabLayoutMode) {
     case PageLayoutTabLayoutMode.VERTICAL_LIST: {
-      const index =
-        widget.position?.__typename === 'PageLayoutWidgetVerticalListPosition'
-          ? widget.position.index
-          : widgetIndex;
-
       return {
         layoutMode: PageLayoutTabLayoutMode.VERTICAL_LIST,
-        index,
+        index: widgetIndex, // we should read in widget.position.index instead. Not sure why this change
       };
     }
     case PageLayoutTabLayoutMode.CANVAS:
@@ -57,6 +52,7 @@ export const convertPageLayoutDraftToUpdateInput = (
         id: tab.id,
         title: tab.title,
         position: tab.position,
+        icon: tab.icon ?? null,
         layoutMode: tab.layoutMode,
         widgets: widgets.map((widget, widgetIndex) => ({
           id: widget.id,
