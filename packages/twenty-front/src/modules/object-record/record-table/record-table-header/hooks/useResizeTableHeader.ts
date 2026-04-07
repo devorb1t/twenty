@@ -28,7 +28,7 @@ import { useCallback, useState } from 'react';
 import {
   findById,
   findByProperty,
-  throwIfNotDefined,
+  isDefined,
 } from 'twenty-shared/utils';
 
 export const useResizeTableHeader = () => {
@@ -93,7 +93,7 @@ export const useResizeTableHeader = () => {
     ({ x }) => {
       if (!initialPointerPositionX) return;
 
-      throwIfNotDefined(recordField, 'recordField');
+      if (!isDefined(recordField)) return;
 
       const newResizeOffset = x - initialPointerPositionX;
 
@@ -162,9 +162,14 @@ export const useResizeTableHeader = () => {
   const store = useStore();
 
   const handleResizeHandlerEnd = useCallback(async () => {
-    throwIfNotDefined(recordField, 'recordField');
+    if (!isDefined(recordField) || !resizedFieldMetadataId) {
+      store.set(resizeFieldOffset, 0);
+      setInitialPointerPositionX(null);
+      setResizedFieldMetadataId(null);
+      setDragSelectionStartEnabled(true);
 
-    if (!resizedFieldMetadataId) return;
+      return;
+    }
 
     const currentResizeFieldOffset = store.get(resizeFieldOffset);
 
