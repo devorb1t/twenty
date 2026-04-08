@@ -71,6 +71,43 @@ export class ApplyCalendarEventsVisibilityRestrictionsService {
           calendarChannelsFromCore.map((channel) => [channel.id, channel]),
         );
 
+        const nonShareEverythingChannelIds = calendarChannelsFromCore
+          .filter(
+            (channel) =>
+              channel.visibility !== CalendarChannelVisibility.SHARE_EVERYTHING,
+          )
+          .map((channel) => channel.id);
+
+        // Batch-fetch user ownership data outside the loop to avoid N+1 queries
+        let ownedCalendarChannelIds = new Set<string>();
+
+        if (isDefined(userId) && nonShareEverythingChannelIds.length > 0) {
+          const userWorkspace = await this.userWorkspaceRepository.findOne({
+            where: { userId, workspaceId },
+            select: ['id'],
+          });
+
+          if (userWorkspace) {
+            const connectedAccounts =
+              await this.connectedAccountRepository.find({
+                where: {
+                  calendarChannels: {
+                    id: In(nonShareEverythingChannelIds),
+                  },
+                  userWorkspaceId: userWorkspace.id,
+                  workspaceId,
+                },
+                relations: ['calendarChannels'],
+              });
+
+            ownedCalendarChannelIds = new Set(
+              connectedAccounts.flatMap((account) =>
+                account.calendarChannels.map((channel) => channel.id),
+              ),
+            );
+          }
+        }
+
         for (let i = calendarEvents.length - 1; i >= 0; i--) {
           const associations = calendarChannelCalendarEventsAssociations.filter(
             (association) =>
@@ -97,26 +134,12 @@ export class ApplyCalendarEventsVisibilityRestrictionsService {
           }
 
           if (isDefined(userId)) {
-            const userWorkspace = await this.userWorkspaceRepository.findOne({
-              where: { userId, workspaceId },
-              select: ['id'],
-            });
+            const isOwnerOfAnyChannel = calendarChannels.some((channel) =>
+              ownedCalendarChannelIds.has(channel.id),
+            );
 
-            if (userWorkspace) {
-              const connectedAccounts =
-                await this.connectedAccountRepository.find({
-                  where: {
-                    calendarChannels: {
-                      id: In(calendarChannels.map((channel) => channel.id)),
-                    },
-                    userWorkspaceId: userWorkspace.id,
-                    workspaceId,
-                  },
-                });
-
-              if (connectedAccounts.length > 0) {
-                continue;
-              }
+            if (isOwnerOfAnyChannel) {
+              continue;
             }
           }
 

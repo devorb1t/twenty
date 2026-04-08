@@ -48,10 +48,6 @@ describe('ApplyCalendarEventsVisibilityRestrictionsService', () => {
     find: jest.fn(),
   };
 
-  const mockWorkspaceMemberRepository = {
-    findOneByOrFail: jest.fn(),
-  };
-
   const mockConnectedAccountRepository = {
     find: jest.fn(),
   };
@@ -65,12 +61,9 @@ describe('ApplyCalendarEventsVisibilityRestrictionsService', () => {
   };
 
   const mockGlobalWorkspaceOrmManager = {
-    getRepository: jest.fn().mockImplementation((workspaceId, name) => {
+    getRepository: jest.fn().mockImplementation((_workspaceId, name) => {
       if (name === 'calendarChannelEventAssociation') {
         return mockCalendarEventAssociationRepository;
-      }
-      if (name === 'workspaceMember') {
-        return mockWorkspaceMemberRepository;
       }
     }),
     executeInWorkspaceContext: jest
@@ -208,7 +201,9 @@ describe('ApplyCalendarEventsVisibilityRestrictionsService', () => {
       id: 'user-workspace-id',
     });
 
-    mockConnectedAccountRepository.find.mockResolvedValue([{ id: '1' }]);
+    mockConnectedAccountRepository.find.mockResolvedValue([
+      { id: '1', calendarChannels: [{ id: '1' }] },
+    ]);
 
     const result = await service.applyCalendarEventsVisibilityRestrictions(
       calendarEvents,
@@ -300,9 +295,10 @@ describe('ApplyCalendarEventsVisibilityRestrictionsService', () => {
       },
     ]);
 
-    mockConnectedAccountRepository.find
-      .mockResolvedValueOnce([]) // request for calendar event 3
-      .mockResolvedValueOnce([{ id: '1' }]); // request for calendar event 2
+    // Single batched query returns connected accounts with their calendar channels
+    mockConnectedAccountRepository.find.mockResolvedValue([
+      { id: '1', calendarChannels: [{ id: '2' }] },
+    ]);
 
     const result = await service.applyCalendarEventsVisibilityRestrictions(
       calendarEvents,
