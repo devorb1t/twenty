@@ -1,18 +1,10 @@
 'use client';
 
-import { theme } from '@/theme';
-import { styled } from '@linaria/react';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-const FAQ_VISUAL_MODEL_FIT_SCALE = 4;
-const FAQ_VISUAL_ROTATION_RADIANS_PER_SECOND = 0.5;
-const FAQ_VISUAL_WORLD_OFFSET_Y = 0.52;
-
-// World spin axis (x, y, z). Camera on +Z: (0,0,1) = spinner in the view plane.
-// Try (0,1,0) or (1,0,0) if motion or framing looks wrong.
-const FAQ_VISUAL_SPIN_AXIS_XYZ: readonly [number, number, number] = [0, 0, 1];
+const GLB_URL = '/illustrations/pricing/Price/organization.glb';
 
 const scanlineVertexShader = /* glsl */ `
   varying vec3 vWorldPosition;
@@ -103,6 +95,12 @@ function disposeObjectSubtree(root: THREE.Object3D) {
   });
 }
 
+type MeshRestPose = {
+  position: THREE.Vector3;
+  quaternion: THREE.Quaternion;
+  wobblePhase: number;
+};
+
 function applyScanlineMaterials(
   modelRoot: THREE.Object3D,
   lightDirection: THREE.Vector3,
@@ -113,42 +111,18 @@ function applyScanlineMaterials(
     }
 
     sceneObject.material = createScanlineMaterial(lightDirection);
+
+    const mesh = sceneObject;
+    const rest: MeshRestPose = {
+      position: mesh.position.clone(),
+      quaternion: mesh.quaternion.clone(),
+      wobblePhase: mesh.position.y * 4.2 + mesh.position.x * 1.7,
+    };
+    mesh.userData.planOrganizationMeshRest = rest;
   });
 }
 
-const FaqVisualShell = styled.div`
-  bottom: 0;
-  display: block;
-  left: auto;
-  opacity: 0.45;
-  overflow: hidden;
-  pointer-events: none;
-  position: absolute;
-  right: -5%;
-  top: 0;
-  transform: translateY(-11%);
-  width: min(70vw, 750px);
-
-  @media (min-width: ${theme.breakpoints.md}px) {
-    right: -10%;
-    transform: translateY(-12%);
-    width: min(60vw, 900px);
-  }
-`;
-
-const FaqVisualCanvasMount = styled.div`
-  display: block;
-  height: 100%;
-  min-width: 0;
-  width: 100%;
-`;
-
-export type FaqVisualProps = {
-  src: string;
-  title: string;
-};
-
-export function FaqVisual({ src, title }: FaqVisualProps) {
+export function Organization() {
   const mountReference = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -160,11 +134,21 @@ export function FaqVisual({ src, title }: FaqVisualProps) {
     let cancelled = false;
     let animationFrameId = 0;
 
+    const pointer = { x: 0, y: 0, inside: false };
+    const targetRotation = { x: 0, y: 0 };
     const lightDirectionWorld = new THREE.Vector3(4, 8, 6).normalize();
 
     const scene = new THREE.Scene();
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+    const readSize = () => {
+      const nextWidth = container.clientWidth;
+      const nextHeight = container.clientHeight;
+      return {
+        width: Math.max(nextWidth, 1),
+        height: Math.max(nextHeight, 1),
+      };
+    };
+
+    const { width, height } = readSize();
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
     camera.position.set(0, 0, 5.05);
@@ -175,25 +159,21 @@ export function FaqVisual({ src, title }: FaqVisualProps) {
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     const canvas = renderer.domElement;
+    canvas.style.cursor = 'default';
     canvas.style.display = 'block';
     canvas.style.height = '100%';
+    canvas.style.touchAction = 'none';
     canvas.style.width = '100%';
     container.appendChild(canvas);
 
-    const wheel = new THREE.Group();
-    scene.add(wheel);
-
-    const spinAxisWorld = new THREE.Vector3(
-      FAQ_VISUAL_SPIN_AXIS_XYZ[0],
-      FAQ_VISUAL_SPIN_AXIS_XYZ[1],
-      FAQ_VISUAL_SPIN_AXIS_XYZ[2],
-    ).normalize();
+    const pivot = new THREE.Group();
+    scene.add(pivot);
 
     const clock = new THREE.Clock();
 
     const loader = new GLTFLoader();
     loader.load(
-      src,
+      GLB_URL,
       (gltf) => {
         if (cancelled) {
           disposeObjectSubtree(gltf.scene);
@@ -205,14 +185,13 @@ export function FaqVisual({ src, title }: FaqVisualProps) {
         const center = bounds.getCenter(new THREE.Vector3());
         const size = bounds.getSize(new THREE.Vector3());
         const maxAxis = Math.max(size.x, size.y, size.z, 0.001);
-        const scale = FAQ_VISUAL_MODEL_FIT_SCALE / maxAxis;
+        const scale = 2.35 / maxAxis;
 
         modelRoot.position.sub(center);
         modelRoot.scale.setScalar(scale);
 
         applyScanlineMaterials(modelRoot, lightDirectionWorld);
-        wheel.add(modelRoot);
-        wheel.position.y = FAQ_VISUAL_WORLD_OFFSET_Y;
+        pivot.add(modelRoot);
 
         const renderFrame = () => {
           if (cancelled) {
@@ -221,10 +200,58 @@ export function FaqVisual({ src, title }: FaqVisualProps) {
 
           animationFrameId = window.requestAnimationFrame(renderFrame);
           const delta = Math.min(clock.getDelta(), 0.1);
-          wheel.rotateOnWorldAxis(
-            spinAxisWorld,
-            -delta * FAQ_VISUAL_ROTATION_RADIANS_PER_SECOND,
+
+          const influence = pointer.inside ? 1 : 0.22;
+          targetRotation.y = pointer.x * 0.52 * influence;
+          targetRotation.x = pointer.y * 0.42 * influence;
+
+          pivot.rotation.y = THREE.MathUtils.damp(
+            pivot.rotation.y,
+            targetRotation.y,
+            8.2,
+            delta,
           );
+          pivot.rotation.x = THREE.MathUtils.damp(
+            pivot.rotation.x,
+            targetRotation.x,
+            8.2,
+            delta,
+          );
+
+          const hoverLift = pointer.inside ? 1 : 0;
+          pivot.scale.setScalar(
+            THREE.MathUtils.damp(pivot.scale.x, 1 + hoverLift * 0.06, 7, delta),
+          );
+
+          const mx = pointer.x * (pointer.inside ? 1 : 0.22);
+          const my = pointer.y * (pointer.inside ? 1 : 0.22);
+
+          modelRoot.traverse((sceneObject) => {
+            if (!(sceneObject instanceof THREE.Mesh)) {
+              return;
+            }
+
+            const rest = sceneObject.userData.planOrganizationMeshRest as
+              | MeshRestPose
+              | undefined;
+            if (!rest) {
+              return;
+            }
+
+            const phase = rest.wobblePhase;
+            const wobble = pointer.inside ? 0.55 : 0.22;
+            sceneObject.position.x =
+              rest.position.x + mx * 0.12 * Math.sin(phase * 1.8);
+            sceneObject.position.z =
+              rest.position.z + my * 0.1 * Math.cos(phase * 1.4);
+            sceneObject.position.y =
+              rest.position.y + (mx + my) * 0.03 * Math.sin(phase * 2.5);
+
+            const twist = (mx * 0.18 + my * 0.14) * wobble * Math.sin(phase);
+            sceneObject.quaternion.copy(rest.quaternion);
+            sceneObject.rotateY(twist);
+          });
+
           renderer.render(scene, camera);
         };
 
@@ -234,7 +261,33 @@ export function FaqVisual({ src, title }: FaqVisualProps) {
       undefined,
     );
 
-    const handleResize = () => {
+    const setPointerFromEvent = (event: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const normalizedX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      const normalizedY = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+      pointer.x = THREE.MathUtils.clamp(normalizedX, -1, 1);
+      pointer.y = THREE.MathUtils.clamp(normalizedY, -1, 1);
+    };
+
+    const handlePointerEnter = () => {
+      pointer.inside = true;
+    };
+
+    const handlePointerLeave = () => {
+      pointer.inside = false;
+      pointer.x = 0;
+      pointer.y = 0;
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      setPointerFromEvent(event);
+    };
+
+    canvas.addEventListener('pointerenter', handlePointerEnter);
+    canvas.addEventListener('pointerleave', handlePointerLeave);
+    canvas.addEventListener('pointermove', handlePointerMove);
+
+    const syncCanvasToContainer = () => {
       if (!mountReference.current || cancelled) {
         return;
       }
@@ -244,16 +297,30 @@ export function FaqVisual({ src, title }: FaqVisualProps) {
       if (nextWidth < 1 || nextHeight < 1) {
         return;
       }
+
       camera.aspect = nextWidth / nextHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(nextWidth, nextHeight);
     };
 
-    window.addEventListener('resize', handleResize);
+    const resizeObserver = new ResizeObserver(() => {
+      syncCanvasToContainer();
+    });
+    resizeObserver.observe(container);
+
+    const handleWindowResize = () => {
+      syncCanvasToContainer();
+    };
+
+    window.addEventListener('resize', handleWindowResize);
 
     return () => {
       cancelled = true;
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', handleWindowResize);
+      canvas.removeEventListener('pointerenter', handlePointerEnter);
+      canvas.removeEventListener('pointerleave', handlePointerLeave);
+      canvas.removeEventListener('pointermove', handlePointerMove);
       window.cancelAnimationFrame(animationFrameId);
       disposeObjectSubtree(scene);
       renderer.dispose();
@@ -262,15 +329,18 @@ export function FaqVisual({ src, title }: FaqVisualProps) {
         container.removeChild(canvas);
       }
     };
-  }, [src]);
+  }, []);
 
   return (
-    <FaqVisualShell>
-      <FaqVisualCanvasMount
-        aria-label={title}
-        ref={mountReference}
-        role="img"
-      />
-    </FaqVisualShell>
+    <div
+      aria-hidden
+      ref={mountReference}
+      style={{
+        display: 'block',
+        height: '100%',
+        minWidth: 0,
+        width: '100%',
+      }}
+    />
   );
 }

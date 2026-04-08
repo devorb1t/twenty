@@ -5,15 +5,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// Framing for the extruded “ZO” hero shot (low angle, centered, room below for links).
-const FOOTER_VISUAL_MODEL_FIT_SCALE = 5;
-const FOOTER_VISUAL_MODEL_OFFSET_Y = 0.42;
-const FOOTER_VISUAL_CAMERA_POSITION: readonly [number, number, number] = [
-  0, -1.35, 7.4,
-];
-const FOOTER_VISUAL_CAMERA_LOOK_AT: readonly [number, number, number] = [
-  0, 0.55, 0,
-];
+const GLB_URL = '/illustrations/home/helped/money.glb';
 
 const scanlineVertexShader = /* glsl */ `
   varying vec3 vWorldPosition;
@@ -28,6 +20,7 @@ const scanlineVertexShader = /* glsl */ `
 `;
 
 const scanlineFragmentShader = /* glsl */ `
+  uniform vec3 uCameraPosition;
   uniform vec3 uColor;
   uniform vec3 uLightDir;
   uniform float uStripeScale;
@@ -38,45 +31,62 @@ const scanlineFragmentShader = /* glsl */ `
   void main() {
     vec3 normal = normalize(vWorldNormal);
     vec3 lightDir = normalize(uLightDir);
-    float ndotl = max(dot(normal, lightDir), 0.06);
+    vec3 viewDir = normalize(uCameraPosition - vWorldPosition);
+    float ndotl = max(dot(normal, lightDir), 0.05);
+    float ndotv = abs(dot(normal, viewDir));
 
     float y = vWorldPosition.y * uStripeScale;
     float cell = fract(y);
 
-    float shadowWeight = mix(1.0, 0.5, ndotl);
-    float lineWidth = 0.58 * shadowWeight;
-    float edge = 0.035;
+    // Narrow colored bands so most of each stripe period reads as background.
+    float shadowWeight = mix(1.0, 0.62, ndotl);
+    float lineWidth = 0.26 * shadowWeight;
+    float edge = 0.024;
     float band = 1.0 - smoothstep(lineWidth, lineWidth + edge, cell);
 
-    float highlight = pow(ndotl, 1.35);
-    float dash = fract(vWorldPosition.x * 20.0 + vWorldPosition.z * 6.0);
+    float highlight = pow(ndotl, 1.25);
+    float dash = fract(vWorldPosition.x * 18.0 + vWorldPosition.z * 5.0);
     float dashMask = mix(
       1.0,
-      smoothstep(0.15, 0.45, dash) * (1.0 - smoothstep(0.55, 0.88, dash)),
-      highlight
+      smoothstep(0.18, 0.48, dash) * (1.0 - smoothstep(0.58, 0.86, dash)),
+      highlight * 0.4
     );
     band *= dashMask;
 
     float speckle = fract(
       sin(dot(vWorldPosition.xz, vec2(127.1, 311.7))) * 43758.5453
     );
-    band *= mix(1.0, 0.55 + 0.45 * step(0.4, speckle), highlight * 0.85);
+    band *= mix(1.0, 0.62 + 0.38 * step(0.42, speckle), highlight * 0.42);
 
-    if (band < 0.015) {
+    // Silhouettes and shadowed sides fall back to transparent (card shows through).
+    float viewFacing = pow(clamp(ndotv, 0.04, 1.0), 0.52);
+    float lightFacing = pow(clamp(ndotl, 0.1, 1.0), 0.88);
+    float alpha = band * viewFacing * lightFacing;
+
+    // Brighten RGB vs flat uColor; alpha above still drives edge transparency.
+    float lightTint = mix(0.72, 1.58, pow(ndotl, 0.82));
+    float viewTint = mix(0.88, 1.14, viewFacing);
+    const float colorGain = 1.22;
+    vec3 lit = uColor * lightTint * viewTint * colorGain;
+
+    if (alpha < 0.02) {
       discard;
     }
 
-    vec3 lit = uColor * mix(0.72, 1.18, ndotl);
-    gl_FragColor = vec4(lit, band);
+    gl_FragColor = vec4(lit, alpha);
   }
 `;
 
-function createFooterScanlineMaterial(lightDirection: THREE.Vector3) {
+function createScanlineMaterial(
+  lightDirection: THREE.Vector3,
+  stripeColor: string,
+) {
   return new THREE.ShaderMaterial({
     uniforms: {
-      uColor: { value: new THREE.Color('#b0b0b0') },
+      uCameraPosition: { value: new THREE.Vector3() },
+      uColor: { value: new THREE.Color(stripeColor) },
       uLightDir: { value: lightDirection.clone() },
-      uStripeScale: { value: 16.0 },
+      uStripeScale: { value: 23.0 },
     },
     vertexShader: scanlineVertexShader,
     fragmentShader: scanlineFragmentShader,
@@ -110,16 +120,17 @@ type MeshRestPose = {
   wobblePhase: number;
 };
 
-function applyFooterScanlineMaterials(
+function applyScanlineMaterials(
   modelRoot: THREE.Object3D,
   lightDirection: THREE.Vector3,
+  stripeColor: string,
 ) {
   modelRoot.traverse((sceneObject) => {
     if (!(sceneObject instanceof THREE.Mesh)) {
       return;
     }
 
-    sceneObject.material = createFooterScanlineMaterial(lightDirection);
+    sceneObject.material = createScanlineMaterial(lightDirection, stripeColor);
 
     const mesh = sceneObject;
     const rest: MeshRestPose = {
@@ -127,23 +138,18 @@ function applyFooterScanlineMaterials(
       quaternion: mesh.quaternion.clone(),
       wobblePhase: mesh.position.y * 4.2 + mesh.position.x * 1.7,
     };
-    mesh.userData.footerVisualRest = rest;
+    mesh.userData.helpedMoneyMeshRest = rest;
   });
 }
 
-const FooterVisualCanvasMount = styled.div`
+const StyledVisualMount = styled.div`
   display: block;
   height: 100%;
   min-width: 0;
   width: 100%;
 `;
 
-export type FooterVisualProps = {
-  src: string;
-  title: string;
-};
-
-export function FooterVisual({ src, title }: FooterVisualProps) {
+export function Money() {
   const mountReference = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -157,25 +163,14 @@ export function FooterVisual({ src, title }: FooterVisualProps) {
 
     const pointer = { x: 0, y: 0, inside: false };
     const targetRotation = { x: 0, y: 0 };
-    const lightDirectionWorld = new THREE.Vector3(2, 10, 5).normalize();
+    const lightDirectionWorld = new THREE.Vector3(4, 8, 6).normalize();
 
     const scene = new THREE.Scene();
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
-    camera.position.set(
-      FOOTER_VISUAL_CAMERA_POSITION[0],
-      FOOTER_VISUAL_CAMERA_POSITION[1],
-      FOOTER_VISUAL_CAMERA_POSITION[2],
-    );
-    camera.lookAt(
-      new THREE.Vector3(
-        FOOTER_VISUAL_CAMERA_LOOK_AT[0],
-        FOOTER_VISUAL_CAMERA_LOOK_AT[1],
-        FOOTER_VISUAL_CAMERA_LOOK_AT[2],
-      ),
-    );
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(0, 0, 5.05);
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -183,21 +178,22 @@ export function FooterVisual({ src, title }: FooterVisualProps) {
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     const canvas = renderer.domElement;
-    canvas.style.cursor = 'pointer';
     canvas.style.display = 'block';
     canvas.style.height = '100%';
     canvas.style.touchAction = 'none';
     canvas.style.width = '100%';
+    canvas.style.cursor = 'pointer';
     container.appendChild(canvas);
 
     const pivot = new THREE.Group();
     scene.add(pivot);
 
+    const cameraWorldPosition = new THREE.Vector3();
     const clock = new THREE.Clock();
 
     const loader = new GLTFLoader();
     loader.load(
-      src,
+      GLB_URL,
       (gltf) => {
         if (cancelled) {
           disposeObjectSubtree(gltf.scene);
@@ -209,13 +205,12 @@ export function FooterVisual({ src, title }: FooterVisualProps) {
         const center = bounds.getCenter(new THREE.Vector3());
         const size = bounds.getSize(new THREE.Vector3());
         const maxAxis = Math.max(size.x, size.y, size.z, 0.001);
-        const scale = FOOTER_VISUAL_MODEL_FIT_SCALE / maxAxis;
+        const scale = (2.75 * 1.1) / maxAxis;
 
         modelRoot.position.sub(center);
         modelRoot.scale.setScalar(scale);
-        modelRoot.position.y += FOOTER_VISUAL_MODEL_OFFSET_Y;
 
-        applyFooterScanlineMaterials(modelRoot, lightDirectionWorld);
+        applyScanlineMaterials(modelRoot, lightDirectionWorld, '#E4E58A');
         pivot.add(modelRoot);
 
         const renderFrame = () => {
@@ -226,10 +221,11 @@ export function FooterVisual({ src, title }: FooterVisualProps) {
           animationFrameId = window.requestAnimationFrame(renderFrame);
           const delta = Math.min(clock.getDelta(), 0.1);
 
+          const motion = 1.1;
           const rotationDamp = 6.8;
           const influence = pointer.inside ? 1 : 0.38;
-          targetRotation.y = pointer.x * 0.78 * influence;
-          targetRotation.x = pointer.y * 0.62 * influence;
+          targetRotation.y = pointer.x * 0.78 * motion * influence;
+          targetRotation.x = pointer.y * 0.62 * motion * influence;
 
           pivot.rotation.y = THREE.MathUtils.damp(
             pivot.rotation.y,
@@ -246,18 +242,25 @@ export function FooterVisual({ src, title }: FooterVisualProps) {
 
           const hoverLift = pointer.inside ? 1 : 0;
           pivot.scale.setScalar(
-            THREE.MathUtils.damp(pivot.scale.x, 1 + hoverLift * 0.12, 7, delta),
+            THREE.MathUtils.damp(
+              pivot.scale.x,
+              1 + hoverLift * 0.12 * motion,
+              7,
+              delta,
+            ),
           );
 
-          const mx = pointer.x * (pointer.inside ? 1 : 0.32);
-          const my = pointer.y * (pointer.inside ? 1 : 0.32);
+          const pointerFollow = pointer.inside ? 1 : 0.32;
+          const mx = pointer.x * pointerFollow;
+          const my = pointer.y * pointerFollow;
+          const wobbleAttenuation = pointer.inside ? 1 : 0.36;
 
           modelRoot.traverse((sceneObject) => {
             if (!(sceneObject instanceof THREE.Mesh)) {
               return;
             }
 
-            const rest = sceneObject.userData.footerVisualRest as
+            const rest = sceneObject.userData.helpedMoneyMeshRest as
               | MeshRestPose
               | undefined;
             if (!rest) {
@@ -265,17 +268,35 @@ export function FooterVisual({ src, title }: FooterVisualProps) {
             }
 
             const phase = rest.wobblePhase;
-            const wobble = pointer.inside ? 1 : 0.36;
             sceneObject.position.x =
-              rest.position.x + mx * 0.22 * Math.sin(phase * 1.8);
+              rest.position.x + mx * motion * 0.22 * Math.sin(phase * 1.8);
             sceneObject.position.z =
-              rest.position.z + my * 0.19 * Math.cos(phase * 1.4);
+              rest.position.z + my * motion * 0.19 * Math.cos(phase * 1.4);
             sceneObject.position.y =
-              rest.position.y + (mx + my) * 0.055 * Math.sin(phase * 2.5);
+              rest.position.y +
+              (mx + my) * motion * 0.055 * Math.sin(phase * 2.5);
 
-            const twist = (mx * 0.34 + my * 0.24) * wobble * Math.sin(phase);
+            const twist =
+              motion *
+              (mx * 0.34 + my * 0.24) *
+              wobbleAttenuation *
+              Math.sin(phase);
             sceneObject.quaternion.copy(rest.quaternion);
             sceneObject.rotateY(twist);
+          });
+
+          camera.getWorldPosition(cameraWorldPosition);
+          modelRoot.traverse((sceneObject) => {
+            if (!(sceneObject instanceof THREE.Mesh)) {
+              return;
+            }
+            const material = sceneObject.material;
+            if (
+              material instanceof THREE.ShaderMaterial &&
+              material.uniforms.uCameraPosition
+            ) {
+              material.uniforms.uCameraPosition.value.copy(cameraWorldPosition);
+            }
           });
 
           renderer.render(scene, camera);
@@ -341,13 +362,7 @@ export function FooterVisual({ src, title }: FooterVisualProps) {
         container.removeChild(canvas);
       }
     };
-  }, [src]);
+  }, []);
 
-  return (
-    <FooterVisualCanvasMount
-      aria-label={title}
-      ref={mountReference}
-      role="img"
-    />
-  );
+  return <StyledVisualMount aria-hidden ref={mountReference} />;
 }

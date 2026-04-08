@@ -1,40 +1,11 @@
 'use client';
 
-import type { IllustrationType } from '@/design-system/components/Illustration/types/Illustration';
-import { theme } from '@/theme';
 import { styled } from '@linaria/react';
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-const STEP_VISUAL_MODEL_SCALE = 2.72;
-const STEP_VISUAL_STRIPE_SCALE = 22.0;
-
-const VisualColumn = styled.div`
-  min-width: 0;
-  width: 100%;
-
-  @media (min-width: ${theme.breakpoints.md}px) {
-    max-width: 672px;
-    position: sticky;
-    top: ${theme.spacing(10)};
-  }
-`;
-
-const VisualContainer = styled.div`
-  background-color: transparent;
-  border-radius: ${theme.radius(1)};
-  height: min(705px, 70vw);
-  min-height: ${theme.spacing(80)};
-  overflow: hidden;
-  position: relative;
-  width: 100%;
-
-  @media (min-width: ${theme.breakpoints.md}px) {
-    height: 705px;
-    max-width: 672px;
-  }
-`;
+const GLB_URL = '/illustrations/why-twenty/hero/hero.glb';
 
 const GlbMount = styled.div`
   display: block;
@@ -43,76 +14,97 @@ const GlbMount = styled.div`
   min-width: 0;
   position: absolute;
   width: 100%;
+  z-index: 1;
 `;
 
-const retroVertexShader = /* glsl */ `
+// Same scanline shader as ProductVisual / IllustrationCardVisual; white uColor for Why Twenty.
+const scanlineVertexShader = /* glsl */ `
   varying vec3 vLocalPosition;
   varying vec3 vWorldPosition;
+  varying vec3 vWorldNormal;
 
   void main() {
     vLocalPosition = position;
     vec4 worldPosition = modelMatrix * vec4(position, 1.0);
     vWorldPosition = worldPosition.xyz;
+    vWorldNormal = normalize(mat3(modelMatrix) * normal);
     gl_Position = projectionMatrix * viewMatrix * worldPosition;
   }
 `;
 
-const retroFragmentShader = /* glsl */ `
+const scanlineFragmentShader = /* glsl */ `
+  uniform vec3 uCameraPosition;
   uniform vec3 uColor;
+  uniform vec3 uDigitFillColor;
   uniform vec2 uDigitCenterXY;
   uniform vec2 uDigitRadiusXY;
   uniform float uDigitZMin;
+  uniform vec3 uLightDir;
   uniform float uStripeScale;
 
   varying vec3 vLocalPosition;
   varying vec3 vWorldPosition;
+  varying vec3 vWorldNormal;
 
   void main() {
+    vec3 normal = normalize(vWorldNormal);
+    vec3 lightDir = normalize(uLightDir);
+    vec3 viewDir = normalize(uCameraPosition - vWorldPosition);
+    float ndotl = max(dot(normal, lightDir), 0.06);
+    float ndotv = abs(dot(normal, viewDir));
+
     vec2 delta =
       (vLocalPosition.xy - uDigitCenterXY) / max(uDigitRadiusXY, vec2(0.0001));
     float inDigitXY = 1.0 - smoothstep(0.88, 1.42, length(delta));
     float inDigitZ = smoothstep(uDigitZMin - 2.5, uDigitZMin + 1.2, vLocalPosition.z);
-
-    float digitMask = clamp(inDigitXY * mix(0.55, 1.0, inDigitZ), 0.0, 1.0);
+    float facing = smoothstep(0.08, 0.72, ndotv);
+    float digitMask = clamp(inDigitXY * mix(0.55, 1.0, inDigitZ) * facing, 0.0, 1.0);
 
     if (digitMask > 0.62) {
-      discard;
+      gl_FragColor = vec4(uDigitFillColor, 1.0);
+      return;
     }
 
-    // Left-to-right gradient based on world X
-    float xGrad = smoothstep(-1.2, 1.2, vWorldPosition.x);
+    // Single-mesh GLB: offset stripe phase by normal so cutout "20" walls do not line up with the
+    // rear face (reduces moiré / camouflage).
+    float stripePhase =
+      vWorldPosition.y * uStripeScale +
+      (normal.x * 1.15 + normal.z * 0.9 + normal.y * 0.5) * 3.4;
+    float cell = fract(stripePhase);
 
-    // Horizontal stripes based on world Y
-    float y = vWorldPosition.y * uStripeScale;
-    float cell = fract(y);
+    // Grazing / engraved faces read brighter and keep slightly wider bands.
+    float groove = smoothstep(0.1, 0.92, 1.0 - ndotv);
 
-    float lineWidth = mix(0.85, 0.0, xGrad);
-    float edge = 0.04;
+    float shadowWeight = mix(1.0, 0.48, ndotl);
+    shadowWeight *= mix(1.0, 0.78, groove * 0.7);
+
+    float lineWidth = 0.58 * shadowWeight;
+    float edge = 0.035;
     float band = 1.0 - smoothstep(lineWidth, lineWidth + edge, cell);
 
-    // Dash effect increases from left to right
-    float dashPhase = vWorldPosition.x * 25.0 + vWorldPosition.y * 12.0;
-    float dash = fract(dashPhase);
-
-    float dashStrength = smoothstep(0.1, 0.9, xGrad);
-
+    float highlight = pow(ndotl, 1.35);
+    float dash = fract(vWorldPosition.x * 20.0 + vWorldPosition.z * 6.0);
     float dashMask = mix(
       1.0,
-      smoothstep(0.1, 0.3, dash) * (1.0 - smoothstep(0.4, 0.9, dash)),
-      dashStrength
+      smoothstep(0.15, 0.45, dash) * (1.0 - smoothstep(0.55, 0.88, dash)),
+      highlight
     );
+    band *= dashMask;
 
-    // Add speckle noise for the retro feel
-    float speckle = fract(sin(dot(vWorldPosition.xy, vec2(12.9898, 78.233))) * 43758.5453);
-    float speckleMask = mix(1.0, step(0.3, speckle), dashStrength * 0.8);
+    float speckle = fract(
+      sin(dot(vWorldPosition.xz, vec2(127.1, 311.7))) * 43758.5453
+    );
+    band *= mix(1.0, 0.55 + 0.45 * step(0.4, speckle), highlight * 0.85);
 
-    band *= dashMask * speckleMask;
-
-    if (band < 0.05) {
+    if (band < 0.015) {
       discard;
     }
 
-    gl_FragColor = vec4(uColor, 1.0);
+    vec3 lit = uColor * mix(0.78, 1.22, ndotl);
+    lit *= 1.0 + groove * 0.5;
+    lit *= 1.0 + smoothstep(0.4, 0.92, 1.0 - ndotv) * 0.22;
+
+    gl_FragColor = vec4(lit, band);
   }
 `;
 
@@ -131,17 +123,20 @@ function disposeObjectSubtree(root: THREE.Object3D) {
   });
 }
 
-function createRetroScreenStripeMaterial() {
+function createWhyTwentyScanlineMaterial(lightDirection: THREE.Vector3) {
   return new THREE.ShaderMaterial({
     uniforms: {
-      uColor: { value: new THREE.Color('#000000') },
+      uCameraPosition: { value: new THREE.Vector3() },
+      uColor: { value: new THREE.Color('#ffffff') },
+      uDigitFillColor: { value: new THREE.Color('#0a0a0c') },
       uDigitCenterXY: { value: new THREE.Vector2(0, 0) },
       uDigitRadiusXY: { value: new THREE.Vector2(1, 1) },
       uDigitZMin: { value: 0 },
-      uStripeScale: { value: STEP_VISUAL_STRIPE_SCALE },
+      uLightDir: { value: lightDirection.clone() },
+      uStripeScale: { value: 16.0 },
     },
-    vertexShader: retroVertexShader,
-    fragmentShader: retroFragmentShader,
+    vertexShader: scanlineVertexShader,
+    fragmentShader: scanlineFragmentShader,
     transparent: true,
     depthWrite: true,
     depthTest: true,
@@ -149,7 +144,10 @@ function createRetroScreenStripeMaterial() {
   });
 }
 
-function applyRetroScreenStripeMaterials(modelRoot: THREE.Object3D) {
+function applyWhyTwentyScanlineMaterials(
+  modelRoot: THREE.Object3D,
+  lightDirection: THREE.Vector3,
+) {
   modelRoot.traverse((sceneObject) => {
     if (!(sceneObject instanceof THREE.Mesh)) {
       return;
@@ -172,7 +170,7 @@ function applyRetroScreenStripeMaterials(modelRoot: THREE.Object3D) {
     const sizeY = box.max.y - box.min.y;
     const sizeZ = box.max.z - box.min.z;
 
-    const material = createRetroScreenStripeMaterial();
+    const material = createWhyTwentyScanlineMaterial(lightDirection);
     material.uniforms.uDigitCenterXY.value.set(centerX, centerY);
     material.uniforms.uDigitRadiusXY.value.set(
       Math.max(sizeX * 0.135, 0.01),
@@ -184,55 +182,22 @@ function applyRetroScreenStripeMaterials(modelRoot: THREE.Object3D) {
   });
 }
 
-type VisualProps = {
-  illustration: IllustrationType;
-};
-
-export function Visual({ illustration }: VisualProps) {
+export function WhyTwenty() {
   const glbMountReference = useRef<HTMLDivElement>(null);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const container = glbMountReference.current;
-    if (!container) {
-      return;
-    }
+    if (!container) return;
 
     let cancelled = false;
     let animationFrameId = 0;
 
-    let modelHalfX = 0.55;
-    let modelHalfY = 0.55;
-
     const scene = new THREE.Scene();
     const width = container.clientWidth;
     const height = container.clientHeight;
-    const aspect = width / Math.max(height, 1);
 
-    const camera = new THREE.OrthographicCamera(
-      -aspect,
-      aspect,
-      1,
-      -1,
-      0.1,
-      100,
-    );
-    camera.position.set(0, 0, 10);
-    camera.lookAt(0, 0, 0);
-
-    const updateOrthoFrustum = () => {
-      const w = container.clientWidth;
-      const h = Math.max(container.clientHeight, 1);
-      const asp = w / h;
-      const halfH = Math.max(modelHalfY, modelHalfX / asp);
-      const halfW = halfH * asp;
-      camera.left = -halfW;
-      camera.right = halfW;
-      camera.top = halfH;
-      camera.bottom = -halfH;
-      camera.updateProjectionMatrix();
-    };
-
-    updateOrthoFrustum();
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(0, 0, 5.2);
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -241,13 +206,15 @@ export function Visual({ illustration }: VisualProps) {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const canvas = renderer.domElement;
-    canvas.style.cursor = 'crosshair';
     canvas.style.display = 'block';
     canvas.style.height = '100%';
     canvas.style.width = '100%';
+    canvas.style.cursor = 'crosshair';
     container.appendChild(canvas);
 
     const clock = new THREE.Clock();
+    const lightDirectionWorld = new THREE.Vector3(4, 8, 6).normalize();
+    const cameraWorldPosition = new THREE.Vector3();
 
     const pivot = new THREE.Group();
     scene.add(pivot);
@@ -255,24 +222,8 @@ export function Visual({ illustration }: VisualProps) {
     let targetRotationX = 0;
     let targetRotationY = 0;
 
-    const syncResolutionUniforms = () => {
-      const rw = canvas.width;
-      const rh = canvas.height;
-      pivot.traverse((sceneObject) => {
-        if (
-          sceneObject instanceof THREE.Mesh &&
-          sceneObject.material instanceof THREE.ShaderMaterial &&
-          sceneObject.material.uniforms.uResolution
-        ) {
-          sceneObject.material.uniforms.uResolution.value.set(rw, rh);
-        }
-      });
-    };
-
-    syncResolutionUniforms();
-
     const loader = new GLTFLoader();
-    loader.load(illustration.src, (gltf) => {
+    loader.load(GLB_URL, (gltf) => {
       if (cancelled) {
         disposeObjectSubtree(gltf.scene);
         return;
@@ -284,38 +235,44 @@ export function Visual({ illustration }: VisualProps) {
       const size = bounds.getSize(new THREE.Vector3());
       const maxAxis = Math.max(size.x, size.y, size.z, 0.001);
 
-      const scale = STEP_VISUAL_MODEL_SCALE / maxAxis;
+      const scale = 1.65 / maxAxis;
 
       modelRoot.position.sub(center);
       modelRoot.scale.setScalar(scale);
+
       modelRoot.rotation.set(0, -0.2, -0.2);
 
-      applyRetroScreenStripeMaterials(modelRoot);
+      applyWhyTwentyScanlineMaterials(modelRoot, lightDirectionWorld);
 
       pivot.add(modelRoot);
 
-      const fitBox = new THREE.Box3().setFromObject(pivot);
-      const fitSize = new THREE.Vector3();
-      fitBox.getSize(fitSize);
-      const fitPad = 1.1;
-      modelHalfX = (fitSize.x * fitPad) / 2;
-      modelHalfY = (fitSize.y * fitPad) / 2;
-
-      updateOrthoFrustum();
-      syncResolutionUniforms();
+      pivot.position.x = 0.25;
 
       const renderFrame = () => {
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
         animationFrameId = window.requestAnimationFrame(renderFrame);
         const time = clock.getElapsedTime();
 
-        pivot.position.y = Math.sin(time * 1.2) * 0.025;
+        // Elegant, breathing float animation
+        pivot.position.y = Math.sin(time * 1.5) * 0.06;
 
-        pivot.rotation.x += (targetRotationX - pivot.rotation.x) * 0.06;
-        pivot.rotation.y += (targetRotationY - pivot.rotation.y) * 0.06;
+        // Fluid, luxurious mouse interaction (damped)
+        pivot.rotation.x += (targetRotationX - pivot.rotation.x) * 0.05;
+        pivot.rotation.y += (targetRotationY - pivot.rotation.y) * 0.05;
+
+        camera.getWorldPosition(cameraWorldPosition);
+        modelRoot.traverse((sceneObject) => {
+          if (
+            sceneObject instanceof THREE.Mesh &&
+            sceneObject.material instanceof THREE.ShaderMaterial &&
+            sceneObject.material.uniforms.uCameraPosition
+          ) {
+            sceneObject.material.uniforms.uCameraPosition.value.copy(
+              cameraWorldPosition,
+            );
+          }
+        });
 
         renderer.render(scene, camera);
       };
@@ -323,13 +280,14 @@ export function Visual({ illustration }: VisualProps) {
       renderFrame();
     });
 
-    const handlePointerMove = (event: PointerEvent) => {
+    const handlePointerMove = (e: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
-      const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
 
-      targetRotationY = x * 0.1;
-      targetRotationX = y * 0.08;
+      // Subtle tilt ranges
+      targetRotationY = x * 0.35;
+      targetRotationX = y * 0.25;
     };
 
     const handlePointerLeave = () => {
@@ -338,14 +296,12 @@ export function Visual({ illustration }: VisualProps) {
     };
 
     const handleResize = () => {
-      if (!container || cancelled) {
-        return;
-      }
+      if (!container || cancelled) return;
       const nextWidth = container.clientWidth;
       const nextHeight = container.clientHeight;
+      camera.aspect = nextWidth / nextHeight;
+      camera.updateProjectionMatrix();
       renderer.setSize(nextWidth, nextHeight);
-      updateOrthoFrustum();
-      syncResolutionUniforms();
     };
 
     canvas.addEventListener('pointermove', handlePointerMove);
@@ -364,17 +320,7 @@ export function Visual({ illustration }: VisualProps) {
         container.removeChild(canvas);
       }
     };
-  }, [illustration.src]);
+  }, []);
 
-  return (
-    <VisualColumn>
-      <VisualContainer>
-        <GlbMount
-          aria-label={illustration.title}
-          ref={glbMountReference}
-          role="img"
-        />
-      </VisualContainer>
-    </VisualColumn>
-  );
+  return <GlbMount aria-hidden ref={glbMountReference} />;
 }
