@@ -3,7 +3,7 @@ import { isNonEmptyString } from '@sniptt/guards';
 import { type APP_LOCALES, SOURCE_LOCALE } from 'twenty-shared/translations';
 import { isDefined } from 'twenty-shared/utils';
 
-import { generateMessageId } from 'src/engine/core-modules/i18n/utils/generateMessageId';
+import { translateStandardMetadataLabel } from 'src/engine/core-modules/i18n/standard-metadata-descriptor-registry/translate-standard-metadata-label.util';
 import { type ObjectMetadataDTO } from 'src/engine/metadata-modules/object-metadata/dtos/object-metadata.dto';
 
 export const resolveObjectMetadataStandardOverride = (
@@ -22,41 +22,26 @@ export const resolveObjectMetadataStandardOverride = (
   i18nInstance: I18n,
 ): string => {
   const safeLocale = locale ?? SOURCE_LOCALE;
+  const baseValue = objectMetadata[labelKey] ?? '';
 
   if (objectMetadata.isCustom) {
-    return objectMetadata[labelKey] ?? '';
+    return baseValue;
   }
 
-  if (
-    (labelKey === 'icon' || labelKey === 'color') &&
-    isDefined(objectMetadata.standardOverrides?.[labelKey])
-  ) {
-    return objectMetadata.standardOverrides[labelKey];
+  if (labelKey === 'icon' || labelKey === 'color') {
+    return objectMetadata.standardOverrides?.[labelKey] ?? baseValue;
   }
 
-  if (
-    isDefined(objectMetadata.standardOverrides?.translations) &&
-    labelKey !== 'icon' &&
-    labelKey !== 'color'
-  ) {
-    const translationValue =
-      objectMetadata.standardOverrides.translations[safeLocale]?.[labelKey];
+  const translationOverride =
+    objectMetadata.standardOverrides?.translations?.[safeLocale]?.[labelKey];
 
-    if (isDefined(translationValue)) {
-      return translationValue;
-    }
+  if (isDefined(translationOverride)) {
+    return translationOverride;
   }
 
   if (isNonEmptyString(objectMetadata.standardOverrides?.[labelKey])) {
     return objectMetadata.standardOverrides[labelKey] ?? '';
   }
 
-  const messageId = generateMessageId(objectMetadata[labelKey] ?? '');
-  const translatedMessage = i18nInstance._(messageId);
-
-  if (translatedMessage === messageId) {
-    return objectMetadata[labelKey] ?? '';
-  }
-
-  return translatedMessage;
+  return translateStandardMetadataLabel(i18nInstance, baseValue) ?? baseValue;
 };

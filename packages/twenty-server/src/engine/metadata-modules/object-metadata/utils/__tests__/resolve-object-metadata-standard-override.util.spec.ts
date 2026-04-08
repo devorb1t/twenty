@@ -1,15 +1,45 @@
 import { type I18n } from '@lingui/core';
 import { SOURCE_LOCALE } from 'twenty-shared/translations';
 
-import { generateMessageId } from 'src/engine/core-modules/i18n/utils/generateMessageId';
+import { translateStandardMetadataLabel } from 'src/engine/core-modules/i18n/standard-metadata-descriptor-registry/translate-standard-metadata-label.util';
 import { type ObjectMetadataDTO } from 'src/engine/metadata-modules/object-metadata/dtos/object-metadata.dto';
 import { resolveObjectMetadataStandardOverride } from 'src/engine/metadata-modules/object-metadata/utils/resolve-object-metadata-standard-override.util';
 
-jest.mock('src/engine/core-modules/i18n/utils/generateMessageId');
+jest.mock(
+  'src/engine/core-modules/i18n/standard-metadata-descriptor-registry/translate-standard-metadata-label.util',
+  () => ({
+    translateStandardMetadataLabel: jest.fn(),
+  }),
+);
 
-const mockGenerateMessageId = generateMessageId as jest.MockedFunction<
-  typeof generateMessageId
+const mockTranslateStandardMetadataLabel =
+  translateStandardMetadataLabel as jest.MockedFunction<
+    typeof translateStandardMetadataLabel
+  >;
+
+type ObjectFixture = Pick<
+  ObjectMetadataDTO,
+  | 'color'
+  | 'labelPlural'
+  | 'labelSingular'
+  | 'description'
+  | 'icon'
+  | 'isCustom'
+  | 'standardOverrides'
 >;
+
+const baseFixture = (
+  overrides: Partial<ObjectFixture> = {},
+): ObjectFixture => ({
+  labelSingular: 'Standard Label',
+  labelPlural: 'Standard Labels',
+  description: 'Standard Description',
+  icon: 'default-icon',
+  color: 'blue',
+  isCustom: false,
+  standardOverrides: undefined,
+  ...overrides,
+});
 
 describe('resolveObjectMetadataStandardOverride', () => {
   let mockI18n: jest.Mocked<I18n>;
@@ -19,28 +49,15 @@ describe('resolveObjectMetadataStandardOverride', () => {
     mockI18n = {
       _: jest.fn(),
     } as unknown as jest.Mocked<I18n>;
+    mockTranslateStandardMetadataLabel.mockReturnValue(undefined);
   });
 
   describe('Custom objects', () => {
     it('should return the object value for custom labelSingular object', () => {
-      const objectMetadata = {
+      const objectMetadata = baseFixture({
         labelSingular: 'My Custom',
-        labelPlural: 'My Customs',
-        description: 'Custom Description',
-        icon: 'custom-icon',
-        color: 'blue',
         isCustom: true,
-        standardOverrides: undefined,
-      } satisfies Pick<
-        ObjectMetadataDTO,
-        | 'color'
-        | 'labelPlural'
-        | 'labelSingular'
-        | 'description'
-        | 'icon'
-        | 'isCustom'
-        | 'standardOverrides'
-      >;
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -53,24 +70,10 @@ describe('resolveObjectMetadataStandardOverride', () => {
     });
 
     it('should return the object value for custom description object', () => {
-      const objectMetadata = {
-        labelSingular: 'My Custom',
-        labelPlural: 'My Customs',
+      const objectMetadata = baseFixture({
         description: 'Custom Description',
-        icon: 'custom-icon',
-        color: 'blue',
         isCustom: true,
-        standardOverrides: undefined,
-      } satisfies Pick<
-        ObjectMetadataDTO,
-        | 'color'
-        | 'labelPlural'
-        | 'labelSingular'
-        | 'description'
-        | 'icon'
-        | 'isCustom'
-        | 'standardOverrides'
-      >;
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -83,24 +86,10 @@ describe('resolveObjectMetadataStandardOverride', () => {
     });
 
     it('should return the object value for custom icon object', () => {
-      const objectMetadata = {
-        labelSingular: 'My Custom',
-        labelPlural: 'My Customs',
-        description: 'Custom Description',
+      const objectMetadata = baseFixture({
         icon: 'custom-icon',
-        color: 'blue',
         isCustom: true,
-        standardOverrides: undefined,
-      } satisfies Pick<
-        ObjectMetadataDTO,
-        | 'color'
-        | 'labelPlural'
-        | 'labelSingular'
-        | 'description'
-        | 'icon'
-        | 'isCustom'
-        | 'standardOverrides'
-      >;
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -113,24 +102,10 @@ describe('resolveObjectMetadataStandardOverride', () => {
     });
 
     it('should return the object value for custom color object', () => {
-      const objectMetadata = {
-        labelSingular: 'My Custom',
-        labelPlural: 'My Customs',
-        description: 'Custom Description',
-        icon: 'custom-icon',
+      const objectMetadata = baseFixture({
         color: 'green',
         isCustom: true,
-        standardOverrides: undefined,
-      } satisfies Pick<
-        ObjectMetadataDTO,
-        | 'color'
-        | 'labelPlural'
-        | 'labelSingular'
-        | 'description'
-        | 'icon'
-        | 'isCustom'
-        | 'standardOverrides'
-      >;
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -145,16 +120,9 @@ describe('resolveObjectMetadataStandardOverride', () => {
 
   describe('Standard objects - Icon overrides', () => {
     it('should return override icon when available for standard object', () => {
-      const objectMetadata = {
-        labelSingular: 'My Custom',
-        labelPlural: 'My Customs',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
-        standardOverrides: {
-          icon: 'override-icon',
-        },
-      };
+      const objectMetadata = baseFixture({
+        standardOverrides: { icon: 'override-icon' },
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -169,17 +137,9 @@ describe('resolveObjectMetadataStandardOverride', () => {
 
   describe('Standard objects - Color overrides', () => {
     it('should return override color when available for standard object', () => {
-      const objectMetadata = {
-        labelSingular: 'Company',
-        labelPlural: 'Companies',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        color: 'blue',
-        isCustom: false,
-        standardOverrides: {
-          color: 'red',
-        },
-      };
+      const objectMetadata = baseFixture({
+        standardOverrides: { color: 'red' },
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -192,18 +152,7 @@ describe('resolveObjectMetadataStandardOverride', () => {
     });
 
     it('should return base color when no override exists for standard object', () => {
-      const objectMetadata = {
-        labelSingular: 'Company',
-        labelPlural: 'Companies',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        color: 'blue',
-        isCustom: false,
-        standardOverrides: undefined,
-      };
-
-      mockGenerateMessageId.mockReturnValue('generated-message-id');
-      mockI18n._.mockReturnValue('generated-message-id');
+      const objectMetadata = baseFixture();
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -218,12 +167,7 @@ describe('resolveObjectMetadataStandardOverride', () => {
 
   describe('Standard objects - Translation overrides', () => {
     it('should return translation override when available for non-icon objects', () => {
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
+      const objectMetadata = baseFixture({
         standardOverrides: {
           translations: {
             'fr-FR': {
@@ -233,7 +177,7 @@ describe('resolveObjectMetadataStandardOverride', () => {
             },
           },
         },
-      };
+      });
 
       expect(
         resolveObjectMetadataStandardOverride(
@@ -262,12 +206,7 @@ describe('resolveObjectMetadataStandardOverride', () => {
     });
 
     it('should fallback when translation override is not available for the locale', () => {
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
+      const objectMetadata = baseFixture({
         standardOverrides: {
           translations: {
             'es-ES': {
@@ -277,10 +216,7 @@ describe('resolveObjectMetadataStandardOverride', () => {
             },
           },
         },
-      };
-
-      mockGenerateMessageId.mockReturnValue('generated-message-id');
-      mockI18n._.mockReturnValue('generated-message-id');
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -293,12 +229,7 @@ describe('resolveObjectMetadataStandardOverride', () => {
     });
 
     it('should fallback when translation override is not available for the labelKey', () => {
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
+      const objectMetadata = baseFixture({
         standardOverrides: {
           translations: {
             'fr-FR': {
@@ -307,10 +238,7 @@ describe('resolveObjectMetadataStandardOverride', () => {
             },
           },
         },
-      };
-
-      mockGenerateMessageId.mockReturnValue('generated-message-id');
-      mockI18n._.mockReturnValue('generated-message-id');
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -323,12 +251,7 @@ describe('resolveObjectMetadataStandardOverride', () => {
     });
 
     it('should not use translation overrides when locale is undefined', () => {
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
+      const objectMetadata = baseFixture({
         standardOverrides: {
           translations: {
             'fr-FR': {
@@ -338,10 +261,7 @@ describe('resolveObjectMetadataStandardOverride', () => {
             },
           },
         },
-      };
-
-      mockGenerateMessageId.mockReturnValue('generated-message-id');
-      mockI18n._.mockReturnValue('generated-message-id');
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -356,19 +276,14 @@ describe('resolveObjectMetadataStandardOverride', () => {
 
   describe('Standard objects - SOURCE_LOCALE overrides', () => {
     it('should return direct override for SOURCE_LOCALE when available', () => {
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
+      const objectMetadata = baseFixture({
         standardOverrides: {
           labelSingular: 'Overridden Label',
           labelPlural: 'Overridden Labels',
           description: 'Overridden Description',
           icon: 'overridden-icon',
         },
-      };
+      });
 
       expect(
         resolveObjectMetadataStandardOverride(
@@ -405,17 +320,12 @@ describe('resolveObjectMetadataStandardOverride', () => {
     });
 
     it('should use direct override for non-SOURCE_LOCALE', () => {
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
+      const objectMetadata = baseFixture({
         standardOverrides: {
           labelSingular: 'Overridden Label',
           labelPlural: 'Overridden Labels',
         },
-      };
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -428,19 +338,9 @@ describe('resolveObjectMetadataStandardOverride', () => {
     });
 
     it('should not use undefined override for SOURCE_LOCALE', () => {
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
-        standardOverrides: {
-          labelSingular: undefined,
-        },
-      };
-
-      mockGenerateMessageId.mockReturnValue('generated-message-id');
-      mockI18n._.mockReturnValue('generated-message-id');
+      const objectMetadata = baseFixture({
+        standardOverrides: { labelSingular: undefined },
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -453,49 +353,31 @@ describe('resolveObjectMetadataStandardOverride', () => {
     });
   });
 
-  describe('Standard objects - Auto translation fallback', () => {
-    it('should return translated message when translation is available', () => {
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
-        standardOverrides: undefined,
-      };
-
-      mockGenerateMessageId.mockReturnValue('standard.label.message.id');
-      mockI18n._.mockReturnValue('Libellé traduit automatiquement');
+  describe('Standard objects - Registry-based translation', () => {
+    it('should return translated label when the registry has the descriptor', () => {
+      mockTranslateStandardMetadataLabel.mockReturnValue(
+        'Libellé traduit automatiquement',
+      );
 
       const result = resolveObjectMetadataStandardOverride(
-        objectMetadata,
+        baseFixture(),
         'labelSingular',
         'fr-FR',
         mockI18n,
       );
 
-      expect(mockGenerateMessageId).toHaveBeenCalledWith('Standard Label');
-      expect(mockI18n._).toHaveBeenCalledWith('standard.label.message.id');
+      expect(mockTranslateStandardMetadataLabel).toHaveBeenCalledWith(
+        mockI18n,
+        'Standard Label',
+      );
       expect(result).toBe('Libellé traduit automatiquement');
     });
 
-    it('should return original object value when no translation is found', () => {
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
-        standardOverrides: undefined,
-      };
-
-      const messageId = 'standard.label.message.id';
-
-      mockGenerateMessageId.mockReturnValue(messageId);
-      mockI18n._.mockReturnValue(messageId);
+    it('should fall back to original label when registry has no descriptor', () => {
+      mockTranslateStandardMetadataLabel.mockReturnValue(undefined);
 
       const result = resolveObjectMetadataStandardOverride(
-        objectMetadata,
+        baseFixture(),
         'labelSingular',
         'fr-FR',
         mockI18n,
@@ -507,12 +389,7 @@ describe('resolveObjectMetadataStandardOverride', () => {
 
   describe('Priority order - Standard objects', () => {
     it('should prioritize translation override over SOURCE_LOCALE override for non-SOURCE_LOCALE', () => {
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
+      const objectMetadata = baseFixture({
         standardOverrides: {
           labelSingular: 'Source Override',
           labelPlural: 'Source Overrides',
@@ -523,7 +400,7 @@ describe('resolveObjectMetadataStandardOverride', () => {
             },
           },
         },
-      };
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -533,22 +410,16 @@ describe('resolveObjectMetadataStandardOverride', () => {
       );
 
       expect(result).toBe('Translation Override');
-      expect(mockGenerateMessageId).not.toHaveBeenCalled();
-      expect(mockI18n._).not.toHaveBeenCalled();
+      expect(mockTranslateStandardMetadataLabel).not.toHaveBeenCalled();
     });
 
     it('should prioritize SOURCE_LOCALE override over auto translation for SOURCE_LOCALE', () => {
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
+      const objectMetadata = baseFixture({
         standardOverrides: {
           labelSingular: 'Source Override',
           labelPlural: 'Source Overrides',
         },
-      };
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -558,48 +429,28 @@ describe('resolveObjectMetadataStandardOverride', () => {
       );
 
       expect(result).toBe('Source Override');
-      expect(mockGenerateMessageId).not.toHaveBeenCalled();
-      expect(mockI18n._).not.toHaveBeenCalled();
+      expect(mockTranslateStandardMetadataLabel).not.toHaveBeenCalled();
     });
 
-    it('should use auto translation when no overrides are available', () => {
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
-        standardOverrides: {},
-      };
-
-      mockGenerateMessageId.mockReturnValue('auto.translation.id');
-      mockI18n._.mockReturnValue('Auto Translated Label');
+    it('should use registry translation when no overrides are available', () => {
+      mockTranslateStandardMetadataLabel.mockReturnValue('Auto Translated Label');
 
       const result = resolveObjectMetadataStandardOverride(
-        objectMetadata,
+        baseFixture({ standardOverrides: {} }),
         'labelSingular',
         'de-DE',
         mockI18n,
       );
 
       expect(result).toBe('Auto Translated Label');
-      expect(mockGenerateMessageId).toHaveBeenCalledWith('Standard Label');
-      expect(mockI18n._).toHaveBeenCalledWith('auto.translation.id');
     });
   });
 
   describe('Undefined locale handling', () => {
     it('should use SOURCE_LOCALE fallback when locale is undefined for standard object', () => {
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
-        standardOverrides: {
-          labelSingular: 'Source Override',
-        },
-      };
+      const objectMetadata = baseFixture({
+        standardOverrides: { labelSingular: 'Source Override' },
+      });
 
       const result = resolveObjectMetadataStandardOverride(
         objectMetadata,
@@ -609,33 +460,20 @@ describe('resolveObjectMetadataStandardOverride', () => {
       );
 
       expect(result).toBe('Source Override');
-      expect(mockGenerateMessageId).not.toHaveBeenCalled();
-      expect(mockI18n._).not.toHaveBeenCalled();
+      expect(mockTranslateStandardMetadataLabel).not.toHaveBeenCalled();
     });
 
-    it('should fall back to auto translation when locale is undefined and no SOURCE_LOCALE override exists', () => {
-      mockI18n._.mockReturnValue('Auto Translated Label');
-      mockGenerateMessageId.mockReturnValue('auto.translation.id');
-
-      const objectMetadata = {
-        labelSingular: 'Standard Label',
-        labelPlural: 'Standard Labels',
-        description: 'Standard Description',
-        icon: 'default-icon',
-        isCustom: false,
-        standardOverrides: undefined,
-      };
+    it('should fall back to registry translation when locale is undefined and no SOURCE_LOCALE override exists', () => {
+      mockTranslateStandardMetadataLabel.mockReturnValue('Auto Translated Label');
 
       const result = resolveObjectMetadataStandardOverride(
-        objectMetadata,
+        baseFixture(),
         'labelSingular',
         undefined,
         mockI18n,
       );
 
       expect(result).toBe('Auto Translated Label');
-      expect(mockGenerateMessageId).toHaveBeenCalledWith('Standard Label');
-      expect(mockI18n._).toHaveBeenCalledWith('auto.translation.id');
     });
   });
 });

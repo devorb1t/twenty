@@ -1,6 +1,6 @@
 import { type I18n } from '@lingui/core';
 
-import { generateMessageId } from 'src/engine/core-modules/i18n/utils/generateMessageId';
+import { translateStandardMetadataLabel } from 'src/engine/core-modules/i18n/standard-metadata-descriptor-registry/translate-standard-metadata-label.util';
 import { TWENTY_STANDARD_APPLICATION } from 'src/engine/workspace-manager/twenty-standard-application/constants/twenty-standard-applications';
 
 export const resolvePageLayoutTabTitle = ({
@@ -16,12 +16,5 @@ export const resolvePageLayoutTabTitle = ({
     return title;
   }
 
-  const messageId = generateMessageId(title);
-  const translatedMessage = i18nInstance._(messageId);
-
-  if (translatedMessage === messageId) {
-    return title;
-  }
-
-  return translatedMessage;
+  return translateStandardMetadataLabel(i18nInstance, title) ?? title;
 };

@@ -39,6 +39,7 @@ import { messages as ukMessages } from 'src/engine/core-modules/i18n/locales/gen
 import { messages as viMessages } from 'src/engine/core-modules/i18n/locales/generated/vi-VN';
 import { messages as zhHansMessages } from 'src/engine/core-modules/i18n/locales/generated/zh-CN';
 import { messages as zhHantMessages } from 'src/engine/core-modules/i18n/locales/generated/zh-TW';
+import 'src/engine/workspace-manager/twenty-standard-application/utils/populate-standard-metadata-descriptor-registry';
 
 @Injectable()
 export class I18nService implements OnModuleInit {

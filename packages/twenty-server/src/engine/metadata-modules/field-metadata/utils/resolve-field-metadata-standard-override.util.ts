@@ -3,10 +3,9 @@ import { isNonEmptyString } from '@sniptt/guards';
 import { type APP_LOCALES, SOURCE_LOCALE } from 'twenty-shared/translations';
 import { isDefined } from 'twenty-shared/utils';
 
-import { generateMessageId } from 'src/engine/core-modules/i18n/utils/generateMessageId';
+import { translateStandardMetadataLabel } from 'src/engine/core-modules/i18n/standard-metadata-descriptor-registry/translate-standard-metadata-label.util';
 import { type FieldMetadataDTO } from 'src/engine/metadata-modules/field-metadata/dtos/field-metadata.dto';
 
-// TODO simplify
 export const resolveFieldMetadataStandardOverride = (
   fieldMetadata: Pick<
     FieldMetadataDTO,
@@ -16,24 +15,22 @@ export const resolveFieldMetadataStandardOverride = (
   locale: keyof typeof APP_LOCALES | undefined,
   i18nInstance: I18n,
 ): string => {
+  const baseValue = fieldMetadata[labelKey] ?? '';
+
   if (fieldMetadata.isCustom) {
-    return fieldMetadata[labelKey] ?? '';
+    return baseValue;
   }
 
-  if (labelKey === 'icon' && isDefined(fieldMetadata.standardOverrides?.icon)) {
-    return fieldMetadata.standardOverrides.icon;
+  if (labelKey === 'icon') {
+    return fieldMetadata.standardOverrides?.icon ?? baseValue;
   }
 
-  if (
-    isDefined(fieldMetadata.standardOverrides?.translations) &&
-    isDefined(locale) &&
-    labelKey !== 'icon'
-  ) {
-    const translationValue =
-      fieldMetadata.standardOverrides.translations[locale]?.[labelKey];
+  if (isDefined(locale)) {
+    const translationOverride =
+      fieldMetadata.standardOverrides?.translations?.[locale]?.[labelKey];
 
-    if (isDefined(translationValue)) {
-      return translationValue;
+    if (isDefined(translationOverride)) {
+      return translationOverride;
     }
   }
 
@@ -44,13 +41,5 @@ export const resolveFieldMetadataStandardOverride = (
     return fieldMetadata.standardOverrides[labelKey] ?? '';
   }
 
-  const messageId = generateMessageId(fieldMetadata[labelKey] ?? '');
-
-  const translatedMessage = i18nInstance._(messageId);
-
-  if (translatedMessage === messageId) {
-    return fieldMetadata[labelKey] ?? '';
-  }
-
-  return translatedMessage;
+  return translateStandardMetadataLabel(i18nInstance, baseValue) ?? baseValue;
 };
