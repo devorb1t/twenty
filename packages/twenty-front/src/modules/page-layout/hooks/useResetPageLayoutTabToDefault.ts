@@ -3,38 +3,36 @@ import { useMutation } from '@apollo/client/react';
 import { t } from '@lingui/core/macro';
 import { useCallback } from 'react';
 import { CrudOperationType } from 'twenty-shared/types';
-import { ResetPageLayoutWidgetToDefaultDocument } from '~/generated-metadata/graphql';
 
 import { useMetadataErrorHandler } from '@/metadata-error-handler/hooks/useMetadataErrorHandler';
+import { RESET_PAGE_LAYOUT_TAB_TO_DEFAULT } from '@/page-layout/graphql/mutations/resetPageLayoutTabToDefault';
 import { useRefreshPageLayoutAfterReset } from '@/page-layout/hooks/useRefreshPageLayoutAfterReset';
 import { collectViewIdsFromWidgets } from '@/page-layout/utils/collectViewIdsFromWidgets';
 import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 
-export const useResetPageLayoutWidgetToDefault = (
+export const useResetPageLayoutTabToDefault = (
   pageLayoutIdFromProps: string,
 ) => {
-  const [resetMutation] = useMutation(ResetPageLayoutWidgetToDefaultDocument);
+  const [resetMutation] = useMutation(RESET_PAGE_LAYOUT_TAB_TO_DEFAULT);
   const { handleMetadataError } = useMetadataErrorHandler();
   const { enqueueErrorSnackBar } = useSnackBar();
   const { refreshPageLayoutAfterReset } = useRefreshPageLayoutAfterReset(
     pageLayoutIdFromProps,
   );
 
-  const resetPageLayoutWidgetToDefault = useCallback(
-    async (widgetId: string) => {
+  const resetPageLayoutTabToDefault = useCallback(
+    async (tabId: string) => {
       try {
-        await resetMutation({ variables: { id: widgetId } });
+        await resetMutation({ variables: { id: tabId } });
         await refreshPageLayoutAfterReset((layout) =>
           collectViewIdsFromWidgets(
-            layout.tabs
-              .flatMap((tab) => tab.widgets)
-              .filter((widget) => widget.id === widgetId),
+            layout.tabs.find((tab) => tab.id === tabId)?.widgets ?? [],
           ),
         );
       } catch (error) {
         if (CombinedGraphQLErrors.is(error)) {
           handleMetadataError(error, {
-            primaryMetadataName: 'pageLayoutWidget',
+            primaryMetadataName: 'pageLayoutTab',
             operationType: CrudOperationType.UPDATE,
           });
         } else {
@@ -50,5 +48,5 @@ export const useResetPageLayoutWidgetToDefault = (
     ],
   );
 
-  return { resetPageLayoutWidgetToDefault };
+  return { resetPageLayoutTabToDefault };
 };
