@@ -300,7 +300,6 @@ export const NavigationDrawerItem = ({
   const isInternalLink = isDefined(to) && !isExternalLink;
 
   const handleExternalLinkClick = () => {
-    handleBeforeNavigation();
     if (isDefined(to)) {
       window.open(to, '_blank', 'noopener,noreferrer');
     }
