@@ -62,7 +62,6 @@ export type NavigationDrawerItemProps = {
   preventCollapseOnMobile?: boolean;
   isSelectedInEditMode?: boolean;
   variant?: 'default' | 'tertiary';
-  navigationState?: Record<string, unknown>;
   onBeforeNavigation?: () => void;
 };
 
@@ -81,7 +80,6 @@ type StyledItemProps = Pick<
   href?: string;
   target?: string;
   rel?: string;
-  state?: Record<string, unknown>;
 };
 
 const StyledItem = styled.button<StyledItemProps>`
@@ -270,7 +268,6 @@ export const NavigationDrawerItem = ({
   preventCollapseOnMobile = false,
   isSelectedInEditMode = false,
   variant = 'default',
-  navigationState,
   onBeforeNavigation: onBeforeNavigationProp,
 }: NavigationDrawerItemProps) => {
   const { theme } = useContext(ThemeContext);
@@ -314,7 +311,6 @@ export const NavigationDrawerItem = ({
     onMouseDown: handleMouseDown,
   } = useMouseDownNavigation({
     to: isExternalLink ? undefined : to,
-    navigationState,
     onClick: isExternalLink ? (onClick ?? handleExternalLinkClick) : onClick,
     onBeforeNavigation: handleBeforeNavigation,
     triggerEvent,
@@ -347,7 +343,6 @@ export const NavigationDrawerItem = ({
         as={elementType}
         role={!to && isDefined(rightOptions) ? 'button' : undefined}
         to={isInternalLink ? to : undefined}
-        state={isInternalLink ? navigationState : undefined}
         href={isExternalLink ? to : undefined}
         target={isExternalLink ? '_blank' : undefined}
         rel={isExternalLink ? 'noopener noreferrer' : undefined}

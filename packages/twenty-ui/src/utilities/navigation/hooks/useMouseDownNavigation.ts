@@ -6,7 +6,6 @@ import { isDefined } from 'twenty-shared/utils';
 
 type UseMouseDownNavigationProps = {
   to?: string;
-  navigationState?: Record<string, unknown>;
   onClick?: (event: MouseEvent<HTMLElement>) => void;
   disabled?: boolean;
   onBeforeNavigation?: () => void;
@@ -16,7 +15,6 @@ type UseMouseDownNavigationProps = {
 
 export const useMouseDownNavigation = ({
   to,
-  navigationState,
   onClick,
   disabled = false,
   onBeforeNavigation,
@@ -42,7 +40,7 @@ export const useMouseDownNavigation = ({
       if (isDefined(onClick)) {
         onClick(event);
       } else if (isDefined(to)) {
-        navigate(to, { state: navigationState });
+        navigate(to);
       }
     }
 
@@ -62,7 +60,7 @@ export const useMouseDownNavigation = ({
     if (isDefined(onClick)) {
       onClick(event);
     } else if (isDefined(to)) {
-      navigate(to, { state: navigationState });
+      navigate(to);
     }
   };
 
