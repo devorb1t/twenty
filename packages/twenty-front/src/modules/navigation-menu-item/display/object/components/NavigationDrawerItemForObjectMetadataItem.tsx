@@ -92,13 +92,16 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
 
   const computedLink = hasCustomLink ? navigationPath : '';
 
-  const isActive = hasCustomLink
+  const navItemId = navigationMenuItem?.id;
+  const activeNavItemId = location.state?.activeNavItemId as string | undefined;
+  const hasExplicitActiveItem = isDefined(activeNavItemId);
+
+  const isActiveByUrl = hasCustomLink
     ? isLocationMatchingNavigationMenuItem(
         currentPath,
         currentPathWithSearch,
         navigationMenuItem!.type,
         computedLink,
-        isObject || isView ? objectMetadataItem.nameSingular : null,
       )
     : currentPath ===
         getAppPath(AppPath.RecordIndexPage, {
@@ -108,6 +111,10 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
         currentPath,
         objectMetadataItem.nameSingular,
       );
+
+  const isActive = hasExplicitActiveItem
+    ? activeNavItemId === navItemId
+    : isActiveByUrl;
 
   const handleClick = isLayoutCustomizationModeEnabled
     ? onEditModeClick
@@ -189,6 +196,7 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
             ? navigationPath
             : undefined
       }
+      navigationState={{ activeNavItemId: navItemId }}
       onClick={handleClick}
       Icon={Icon}
       iconColor={iconThemeColor}

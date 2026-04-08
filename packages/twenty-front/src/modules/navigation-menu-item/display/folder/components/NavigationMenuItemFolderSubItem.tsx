@@ -108,6 +108,7 @@ export const NavigationMenuItemFolderSubItem = ({
         objectMetadataItem ?? undefined,
       )}
       to={isDragging || handleClick ? undefined : computedLink}
+      navigationState={{ activeNavItemId: navigationMenuItem.id }}
       onClick={handleClick}
       active={index === selectedNavigationMenuItemIndex}
       isSelectedInEditMode={isEditHighlightedInNavigationMenu}
