@@ -50,6 +50,12 @@ import {
 import { type FieldMetadataItem } from '@/object-metadata/types/FieldMetadataItem';
 import { type EnrichedObjectMetadataItem } from '@/object-metadata/types/EnrichedObjectMetadataItem';
 import { computePossibleMorphGqlFieldForFieldName } from '@/object-record/cache/utils/computePossibleMorphGqlFieldForFieldName';
+import { isFieldActorValue } from '@/object-record/record-field/ui/types/guards/isFieldActorValue';
+import { isFieldAddressValue } from '@/object-record/record-field/ui/types/guards/isFieldAddressValue';
+import { isFieldEmailsValue } from '@/object-record/record-field/ui/types/guards/isFieldEmailsValue';
+import { isFieldFullNameValue } from '@/object-record/record-field/ui/types/guards/isFieldFullNameValue';
+import { isFieldLinksValue } from '@/object-record/record-field/ui/types/guards/isFieldLinksValue';
+import { isFieldPhonesValue } from '@/object-record/record-field/ui/types/guards/isFieldPhonesValue';
 
 const isLeafFilter = (
   filter: RecordGqlOperationFilter,
@@ -271,22 +277,32 @@ export const isRecordMatchingFilter = ({
       }
       case FieldMetadataType.FULL_NAME: {
         const fullNameFilter = filterValue as FullNameFilter;
+        const fullNameValue = record[filterKey];
+
+        if (!isFieldFullNameValue(fullNameValue)) {
+          return false;
+        }
 
         return (
           (fullNameFilter.firstName === undefined ||
             isMatchingStringFilter({
               stringFilter: fullNameFilter.firstName,
-              value: record[filterKey]?.firstName,
+              value: fullNameValue.firstName,
             })) &&
           (fullNameFilter.lastName === undefined ||
             isMatchingStringFilter({
               stringFilter: fullNameFilter.lastName,
-              value: record[filterKey]?.lastName,
+              value: fullNameValue.lastName,
             }))
         );
       }
       case FieldMetadataType.ADDRESS: {
         const addressFilter = filterValue as AddressFilter;
+        const addressValue = record[filterKey];
+
+        if (!isFieldAddressValue(addressValue)) {
+          return false;
+        }
 
         const keys = [
           'addressStreet1',
@@ -305,12 +321,17 @@ export const isRecordMatchingFilter = ({
 
           return isMatchingStringFilter({
             stringFilter: value,
-            value: record[filterKey]?.[key],
+            value: addressValue[key],
           });
         });
       }
       case FieldMetadataType.LINKS: {
         const linksFilter = filterValue as LinksFilter;
+        const linksValue = record[filterKey];
+
+        if (!isFieldLinksValue(linksValue)) {
+          return false;
+        }
 
         const keys = ['primaryLinkLabel', 'primaryLinkUrl'] as const;
 
@@ -322,7 +343,7 @@ export const isRecordMatchingFilter = ({
 
           return isMatchingStringFilter({
             stringFilter: value,
-            value: record[filterKey]?.[key],
+            value: linksValue[key],
           });
         });
       }
@@ -360,18 +381,23 @@ export const isRecordMatchingFilter = ({
       }
       case FieldMetadataType.ACTOR: {
         const actorFilter = filterValue as ActorFilter;
+        const actorValue = record[filterKey];
+
+        if (!isFieldActorValue(actorValue)) {
+          return false;
+        }
 
         if (isDefined(actorFilter.workspaceMemberId)) {
           return isMatchingUUIDFilter({
             uuidFilter: actorFilter.workspaceMemberId,
-            value: record[filterKey]?.workspaceMemberId,
+            value: actorValue.workspaceMemberId,
           });
         }
 
         if (isDefined(actorFilter.source)) {
           return isMatchingSelectFilter({
             selectFilter: actorFilter.source,
-            value: record[filterKey].source,
+            value: actorValue.source,
           });
         }
 
@@ -379,12 +405,17 @@ export const isRecordMatchingFilter = ({
           actorFilter.name === undefined ||
           isMatchingStringFilter({
             stringFilter: actorFilter.name,
-            value: record[filterKey]?.name,
+            value: actorValue.name,
           })
         );
       }
       case FieldMetadataType.EMAILS: {
         const emailsFilter = filterValue as EmailsFilter;
+        const emailsValue = record[filterKey];
+
+        if (!isFieldEmailsValue(emailsValue)) {
+          return false;
+        }
 
         if (emailsFilter.primaryEmail === undefined) {
           return false;
@@ -392,11 +423,16 @@ export const isRecordMatchingFilter = ({
 
         return isMatchingStringFilter({
           stringFilter: emailsFilter.primaryEmail,
-          value: record[filterKey]?.primaryEmail,
+          value: emailsValue.primaryEmail,
         });
       }
       case FieldMetadataType.PHONES: {
         const phonesFilter = filterValue as PhonesFilter;
+        const phonesValue = record[filterKey];
+
+        if (!isFieldPhonesValue(phonesValue)) {
+          return false;
+        }
 
         const keys: (keyof PhonesFilter)[] = ['primaryPhoneNumber'];
 
@@ -408,7 +444,7 @@ export const isRecordMatchingFilter = ({
 
           return isMatchingStringFilter({
             stringFilter: value,
-            value: record[filterKey]?.[key],
+            value: phonesValue[key],
           });
         });
       }
