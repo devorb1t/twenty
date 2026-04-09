@@ -3384,6 +3384,7 @@ enum EventLogTable {
   PAGEVIEW
   OBJECT_EVENT
   USAGE_EVENT
+  APPLICATION_LOG
 }
 
 input EventLogFiltersInput {
