@@ -98,36 +98,44 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
   const activeNavigationItem = useAtomStateValue(activeNavigationItemState);
   const setActiveNavigationItem = useSetAtomState(activeNavigationItemState);
 
-  const isAtomForCurrentObject =
+  const isOnRecordShowPage = matchesRecordShowPathForObject(
+    currentPath,
+    objectMetadataItem.nameSingular,
+  );
+
+  const isOnIndexPage =
+    currentPath ===
+    getAppPath(AppPath.RecordIndexPage, {
+      objectNamePlural: objectMetadataItem.namePlural,
+    });
+
+  const isCurrentPathMatchingObject = isOnIndexPage || isOnRecordShowPage;
+
+  const shouldUseExplicitActiveItem =
     isDefined(activeNavigationItem) &&
-    activeNavigationItem.objectNameSingular === objectMetadataItem.nameSingular;
+    activeNavigationItem.objectNameSingular ===
+      objectMetadataItem.nameSingular &&
+    isCurrentPathMatchingObject;
 
   const isRecordMatchingCurrentPage =
     isRecord && hasCustomLink && computedLink === currentPath;
 
-  const isActiveByUrl = hasCustomLink
-    ? isLocationMatchingNavigationMenuItem(
-        currentPath,
-        currentPathWithSearch,
-        navigationMenuItem!.type,
-        computedLink,
-      ) ||
-      (isObject &&
-        matchesRecordShowPathForObject(
-          currentPath,
-          objectMetadataItem.nameSingular,
-        ))
-    : currentPath ===
-        getAppPath(AppPath.RecordIndexPage, {
-          objectNamePlural: objectMetadataItem.namePlural,
-        }) ||
-      matchesRecordShowPathForObject(
-        currentPath,
-        objectMetadataItem.nameSingular,
-      );
+  const matchesNavigationMenuItemLink =
+    hasCustomLink &&
+    isLocationMatchingNavigationMenuItem(
+      currentPath,
+      currentPathWithSearch,
+      navigationMenuItem!.type,
+      computedLink,
+    );
+
+  const isActiveByUrl =
+    matchesNavigationMenuItemLink ||
+    (isObject && isOnRecordShowPage) ||
+    (!hasCustomLink && isCurrentPathMatchingObject);
 
   const isActive =
-    isAtomForCurrentObject && isDefined(navItemId)
+    shouldUseExplicitActiveItem && isDefined(navItemId)
       ? activeNavigationItem.navItemId === navItemId ||
         isRecordMatchingCurrentPage
       : isActiveByUrl;
