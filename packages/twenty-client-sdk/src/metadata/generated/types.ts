@@ -88,9 +88,9 @@ export default {
         370,
         377,
         408,
-        488,
-        493,
-        494
+        489,
+        494,
+        495
     ],
     "types": {
         "BillingProductDTO": {
@@ -7215,6 +7215,15 @@ export default {
                     ]
                 }
             ],
+            "uploadEmailAttachmentFile": [
+                142,
+                {
+                    "file": [
+                        377,
+                        "Upload!"
+                    ]
+                }
+            ],
             "uploadAIChatFile": [
                 142,
                 {
@@ -8883,7 +8892,7 @@ export default {
                         "String!"
                     ],
                     "connectionParameters": [
-                        485,
+                        486,
                         "EmailAccountConnectionParameters!"
                     ],
                     "id": [
@@ -8895,7 +8904,7 @@ export default {
                 200,
                 {
                     "input": [
-                        487,
+                        488,
                         "UpdateLabPublicFeatureFlagInput!"
                     ]
                 }
@@ -8956,7 +8965,7 @@ export default {
                 6,
                 {
                     "role": [
-                        488,
+                        489,
                         "AiModelRole!"
                     ],
                     "modelId": [
@@ -9161,7 +9170,7 @@ export default {
                 68,
                 {
                     "input": [
-                        489,
+                        490,
                         "CreateOneAppTokenInput!"
                     ]
                 }
@@ -9197,7 +9206,7 @@ export default {
                 6,
                 {
                     "workspaceMigration": [
-                        491,
+                        492,
                         "WorkspaceMigrationInput!"
                     ]
                 }
@@ -9271,7 +9280,7 @@ export default {
                         "String!"
                     ],
                     "fileFolder": [
-                        494,
+                        495,
                         "FileFolder!"
                     ],
                     "filePath": [
@@ -11458,19 +11467,33 @@ export default {
             "inReplyTo": [
                 1
             ],
+            "files": [
+                485
+            ],
+            "__typename": [
+                1
+            ]
+        },
+        "SendEmailAttachmentInput": {
+            "id": [
+                1
+            ],
+            "name": [
+                1
+            ],
             "__typename": [
                 1
             ]
         },
         "EmailAccountConnectionParameters": {
             "IMAP": [
-                486
+                487
             ],
             "SMTP": [
-                486
+                487
             ],
             "CALDAV": [
-                486
+                487
             ],
             "__typename": [
                 1
@@ -11510,7 +11533,7 @@ export default {
         "AiModelRole": {},
         "CreateOneAppTokenInput": {
             "appToken": [
-                490
+                491
             ],
             "__typename": [
                 1
@@ -11526,7 +11549,7 @@ export default {
         },
         "WorkspaceMigrationInput": {
             "actions": [
-                492
+                493
             ],
             "__typename": [
                 1
@@ -11534,7 +11557,7 @@ export default {
         },
         "WorkspaceMigrationDeleteActionInput": {
             "type": [
-                493
+                494
             ],
             "metadataName": [
                 345
@@ -11562,7 +11585,7 @@ export default {
                 253,
                 {
                     "input": [
-                        496,
+                        497,
                         "LogicFunctionLogsInput!"
                     ]
                 }
