@@ -1,14 +1,11 @@
 import { useLingui } from '@lingui/react/macro';
 import { useLocation, useParams } from 'react-router-dom';
-import { NavigationMenuItemType } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
 
 import { activeNavigationItemState } from '@/navigation-menu-item/common/states/activeNavigationItemState';
-import { matchesRecordShowPathForObject } from '@/navigation-menu-item/common/utils/matchesRecordShowPathForObject';
 import { useNavigationMenuItemsData } from '@/navigation-menu-item/display/hooks/useNavigationMenuItemsData';
-import { useWorkspaceNavigationMenuItems } from '@/navigation-menu-item/display/hooks/useWorkspaceNavigationMenuItems';
-import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/display/object/utils/getObjectMetadataForNavigationMenuItem';
+import { shouldShowOpenedSection } from '@/navigation-menu-item/display/sections/utils/shouldShowOpenedSection';
 import { NavigationDrawerSectionForObjectMetadataItems } from '@/object-metadata/components/NavigationDrawerSectionForObjectMetadataItems';
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
 import { objectMetadataItemsSelector } from '@/object-metadata/states/objectMetadataItemsSelector';
@@ -20,9 +17,6 @@ export const NavigationDrawerOpenedSection = () => {
   const { pathname } = useLocation();
 
   const { activeObjectMetadataItems } = useFilteredObjectMetadataItems();
-
-  const { objectMetadataIdsWithObjectWorkspaceItem } =
-    useWorkspaceNavigationMenuItems();
 
   const { workspaceNavigationMenuItems } = useNavigationMenuItemsData();
   const activeNavigationItem = useAtomStateValue(activeNavigationItemState);
@@ -40,53 +34,17 @@ export const NavigationDrawerOpenedSection = () => {
       item.nameSingular === currentObjectNameSingular,
   );
 
-  const isOnRecordShowForCurrentObject =
-    isDefined(objectMetadataItem) &&
-    matchesRecordShowPathForObject(pathname, objectMetadataItem.nameSingular);
-
-  const activeWorkspaceNavigationMenuItem = isDefined(activeNavigationItem)
-    ? workspaceNavigationMenuItems.find(
-        (item) => item.id === activeNavigationItem.navItemId,
-      )
-    : undefined;
-
-  const objectMetadataForActiveWorkspaceNavItem = isDefined(
-    activeWorkspaceNavigationMenuItem,
-  )
-    ? getObjectMetadataForNavigationMenuItem(
-        activeWorkspaceNavigationMenuItem,
-        objectMetadataItems,
-        views,
-      )
-    : null;
-
-  const isCurrentObjectActiveInNavigationState =
-    isDefined(objectMetadataItem) &&
-    isDefined(activeNavigationItem) &&
-    activeNavigationItem.objectNameSingular === objectMetadataItem.nameSingular;
-
-  const isActiveWorkspaceItemViewOrRecord =
-    isDefined(activeWorkspaceNavigationMenuItem) &&
-    (activeWorkspaceNavigationMenuItem.type === NavigationMenuItemType.VIEW ||
-      activeWorkspaceNavigationMenuItem.type === NavigationMenuItemType.RECORD);
-
-  const activeWorkspaceItemTargetsCurrentObjectMetadata =
-    isDefined(objectMetadataItem) &&
-    objectMetadataForActiveWorkspaceNavItem?.id === objectMetadataItem.id;
-
-  const isOpenedSuppressedForViewOrRecordItem =
-    isCurrentObjectActiveInNavigationState &&
-    isActiveWorkspaceItemViewOrRecord &&
-    activeWorkspaceItemTargetsCurrentObjectMetadata;
-
-  const shouldShowOpenedSection =
-    isDefined(objectMetadataItem) &&
-    isOnRecordShowForCurrentObject &&
-    !objectMetadataIdsWithObjectWorkspaceItem.has(objectMetadataItem.id) &&
-    !isOpenedSuppressedForViewOrRecordItem;
+  const isExpanded = shouldShowOpenedSection({
+    objectMetadataItem,
+    pathname,
+    activeNavigationItem,
+    workspaceNavigationMenuItems,
+    objectMetadataItems,
+    views,
+  });
 
   return (
-    <AnimatedExpandableContainer isExpanded={shouldShowOpenedSection}>
+    <AnimatedExpandableContainer isExpanded={isExpanded}>
       <NavigationDrawerSectionForObjectMetadataItems
         sectionTitle={t`Opened`}
         objectMetadataItems={

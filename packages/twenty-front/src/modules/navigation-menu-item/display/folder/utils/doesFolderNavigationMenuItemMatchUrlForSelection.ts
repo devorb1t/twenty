@@ -32,31 +32,31 @@ export const doesFolderNavigationMenuItemMatchUrlForSelection = ({
     views,
   );
 
-  let locationMatches = isLocationMatchingNavigationMenuItem(
+  const matchesByLink = isLocationMatchingNavigationMenuItem(
     currentPath,
     currentViewPath,
     folderChildNavigationMenuItem.type,
     computedLink,
   );
 
-  if (
-    !locationMatches &&
+  const objectMetadataForRecordShowMatch =
+    !matchesByLink &&
     folderChildNavigationMenuItem.type === NavigationMenuItemType.OBJECT
-  ) {
-    const objectMetadataItem = getObjectMetadataForNavigationMenuItem(
-      folderChildNavigationMenuItem,
-      objectMetadataItems,
-      views,
-    );
-    if (isDefined(objectMetadataItem)) {
-      locationMatches = matchesRecordShowPathForObject(
-        currentPath,
-        objectMetadataItem.nameSingular,
-      );
-    }
-  }
+      ? getObjectMetadataForNavigationMenuItem(
+          folderChildNavigationMenuItem,
+          objectMetadataItems,
+          views,
+        )
+      : undefined;
 
-  if (!locationMatches) {
+  const matchesByRecordShow =
+    isDefined(objectMetadataForRecordShowMatch) &&
+    matchesRecordShowPathForObject(
+      currentPath,
+      objectMetadataForRecordShowMatch.nameSingular,
+    );
+
+  if (!matchesByLink && !matchesByRecordShow) {
     return false;
   }
 

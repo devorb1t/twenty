@@ -4,9 +4,8 @@ import { Fragment, type ReactNode, useContext } from 'react';
 
 import { isLayoutCustomizationModeEnabledState } from '@/layout-customization/states/isLayoutCustomizationModeEnabledState';
 import { activeNavigationItemState } from '@/navigation-menu-item/common/states/activeNavigationItemState';
-import { isLocationMatchingNavigationMenuItem } from '@/navigation-menu-item/common/utils/isLocationMatchingNavigationMenuItem';
-import { matchesRecordShowPathForObject } from '@/navigation-menu-item/common/utils/matchesRecordShowPathForObject';
 import { recordIdentifierToObjectRecordIdentifier } from '@/navigation-menu-item/common/utils/recordIdentifierToObjectRecordIdentifier';
+import { isNavigationItemActive } from '@/navigation-menu-item/display/object/utils/isNavigationItemActive';
 import { getNavigationMenuItemComputedLink } from '@/navigation-menu-item/display/utils/getNavigationMenuItemComputedLink';
 import { getNavigationMenuItemLabel } from '@/navigation-menu-item/display/utils/getNavigationMenuItemLabel';
 import { ObjectIconWithViewOverlay } from '@/navigation-menu-item/display/view/components/ObjectIconWithViewOverlay';
@@ -72,8 +71,6 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
   const { getIcon } = useIcons();
   const objectNavItemColor = getObjectColorWithFallback(objectMetadataItem);
   const location = useLocation();
-  const currentPath = location.pathname;
-  const currentPathWithSearch = `${location.pathname}${location.search}`;
 
   const isRecord = navigationMenuItem?.type === NavigationMenuItemType.RECORD;
   const isView = navigationMenuItem?.type === NavigationMenuItemType.VIEW;
@@ -94,57 +91,22 @@ export const NavigationDrawerItemForObjectMetadataItem = ({
 
   const computedLink = hasCustomLink ? navigationPath : '';
 
-  const navItemId = navigationMenuItem?.id;
   const activeNavigationItem = useAtomStateValue(activeNavigationItemState);
   const setActiveNavigationItem = useSetAtomState(activeNavigationItemState);
 
-  const isOnObjectRecordShowPage = matchesRecordShowPathForObject(
-    currentPath,
-    objectMetadataItem.nameSingular,
-  );
-
-  const isOnObjectIndexPage =
-    currentPath ===
-    getAppPath(AppPath.RecordIndexPage, {
-      objectNamePlural: objectMetadataItem.namePlural,
-    });
-
-  const isCurrentPathMatchingObject =
-    isOnObjectIndexPage || isOnObjectRecordShowPage;
-
-  const shouldUseExplicitActiveItem =
-    isDefined(activeNavigationItem) &&
-    activeNavigationItem.objectNameSingular ===
-      objectMetadataItem.nameSingular &&
-    isCurrentPathMatchingObject;
-
-  const isRecordMatchingCurrentPage =
-    isRecord && hasCustomLink && computedLink === currentPath;
-
-  const matchesNavigationMenuItemLink =
-    hasCustomLink &&
-    isLocationMatchingNavigationMenuItem(
-      currentPath,
-      currentPathWithSearch,
-      navigationMenuItem!.type,
-      computedLink,
-    );
-
-  const isActiveByUrl =
-    matchesNavigationMenuItemLink ||
-    (isObject && isOnObjectRecordShowPage) ||
-    (!hasCustomLink && isCurrentPathMatchingObject);
-
-  const isActive =
-    shouldUseExplicitActiveItem && isDefined(navItemId)
-      ? activeNavigationItem.navItemId === navItemId ||
-        isRecordMatchingCurrentPage
-      : isActiveByUrl;
+  const isActive = isNavigationItemActive({
+    navigationMenuItem,
+    activeNavigationItem,
+    objectNameSingular: objectMetadataItem.nameSingular,
+    objectNamePlural: objectMetadataItem.namePlural,
+    computedLink,
+    currentLocation: location,
+  });
 
   const handleBeforeNavigation = () => {
-    if (isDefined(navItemId)) {
+    if (isDefined(navigationMenuItem?.id)) {
       setActiveNavigationItem({
-        navItemId,
+        navItemId: navigationMenuItem.id,
         objectNameSingular: objectMetadataItem.nameSingular,
       });
     }

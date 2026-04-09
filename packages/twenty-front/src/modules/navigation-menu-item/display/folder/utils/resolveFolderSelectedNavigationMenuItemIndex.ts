@@ -1,6 +1,7 @@
 import { NavigationMenuItemType } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 
+import { type ActiveNavigationItem } from '@/navigation-menu-item/common/types/ActiveNavigationItem';
 import { doesFolderNavigationMenuItemMatchUrlForSelection } from '@/navigation-menu-item/display/folder/utils/doesFolderNavigationMenuItemMatchUrlForSelection';
 import { getObjectMetadataForNavigationMenuItem } from '@/navigation-menu-item/display/object/utils/getObjectMetadataForNavigationMenuItem';
 import { getNavigationMenuItemComputedLink } from '@/navigation-menu-item/display/utils/getNavigationMenuItemComputedLink';
@@ -8,14 +9,9 @@ import { type EnrichedObjectMetadataItem } from '@/object-metadata/types/Enriche
 import { type View } from '@/views/types/View';
 import { type NavigationMenuItem } from '~/generated-metadata/graphql';
 
-type ActiveNavigationItemForFolderSelection = {
-  navItemId: string;
-  objectNameSingular: string;
-};
-
 type ResolveFolderSelectedNavigationMenuItemIndexParams = {
   navigationMenuItems: NavigationMenuItem[];
-  activeNavigationItem: ActiveNavigationItemForFolderSelection | null;
+  activeNavigationItem: ActiveNavigationItem | null;
   currentPath: string;
   currentViewPath: string;
   objectMetadataItems: EnrichedObjectMetadataItem[];
@@ -82,9 +78,9 @@ export const resolveFolderSelectedNavigationMenuItemIndex = ({
     }),
   );
 
-  return isActiveNavigationItemObjectInFolder
-    ? explicitMatchIndex !== -1
-      ? explicitMatchIndex
-      : recordMatchIndex
-    : urlMatchIndex;
+  if (!isActiveNavigationItemObjectInFolder) {
+    return urlMatchIndex;
+  }
+
+  return explicitMatchIndex !== -1 ? explicitMatchIndex : recordMatchIndex;
 };
