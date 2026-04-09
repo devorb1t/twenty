@@ -19,7 +19,12 @@ import { useCopyToClipboard } from '~/hooks/useCopyToClipboard';
 export const useGetSecondaryRecordTableCellButton = () => {
   const { fieldDefinition, recordId } = useContext(FieldContext);
   const { copyToClipboard } = useCopyToClipboard();
-  const { openEmail } = useOpenEmailInAppOrFallback();
+
+  const isEmailField = isFieldEmails(fieldDefinition);
+
+  // Only fire the connected-account query for email fields — phone and link
+  // fields never use the in-app composer so the request would be wasted.
+  const { openEmail } = useOpenEmailInAppOrFallback({ skip: !isEmailField });
 
   const fieldValue = useRecordFieldValue<
     FieldPhonesValue | FieldEmailsValue | FieldLinksValue | undefined
@@ -28,7 +33,7 @@ export const useGetSecondaryRecordTableCellButton = () => {
   if (
     (!isFieldPhones(fieldDefinition) &&
       !isFieldLinks(fieldDefinition) &&
-      !isFieldEmails(fieldDefinition)) ||
+      !isEmailField) ||
     !isDefined(fieldValue)
   ) {
     return [];
@@ -36,7 +41,6 @@ export const useGetSecondaryRecordTableCellButton = () => {
 
   // Email fields default to opening the in-app composer; other field types
   // default to opening the platform link handler.
-  const isEmailField = isFieldEmails(fieldDefinition);
   const defaultClickAction = isEmailField
     ? FieldMetadataSettingsOnClickAction.OPEN_IN_APP
     : FieldMetadataSettingsOnClickAction.OPEN_LINK;

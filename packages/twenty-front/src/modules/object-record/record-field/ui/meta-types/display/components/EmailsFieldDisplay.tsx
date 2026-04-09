@@ -9,7 +9,6 @@ import { useCopyToClipboard } from '~/hooks/useCopyToClipboard';
 export const EmailsFieldDisplay = () => {
   const { fieldValue, fieldDefinition } = useEmailsFieldDisplay();
   const { copyToClipboard } = useCopyToClipboard();
-  const { openEmail } = useOpenEmailInAppOrFallback();
   const { t } = useLingui();
 
   // Email fields default to opening the in-app composer when no setting is
@@ -18,6 +17,13 @@ export const EmailsFieldDisplay = () => {
   const onClickAction =
     fieldDefinition.metadata.settings?.clickAction ??
     FieldMetadataSettingsOnClickAction.OPEN_IN_APP;
+
+  const isOpenInApp =
+    onClickAction === FieldMetadataSettingsOnClickAction.OPEN_IN_APP;
+
+  // Only fire the connected-account query when the click action is
+  // OPEN_IN_APP — COPY and OPEN_LINK don't need it.
+  const { openEmail } = useOpenEmailInAppOrFallback({ skip: !isOpenInApp });
 
   const handleEmailClick = (
     email: string,
@@ -30,10 +36,14 @@ export const EmailsFieldDisplay = () => {
       return;
     }
 
-    if (onClickAction === FieldMetadataSettingsOnClickAction.OPEN_IN_APP) {
+    if (isOpenInApp) {
       event.preventDefault();
       openEmail(email);
+
+      return;
     }
+
+    // OPEN_LINK: let the native <a href="mailto:…"> behaviour handle it.
   };
 
   return <EmailsDisplay value={fieldValue} onEmailClick={handleEmailClick} />;
