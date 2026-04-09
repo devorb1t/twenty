@@ -5,8 +5,8 @@ import { type PersonWorkspaceEntity } from 'src/modules/person/standard-objects/
 export const computeChangedAdditionalEmails = (
   diff: Partial<ObjectRecordDiff<PersonWorkspaceEntity>>,
 ) => {
-  const before = diff.emails?.before?.additionalEmails as string[];
-  const after = diff.emails?.after?.additionalEmails as string[];
+  const before = diff.emails?.before?.additionalEmails;
+  const after = diff.emails?.after?.additionalEmails;
 
   if (!Array.isArray(before) || !Array.isArray(after)) {
     return {

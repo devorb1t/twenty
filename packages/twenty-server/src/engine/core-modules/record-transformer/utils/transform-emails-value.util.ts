@@ -17,14 +17,12 @@ export const transformEmailsValue = (
 
   if (additionalEmails) {
     try {
-      const emailArray = (
-        isNonEmptyString(additionalEmails)
-          ? JSON.parse(additionalEmails)
-          : additionalEmails
-      ) as string[];
+      const emailArray = isNonEmptyString(additionalEmails)
+        ? JSON.parse(additionalEmails)
+        : additionalEmails;
 
       additionalEmails = isNonEmptyArray(emailArray)
-        ? JSON.stringify(emailArray.map((email) => email.toLowerCase()))
+        ? JSON.stringify(emailArray.map((email: string) => email.toLowerCase()))
         : null;
     } catch {
       /* empty */

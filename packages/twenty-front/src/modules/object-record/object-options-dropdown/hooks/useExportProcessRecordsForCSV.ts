@@ -1,5 +1,6 @@
 import { useObjectMetadataItem } from '@/object-metadata/hooks/useObjectMetadataItem';
 import { type FieldCurrencyValue } from '@/object-record/record-field/ui/types/FieldMetadata';
+import { isFieldCurrencyValue } from '@/object-record/record-field/ui/types/guards/isFieldCurrencyValue';
 import { type ObjectRecord } from '@/object-record/types/ObjectRecord';
 import { isDefined } from 'twenty-shared/utils';
 import { FieldMetadataType } from '~/generated-metadata/graphql';
@@ -19,16 +20,24 @@ export const useExportProcessRecordsForCSV = (objectNameSingular: string) => {
           }
 
           switch (field.type) {
-            case FieldMetadataType.CURRENCY:
+            case FieldMetadataType.CURRENCY: {
+              const currencyValue = record[field.name];
+              if (!isFieldCurrencyValue(currencyValue)) {
+                return processedRecord;
+              }
               return {
                 ...processedRecord,
                 [field.name]: {
-                  amountMicros: convertCurrencyMicrosToCurrencyAmount(
-                    record[field.name].amountMicros,
-                  ),
-                  currencyCode: record[field.name].currencyCode,
+                  amountMicros:
+                    currencyValue.amountMicros !== null
+                      ? convertCurrencyMicrosToCurrencyAmount(
+                          currencyValue.amountMicros,
+                        )
+                      : null,
+                  currencyCode: currencyValue.currencyCode,
                 } satisfies FieldCurrencyValue,
               };
+            }
             case FieldMetadataType.MULTI_SELECT:
             case FieldMetadataType.ARRAY:
             case FieldMetadataType.RAW_JSON:

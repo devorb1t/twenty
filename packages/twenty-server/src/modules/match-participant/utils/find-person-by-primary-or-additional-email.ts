@@ -1,3 +1,5 @@
+import { isNonEmptyArray } from 'twenty-shared/utils';
+
 import { type PersonWorkspaceEntity } from 'src/modules/person/standard-objects/person.workspace-entity';
 
 export const findPersonByPrimaryOrAdditionalEmail = ({
@@ -20,7 +22,7 @@ export const findPersonByPrimaryOrAdditionalEmail = ({
   const personWithAdditionalEmail = people.find((person) => {
     const additionalEmails = person.emails?.additionalEmails;
 
-    if (!Array.isArray(additionalEmails)) {
+    if (!isNonEmptyArray(additionalEmails)) {
       return false;
     }
 

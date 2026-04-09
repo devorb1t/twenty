@@ -8,7 +8,7 @@ import {
   ConnectedAccountProvider,
   type FieldActorSource,
 } from 'twenty-shared/types';
-import { isDefined } from 'twenty-shared/utils';
+import { isDefined, isNonEmptyArray } from 'twenty-shared/utils';
 import { type DeepPartial, type Repository } from 'typeorm';
 import { v4 } from 'uuid';
 
@@ -251,7 +251,7 @@ export class CreateCompanyAndPersonService {
       const existingPersonOnAdditionalEmails = alreadyCreatedPeople.find(
         (person) => {
           return (
-            Array.isArray(person.emails?.additionalEmails) &&
+            isNonEmptyArray(person.emails?.additionalEmails) &&
             person.emails.additionalEmails.some(
               (email) => email.toLowerCase() === contact.handle.toLowerCase(),
             )

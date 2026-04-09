@@ -45,8 +45,7 @@ export class CalendarEventParticipantPersonListener {
     const personEmails = personWithEmails
       .flatMap((eventPayload) => [
         eventPayload.properties.after.emails.primaryEmail,
-        ...((eventPayload.properties.after.emails?.additionalEmails ??
-          []) as string[]),
+        ...(eventPayload.properties.after.emails?.additionalEmails ?? []),
       ])
       .filter(isDefined);
 
@@ -82,8 +81,7 @@ export class CalendarEventParticipantPersonListener {
     const personEmails = personWithEmails
       .flatMap((eventPayload) => [
         eventPayload.properties.after.emails.primaryEmail,
-        ...((eventPayload.properties.after.emails?.additionalEmails ??
-          []) as string[]),
+        ...(eventPayload.properties.after.emails?.additionalEmails ?? []),
       ])
       .filter(isDefined);
 
@@ -115,8 +113,7 @@ export class CalendarEventParticipantPersonListener {
     const personEmails = peopleHavingEmails
       .flatMap((eventPayload) => [
         eventPayload.properties.before.emails.primaryEmail,
-        ...((eventPayload.properties.before.emails?.additionalEmails ??
-          []) as string[]),
+        ...(eventPayload.properties.before.emails?.additionalEmails ?? []),
       ])
       .filter(isDefined);
 
