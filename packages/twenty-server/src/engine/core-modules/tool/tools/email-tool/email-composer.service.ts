@@ -185,7 +185,7 @@ export class EmailComposerService {
     const fileIds = files.map((file) => file.id);
 
     const fileEntities = await this.fileRepository.find({
-      where: { id: In(fileIds) },
+      where: { id: In(fileIds), workspaceId },
     });
 
     const fileEntityMap = new Map(
