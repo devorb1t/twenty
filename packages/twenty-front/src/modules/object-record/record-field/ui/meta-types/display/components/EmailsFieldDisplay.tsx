@@ -37,7 +37,6 @@ export const EmailsFieldDisplay = () => {
 
       return;
     }
-
   };
 
   return <EmailsDisplay value={fieldValue} onEmailClick={handleEmailClick} />;
