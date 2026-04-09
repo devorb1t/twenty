@@ -943,4 +943,54 @@ export const STANDARD_COMMAND_MENU_ITEMS = {
     hotKeys: null,
     payload: { path: '/settings/updates' },
   },
+  // Per-object Send Email items: same engine component as the global
+  // Compose Email command, but scoped to a record selection so the composer
+  // can be opened pre-filled with the selected record's email address.
+  // Person allows >= 1 so it works both from a record show page and from a
+  // bulk selection on the people index page.
+  composeEmailToPerson: {
+    universalIdentifier: 'f01d4b8b-2b4e-4ae0-9c6f-0b9a9a3e5b21',
+    label: 'Send Email',
+    icon: 'IconMail',
+    isPinned: true,
+    position: 63,
+    shortLabel: 'Send Email',
+    availabilityType: CommandMenuItemAvailabilityType.RECORD_SELECTION,
+    conditionalAvailabilityExpression: 'numberOfSelectedRecords >= 1',
+    availabilityObjectMetadataUniversalIdentifier:
+      STANDARD_OBJECTS.person.universalIdentifier,
+    frontComponentUniversalIdentifier: null,
+    engineComponentKey: EngineComponentKey.COMPOSE_EMAIL,
+    hotKeys: null,
+  },
+  composeEmailToCompany: {
+    universalIdentifier: 'a76d3ab8-4c3a-4e5d-8a4a-1f5d6e7f8a90',
+    label: 'Send Email',
+    icon: 'IconMail',
+    isPinned: true,
+    position: 64,
+    shortLabel: 'Send Email',
+    availabilityType: CommandMenuItemAvailabilityType.RECORD_SELECTION,
+    conditionalAvailabilityExpression: 'numberOfSelectedRecords == 1',
+    availabilityObjectMetadataUniversalIdentifier:
+      STANDARD_OBJECTS.company.universalIdentifier,
+    frontComponentUniversalIdentifier: null,
+    engineComponentKey: EngineComponentKey.COMPOSE_EMAIL,
+    hotKeys: null,
+  },
+  composeEmailToOpportunity: {
+    universalIdentifier: 'b3e7c9f2-5d6e-4f7a-8b9c-0d1e2f3a4b5c',
+    label: 'Send Email',
+    icon: 'IconMail',
+    isPinned: true,
+    position: 65,
+    shortLabel: 'Send Email',
+    availabilityType: CommandMenuItemAvailabilityType.RECORD_SELECTION,
+    conditionalAvailabilityExpression: 'numberOfSelectedRecords == 1',
+    availabilityObjectMetadataUniversalIdentifier:
+      STANDARD_OBJECTS.opportunity.universalIdentifier,
+    frontComponentUniversalIdentifier: null,
+    engineComponentKey: EngineComponentKey.COMPOSE_EMAIL,
+    hotKeys: null,
+  },
 } as const;

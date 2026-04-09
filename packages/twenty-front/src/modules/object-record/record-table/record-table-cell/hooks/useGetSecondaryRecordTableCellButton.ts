@@ -1,3 +1,4 @@
+import { useOpenEmailInAppOrFallback } from '@/activities/emails/hooks/useOpenEmailInAppOrFallback';
 import { FieldContext } from '@/object-record/record-field/ui/contexts/FieldContext';
 import {
   type FieldEmailsValue,
@@ -12,12 +13,13 @@ import { t } from '@lingui/core/macro';
 import { useContext } from 'react';
 import { FieldMetadataSettingsOnClickAction } from 'twenty-shared/types';
 import { ensureAbsoluteUrl, isDefined } from 'twenty-shared/utils';
-import { IconArrowUpRight, IconCopy } from 'twenty-ui/display';
+import { IconArrowUpRight, IconCopy, IconMail } from 'twenty-ui/display';
 import { useCopyToClipboard } from '~/hooks/useCopyToClipboard';
 
 export const useGetSecondaryRecordTableCellButton = () => {
   const { fieldDefinition, recordId } = useContext(FieldContext);
   const { copyToClipboard } = useCopyToClipboard();
+  const { openEmail } = useOpenEmailInAppOrFallback();
 
   const fieldValue = useRecordFieldValue<
     FieldPhonesValue | FieldEmailsValue | FieldLinksValue | undefined
@@ -32,17 +34,31 @@ export const useGetSecondaryRecordTableCellButton = () => {
     return [];
   }
 
+  // Email fields default to opening the in-app composer; other field types
+  // default to opening the platform link handler.
+  const isEmailField = isFieldEmails(fieldDefinition);
+  const defaultClickAction = isEmailField
+    ? FieldMetadataSettingsOnClickAction.OPEN_IN_APP
+    : FieldMetadataSettingsOnClickAction.OPEN_LINK;
+
   const mainActionOnClick =
-    fieldDefinition.metadata.settings?.clickAction ??
-    FieldMetadataSettingsOnClickAction.OPEN_LINK;
+    fieldDefinition.metadata.settings?.clickAction ?? defaultClickAction;
+
+  // The secondary button always exposes the "other" useful action: if main is
+  // a copy then offer an open action, otherwise offer copy. For emails the
+  // open action is the in-app composer rather than mailto.
+  const openActionForFieldType = isEmailField
+    ? FieldMetadataSettingsOnClickAction.OPEN_IN_APP
+    : FieldMetadataSettingsOnClickAction.OPEN_LINK;
 
   const secondaryActionOnClick =
-    mainActionOnClick === FieldMetadataSettingsOnClickAction.OPEN_LINK
-      ? FieldMetadataSettingsOnClickAction.COPY
-      : FieldMetadataSettingsOnClickAction.OPEN_LINK;
+    mainActionOnClick === FieldMetadataSettingsOnClickAction.COPY
+      ? openActionForFieldType
+      : FieldMetadataSettingsOnClickAction.COPY;
 
   let openLinkOnClick: () => void = () => {};
   let copyOnClick: () => void = () => {};
+  let openInAppOnClick: () => void = () => {};
 
   if (isFieldPhones(fieldDefinition)) {
     const { primaryPhoneCallingCode = '', primaryPhoneNumber = '' } =
@@ -64,6 +80,9 @@ export const useGetSecondaryRecordTableCellButton = () => {
     copyOnClick = () => {
       copyToClipboard(email, t`Email copied to clipboard`);
     };
+    openInAppOnClick = () => {
+      openEmail(email);
+    };
   }
 
   if (isFieldLinks(fieldDefinition)) {
@@ -76,16 +95,25 @@ export const useGetSecondaryRecordTableCellButton = () => {
     };
   }
 
+  const onClickByAction: Record<
+    FieldMetadataSettingsOnClickAction,
+    () => void
+  > = {
+    [FieldMetadataSettingsOnClickAction.OPEN_LINK]: openLinkOnClick,
+    [FieldMetadataSettingsOnClickAction.COPY]: copyOnClick,
+    [FieldMetadataSettingsOnClickAction.OPEN_IN_APP]: openInAppOnClick,
+  };
+
+  const iconByAction = {
+    [FieldMetadataSettingsOnClickAction.OPEN_LINK]: IconArrowUpRight,
+    [FieldMetadataSettingsOnClickAction.COPY]: IconCopy,
+    [FieldMetadataSettingsOnClickAction.OPEN_IN_APP]: IconMail,
+  };
+
   return [
     {
-      onClick:
-        secondaryActionOnClick === FieldMetadataSettingsOnClickAction.OPEN_LINK
-          ? openLinkOnClick
-          : copyOnClick,
-      Icon:
-        secondaryActionOnClick === FieldMetadataSettingsOnClickAction.OPEN_LINK
-          ? IconArrowUpRight
-          : IconCopy,
+      onClick: onClickByAction[secondaryActionOnClick],
+      Icon: iconByAction[secondaryActionOnClick],
     },
   ];
 };

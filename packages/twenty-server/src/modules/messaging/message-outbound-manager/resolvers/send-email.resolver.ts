@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { Args, Mutation } from '@nestjs/graphql';
 
+import { FileFolder } from 'twenty-shared/types';
+
 import { MetadataResolver } from 'src/engine/api/graphql/graphql-config/decorators/metadata-resolver.decorator';
 import { AuthGraphqlApiExceptionFilter } from 'src/engine/core-modules/auth/filters/auth-graphql-api-exception.filter';
 import { ResolverValidationPipe } from 'src/engine/core-modules/graphql/pipes/resolver-validation.pipe';
@@ -57,10 +59,11 @@ export class SendEmailResolver {
           subject: input.subject,
           body: input.body,
           connectedAccountId: input.connectedAccountId,
-          files: [],
+          files: input.files ?? [],
           inReplyTo: input.inReplyTo,
         },
         { workspaceId: workspace.id },
+        { attachmentsFileFolder: FileFolder.EmailAttachment },
       );
 
       if (!result.success) {

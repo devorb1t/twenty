@@ -1,3 +1,4 @@
+import { useOpenEmailInAppOrFallback } from '@/activities/emails/hooks/useOpenEmailInAppOrFallback';
 import { useEmailsFieldDisplay } from '@/object-record/record-field/ui/meta-types/hooks/useEmailsFieldDisplay';
 import { EmailsDisplay } from '@/ui/field/display/components/EmailsDisplay';
 import { useLingui } from '@lingui/react/macro';
@@ -8,9 +9,15 @@ import { useCopyToClipboard } from '~/hooks/useCopyToClipboard';
 export const EmailsFieldDisplay = () => {
   const { fieldValue, fieldDefinition } = useEmailsFieldDisplay();
   const { copyToClipboard } = useCopyToClipboard();
+  const { openEmail } = useOpenEmailInAppOrFallback();
   const { t } = useLingui();
 
-  const onClickAction = fieldDefinition.metadata.settings?.clickAction;
+  // Email fields default to opening the in-app composer when no setting is
+  // explicitly stored. The mailto-based <a> stays as the rendered href so the
+  // link is still right-clickable / openable in a new tab.
+  const onClickAction =
+    fieldDefinition.metadata.settings?.clickAction ??
+    FieldMetadataSettingsOnClickAction.OPEN_IN_APP;
 
   const handleEmailClick = (
     email: string,
@@ -19,6 +26,13 @@ export const EmailsFieldDisplay = () => {
     if (onClickAction === FieldMetadataSettingsOnClickAction.COPY) {
       event.preventDefault();
       copyToClipboard(email, t`Email copied to clipboard`);
+
+      return;
+    }
+
+    if (onClickAction === FieldMetadataSettingsOnClickAction.OPEN_IN_APP) {
+      event.preventDefault();
+      openEmail(email);
     }
   };
 

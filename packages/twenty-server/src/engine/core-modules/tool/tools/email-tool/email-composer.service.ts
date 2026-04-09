@@ -12,6 +12,7 @@ import { z } from 'zod';
 
 import { FileEntity } from 'src/engine/core-modules/file/entities/file.entity';
 import { FileService } from 'src/engine/core-modules/file/services/file.service';
+import { MAX_EMAIL_RECIPIENTS } from 'src/engine/core-modules/tool/tools/email-tool/constants/email-tool.constants';
 import {
   EmailToolException,
   EmailToolExceptionCode,
@@ -157,9 +158,26 @@ export class EmailComposerService {
     return invalidEmails;
   }
 
+  private assertRecipientCountWithinLimit(recipients: {
+    to: string[];
+    cc: string[];
+    bcc: string[];
+  }): void {
+    const total =
+      recipients.to.length + recipients.cc.length + recipients.bcc.length;
+
+    if (total > MAX_EMAIL_RECIPIENTS) {
+      throw new EmailToolException(
+        `Too many recipients: ${total}. Maximum allowed is ${MAX_EMAIL_RECIPIENTS}.`,
+        EmailToolExceptionCode.TOO_MANY_RECIPIENTS,
+      );
+    }
+  }
+
   private async getAttachments(
     files: Array<WorkflowAttachment>,
     workspaceId: string,
+    fileFolder: FileFolder,
   ): Promise<MessageAttachment[]> {
     if (files.length === 0) {
       return [];
@@ -196,7 +214,7 @@ export class EmailComposerService {
       const { stream } = await this.fileService.getFileStreamById({
         fileId: fileMetadata.id,
         workspaceId,
-        fileFolder: FileFolder.Workflow,
+        fileFolder,
       });
 
       const buffer = await streamToBuffer(stream);
@@ -258,6 +276,7 @@ export class EmailComposerService {
   async composeEmail(
     parameters: EmailToolInput,
     context: ToolExecutionContext,
+    options: { attachmentsFileFolder: FileFolder },
   ): Promise<EmailComposerResult> {
     const { workspaceId } = context;
     const { subject, body, files, inReplyTo } = parameters;
@@ -267,6 +286,7 @@ export class EmailComposerService {
 
     try {
       recipients = this.normalizeRecipients(parameters);
+      this.assertRecipientCountWithinLimit(recipients);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Invalid recipients';
@@ -334,7 +354,11 @@ export class EmailComposerService {
       refreshToken,
     };
 
-    const attachments = await this.getAttachments(files || [], workspaceId);
+    const attachments = await this.getAttachments(
+      files || [],
+      workspaceId,
+      options.attachmentsFileFolder,
+    );
 
     const parsedBody = parseEmailBody(body);
     const reactMarkup = reactMarkupFromJSON(parsedBody);

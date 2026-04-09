@@ -5017,11 +5017,20 @@ export type SendChatMessageResult = {
   streamId?: Maybe<Scalars['String']>;
 };
 
+export type SendEmailAttachmentInput = {
+  createdAt: Scalars['String'];
+  id: Scalars['String'];
+  name: Scalars['String'];
+  size: Scalars['Float'];
+  type: Scalars['String'];
+};
+
 export type SendEmailInput = {
   bcc?: InputMaybe<Scalars['String']>;
   body: Scalars['String'];
   cc?: InputMaybe<Scalars['String']>;
   connectedAccountId: Scalars['String'];
+  files?: InputMaybe<Array<SendEmailAttachmentInput>>;
   inReplyTo?: InputMaybe<Scalars['String']>;
   subject: Scalars['String'];
   to: Scalars['String'];
