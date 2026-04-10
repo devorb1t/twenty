@@ -1,6 +1,5 @@
 import { isDefined } from 'twenty-shared/utils';
-import { useParams } from 'react-router-dom';
-import { ApplicationDataTableRow } from '~/pages/settings/applications/components/SettingsApplicationDataTable';
+import { type ApplicationDataTableRow } from '~/pages/settings/applications/components/SettingsApplicationDataTable';
 
 export type ItemTagInfo = (
   | ThisAppItemTagInfo
@@ -38,14 +37,12 @@ type ManagedItemTagInfo = {
 export const getItemTagInfo = ({
   item: { isCustom, isRemote, applicationId, logoUrl },
   workspaceCustomApplicationId,
+  currentApplicationId,
 }: {
   item: ApplicationDataTableRow['tagItem'];
   workspaceCustomApplicationId?: string;
+  currentApplicationId?: string;
 }): ItemTagInfo => {
-  const { applicationId: currentApplicationId = '' } = useParams<{
-    applicationId: string;
-  }>();
-
   if (
     isDefined(applicationId) &&
     isDefined(currentApplicationId) &&

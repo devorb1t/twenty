@@ -5,6 +5,7 @@ import { Avatar } from 'twenty-ui/display';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { useContext } from 'react';
 import { ThemeContext, themeCssVariables } from 'twenty-ui/theme-constants';
+import { useParams } from 'react-router-dom';
 
 type SettingsItemTypeTagProps = {
   item: {
@@ -28,6 +29,11 @@ export const SettingsItemTypeTag = ({
   item: { isCustom, isRemote, applicationId },
 }: SettingsItemTypeTagProps) => {
   const currentWorkspace = useAtomStateValue(currentWorkspaceState);
+
+  const { applicationId: currentApplicationId = '' } = useParams<{
+    applicationId: string;
+  }>();
+
   const itemTagInfo = getItemTagInfo({
     item: {
       isCustom,
@@ -36,6 +42,7 @@ export const SettingsItemTypeTag = ({
     },
     workspaceCustomApplicationId:
       currentWorkspace?.workspaceCustomApplication?.id,
+    currentApplicationId,
   });
 
   const { theme } = useContext(ThemeContext);

@@ -1,6 +1,6 @@
 import {
   type Application,
-  ApplicationRegistration,
+  type ApplicationRegistration,
 } from '~/generated-metadata/graphql';
 
 export type ApplicationWithoutRelation = Omit<

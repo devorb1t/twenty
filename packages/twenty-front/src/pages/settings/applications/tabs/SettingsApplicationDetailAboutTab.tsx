@@ -16,7 +16,7 @@ import {
 } from '~/generated-metadata/graphql';
 import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 import { useNavigateSettings } from '~/hooks/useNavigateSettings';
-import { ApplicationWithoutRelation } from '~/pages/settings/applications/types/applicationWithoutRelation';
+import { type ApplicationWithoutRelation } from '~/pages/settings/applications/types/applicationWithoutRelation';
 
 const UNINSTALL_APPLICATION_MODAL_ID = 'uninstall-application-modal';
 

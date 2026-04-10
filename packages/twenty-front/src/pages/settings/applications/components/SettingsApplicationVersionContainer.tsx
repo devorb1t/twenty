@@ -9,7 +9,7 @@ import { IconCircleDot, IconStatusChange, IconUpload } from 'twenty-ui/display';
 import { Button } from 'twenty-ui/input';
 import { ApplicationRegistrationSourceType } from '~/generated-metadata/graphql';
 import { isNewerSemver } from '~/pages/settings/applications/utils/isNewerSemver';
-import { ApplicationWithoutRelation } from '~/pages/settings/applications/types/applicationWithoutRelation';
+import { type ApplicationWithoutRelation } from '~/pages/settings/applications/types/applicationWithoutRelation';
 
 const StyledContainer = styled.div`
   display: flex;
