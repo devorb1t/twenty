@@ -37,53 +37,6 @@ import { PublicEndpointGuard } from 'src/engine/guards/public-endpoint.guard';
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
-  @Get('public-assets/:workspaceId/:applicationId/*path')
-  @UseGuards(PublicEndpointGuard, NoPermissionGuard)
-  async getPublicAssets(
-    @Res() res: Response,
-    @Req() req: Request,
-    @Param('workspaceId') workspaceId: string,
-    @Param('applicationId')
-    applicationId: string,
-  ) {
-    const filepath = join(...req.params.path);
-
-    try {
-      const { stream, mimeType } = await this.fileService.getFileStreamByPath({
-        workspaceId,
-        applicationId,
-        fileFolder: FileFolder.PublicAsset,
-        filepath,
-      });
-
-      setFileResponseHeaders(res, mimeType);
-
-      stream.on('error', () => {
-        throw new FileException(
-          'Error streaming file from storage',
-          FileExceptionCode.INTERNAL_SERVER_ERROR,
-        );
-      });
-
-      stream.pipe(res);
-    } catch (error) {
-      if (
-        error instanceof FileStorageException &&
-        error.code === FileStorageExceptionCode.FILE_NOT_FOUND
-      ) {
-        throw new FileException(
-          'File not found',
-          FileExceptionCode.FILE_NOT_FOUND,
-        );
-      }
-
-      throw new FileException(
-        `Error retrieving file: ${error.message}`,
-        FileExceptionCode.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
   @Get('file/:fileFolder/:id')
   @UseGuards(FileByIdGuard, NoPermissionGuard)
   async getFileById(

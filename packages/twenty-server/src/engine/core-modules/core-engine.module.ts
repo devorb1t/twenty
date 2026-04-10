@@ -77,6 +77,7 @@ import { AuditModule } from './audit/audit.module';
 import { ClientConfigModule } from './client-config/client-config.module';
 import { EventLogsModule } from './event-logs/event-logs.module';
 import { FileModule } from './file/file.module';
+import { ApplicationAssetModule } from 'src/engine/core-modules/application/application-asset/application-asset.module';
 
 @Module({
   imports: [
@@ -99,6 +100,7 @@ import { FileModule } from './file/file.module';
     ApplicationInstallModule,
     ApplicationUpgradeModule,
     ApplicationDevelopmentModule,
+    ApplicationAssetModule,
     MarketplaceModule,
     AppTokenModule,
     TimelineMessagingModule,

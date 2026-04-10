@@ -27,7 +27,7 @@ export const getPublicAssetUrl = (path: string): string => {
     );
   }
 
-  const { workspaceId, applicationId } = decodeTokenPayload(token);
+  const { applicationId } = decodeTokenPayload(token);
   const withoutLeadingSlash = path.startsWith('/') ? path.slice(1) : path;
   const withPublicPrefix = withoutLeadingSlash.startsWith('public/')
     ? withoutLeadingSlash
@@ -38,5 +38,5 @@ export const getPublicAssetUrl = (path: string): string => {
     .map(encodeURIComponent)
     .join('/');
 
-  return `${apiUrl}/public-assets/${workspaceId}/${applicationId}/${encodedPath}`;
+  return `${apiUrl}/applications/${applicationId}/assets/${encodedPath}`;
 };

@@ -213,7 +213,8 @@ export const SettingsAvailableApplicationDetails = () => {
 
   const displayName = app?.displayName ?? detail?.name ?? '';
   const description = app?.description ?? '';
-  const screenshots = app?.screenshots ?? [];
+  const logoUrl = detail?.logoUrl ?? undefined;
+  const screenshots = detail?.screenshots ?? [];
   const aboutDescription = app?.aboutDescription;
 
   const currentVersion = application?.version;
@@ -222,7 +223,6 @@ export const SettingsAvailableApplicationDetails = () => {
   const sourceType = detail?.sourceType;
   const isNpmApp = sourceType === ApplicationRegistrationSourceType.NPM;
   const registrationId = detail?.id;
-  const sourcePackage = detail?.sourcePackage;
   const sourcePackageUrl =
     isNpmApp && detail?.sourcePackage
       ? `https://www.npmjs.com/package/${detail.sourcePackage}`
@@ -585,7 +585,7 @@ export const SettingsAvailableApplicationDetails = () => {
         <SettingsApplicationDetailTitle
           displayName={displayName}
           description={description}
-          logoUrl={app?.logoUrl}
+          logoUrl={logoUrl}
           isUnlisted={isUnlisted}
         />
       }

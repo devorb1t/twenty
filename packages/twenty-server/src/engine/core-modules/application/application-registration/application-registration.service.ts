@@ -22,7 +22,9 @@ import { type PublicApplicationRegistrationDTO } from 'src/engine/core-modules/a
 import { type UpdateApplicationRegistrationInput } from 'src/engine/core-modules/application/application-registration/dtos/update-application-registration.input';
 import { ApplicationRegistrationSourceType } from 'src/engine/core-modules/application/application-registration/enums/application-registration-source-type.enum';
 import { ApplicationEntity } from 'src/engine/core-modules/application/application.entity';
+import { buildApplicationRegistrationPublicAssetUrl } from 'src/engine/core-modules/application/application-registration/utils/build-application-registration-public-asset-url.util';
 import { validateRedirectUri } from 'src/engine/core-modules/auth/utils/validate-redirect-uri.util';
+import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 const BCRYPT_SALT_ROUNDS = 10;
 
@@ -35,7 +37,32 @@ export class ApplicationRegistrationService {
     private readonly applicationRepository: Repository<ApplicationEntity>,
     @InjectRepository(WorkspaceEntity)
     private readonly workspaceRepository: Repository<WorkspaceEntity>,
+    private readonly twentyConfigService: TwentyConfigService,
   ) {}
+
+  resolvePublicAssetUrl(
+    applicationRegistrationId: string,
+    assetPath: string | undefined | null,
+  ): string | null {
+    if (!assetPath) {
+      return null;
+    }
+
+    return buildApplicationRegistrationPublicAssetUrl({
+      serverUrl: this.twentyConfigService.get('SERVER_URL'),
+      applicationRegistrationId,
+      assetPath,
+    });
+  }
+
+  async findApplicationByRegistrationId(
+    applicationRegistrationId: string,
+    workspaceId: string,
+  ): Promise<ApplicationEntity | null> {
+    return this.applicationRepository.findOne({
+      where: { applicationRegistrationId, workspaceId },
+    });
+  }
 
   async findMany(
     ownerWorkspaceId: string,
@@ -113,7 +140,10 @@ export class ApplicationRegistrationService {
     return {
       id: registration.id,
       name: registration.name,
-      logoUrl: registration.manifest?.application?.logoUrl ?? null,
+      logoUrl: this.resolvePublicAssetUrl(
+        registration.id,
+        registration.manifest?.application?.logoUrl,
+      ),
       websiteUrl: registration.manifest?.application?.websiteUrl ?? null,
       oAuthScopes: registration.oAuthScopes,
     };

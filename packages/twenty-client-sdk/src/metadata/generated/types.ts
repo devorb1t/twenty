@@ -212,14 +212,14 @@ export default {
             "isFeatured": [
                 6
             ],
-            "logoUrl": [
-                1
-            ],
             "createdAt": [
                 4
             ],
             "updatedAt": [
                 4
+            ],
+            "logoUrl": [
+                1
             ],
             "__typename": [
                 1
@@ -4924,6 +4924,12 @@ export default {
                 1
             ],
             "name": [
+                1
+            ],
+            "logoUrl": [
+                1
+            ],
+            "screenshots": [
                 1
             ],
             "sourceType": [

@@ -1,5 +1,5 @@
 import { UseFilters, UseGuards, UsePipes } from '@nestjs/common';
-import { Args, Mutation, Query } from '@nestjs/graphql';
+import { Args, Mutation, Parent, Query, ResolveField } from '@nestjs/graphql';
 
 import GraphQLUpload from 'graphql-upload/GraphQLUpload.mjs';
 import { PermissionFlagType } from 'twenty-shared/constants';
@@ -48,7 +48,7 @@ import { WorkspaceAuthGuard } from 'src/engine/guards/workspace-auth.guard';
 import { streamToBuffer } from 'src/utils/stream-to-buffer';
 
 @UsePipes(ResolverValidationPipe)
-@MetadataResolver()
+@MetadataResolver(() => ApplicationRegistrationEntity)
 @UseFilters(
   ApplicationRegistrationExceptionFilter,
   AuthGraphqlApiExceptionFilter,
@@ -60,7 +60,6 @@ export class ApplicationRegistrationResolver {
     private readonly applicationRegistrationVariableService: ApplicationRegistrationVariableService,
     private readonly applicationTarballService: ApplicationTarballService,
     private readonly fileUrlService: FileUrlService,
-    private readonly domainServerConfigService: DomainServerConfigService,
   ) {}
 
   @UseGuards(PublicEndpointGuard, NoPermissionGuard)
@@ -310,5 +309,15 @@ export class ApplicationRegistrationResolver {
       targetWorkspaceSubdomain,
       currentOwnerWorkspaceId: workspaceId,
     });
+  }
+
+  @ResolveField(() => String, { nullable: true })
+  logoUrl(
+    @Parent() registration: ApplicationRegistrationEntity,
+  ): string | null {
+    return this.applicationRegistrationService.resolvePublicAssetUrl(
+      registration.id,
+      registration.manifest?.application?.logoUrl,
+    );
   }
 }

@@ -51,9 +51,9 @@ export interface ApplicationRegistration {
     latestAvailableVersion?: Scalars['String']
     isListed: Scalars['Boolean']
     isFeatured: Scalars['Boolean']
-    logoUrl?: Scalars['String']
     createdAt: Scalars['DateTime']
     updatedAt: Scalars['DateTime']
+    logoUrl?: Scalars['String']
     __typename: 'ApplicationRegistration'
 }
 
@@ -2181,6 +2181,8 @@ export interface MarketplaceAppDetail {
     universalIdentifier: Scalars['String']
     id: Scalars['String']
     name: Scalars['String']
+    logoUrl?: Scalars['String']
+    screenshots?: Scalars['String'][]
     sourceType: ApplicationRegistrationSourceType
     sourcePackage?: Scalars['String']
     latestAvailableVersion?: Scalars['String']
@@ -3171,9 +3173,9 @@ export interface ApplicationRegistrationGenqlSelection{
     latestAvailableVersion?: boolean | number
     isListed?: boolean | number
     isFeatured?: boolean | number
-    logoUrl?: boolean | number
     createdAt?: boolean | number
     updatedAt?: boolean | number
+    logoUrl?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -5429,6 +5431,8 @@ export interface MarketplaceAppDetailGenqlSelection{
     universalIdentifier?: boolean | number
     id?: boolean | number
     name?: boolean | number
+    logoUrl?: boolean | number
+    screenshots?: boolean | number
     sourceType?: boolean | number
     sourcePackage?: boolean | number
     latestAvailableVersion?: boolean | number

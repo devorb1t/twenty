@@ -47,9 +47,9 @@ type ApplicationRegistration {
   latestAvailableVersion: String
   isListed: Boolean!
   isFeatured: Boolean!
-  logoUrl: String
   createdAt: DateTime!
   updatedAt: DateTime!
+  logoUrl: String
 }
 
 enum ApplicationRegistrationSourceType {
@@ -2472,6 +2472,8 @@ type MarketplaceAppDetail {
   universalIdentifier: String!
   id: String!
   name: String!
+  logoUrl: String
+  screenshots: [String!]
   sourceType: ApplicationRegistrationSourceType!
   sourcePackage: String
   latestAvailableVersion: String

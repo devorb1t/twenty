@@ -5,6 +5,8 @@ export const MARKETPLACE_APP_DETAIL_FRAGMENT = gql`
     id
     universalIdentifier
     name
+    logoUrl
+    screenshots
     sourceType
     sourcePackage
     latestAvailableVersion

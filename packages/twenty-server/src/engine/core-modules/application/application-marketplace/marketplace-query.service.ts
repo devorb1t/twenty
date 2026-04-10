@@ -90,7 +90,11 @@ export class MarketplaceQueryService {
       icon: app?.icon ?? 'IconApps',
       author: app?.author ?? 'Unknown',
       category: app?.category ?? '',
-      logo: app?.logoUrl ?? undefined,
+      logo:
+        this.applicationRegistrationService.resolvePublicAssetUrl(
+          registration.id,
+          app?.logoUrl,
+        ) ?? undefined,
       sourcePackage: registration.sourcePackage ?? undefined,
       isFeatured: registration.isFeatured,
     };
@@ -99,16 +103,31 @@ export class MarketplaceQueryService {
   private toMarketplaceAppDetailDTO(
     registration: ApplicationRegistrationEntity,
   ): MarketplaceAppDetailDTO {
+    const manifest = registration.manifest;
+
     return {
       id: registration.id,
       universalIdentifier: registration.universalIdentifier,
       name: registration.name,
+      logoUrl: isDefined(manifest)
+        ? (this.applicationRegistrationService.resolvePublicAssetUrl(
+            registration.id,
+            manifest.application.logoUrl,
+          ) ?? undefined)
+        : undefined,
+      screenshots: (manifest?.application.screenshots ?? []).map(
+        (url) =>
+          this.applicationRegistrationService.resolvePublicAssetUrl(
+            registration.id,
+            url,
+          ) ?? url,
+      ),
       sourceType: registration.sourceType,
       sourcePackage: registration.sourcePackage ?? undefined,
       latestAvailableVersion: registration.latestAvailableVersion ?? undefined,
       isListed: registration.isListed,
       isFeatured: registration.isFeatured,
-      manifest: registration.manifest ?? undefined,
+      manifest: manifest ?? undefined,
     };
   }
 }
