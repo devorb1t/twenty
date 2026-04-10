@@ -46,8 +46,6 @@ export const SettingsApplicationDetailAboutTab = ({
     return null;
   }
 
-  const { id, name, description } = application;
-
   const handleUninstallApplication = async () => {
     setIsLoading(true);
     try {
