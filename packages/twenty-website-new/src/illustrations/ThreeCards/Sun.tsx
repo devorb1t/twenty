@@ -10,14 +10,14 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 const DRACO_DECODER_PATH =
   'https://www.gstatic.com/draco/versioned/decoders/1.5.6/';
 
-const GLB_URL = '/illustrations/home/three-cards/flash.glb';
+const GLB_URL = '/illustrations/home/three-cards/sun.glb';
 const VIRTUAL_RENDER_HEIGHT = 768;
 
 const LIGHTING = {
-  intensity: 4,
-  fillIntensity: 1.31,
-  ambientIntensity: 0.1,
-  angleDegrees: 25,
+  intensity: 1.5,
+  fillIntensity: 0.15,
+  ambientIntensity: 0.08,
+  angleDegrees: 45,
   height: 2,
 };
 
@@ -27,40 +27,30 @@ const MATERIAL = {
 };
 
 const HALFTONE = {
-  numRows: 48,
-  contrast: 2.7,
+  numRows: 99,
+  contrast: 1.3,
   power: 1.1,
-  shading: 3,
-  baseInk: 0.19,
-  maxBar: 0.23,
-  cellRatio: 2,
+  shading: 1.6,
+  baseInk: 0.16,
+  maxBar: 0.24,
+  cellRatio: 2.2,
   cutoff: 0.02,
   dashColor: '#4A38F5',
-  waveAmount: 0,
-  waveSpeed: 0,
 };
 
-const ANIMATION = {
-  autoSpeed: 0.1,
-  autoWobble: 0.3,
-  dragFriction: 0.08,
-  dragMomentum: true,
-  dragSens: 0.008,
-  followDragEnabled: true,
-  followHoverEnabled: true,
-  hoverEase: 0.08,
-  hoverRange: 25,
-  hoverReturn: true,
+const AUTO_ROTATE = {
+  speed: 0.3,
+  wobble: 0.3,
 };
 
+// Start from the same hero angle used in the exported homepage asset.
 const INITIAL_POSE = {
-  autoElapsed: 16.16666666666703,
-  rotationX: -0.09184084195435831,
-  rotationY: 1.7614744750399298,
+  autoElapsed: 4,
+  rotationX: 0.215,
+  rotationY: 1.2,
   rotationZ: 0,
   targetRotationX: 0,
   targetRotationY: 0,
-  timeElapsed: 325.47089999996314,
 };
 
 const passThroughVertexShader = /* glsl */ `
@@ -121,8 +111,6 @@ const halftoneFragmentShader = /* glsl */ `
   uniform float cutoff;
   uniform vec3 dashColor;
   uniform float time;
-  uniform float waveAmount;
-  uniform float waveSpeed;
 
   varying vec2 vUv;
 
@@ -133,12 +121,9 @@ const halftoneFragmentShader = /* glsl */ `
     float rowV = (row + 0.5) * rowH / resolution.y;
     float dy = abs(rowFrac - 0.5);
 
-    float waveOffset = waveAmount * sin(time * waveSpeed + row * 0.5) * rowH;
-    float effectiveX = gl_FragCoord.x + waveOffset;
-
     float cellW = rowH * cellRatio;
-    float cellIdx = floor(effectiveX / cellW);
-    float cellFrac = (effectiveX - cellIdx * cellW) / cellW;
+    float cellIdx = floor(gl_FragCoord.x / cellW);
+    float cellFrac = (gl_FragCoord.x - cellIdx * cellW) / cellW;
     float cellU = (cellIdx + 0.5) * cellW / resolution.x;
 
     vec2 sampleUv = vec2(
@@ -406,9 +391,9 @@ async function loadGeometry(modelUrl: string) {
 
 function createRenderTarget(width: number, height: number) {
   return new THREE.WebGLRenderTarget(width, height, {
-    format: THREE.RGBAFormat,
-    magFilter: THREE.LinearFilter,
     minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter,
+    format: THREE.RGBAFormat,
   });
 }
 
@@ -446,26 +431,15 @@ function createInteractionState(): InteractionState {
   };
 }
 
-function setPrimaryLightPosition(
-  light: THREE.DirectionalLight,
-  angleDegrees: number,
-  height: number,
-) {
-  const lightAngle = THREE.MathUtils.degToRad(angleDegrees);
-  light.position.set(
-    Math.cos(lightAngle) * 5,
-    height,
-    Math.sin(lightAngle) * 5,
-  );
-}
-
-async function mountFlashCanvas(container: HTMLDivElement) {
+async function mountSunCanvas(container: HTMLDivElement) {
   const getWidth = () => Math.max(container.clientWidth, 1);
   const getHeight = () => Math.max(container.clientHeight, 1);
   const getVirtualHeight = () => Math.max(VIRTUAL_RENDER_HEIGHT, getHeight());
   const getVirtualWidth = () =>
     Math.max(
-      Math.round(getVirtualHeight() * (getWidth() / Math.max(getHeight(), 1))),
+      Math.round(
+        getVirtualHeight() * (getWidth() / Math.max(getHeight(), 1)),
+      ),
       1,
     );
 
@@ -478,7 +452,7 @@ async function mountFlashCanvas(container: HTMLDivElement) {
     geometry = new THREE.TorusKnotGeometry(1, 0.35, 200, 32);
   }
 
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false });
+  const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setPixelRatio(1);
   renderer.setClearColor(0x000000, 0);
@@ -502,17 +476,25 @@ async function mountFlashCanvas(container: HTMLDivElement) {
   const scene3d = new THREE.Scene();
   scene3d.background = null;
 
-  const baseCameraDistance = 4;
   const camera = new THREE.PerspectiveCamera(
     45,
     getWidth() / getHeight(),
     0.1,
     100,
   );
-  camera.position.z = baseCameraDistance;
+  camera.position.z = 4;
 
-  const primaryLight = new THREE.DirectionalLight(0xffffff, LIGHTING.intensity);
-  setPrimaryLightPosition(primaryLight, LIGHTING.angleDegrees, LIGHTING.height);
+  const lightAngle = (LIGHTING.angleDegrees * Math.PI) / 180;
+
+  const primaryLight = new THREE.DirectionalLight(
+    0xffffff,
+    LIGHTING.intensity,
+  );
+  primaryLight.position.set(
+    Math.cos(lightAngle) * 5,
+    LIGHTING.height,
+    Math.sin(lightAngle) * 5,
+  );
   scene3d.add(primaryLight);
 
   const fillLight = new THREE.DirectionalLight(
@@ -529,14 +511,14 @@ async function mountFlashCanvas(container: HTMLDivElement) {
   scene3d.add(ambientLight);
 
   const material = new THREE.MeshPhysicalMaterial({
-    clearcoat: 0,
-    clearcoatRoughness: 0.08,
     color: 0xd4d0c8,
+    roughness: MATERIAL.roughness,
+    metalness: MATERIAL.metalness,
     envMap: environmentTexture,
     envMapIntensity: 0.25,
-    metalness: MATERIAL.metalness,
+    clearcoat: 0,
+    clearcoatRoughness: 0.08,
     reflectivity: 0.5,
-    roughness: MATERIAL.roughness,
     transmission: 0,
   });
 
@@ -551,48 +533,50 @@ async function mountFlashCanvas(container: HTMLDivElement) {
 
   const blurHorizontalMaterial = new THREE.ShaderMaterial({
     uniforms: {
-      dir: { value: new THREE.Vector2(1, 0) },
-      res: { value: new THREE.Vector2(getVirtualWidth(), getVirtualHeight()) },
       tInput: { value: null },
+      dir: { value: new THREE.Vector2(1, 0) },
+      res: {
+        value: new THREE.Vector2(getVirtualWidth(), getVirtualHeight()),
+      },
     },
-    fragmentShader: blurFragmentShader,
     vertexShader: passThroughVertexShader,
+    fragmentShader: blurFragmentShader,
   });
 
   const blurVerticalMaterial = new THREE.ShaderMaterial({
     uniforms: {
-      dir: { value: new THREE.Vector2(0, 1) },
-      res: { value: new THREE.Vector2(getVirtualWidth(), getVirtualHeight()) },
       tInput: { value: null },
+      dir: { value: new THREE.Vector2(0, 1) },
+      res: {
+        value: new THREE.Vector2(getVirtualWidth(), getVirtualHeight()),
+      },
     },
-    fragmentShader: blurFragmentShader,
     vertexShader: passThroughVertexShader,
+    fragmentShader: blurFragmentShader,
   });
 
   const halftoneMaterial = new THREE.ShaderMaterial({
     transparent: true,
     uniforms: {
-      baseInk: { value: HALFTONE.baseInk },
-      cellRatio: { value: HALFTONE.cellRatio },
-      contrast: { value: HALFTONE.contrast },
-      cutoff: { value: HALFTONE.cutoff },
-      dashColor: { value: new THREE.Color(HALFTONE.dashColor) },
-      glowStr: { value: 0 },
-      maxBar: { value: HALFTONE.maxBar },
-      numRows: { value: HALFTONE.numRows },
-      power: { value: HALFTONE.power },
+      tScene: { value: sceneTarget.texture },
+      tGlow: { value: blurTargetB.texture },
       resolution: {
         value: new THREE.Vector2(getVirtualWidth(), getVirtualHeight()),
       },
+      numRows: { value: HALFTONE.numRows },
+      glowStr: { value: 0 },
+      contrast: { value: HALFTONE.contrast },
+      power: { value: HALFTONE.power },
       shading: { value: HALFTONE.shading },
-      tGlow: { value: blurTargetB.texture },
-      tScene: { value: sceneTarget.texture },
+      baseInk: { value: HALFTONE.baseInk },
+      maxBar: { value: HALFTONE.maxBar },
+      cellRatio: { value: HALFTONE.cellRatio },
+      cutoff: { value: HALFTONE.cutoff },
+      dashColor: { value: new THREE.Color(HALFTONE.dashColor) },
       time: { value: 0 },
-      waveAmount: { value: HALFTONE.waveAmount },
-      waveSpeed: { value: HALFTONE.waveSpeed },
     },
-    fragmentShader: halftoneFragmentShader,
     vertexShader: passThroughVertexShader,
+    fragmentShader: halftoneFragmentShader,
   });
 
   const blurHorizontalScene = new THREE.Scene();
@@ -624,31 +608,16 @@ async function mountFlashCanvas(container: HTMLDivElement) {
     blurTargetB.setSize(virtualWidth, virtualHeight);
     blurHorizontalMaterial.uniforms.res.value.set(virtualWidth, virtualHeight);
     blurVerticalMaterial.uniforms.res.value.set(virtualWidth, virtualHeight);
-    halftoneMaterial.uniforms.resolution.value.set(virtualWidth, virtualHeight);
+    halftoneMaterial.uniforms.resolution.value.set(
+      virtualWidth,
+      virtualHeight,
+    );
   };
 
   const resizeObserver = new ResizeObserver(syncSize);
   resizeObserver.observe(container);
 
-  const updatePointerPosition = (event: PointerEvent) => {
-    const rect = canvas.getBoundingClientRect();
-    const width = Math.max(rect.width, 1);
-    const height = Math.max(rect.height, 1);
-
-    interaction.mouseX = THREE.MathUtils.clamp(
-      (event.clientX - rect.left) / width,
-      0,
-      1,
-    );
-    interaction.mouseY = THREE.MathUtils.clamp(
-      (event.clientY - rect.top) / height,
-      0,
-      1,
-    );
-  };
-
   const handlePointerDown = (event: PointerEvent) => {
-    updatePointerPosition(event);
     interaction.dragging = true;
     interaction.pointerX = event.clientX;
     interaction.pointerY = event.clientY;
@@ -658,34 +627,8 @@ async function mountFlashCanvas(container: HTMLDivElement) {
   };
 
   const handlePointerMove = (event: PointerEvent) => {
-    updatePointerPosition(event);
-  };
-
-  const handleWindowPointerMove = (event: PointerEvent) => {
-    updatePointerPosition(event);
-
-    if (!interaction.dragging || !ANIMATION.followDragEnabled) {
-      return;
-    }
-
-    const deltaX = (event.clientX - interaction.pointerX) * ANIMATION.dragSens;
-    const deltaY = (event.clientY - interaction.pointerY) * ANIMATION.dragSens;
-
-    interaction.velocityX = deltaY;
-    interaction.velocityY = deltaX;
-    interaction.targetRotationY += deltaX;
-    interaction.targetRotationX += deltaY;
-    interaction.pointerX = event.clientX;
-    interaction.pointerY = event.clientY;
-  };
-
-  const handlePointerLeave = () => {
-    if (interaction.dragging) {
-      return;
-    }
-
-    interaction.mouseX = 0.5;
-    interaction.mouseY = 0.5;
+    interaction.mouseX = event.clientX / window.innerWidth;
+    interaction.mouseY = event.clientY / window.innerHeight;
   };
 
   const handlePointerUp = () => {
@@ -693,17 +636,9 @@ async function mountFlashCanvas(container: HTMLDivElement) {
     canvas.style.cursor = 'grab';
   };
 
-  const handleWindowBlur = () => {
-    handlePointerUp();
-    handlePointerLeave();
-  };
-
-  canvas.addEventListener('pointerdown', handlePointerDown);
-  canvas.addEventListener('pointerleave', handlePointerLeave);
-  canvas.addEventListener('pointermove', handlePointerMove);
-  window.addEventListener('blur', handleWindowBlur);
-  window.addEventListener('pointermove', handleWindowPointerMove);
+  window.addEventListener('pointermove', handlePointerMove);
   window.addEventListener('pointerup', handlePointerUp);
+  canvas.addEventListener('pointerdown', handlePointerDown);
 
   const clock = new THREE.Clock();
   let animationFrameId = 0;
@@ -711,69 +646,34 @@ async function mountFlashCanvas(container: HTMLDivElement) {
   const renderFrame = () => {
     animationFrameId = window.requestAnimationFrame(renderFrame);
 
-    const delta = Math.min(clock.getDelta(), 0.1);
-    const elapsedTime = INITIAL_POSE.timeElapsed + clock.getElapsedTime();
-
+    const delta = 1 / 60;
+    const elapsedTime = clock.getElapsedTime();
     halftoneMaterial.uniforms.time.value = elapsedTime;
 
     if (!interaction.dragging) {
       interaction.autoElapsed += delta;
-
-      if (ANIMATION.dragMomentum) {
-        interaction.targetRotationX += interaction.velocityX;
-        interaction.targetRotationY += interaction.velocityY;
-        interaction.velocityX *= 1 - ANIMATION.dragFriction;
-        interaction.velocityY *= 1 - ANIMATION.dragFriction;
-      }
+      interaction.targetRotationX += interaction.velocityX;
+      interaction.targetRotationY += interaction.velocityY;
+      interaction.velocityX *= 0.92;
+      interaction.velocityY *= 0.92;
     }
 
+    const baseRotationY =
+      interaction.autoElapsed * AUTO_ROTATE.speed;
     const baseRotationX =
-      Math.sin(interaction.autoElapsed * 0.2) * ANIMATION.autoWobble;
-    const baseRotationY = interaction.autoElapsed * ANIMATION.autoSpeed;
+      Math.sin(interaction.autoElapsed * 0.2) * AUTO_ROTATE.wobble;
 
-    let targetX = baseRotationX;
-    let targetY = baseRotationY;
-    let easing = 0.12;
-
-    if (ANIMATION.followHoverEnabled) {
-      const rangeRadians = THREE.MathUtils.degToRad(ANIMATION.hoverRange);
-
-      if (
-        ANIMATION.hoverReturn ||
-        interaction.mouseX !== 0.5 ||
-        interaction.mouseY !== 0.5
-      ) {
-        targetX += (interaction.mouseY - 0.5) * rangeRadians;
-        targetY += (interaction.mouseX - 0.5) * rangeRadians;
-      }
-
-      easing = ANIMATION.hoverEase;
-    }
-
-    if (ANIMATION.followDragEnabled) {
-      targetX += interaction.targetRotationX;
-      targetY += interaction.targetRotationY;
-      easing = ANIMATION.dragFriction;
-    }
+    const targetX = baseRotationX + interaction.targetRotationX;
+    const targetY = baseRotationY + interaction.targetRotationY;
+    const easing = 0.08;
 
     interaction.rotationX += (targetX - interaction.rotationX) * easing;
     interaction.rotationY += (targetY - interaction.rotationY) * easing;
-    interaction.rotationZ += (0 - interaction.rotationZ) * 0.12;
 
     mesh.rotation.set(
       interaction.rotationX,
       interaction.rotationY,
       interaction.rotationZ,
-    );
-
-    camera.position.x += (0 - camera.position.x) * 0.12;
-    camera.position.y += (0 - camera.position.y) * 0.12;
-    camera.position.z += (baseCameraDistance - camera.position.z) * 0.12;
-    camera.lookAt(0, 0, 0);
-    setPrimaryLightPosition(
-      primaryLight,
-      LIGHTING.angleDegrees,
-      LIGHTING.height,
     );
 
     renderer.setRenderTarget(sceneTarget);
@@ -805,17 +705,13 @@ async function mountFlashCanvas(container: HTMLDivElement) {
   return () => {
     window.cancelAnimationFrame(animationFrameId);
     resizeObserver.disconnect();
-    canvas.removeEventListener('pointerdown', handlePointerDown);
-    canvas.removeEventListener('pointerleave', handlePointerLeave);
-    canvas.removeEventListener('pointermove', handlePointerMove);
-    window.removeEventListener('blur', handleWindowBlur);
-    window.removeEventListener('pointermove', handleWindowPointerMove);
+    window.removeEventListener('pointermove', handlePointerMove);
     window.removeEventListener('pointerup', handlePointerUp);
+    canvas.removeEventListener('pointerdown', handlePointerDown);
     blurHorizontalMaterial.dispose();
     blurVerticalMaterial.dispose();
     halftoneMaterial.dispose();
     fullScreenGeometry.dispose();
-    mesh.geometry.dispose();
     material.dispose();
     sceneTarget.dispose();
     blurTargetA.dispose();
@@ -836,7 +732,7 @@ const StyledVisualMount = styled.div`
   width: 100%;
 `;
 
-export function Flash() {
+export function Sun() {
   const mountReference = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -846,7 +742,7 @@ export function Flash() {
       return;
     }
 
-    const unmount = mountFlashCanvas(container);
+    const unmount = mountSunCanvas(container);
 
     return () => {
       void Promise.resolve(unmount).then((dispose) => dispose?.());
