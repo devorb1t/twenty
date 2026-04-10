@@ -29,6 +29,11 @@ import {
   type HalftoneSourceMode,
   normalizeHalftoneStudioSettings,
 } from '@/app/halftone/_lib/state';
+import {
+  buildShareUrl,
+  decodeShareState,
+  encodeShareState,
+} from '@/app/halftone/_lib/share';
 import { Logo as LogoIcon } from '@/icons';
 import { theme } from '@/theme';
 import { styled } from '@linaria/react';
@@ -355,6 +360,73 @@ export function HalftoneStudio() {
       ...state.settings.halftone,
     };
   }, [state.settings.halftone, state.settings.sourceMode]);
+
+  // Hydrate from URL hash on first mount. Done in an effect (not the reducer
+  // initializer) so the server-rendered HTML matches the client and we don't
+  // touch `window` during render.
+  const hashHydratedReference = useRef(false);
+  useEffect(() => {
+    if (hashHydratedReference.current) {
+      return;
+    }
+
+    hashHydratedReference.current = true;
+
+    const decoded = decodeShareState(window.location.hash);
+
+    if (!decoded) {
+      return;
+    }
+
+    dispatch({ type: 'replaceSettings', value: decoded.settings });
+    setPreviewDistance(decoded.previewDistance);
+    setExportName(decoded.exportName);
+  }, []);
+
+  // Mirror the current design state to the URL hash so a refresh (and a copy
+  // of the URL) restores the same look. We skip the very first effect run so
+  // the URL stays clean until the user actually changes something.
+  const hashSyncInitializedReference = useRef(false);
+  useEffect(() => {
+    if (!hashSyncInitializedReference.current) {
+      hashSyncInitializedReference.current = true;
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      const hash = encodeShareState({
+        settings: state.settings,
+        previewDistance,
+        exportName,
+      });
+      const nextUrl = `${window.location.pathname}${window.location.search}#${hash}`;
+      window.history.replaceState(null, '', nextUrl);
+    }, 250);
+
+    return () => window.clearTimeout(timeout);
+  }, [state.settings, previewDistance, exportName]);
+
+  const handleCopyShareLink = useCallback(() => {
+    const url = buildShareUrl({
+      settings: state.settings,
+      previewDistance,
+      exportName,
+    });
+
+    void navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        dispatch({ type: 'setStatus', message: 'Link copied to clipboard.' });
+        window.setTimeout(() => dispatch({ type: 'clearStatus' }), 2000);
+      })
+      .catch(() => {
+        dispatch({
+          type: 'setStatus',
+          message: 'Could not copy the share link.',
+          isError: true,
+        });
+      });
+  }, [exportName, previewDistance, state.settings]);
 
   const openFilePicker = useCallback((accept: string) => {
     return new Promise<File | null>((resolve) => {
@@ -1026,6 +1098,7 @@ export function HalftoneStudio() {
             onAnimationSettingsChange={(value) =>
               dispatch({ type: 'patchAnimation', value })
             }
+            onCopyShareLink={handleCopyShareLink}
             onDashColorChange={(value) =>
               dispatch({
                 type: 'patchHalftone',

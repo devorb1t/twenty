@@ -24,6 +24,7 @@ type ControlsPanelProps = {
     value: Partial<HalftoneStudioSettings['animation']>,
   ) => void;
   onBackgroundChange: (value: Partial<HalftoneBackgroundSettings>) => void;
+  onCopyShareLink: () => void;
   onDashColorChange: (value: string) => void;
   onExportHalftoneImage: (width: number, height: number) => void;
   onExportBackgroundChange: (value: boolean) => void;
@@ -112,6 +113,7 @@ export function ControlsPanel({
   imageFileName,
   onAnimationSettingsChange,
   onBackgroundChange,
+  onCopyShareLink,
   onDashColorChange,
   onExportHalftoneImage,
   onExportBackgroundChange,
@@ -198,6 +200,7 @@ export function ControlsPanel({
           exportBackground={exportBackground}
           exportName={exportName}
           imageFileName={imageFileName}
+          onCopyShareLink={onCopyShareLink}
           onExportHalftoneImage={onExportHalftoneImage}
           onExportBackgroundChange={onExportBackgroundChange}
           onExportHtml={onExportHtml}
