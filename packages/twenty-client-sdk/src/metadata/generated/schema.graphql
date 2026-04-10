@@ -1628,6 +1628,7 @@ type PublicWorkspaceData {
 type AgentCapabilities {
   webSearch: Boolean
   twitterSearch: Boolean
+  codeInterpreter: Boolean
 }
 
 type ClientAIModelConfig {

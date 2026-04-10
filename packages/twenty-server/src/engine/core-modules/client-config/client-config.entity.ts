@@ -36,6 +36,9 @@ export class AgentCapabilities {
 
   @Field(() => Boolean, { nullable: true })
   twitterSearch?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  codeInterpreter?: boolean;
 }
 
 @ObjectType()

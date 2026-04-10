@@ -1337,6 +1337,7 @@ export interface PublicWorkspaceData {
 export interface AgentCapabilities {
     webSearch?: Scalars['Boolean']
     twitterSearch?: Scalars['Boolean']
+    codeInterpreter?: Scalars['Boolean']
     __typename: 'AgentCapabilities'
 }
 
@@ -4512,6 +4513,7 @@ export interface PublicWorkspaceDataGenqlSelection{
 export interface AgentCapabilitiesGenqlSelection{
     webSearch?: boolean | number
     twitterSearch?: boolean | number
+    codeInterpreter?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }

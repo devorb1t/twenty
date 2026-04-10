@@ -11,6 +11,7 @@ import {
 } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
 import { NodeEnvironment } from 'src/engine/core-modules/twenty-config/interfaces/node-environment.interface';
 import { SupportDriver } from 'src/engine/core-modules/twenty-config/interfaces/support.interface';
+import { CodeInterpreterDriverType } from 'src/engine/core-modules/code-interpreter/code-interpreter.interface';
 import { WebSearchDriverType } from 'src/engine/core-modules/web-search/web-search.interface';
 
 import { MaintenanceModeService } from 'src/engine/core-modules/admin-panel/maintenance-mode.service';
@@ -52,11 +53,18 @@ export class ClientConfigService {
 
     const webSearch = hasNativeWebSearch || isWebSearchDriverEnabled;
 
-    if (!webSearch) {
+    const codeInterpreter =
+      this.twentyConfigService.get('CODE_INTERPRETER_TYPE') !==
+      CodeInterpreterDriverType.DISABLED;
+
+    if (!webSearch && !codeInterpreter) {
       return undefined;
     }
 
-    return { webSearch };
+    return {
+      ...(webSearch && { webSearch }),
+      ...(codeInterpreter && { codeInterpreter }),
+    };
   }
 
   private isCloudflareIntegrationEnabled(): boolean {

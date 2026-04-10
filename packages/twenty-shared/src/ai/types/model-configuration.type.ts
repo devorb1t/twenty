@@ -7,4 +7,8 @@ export type ModelConfiguration = {
     enabled: boolean;
     configuration?: Record<string, unknown>;
   };
+  codeInterpreter?: {
+    enabled: boolean;
+    configuration?: Record<string, unknown>;
+  };
 };

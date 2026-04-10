@@ -114,6 +114,7 @@ export type Agent = {
 
 export type AgentCapabilities = {
   __typename?: 'AgentCapabilities';
+  codeInterpreter?: Maybe<Scalars['Boolean']>;
   twitterSearch?: Maybe<Scalars['Boolean']>;
   webSearch?: Maybe<Scalars['Boolean']>;
 };

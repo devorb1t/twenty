@@ -3,7 +3,7 @@ import { InputLabel } from '@/ui/input/components/InputLabel';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { t } from '@lingui/core/macro';
 import { isDefined } from 'twenty-shared/utils';
-import { IconBrandX, IconWorld } from 'twenty-ui/display';
+import { IconBrandX, IconCode, IconWorld } from 'twenty-ui/display';
 import { Section } from 'twenty-ui/layout';
 import { MenuItemToggle } from 'twenty-ui/navigation';
 
@@ -13,6 +13,10 @@ type ModelConfiguration = {
     configuration?: Record<string, unknown>;
   };
   twitterSearch?: {
+    enabled: boolean;
+    configuration?: Record<string, unknown>;
+  };
+  codeInterpreter?: {
     enabled: boolean;
     configuration?: Record<string, unknown>;
   };
@@ -40,12 +44,16 @@ export const SettingsAgentModelCapabilities = ({
     return null;
   }
 
-  if (!capabilities.webSearch && !capabilities.twitterSearch) {
+  if (
+    !capabilities.webSearch &&
+    !capabilities.twitterSearch &&
+    !capabilities.codeInterpreter
+  ) {
     return null;
   }
 
   const handleCapabilityToggle = (
-    capability: 'webSearch' | 'twitterSearch',
+    capability: 'webSearch' | 'twitterSearch' | 'codeInterpreter',
     enabled: boolean,
   ) => {
     if (disabled) {
@@ -79,6 +87,17 @@ export const SettingsAgentModelCapabilities = ({
             label: t`Twitter/X Search`,
             Icon: IconBrandX,
             enabled: modelConfiguration.twitterSearch?.enabled || false,
+          },
+        ]
+      : []),
+    ...(capabilities.codeInterpreter
+      ? [
+          {
+            key: 'codeInterpreter' as const,
+            label: t`Code Interpreter`,
+            Icon: IconCode,
+            enabled:
+              modelConfiguration.codeInterpreter?.enabled !== false,
           },
         ]
       : []),

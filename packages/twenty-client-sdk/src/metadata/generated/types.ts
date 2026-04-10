@@ -3282,6 +3282,9 @@ export default {
             "twitterSearch": [
                 6
             ],
+            "codeInterpreter": [
+                6
+            ],
             "__typename": [
                 1
             ]

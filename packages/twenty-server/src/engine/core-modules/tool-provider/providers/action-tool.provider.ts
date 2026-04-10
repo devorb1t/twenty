@@ -128,8 +128,12 @@ export class ActionToolProvider implements ToolProvider {
       ),
     );
 
+    const isCodeInterpreterEnabledForAgent =
+      context.agent?.modelConfiguration?.codeInterpreter?.enabled !== false;
+
     const hasCodeInterpreterPermission =
       this.codeInterpreterService.isEnabled() &&
+      isCodeInterpreterEnabledForAgent &&
       (await this.permissionsService.hasToolPermission(
         context.rolePermissionConfig,
         context.workspaceId,
