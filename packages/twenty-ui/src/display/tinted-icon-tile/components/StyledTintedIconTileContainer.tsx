@@ -1,9 +1,10 @@
 import { styled } from '@linaria/react';
-import { themeCssVariables } from 'twenty-ui/theme-constants';
+import { themeCssVariables } from '@ui/theme-constants';
 
-export const StyledNavigationMenuItemIconContainer = styled.div<{
+export const StyledTintedIconTileContainer = styled.div<{
   $backgroundColor?: string;
   $borderColor?: string;
+  $dimension?: string;
 }>`
   align-items: center;
   background-color: ${({ $backgroundColor }) =>
@@ -14,8 +15,8 @@ export const StyledNavigationMenuItemIconContainer = styled.div<{
   box-sizing: border-box;
   display: flex;
   flex-shrink: 0;
-  height: ${themeCssVariables.spacing[4]};
+  height: ${({ $dimension }) => $dimension ?? themeCssVariables.spacing[4]};
 
   justify-content: center;
-  width: ${themeCssVariables.spacing[4]};
+  width: ${({ $dimension }) => $dimension ?? themeCssVariables.spacing[4]};
 `;
