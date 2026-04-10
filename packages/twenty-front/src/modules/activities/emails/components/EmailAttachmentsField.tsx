@@ -1,19 +1,19 @@
-import { useUploadWorkflowFile } from '@/advanced-text-editor/hooks/useUploadWorkflowFile';
+import { styled } from '@linaria/react';
+import { useLingui } from '@lingui/react/macro';
+import { useContext } from 'react';
+import { type EmailAttachment } from 'twenty-shared/types';
+import { isDefined } from 'twenty-shared/utils';
+import { IconUpload } from 'twenty-ui/display';
+import { ThemeContext, themeCssVariables } from 'twenty-ui/theme-constants';
+
+import { useUploadEmailAttachment } from '@/activities/emails/hooks/useUploadEmailAttachment';
 import { AttachmentChip } from '@/file/components/AttachmentChip';
 import { useFileUpload } from '@/file-upload/hooks/useFileUpload';
 import { InputLabel } from '@/ui/input/components/InputLabel';
 
-import { styled } from '@linaria/react';
-import { useLingui } from '@lingui/react/macro';
-import { useContext } from 'react';
-import { isDefined } from 'twenty-shared/utils';
-import { type WorkflowAttachment } from 'twenty-shared/workflow';
-import { IconUpload } from 'twenty-ui/display';
-import { ThemeContext, themeCssVariables } from 'twenty-ui/theme-constants';
-
-type WorkflowSendEmailAttachmentsProps = {
-  files: WorkflowAttachment[];
-  onChange: (files: WorkflowAttachment[]) => void;
+type EmailAttachmentsFieldProps = {
+  files: EmailAttachment[];
+  onChange: (files: EmailAttachment[]) => void;
   label?: string;
 };
 
@@ -57,19 +57,19 @@ const StyledUploadAreaLabel = styled.div`
   justify-content: center;
 `;
 
-export const WorkflowSendEmailAttachments = ({
+export const EmailAttachmentsField = ({
   files,
   label,
   onChange,
-}: WorkflowSendEmailAttachmentsProps) => {
+}: EmailAttachmentsFieldProps) => {
   const { theme } = useContext(ThemeContext);
-  const { uploadWorkflowFile } = useUploadWorkflowFile();
+  const { uploadEmailAttachment } = useUploadEmailAttachment();
   const { openFileUpload } = useFileUpload();
   const { t } = useLingui();
 
   const handleUploadFiles = async (filesToUpload: File[]) => {
     const uploadedFiles = await Promise.all(
-      filesToUpload.map((file) => uploadWorkflowFile(file)),
+      filesToUpload.map((file) => uploadEmailAttachment(file)),
     );
 
     const successfulUploads = uploadedFiles.filter(isDefined);
@@ -100,7 +100,7 @@ export const WorkflowSendEmailAttachments = ({
       >
         {files.length > 0 ? (
           <StyledChipsContainer>
-            {files.map((file: WorkflowAttachment) => (
+            {files.map((file) => (
               <AttachmentChip
                 key={file.id}
                 file={file}
