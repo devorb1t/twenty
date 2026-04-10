@@ -11,6 +11,7 @@ import {
 } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
 import { NodeEnvironment } from 'src/engine/core-modules/twenty-config/interfaces/node-environment.interface';
 import { SupportDriver } from 'src/engine/core-modules/twenty-config/interfaces/support.interface';
+import { WebSearchDriverType } from 'src/engine/core-modules/web-search/web-search.interface';
 
 import { MaintenanceModeService } from 'src/engine/core-modules/admin-panel/maintenance-mode.service';
 import {
@@ -40,14 +41,22 @@ export class ClientConfigService {
   private deriveNativeCapabilities(
     sdkPackage?: AiSdkPackage,
   ): NativeModelCapabilities | undefined {
-    switch (sdkPackage) {
-      case AI_SDK_OPENAI:
-      case AI_SDK_ANTHROPIC:
-      case AI_SDK_BEDROCK:
-        return { webSearch: true };
-      default:
-        return undefined;
+    const hasNativeWebSearch =
+      sdkPackage === AI_SDK_OPENAI ||
+      sdkPackage === AI_SDK_ANTHROPIC ||
+      sdkPackage === AI_SDK_BEDROCK;
+
+    const isWebSearchDriverEnabled =
+      this.twentyConfigService.get('WEB_SEARCH_DRIVER') !==
+      WebSearchDriverType.DISABLED;
+
+    const webSearch = hasNativeWebSearch || isWebSearchDriverEnabled;
+
+    if (!webSearch) {
+      return undefined;
     }
+
+    return { webSearch };
   }
 
   private isCloudflareIntegrationEnabled(): boolean {

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { type ToolSet } from 'ai';
 import { isDefined } from 'twenty-shared/utils';
@@ -15,6 +15,8 @@ import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models
 // This provider keeps generateTools() and is excluded from the descriptor system.
 @Injectable()
 export class NativeModelToolProvider implements NativeToolProvider {
+  private readonly logger = new Logger(NativeModelToolProvider.name);
+
   readonly category = ToolCategory.NATIVE_MODEL;
 
   constructor(
@@ -32,7 +34,13 @@ export class NativeModelToolProvider implements NativeToolProvider {
       return {};
     }
 
-    if (!this.webSearchService.shouldUseNativeSearch()) {
+    const useNativeSearch = this.webSearchService.shouldUseNativeSearch();
+
+    this.logger.log(
+      `Web search strategy: ${useNativeSearch ? 'native (provider SDK)' : 'external (EXA)'}`,
+    );
+
+    if (!useNativeSearch) {
       return {};
     }
 

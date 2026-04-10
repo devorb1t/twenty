@@ -86,7 +86,7 @@ export const SettingsAgentModelCapabilities = ({
 
   return (
     <Section>
-      <InputLabel>{t`Enable model-specific features`}</InputLabel>
+      <InputLabel>{t`Capabilities`}</InputLabel>
       <div>
         {capabilities.map((capability) => (
           <MenuItemToggle

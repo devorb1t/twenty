@@ -144,6 +144,10 @@ export class ChatExecutionService {
 
     const useNativeSearch = this.webSearchService.shouldUseNativeSearch();
 
+    this.logger.log(
+      `Web search strategy: ${useNativeSearch ? 'native (provider SDK)' : 'external (EXA)'}`,
+    );
+
     const toolNamesToPreload = [
       ...COMMON_PRELOAD_TOOLS,
       ...(useNativeSearch ? [] : ['web_search']),
