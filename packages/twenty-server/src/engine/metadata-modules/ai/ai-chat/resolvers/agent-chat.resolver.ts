@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { UseFilters, UseGuards } from '@nestjs/common';
 import {
   Args,
   Float,
@@ -35,6 +35,7 @@ import {
 } from 'src/engine/guards/feature-flag.guard';
 import { SettingsPermissionGuard } from 'src/engine/guards/settings-permission.guard';
 import { WorkspaceAuthGuard } from 'src/engine/guards/workspace-auth.guard';
+import { PermissionsGraphqlApiExceptionFilter } from 'src/engine/metadata-modules/permissions/utils/permissions-graphql-api-exception.filter';
 import {
   AgentException,
   AgentExceptionCode,
@@ -58,6 +59,7 @@ import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models
   FeatureFlagGuard,
   SettingsPermissionGuard(PermissionFlagType.AI),
 )
+@UseFilters(PermissionsGraphqlApiExceptionFilter)
 @MetadataResolver(() => AgentChatThreadDTO)
 export class AgentChatResolver {
   constructor(

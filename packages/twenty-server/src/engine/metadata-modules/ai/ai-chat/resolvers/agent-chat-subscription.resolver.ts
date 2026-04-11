@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { UseFilters, UseGuards } from '@nestjs/common';
 import { Args, Subscription } from '@nestjs/graphql';
 
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,6 +15,7 @@ import { RequireFeatureFlag } from 'src/engine/guards/feature-flag.guard';
 import { SettingsPermissionGuard } from 'src/engine/guards/settings-permission.guard';
 import { UserAuthGuard } from 'src/engine/guards/user-auth.guard';
 import { WorkspaceAuthGuard } from 'src/engine/guards/workspace-auth.guard';
+import { PermissionsGraphqlApiExceptionFilter } from 'src/engine/metadata-modules/permissions/utils/permissions-graphql-api-exception.filter';
 import {
   AgentException,
   AgentExceptionCode,
@@ -26,6 +27,7 @@ import { FeatureFlagKey } from 'twenty-shared/types';
 
 @MetadataResolver()
 @UseGuards(WorkspaceAuthGuard, UserAuthGuard)
+@UseFilters(PermissionsGraphqlApiExceptionFilter)
 export class AgentChatSubscriptionResolver {
   constructor(
     private readonly subscriptionService: SubscriptionService,
