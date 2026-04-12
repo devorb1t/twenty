@@ -1,8 +1,10 @@
+import { useCopyFieldsWidgetDraftState } from '@/page-layout/hooks/useCopyFieldsWidgetDraftState';
 import { PageLayoutComponentInstanceContext } from '@/page-layout/states/contexts/PageLayoutComponentInstanceContext';
 import { pageLayoutCurrentLayoutsComponentState } from '@/page-layout/states/pageLayoutCurrentLayoutsComponentState';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutTabSettingsOpenTabIdComponentState } from '@/page-layout/states/pageLayoutTabSettingsOpenTabIdComponentState';
 import { type PageLayoutTab } from '@/page-layout/types/PageLayoutTab';
+import { duplicateWidgetConfigurationWithNewViewId } from '@/page-layout/utils/duplicateWidgetConfigurationWithNewViewId';
 import { generateDuplicatedTimestamps } from '@/page-layout/utils/generateDuplicatedTimestamps';
 import { sortTabsByPosition } from '@/page-layout/utils/sortTabsByPosition';
 import { useSidePanelMenu } from '@/side-panel/hooks/useSidePanelMenu';
@@ -17,6 +19,7 @@ import { useCallback } from 'react';
 import { SidePanelPages } from 'twenty-shared/types';
 import { appendCopySuffix, isDefined } from 'twenty-shared/utils';
 import { v4 as uuidv4 } from 'uuid';
+import { WidgetConfigurationType } from '~/generated-metadata/graphql';
 
 export const useDuplicatePageLayoutTab = ({
   pageLayoutId: pageLayoutIdFromProps,
@@ -39,6 +42,9 @@ export const useDuplicatePageLayoutTab = ({
     pageLayoutCurrentLayoutsComponentState,
     pageLayoutId,
   );
+
+  const { copyFieldsWidgetDraftState } =
+    useCopyFieldsWidgetDraftState(pageLayoutId);
 
   const store = useStore();
 
@@ -79,6 +85,9 @@ export const useDuplicatePageLayoutTab = ({
           ...widget,
           id: newWidgetId,
           pageLayoutTabId: newTabId,
+          configuration: duplicateWidgetConfigurationWithNewViewId(
+            widget.configuration,
+          ),
           ...generateDuplicatedTimestamps(),
         };
       });
@@ -128,6 +137,19 @@ export const useDuplicatePageLayoutTab = ({
         tabs: [...prev.tabs, newTab],
       });
 
+      for (const [oldWidgetId, newWidgetId] of widgetOldIdNewIdMap) {
+        const sourceWidget = sourceTab.widgets.find(
+          (widget) => widget.id === oldWidgetId,
+        );
+
+        if (
+          sourceWidget?.configuration.configurationType ===
+          WidgetConfigurationType.FIELDS
+        ) {
+          copyFieldsWidgetDraftState(oldWidgetId, newWidgetId);
+        }
+      }
+
       closeSidePanelMenu();
 
       setActiveTabId(newTabId);
@@ -144,6 +166,7 @@ export const useDuplicatePageLayoutTab = ({
     },
     [
       closeSidePanelMenu,
+      copyFieldsWidgetDraftState,
       navigatePageLayoutSidePanel,
       pageLayoutCurrentLayouts,
       pageLayoutDraft,

@@ -1,9 +1,11 @@
+import { useCopyFieldsWidgetDraftState } from '@/page-layout/hooks/useCopyFieldsWidgetDraftState';
 import { PageLayoutComponentInstanceContext } from '@/page-layout/states/contexts/PageLayoutComponentInstanceContext';
 import { pageLayoutCurrentLayoutsComponentState } from '@/page-layout/states/pageLayoutCurrentLayoutsComponentState';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutEditingWidgetIdComponentState } from '@/page-layout/states/pageLayoutEditingWidgetIdComponentState';
 import { type PageLayoutWidget } from '@/page-layout/types/PageLayoutWidget';
 import { addWidgetToTab } from '@/page-layout/utils/addWidgetToTab';
+import { duplicateWidgetConfigurationWithNewViewId } from '@/page-layout/utils/duplicateWidgetConfigurationWithNewViewId';
 import { generateDuplicatedTimestamps } from '@/page-layout/utils/generateDuplicatedTimestamps';
 import { getScrollWrapperInstanceIdFromPageLayoutId } from '@/page-layout/utils/getScrollWrapperInstanceIdFromPageLayoutId';
 import { getUpdatedTabLayouts } from '@/page-layout/utils/getUpdatedTabLayouts';
@@ -15,6 +17,7 @@ import { useStore } from 'jotai';
 import { useCallback } from 'react';
 import { appendCopySuffix, isDefined } from 'twenty-shared/utils';
 import { v4 as uuidv4 } from 'uuid';
+import { WidgetConfigurationType } from '~/generated-metadata/graphql';
 
 export const useDuplicatePageLayoutWidget = (
   pageLayoutIdFromProps?: string,
@@ -38,6 +41,9 @@ export const useDuplicatePageLayoutWidget = (
     pageLayoutEditingWidgetIdComponentState,
     pageLayoutId,
   );
+
+  const { copyFieldsWidgetDraftState } =
+    useCopyFieldsWidgetDraftState(pageLayoutId);
 
   const { getScrollWrapperElement } = useScrollWrapperHTMLElement(
     getScrollWrapperInstanceIdFromPageLayoutId(pageLayoutId),
@@ -75,6 +81,9 @@ export const useDuplicatePageLayoutWidget = (
         ...sourceWidget,
         id: newWidgetId,
         title: appendCopySuffix(sourceWidget.title),
+        configuration: duplicateWidgetConfigurationWithNewViewId(
+          sourceWidget.configuration,
+        ),
         ...generateDuplicatedTimestamps(),
       };
 
@@ -115,6 +124,13 @@ export const useDuplicatePageLayoutWidget = (
         tabs: addWidgetToTab(prev.tabs, sourceTab.id, clonedWidget),
       }));
 
+      if (
+        sourceWidget.configuration.configurationType ===
+        WidgetConfigurationType.FIELDS
+      ) {
+        copyFieldsWidgetDraftState(widgetId, newWidgetId);
+      }
+
       setPageLayoutEditingWidgetId(newWidgetId);
 
       const { scrollWrapperElement } = getScrollWrapperElement();
@@ -137,6 +153,7 @@ export const useDuplicatePageLayoutWidget = (
       return newWidgetId;
     },
     [
+      copyFieldsWidgetDraftState,
       pageLayoutCurrentLayoutsState,
       pageLayoutDraftState,
       setPageLayoutEditingWidgetId,
