@@ -6,6 +6,7 @@ import { useStore } from 'jotai';
 import { isAppEffectRedirectEnabledState } from '@/app/states/isAppEffectRedirectEnabledState';
 import { useAuth } from '@/auth/hooks/useAuth';
 import { tokenPairState } from '@/auth/states/tokenPairState';
+import { isValidReturnToPath } from '@/auth/utils/isValidReturnToPath';
 import { useClearSseClient } from '@/sse-db-event/hooks/useClearSseClient';
 import { useLoadCurrentUser } from '@/users/hooks/useLoadCurrentUser';
 import { type AuthTokenPair } from '~/generated-metadata/graphql';
@@ -15,6 +16,46 @@ const IMPERSONATION_SESSION_KEY = 'impersonation_original_session';
 type StoredImpersonationSession = {
   tokenPair: AuthTokenPair;
   returnPath: string;
+};
+
+const isValidStoredSession = (
+  value: unknown,
+): value is StoredImpersonationSession => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  if (typeof candidate.returnPath !== 'string') {
+    return false;
+  }
+
+  if (typeof candidate.tokenPair !== 'object' || candidate.tokenPair === null) {
+    return false;
+  }
+
+  const tokenPair = candidate.tokenPair as Record<string, unknown>;
+  const accessToken = tokenPair.accessOrWorkspaceAgnosticToken;
+  const refreshToken = tokenPair.refreshToken;
+
+  if (
+    typeof accessToken !== 'object' ||
+    accessToken === null ||
+    typeof (accessToken as Record<string, unknown>).token !== 'string'
+  ) {
+    return false;
+  }
+
+  if (
+    typeof refreshToken !== 'object' ||
+    refreshToken === null ||
+    typeof (refreshToken as Record<string, unknown>).token !== 'string'
+  ) {
+    return false;
+  }
+
+  return true;
 };
 
 export const useImpersonationSession = () => {
@@ -62,15 +103,23 @@ export const useImpersonationSession = () => {
       return;
     }
 
-    let session: StoredImpersonationSession;
+    let parsed: unknown;
 
     try {
-      session = JSON.parse(raw);
+      parsed = JSON.parse(raw);
     } catch {
       sessionStorage.removeItem(IMPERSONATION_SESSION_KEY);
       await signOut();
       return;
     }
+
+    if (!isValidStoredSession(parsed)) {
+      sessionStorage.removeItem(IMPERSONATION_SESSION_KEY);
+      await signOut();
+      return;
+    }
+
+    const session = parsed;
 
     sessionStorage.removeItem(IMPERSONATION_SESSION_KEY);
 
@@ -84,7 +133,11 @@ export const useImpersonationSession = () => {
 
     store.set(isAppEffectRedirectEnabledState.atom, true);
 
-    navigate(session.returnPath);
+    const returnPath = isValidReturnToPath(session.returnPath)
+      ? session.returnPath
+      : '/';
+
+    navigate(returnPath);
   }, [store, client, clearSseClient, loadCurrentUser, signOut, navigate]);
 
   const hasStoredSession = useCallback(() => {
