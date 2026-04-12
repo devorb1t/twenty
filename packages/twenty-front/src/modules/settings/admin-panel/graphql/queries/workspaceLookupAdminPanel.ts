@@ -1,8 +1,8 @@
 import { gql } from '@apollo/client';
 
-export const USER_LOOKUP_ADMIN_PANEL = gql`
-  mutation UserLookupAdminPanel($userIdentifier: String!) {
-    userLookupAdminPanel(userIdentifier: $userIdentifier) {
+export const WORKSPACE_LOOKUP_ADMIN_PANEL = gql`
+  query WorkspaceLookupAdminPanel($workspaceId: String!) {
+    workspaceLookupAdminPanel(workspaceId: $workspaceId) {
       user {
         id
         email
@@ -13,11 +13,11 @@ export const USER_LOOKUP_ADMIN_PANEL = gql`
       workspaces {
         id
         name
+        allowImpersonation
         logo
         totalUsers
         activationStatus
         createdAt
-        allowImpersonation
         workspaceUrls {
           customUrl
           subdomainUrl
