@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 
 import { isDefined } from 'twenty-shared/utils';
@@ -6,6 +7,8 @@ import { DataSource, Repository } from 'typeorm';
 
 import { MessageChannelSyncStage } from 'twenty-shared/types';
 import { SentryCronMonitor } from 'src/engine/core-modules/cron/sentry-cron-monitor.decorator';
+import { MessageChannelEntity } from 'src/engine/metadata-modules/message-channel/entities/message-channel.entity';
+import { isThrottled } from 'src/modules/connected-account/utils/is-throttled';
 import { ExceptionHandlerService } from 'src/engine/core-modules/exception-handler/exception-handler.service';
 import { InjectMessageQueue } from 'src/engine/core-modules/message-queue/decorators/message-queue.decorator';
 import { Process } from 'src/engine/core-modules/message-queue/decorators/process.decorator';
@@ -22,6 +25,8 @@ export const MESSAGING_MESSAGES_IMPORT_CRON_PATTERN = '*/1 * * * *';
 
 @Processor(MessageQueue.cronQueue)
 export class MessagingMessagesImportCronJob {
+  private readonly logger = new Logger(MessagingMessagesImportCronJob.name);
+
   constructor(
     @InjectRepository(WorkspaceEntity)
     private readonly workspaceRepository: Repository<WorkspaceEntity>,
@@ -48,12 +53,26 @@ export class MessagingMessagesImportCronJob {
       try {
         const now = new Date().toISOString();
 
-        const [messageChannels] = await this.coreDataSource.query(
-          `UPDATE core."messageChannel" SET "syncStage" = '${MessageChannelSyncStage.MESSAGES_IMPORT_SCHEDULED}', "syncStageStartedAt" = COALESCE("syncStageStartedAt", '${now}')
+        const [messageChannels]: [MessageChannelEntity[]] =
+          await this.coreDataSource.query(
+            `UPDATE core."messageChannel" SET "syncStage" = '${MessageChannelSyncStage.MESSAGES_IMPORT_SCHEDULED}', "syncStageStartedAt" = COALESCE("syncStageStartedAt", '${now}')
            WHERE "workspaceId" = '${activeWorkspace.id}' AND "isSyncEnabled" = true AND "syncStage" = '${MessageChannelSyncStage.MESSAGES_IMPORT_PENDING}' RETURNING *`,
-        );
+          );
 
         for (const messageChannel of messageChannels) {
+          if (
+            isThrottled(
+              messageChannel.syncStageStartedAt?.toISOString() ?? null,
+              messageChannel.throttleFailureCount,
+              messageChannel.throttleRetryAfter?.toISOString() ?? null,
+            )
+          ) {
+            this.logger.debug(
+              `Skipping throttled message channel ${messageChannel.id} in workspace ${activeWorkspace.id}`,
+            );
+            continue;
+          }
+
           await this.messageQueueService.add<MessagingMessagesImportJobData>(
             MessagingMessagesImportJob.name,
             {
