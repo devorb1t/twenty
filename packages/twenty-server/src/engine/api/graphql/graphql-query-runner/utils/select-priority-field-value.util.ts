@@ -11,9 +11,7 @@ export const selectPriorityFieldValue = <T>(
   );
 
   if (!isDefined(priorityRecord)) {
-    throw new Error(
-      `Priority record with ID ${priorityRecordId} not found in merge candidates`,
-    );
+    return null;
   }
 
   if (hasRecordFieldValue(priorityRecord.value)) {
