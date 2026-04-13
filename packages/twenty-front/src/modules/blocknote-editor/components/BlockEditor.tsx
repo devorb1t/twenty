@@ -136,7 +136,7 @@ const StyledEditor = styled.div`
   }
 
   & .bn-mantine .bn-panel {
-    width: 100cqi;
+    width: min(500px, 100cqi);
   }
 `;
 
