@@ -1,6 +1,8 @@
 import type { PartialBlock } from '@blocknote/core';
 import { isArray, isNonEmptyString } from '@sniptt/guards';
 
+import { ensureBlockIds } from '@/blocknote-editor/utils/ensureBlockIds';
+
 export const parseInitialBlocknote = (
   blocknote?: string | null,
   logContext?: string,
@@ -22,7 +24,7 @@ export const parseInitialBlocknote = (
       return undefined;
     }
 
-    return parsedBody;
+    return ensureBlockIds(parsedBody);
   }
 
   return undefined;
