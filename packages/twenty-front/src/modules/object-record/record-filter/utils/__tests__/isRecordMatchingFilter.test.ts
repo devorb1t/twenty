@@ -535,4 +535,20 @@ describe('isRecordMatchingFilter', () => {
       ).toBe(false);
     });
   });
+
+  describe('Missing field metadata', () => {
+    it('should return true when filter references a field not in object metadata', () => {
+      const filter: RecordGqlOperationFilter = {
+        nonExistentFieldId: { eq: 'some-value' },
+      };
+
+      expect(
+        isRecordMatchingFilter({
+          record: companiesMock[0],
+          filter,
+          objectMetadataItem: companyMockObjectMetadataItem,
+        }),
+      ).toBe(true);
+    });
+  });
 });
