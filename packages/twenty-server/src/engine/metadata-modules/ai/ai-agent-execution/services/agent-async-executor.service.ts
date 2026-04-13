@@ -170,12 +170,8 @@ export class AgentAsyncExecutorService {
           },
         );
 
-        providerOptions = this.agentModelConfigService.getProviderOptions(
-          registeredModel,
-          agent as unknown as Parameters<
-            typeof this.agentModelConfigService.getProviderOptions
-          >[1],
-        );
+        providerOptions =
+          this.agentModelConfigService.getProviderOptions(registeredModel);
       }
 
       const modelTools = this.agentModelConfigService.prepareToolSetForModel(

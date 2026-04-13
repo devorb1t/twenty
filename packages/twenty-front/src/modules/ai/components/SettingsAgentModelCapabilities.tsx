@@ -1,27 +1,23 @@
 import { aiModelsState } from '@/client-config/states/aiModelsState';
 import { InputLabel } from '@/ui/input/components/InputLabel';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
+import { styled } from '@linaria/react';
 import { t } from '@lingui/core/macro';
+import { type ModelConfiguration } from 'twenty-shared/ai';
 import { isDefined } from 'twenty-shared/utils';
 import { IconBrandX, IconCode, IconWorld } from 'twenty-ui/display';
 import { Section } from 'twenty-ui/layout';
 import { MenuItemToggle } from 'twenty-ui/navigation';
+import { themeCssVariables } from 'twenty-ui/theme-constants';
 
-type ModelConfiguration = {
-  webSearch?: {
-    enabled: boolean;
-    configuration?: Record<string, unknown>;
-  };
-  twitterSearch?: {
-    enabled: boolean;
-    configuration?: Record<string, unknown>;
-  };
-  codeInterpreter?: {
-    enabled: boolean;
-    configuration?: Record<string, unknown>;
-  };
-};
+type AgentCapabilityKey = keyof Pick<
+  ModelConfiguration,
+  'webSearch' | 'twitterSearch' | 'codeInterpreter'
+>;
 
+const StyledCapabilitiesContainer = styled.div`
+  gap: ${themeCssVariables.spacing[2]};
+`;
 type SettingsAgentModelCapabilitiesProps = {
   selectedModelId: string;
   modelConfiguration: ModelConfiguration;
@@ -53,7 +49,7 @@ export const SettingsAgentModelCapabilities = ({
   }
 
   const handleCapabilityToggle = (
-    capability: 'webSearch' | 'twitterSearch' | 'codeInterpreter',
+    capability: AgentCapabilityKey,
     enabled: boolean,
   ) => {
     if (disabled) {
@@ -69,6 +65,14 @@ export const SettingsAgentModelCapabilities = ({
     });
   };
 
+  const isCapabilityEnabled = (capability: AgentCapabilityKey) => {
+    if (capability === 'codeInterpreter') {
+      return modelConfiguration.codeInterpreter?.enabled !== false;
+    }
+
+    return modelConfiguration[capability]?.enabled || false;
+  };
+
   const capabilityItems = [
     ...(capabilities.webSearch
       ? [
@@ -76,7 +80,7 @@ export const SettingsAgentModelCapabilities = ({
             key: 'webSearch' as const,
             label: t`Web Search`,
             Icon: IconWorld,
-            enabled: modelConfiguration.webSearch?.enabled || false,
+            enabled: isCapabilityEnabled('webSearch'),
           },
         ]
       : []),
@@ -86,7 +90,7 @@ export const SettingsAgentModelCapabilities = ({
             key: 'twitterSearch' as const,
             label: t`Twitter/X Search`,
             Icon: IconBrandX,
-            enabled: modelConfiguration.twitterSearch?.enabled || false,
+            enabled: isCapabilityEnabled('twitterSearch'),
           },
         ]
       : []),
@@ -96,8 +100,7 @@ export const SettingsAgentModelCapabilities = ({
             key: 'codeInterpreter' as const,
             label: t`Code Interpreter`,
             Icon: IconCode,
-            enabled:
-              modelConfiguration.codeInterpreter?.enabled !== false,
+            enabled: isCapabilityEnabled('codeInterpreter'),
           },
         ]
       : []),
@@ -106,7 +109,7 @@ export const SettingsAgentModelCapabilities = ({
   return (
     <Section>
       <InputLabel>{t`Capabilities`}</InputLabel>
-      <div>
+      <StyledCapabilitiesContainer>
         {capabilityItems.map((capability) => (
           <MenuItemToggle
             key={capability.key}
@@ -119,7 +122,7 @@ export const SettingsAgentModelCapabilities = ({
             disabled={disabled}
           />
         ))}
-      </div>
+      </StyledCapabilitiesContainer>
     </Section>
   );
 };

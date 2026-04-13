@@ -25,10 +25,7 @@ export class AgentModelConfigService {
     private readonly sdkProviderFactory: SdkProviderFactoryService,
   ) {}
 
-  getProviderOptions(
-    model: RegisteredAIModel,
-    _agent: FlatAgentWithRoleId,
-  ): ProviderOptions {
+  getProviderOptions(model: RegisteredAIModel): ProviderOptions {
     switch (model.sdkPackage) {
       case AI_SDK_XAI:
         return {};
