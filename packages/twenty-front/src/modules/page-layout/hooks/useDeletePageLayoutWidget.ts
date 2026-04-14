@@ -2,8 +2,10 @@ import { PageLayoutComponentInstanceContext } from '@/page-layout/states/context
 import { pageLayoutCurrentLayoutsComponentState } from '@/page-layout/states/pageLayoutCurrentLayoutsComponentState';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutEditingWidgetIdComponentState } from '@/page-layout/states/pageLayoutEditingWidgetIdComponentState';
+import { pageLayoutPersistedComponentState } from '@/page-layout/states/pageLayoutPersistedComponentState';
 import { removeWidgetFromTab } from '@/page-layout/utils/removeWidgetFromTab';
 import { removeWidgetLayoutFromTab } from '@/page-layout/utils/removeWidgetLayoutFromTab';
+import { useDeleteViewForFieldsWidget } from '@/page-layout/widgets/fields/hooks/useDeleteViewForFieldsWidget';
 import { useDeleteViewForRecordTableWidget } from '@/page-layout/widgets/record-table/hooks/useDeleteViewForRecordTableWidget';
 import { useSidePanelMenu } from '@/side-panel/hooks/useSidePanelMenu';
 import { useAvailableComponentInstanceIdOrThrow } from '@/ui/utilities/state/component-state/hooks/useAvailableComponentInstanceIdOrThrow';
@@ -36,8 +38,15 @@ export const useDeletePageLayoutWidget = (pageLayoutIdFromProps?: string) => {
 
   const { closeSidePanelMenu } = useSidePanelMenu();
 
+  const { deleteViewForFieldsWidget } = useDeleteViewForFieldsWidget();
+
   const { deleteViewForRecordTableWidget } =
     useDeleteViewForRecordTableWidget();
+
+  const pageLayoutPersistedState = useAtomComponentStateCallbackState(
+    pageLayoutPersistedComponentState,
+    pageLayoutId,
+  );
 
   const store = useStore();
 
@@ -56,13 +65,35 @@ export const useDeletePageLayoutWidget = (pageLayoutIdFromProps?: string) => {
         (widget) => widget.id === widgetId,
       );
 
+      const persisted = store.get(pageLayoutPersistedState);
+      const persistedWidgetIds = new Set(
+        persisted?.tabs.flatMap((tab) =>
+          tab.widgets.map((widget) => widget.id),
+        ) ?? [],
+      );
+
+      const isWidgetPersisted = persistedWidgetIds.has(widgetId);
+
       if (
+        isWidgetPersisted &&
         isDefined(widgetToDelete) &&
         widgetToDelete.type === WidgetType.RECORD_TABLE &&
         'viewId' in widgetToDelete.configuration &&
         isDefined(widgetToDelete.configuration.viewId)
       ) {
         deleteViewForRecordTableWidget(
+          widgetToDelete.configuration.viewId as string,
+        );
+      }
+
+      if (
+        isWidgetPersisted &&
+        isDefined(widgetToDelete) &&
+        widgetToDelete.type === WidgetType.FIELDS &&
+        'viewId' in widgetToDelete.configuration &&
+        isDefined(widgetToDelete.configuration.viewId)
+      ) {
+        deleteViewForFieldsWidget(
           widgetToDelete.configuration.viewId as string,
         );
       }
@@ -93,10 +124,12 @@ export const useDeletePageLayoutWidget = (pageLayoutIdFromProps?: string) => {
     },
     [
       closeSidePanelMenu,
+      deleteViewForFieldsWidget,
       deleteViewForRecordTableWidget,
       pageLayoutCurrentLayoutsState,
       pageLayoutDraftState,
       pageLayoutEditingWidgetIdState,
+      pageLayoutPersistedState,
       store,
     ],
   );
