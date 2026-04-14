@@ -1,3 +1,4 @@
+import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { useApolloClient } from '@apollo/client/react';
 import { useStore } from 'jotai';
 import { useCallback, useState } from 'react';
@@ -18,6 +19,7 @@ import {
 import { agentChatInputState } from '@/ai/states/agentChatInputState';
 import { agentChatSelectedFilesState } from '@/ai/states/agentChatSelectedFilesState';
 import { agentChatUploadedFilesState } from '@/ai/states/agentChatUploadedFilesState';
+import { agentChatErrorComponentFamilyState } from '@/ai/states/agentChatErrorComponentFamilyState';
 import { agentChatMessagesComponentFamilyState } from '@/ai/states/agentChatMessagesComponentFamilyState';
 import { currentAIChatThreadState } from '@/ai/states/currentAIChatThreadState';
 import { useGetBrowsingContext } from '@/ai/hooks/useBrowsingContext';
@@ -110,6 +112,13 @@ export const useAgentChat = (
       familyKey: { threadId },
     });
 
+    const errorAtom = agentChatErrorComponentFamilyState.atomFamily({
+      instanceId: AGENT_CHAT_INSTANCE_ID,
+      familyKey: { threadId },
+    });
+
+    store.set(errorAtom, null);
+
     const currentMessages = store.get(messagesAtom);
 
     store.set(messagesAtom, [...currentMessages, optimisticUserMessage]);
@@ -155,7 +164,7 @@ export const useAgentChat = (
 
         return null;
       });
-    } catch {
+    } catch (error) {
       setAgentChatInput(contentToSend);
       setAgentChatDraftsByThreadId((prev) => ({
         ...prev,
@@ -168,6 +177,17 @@ export const useAgentChat = (
         messagesAtom,
         latestMessages.filter((message) => message.id !== messageId),
       );
+
+      if (CombinedGraphQLErrors.is(error)) {
+        const subCode = error.errors[0]?.extensions?.subCode;
+        const mutationError = new Error(error.message) as Error & {
+          code?: string;
+        };
+
+        mutationError.code =
+          typeof subCode === 'string' ? subCode : undefined;
+        store.set(errorAtom, mutationError);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [

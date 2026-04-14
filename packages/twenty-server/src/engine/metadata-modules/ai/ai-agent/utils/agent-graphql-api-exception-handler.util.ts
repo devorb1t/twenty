@@ -24,8 +24,9 @@ export const agentGraphqlApiExceptionHandler = (error: Error) => {
       case AgentExceptionCode.AGENT_IS_STANDARD:
       case AgentExceptionCode.ROLE_CANNOT_BE_ASSIGNED_TO_AGENTS:
         throw new ForbiddenError(error);
-      case AgentExceptionCode.AGENT_EXECUTION_FAILED:
       case AgentExceptionCode.API_KEY_NOT_CONFIGURED:
+        throw new ForbiddenError(error);
+      case AgentExceptionCode.AGENT_EXECUTION_FAILED:
       case AgentExceptionCode.USER_WORKSPACE_ID_NOT_FOUND:
         throw error;
       default: {
