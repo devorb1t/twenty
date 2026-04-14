@@ -6328,7 +6328,6 @@ export type Workspace = {
   trashRetentionDays: Scalars['Float'];
   updatedAt: Scalars['DateTime'];
   useRecommendedModels: Scalars['Boolean'];
-  version?: Maybe<Scalars['String']>;
   viewFields?: Maybe<Array<ViewField>>;
   viewFilterGroups?: Maybe<Array<ViewFilterGroup>>;
   viewFilters?: Maybe<Array<ViewFilter>>;
