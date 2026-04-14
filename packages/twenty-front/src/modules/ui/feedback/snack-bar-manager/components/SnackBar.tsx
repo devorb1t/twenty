@@ -143,10 +143,21 @@ const defaultAriaLabelByVariant: Record<
   [SnackBarVariant.Warning]: msg`Warning`,
 };
 
+const SNACK_BAR_DEFAULT_DURATION = 6000;
+const SNACK_BAR_ERROR_DURATION = 10000;
+
+const defaultDurationByVariant: Record<SnackBarVariant, number> = {
+  [SnackBarVariant.Default]: SNACK_BAR_DEFAULT_DURATION,
+  [SnackBarVariant.Success]: SNACK_BAR_DEFAULT_DURATION,
+  [SnackBarVariant.Info]: SNACK_BAR_DEFAULT_DURATION,
+  [SnackBarVariant.Warning]: SNACK_BAR_ERROR_DURATION,
+  [SnackBarVariant.Error]: SNACK_BAR_ERROR_DURATION,
+};
+
 export const SnackBar = ({
   className,
   progress: overrideProgressValue,
-  duration = 6000,
+  duration,
   icon: iconComponent,
   id,
   message,
@@ -161,6 +172,9 @@ export const SnackBar = ({
 }: SnackBarProps) => {
   const { i18n, t } = useLingui();
   const { theme } = useContext(ThemeContext);
+
+  const resolvedDuration = duration ?? defaultDurationByVariant[variant];
+
   const { animation: progressAnimation, value: progressValue } =
     useProgressAnimation({
       autoPlay: isUndefined(overrideProgressValue),
@@ -168,7 +182,7 @@ export const SnackBar = ({
         ? overrideProgressValue
         : 100,
       finalValue: 0,
-      options: { duration, onComplete: onClose },
+      options: { duration: resolvedDuration, onComplete: onClose },
     });
 
   const icon = useMemo(() => {
