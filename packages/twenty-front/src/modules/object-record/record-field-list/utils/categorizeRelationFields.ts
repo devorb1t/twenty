@@ -1,11 +1,8 @@
 import { type FieldMetadataItem } from '@/object-metadata/types/FieldMetadataItem';
 import { getObjectPermissionsForObject } from '@/object-metadata/utils/getObjectPermissionsForObject';
 import { isJunctionRelationField } from '@/object-record/record-field/ui/utils/junction/isJunctionRelationField';
-import {
-  CoreObjectNameSingular,
-  type ObjectPermissions,
-} from 'twenty-shared/types';
-import { isDefined } from 'twenty-shared/utils';
+import { type ObjectPermissions } from 'twenty-shared/types';
+import { isActivityTargetField, isDefined } from 'twenty-shared/utils';
 
 type ObjectPermissionsByObjectMetadataId = Record<
   string,
@@ -26,14 +23,7 @@ type CategorizedRelationFields = {
   boxedRelationFields: FieldMetadataItem[];
 };
 
-export const isActivityTargetField = (
-  fieldName: string,
-  objectNameSingular: string,
-): boolean =>
-  (objectNameSingular === CoreObjectNameSingular.Note &&
-    fieldName === 'noteTargets') ||
-  (objectNameSingular === CoreObjectNameSingular.Task &&
-    fieldName === 'taskTargets');
+export { isActivityTargetField } from 'twenty-shared/utils';
 
 const isActivityTargetRelation = (
   fieldMetadataItem: FieldMetadataItem,

@@ -1,7 +1,10 @@
 import { type FieldMetadataItem } from '@/object-metadata/types/FieldMetadataItem';
 import { type FieldsWidgetGroup } from '@/page-layout/widgets/fields/types/FieldsWidgetGroup';
 import { FieldMetadataType } from 'twenty-shared/types';
-import { isFieldMetadataEligibleForFieldsWidget } from 'twenty-shared/utils';
+import {
+  isActivityTargetField,
+  isFieldMetadataEligibleForFieldsWidget,
+} from 'twenty-shared/utils';
 import { v4 as uuidv4 } from 'uuid';
 
 export const buildDefaultFieldsWidgetGroups = ({
@@ -24,9 +27,10 @@ export const buildDefaultFieldsWidgetGroups = ({
   const standardFields = eligibleFields.filter((field) => !field.isCustom);
   const customFields = eligibleFields.filter((field) => field.isCustom);
 
-  const isFieldVisible = (fieldType: FieldMetadataType) =>
-    fieldType !== FieldMetadataType.RELATION &&
-    fieldType !== FieldMetadataType.MORPH_RELATION;
+  const isFieldVisible = (fieldType: FieldMetadataType, fieldName: string) =>
+    isActivityTargetField(fieldName, objectNameSingular) ||
+    (fieldType !== FieldMetadataType.RELATION &&
+      fieldType !== FieldMetadataType.MORPH_RELATION);
 
   const groups: FieldsWidgetGroup[] = [];
   let globalIndex = 0;
@@ -40,7 +44,7 @@ export const buildDefaultFieldsWidgetGroups = ({
       fields: standardFields.map((field, index) => ({
         fieldMetadataItem: field,
         position: index,
-        isVisible: isFieldVisible(field.type),
+        isVisible: isFieldVisible(field.type, field.name),
         globalIndex: globalIndex++,
       })),
     });
@@ -55,7 +59,7 @@ export const buildDefaultFieldsWidgetGroups = ({
       fields: customFields.map((field, index) => ({
         fieldMetadataItem: field,
         position: index,
-        isVisible: isFieldVisible(field.type),
+        isVisible: isFieldVisible(field.type, field.name),
         globalIndex: globalIndex++,
       })),
     });

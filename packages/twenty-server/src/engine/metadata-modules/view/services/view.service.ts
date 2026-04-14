@@ -110,6 +110,7 @@ export class ViewService {
           flatApplication: workspaceCustomFlatApplication,
           labelIdentifierFieldMetadataUniversalIdentifier:
             objectFlatMetadata.labelIdentifierFieldMetadataUniversalIdentifier,
+          objectNameSingular: objectFlatMetadata.nameSingular,
         },
       );
 

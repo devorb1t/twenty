@@ -68,6 +68,7 @@ describe('computeFieldsWidgetViewFieldsAndGroupsToCreate', () => {
       viewUniversalIdentifier,
       flatApplication,
       labelIdentifierFieldMetadataUniversalIdentifier: null,
+      objectNameSingular: 'person',
     });
 
     expect(result.flatViewFieldGroupsToCreate).toHaveLength(1);
@@ -113,6 +114,7 @@ describe('computeFieldsWidgetViewFieldsAndGroupsToCreate', () => {
       viewUniversalIdentifier,
       flatApplication,
       labelIdentifierFieldMetadataUniversalIdentifier: null,
+      objectNameSingular: 'person',
     });
 
     expect(result.flatViewFieldGroupsToCreate).toHaveLength(2);
@@ -155,6 +157,7 @@ describe('computeFieldsWidgetViewFieldsAndGroupsToCreate', () => {
       viewUniversalIdentifier,
       flatApplication,
       labelIdentifierFieldMetadataUniversalIdentifier: null,
+      objectNameSingular: 'person',
     });
 
     expect(result.flatViewFieldGroupsToCreate).toHaveLength(1);
@@ -180,6 +183,7 @@ describe('computeFieldsWidgetViewFieldsAndGroupsToCreate', () => {
       viewUniversalIdentifier,
       flatApplication,
       labelIdentifierFieldMetadataUniversalIdentifier: null,
+      objectNameSingular: 'person',
     });
 
     expect(result.flatViewFieldsToCreate).toHaveLength(1);
@@ -212,6 +216,7 @@ describe('computeFieldsWidgetViewFieldsAndGroupsToCreate', () => {
       viewUniversalIdentifier,
       flatApplication,
       labelIdentifierFieldMetadataUniversalIdentifier: null,
+      objectNameSingular: 'person',
     });
 
     expect(result.flatViewFieldsToCreate).toHaveLength(1);
@@ -240,6 +245,7 @@ describe('computeFieldsWidgetViewFieldsAndGroupsToCreate', () => {
       viewUniversalIdentifier,
       flatApplication,
       labelIdentifierFieldMetadataUniversalIdentifier: null,
+      objectNameSingular: 'person',
     });
 
     expect(resultWithout.flatViewFieldsToCreate).toHaveLength(1);
@@ -250,6 +256,7 @@ describe('computeFieldsWidgetViewFieldsAndGroupsToCreate', () => {
       viewUniversalIdentifier,
       flatApplication,
       labelIdentifierFieldMetadataUniversalIdentifier: idUid,
+      objectNameSingular: 'person',
     });
 
     expect(resultWith.flatViewFieldsToCreate).toHaveLength(1);
@@ -274,6 +281,7 @@ describe('computeFieldsWidgetViewFieldsAndGroupsToCreate', () => {
       viewUniversalIdentifier,
       flatApplication,
       labelIdentifierFieldMetadataUniversalIdentifier: null,
+      objectNameSingular: 'person',
     });
 
     result.flatViewFieldGroupsToCreate.forEach((group) => {
@@ -303,6 +311,7 @@ describe('computeFieldsWidgetViewFieldsAndGroupsToCreate', () => {
       viewUniversalIdentifier,
       flatApplication,
       labelIdentifierFieldMetadataUniversalIdentifier: null,
+      objectNameSingular: 'person',
     });
 
     // Still creates the "General" group, just with no fields
@@ -337,6 +346,7 @@ describe('computeFieldsWidgetViewFieldsAndGroupsToCreate', () => {
       viewUniversalIdentifier,
       flatApplication,
       labelIdentifierFieldMetadataUniversalIdentifier: labelUid,
+      objectNameSingular: 'person',
     });
 
     // Label identifier field is excluded by isFieldMetadataEligibleForFieldsWidget
@@ -379,6 +389,7 @@ describe('computeFieldsWidgetViewFieldsAndGroupsToCreate', () => {
       viewUniversalIdentifier,
       flatApplication,
       labelIdentifierFieldMetadataUniversalIdentifier: null,
+      objectNameSingular: 'person',
     });
 
     const viewFieldForName = result.flatViewFieldsToCreate.find(
@@ -402,5 +413,105 @@ describe('computeFieldsWidgetViewFieldsAndGroupsToCreate', () => {
     expect(viewFieldForCompany!.isVisible).toBe(false);
     expect(viewFieldForTarget!.isVisible).toBe(false);
     expect(viewFieldForCustomRelation!.isVisible).toBe(false);
+  });
+
+  it('should make activity target RELATION fields visible by default for note objects', () => {
+    const fields = [
+      makeFieldMetadata({
+        name: 'name',
+        type: FieldMetadataType.TEXT,
+        isCustom: false,
+      }),
+      makeFieldMetadata({
+        name: 'noteTargets',
+        type: FieldMetadataType.RELATION,
+        isCustom: false,
+      }),
+      makeFieldMetadata({
+        name: 'company',
+        type: FieldMetadataType.RELATION,
+        isCustom: false,
+      }),
+    ];
+
+    const result = computeFieldsWidgetViewFieldsAndGroupsToCreate({
+      objectFlatFieldMetadatas: fields,
+      viewUniversalIdentifier,
+      flatApplication,
+      labelIdentifierFieldMetadataUniversalIdentifier: null,
+      objectNameSingular: 'note',
+    });
+
+    const viewFieldForNoteTargets = result.flatViewFieldsToCreate.find(
+      (vf) =>
+        vf.fieldMetadataUniversalIdentifier === fields[1].universalIdentifier,
+    );
+    const viewFieldForCompany = result.flatViewFieldsToCreate.find(
+      (vf) =>
+        vf.fieldMetadataUniversalIdentifier === fields[2].universalIdentifier,
+    );
+
+    expect(viewFieldForNoteTargets!.isVisible).toBe(true);
+    expect(viewFieldForCompany!.isVisible).toBe(false);
+  });
+
+  it('should make activity target RELATION fields visible by default for task objects', () => {
+    const fields = [
+      makeFieldMetadata({
+        name: 'name',
+        type: FieldMetadataType.TEXT,
+        isCustom: false,
+      }),
+      makeFieldMetadata({
+        name: 'taskTargets',
+        type: FieldMetadataType.RELATION,
+        isCustom: false,
+      }),
+      makeFieldMetadata({
+        name: 'company',
+        type: FieldMetadataType.RELATION,
+        isCustom: false,
+      }),
+    ];
+
+    const result = computeFieldsWidgetViewFieldsAndGroupsToCreate({
+      objectFlatFieldMetadatas: fields,
+      viewUniversalIdentifier,
+      flatApplication,
+      labelIdentifierFieldMetadataUniversalIdentifier: null,
+      objectNameSingular: 'task',
+    });
+
+    const viewFieldForTaskTargets = result.flatViewFieldsToCreate.find(
+      (vf) =>
+        vf.fieldMetadataUniversalIdentifier === fields[1].universalIdentifier,
+    );
+    const viewFieldForCompany = result.flatViewFieldsToCreate.find(
+      (vf) =>
+        vf.fieldMetadataUniversalIdentifier === fields[2].universalIdentifier,
+    );
+
+    expect(viewFieldForTaskTargets!.isVisible).toBe(true);
+    expect(viewFieldForCompany!.isVisible).toBe(false);
+  });
+
+  it('should not make noteTargets visible on non-note objects', () => {
+    const fields = [
+      makeFieldMetadata({
+        name: 'noteTargets',
+        type: FieldMetadataType.RELATION,
+        isCustom: false,
+      }),
+    ];
+
+    const result = computeFieldsWidgetViewFieldsAndGroupsToCreate({
+      objectFlatFieldMetadatas: fields,
+      viewUniversalIdentifier,
+      flatApplication,
+      labelIdentifierFieldMetadataUniversalIdentifier: null,
+      objectNameSingular: 'person',
+    });
+
+    expect(result.flatViewFieldsToCreate[0].isVisible).toBe(false);
   });
 });

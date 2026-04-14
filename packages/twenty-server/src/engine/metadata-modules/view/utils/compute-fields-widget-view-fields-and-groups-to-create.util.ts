@@ -6,18 +6,23 @@ import { DEFAULT_VIEW_FIELD_SIZE } from 'src/engine/metadata-modules/flat-view-f
 import { type UniversalFlatFieldMetadata } from 'src/engine/workspace-manager/workspace-migration/universal-flat-entity/types/universal-flat-field-metadata.type';
 import { type UniversalFlatViewFieldGroup } from 'src/engine/workspace-manager/workspace-migration/universal-flat-entity/types/universal-flat-view-field-group.type';
 import { type UniversalFlatViewField } from 'src/engine/workspace-manager/workspace-migration/universal-flat-entity/types/universal-flat-view-field.type';
-import { isFieldMetadataEligibleForFieldsWidget } from 'twenty-shared/utils';
+import {
+  isActivityTargetField,
+  isFieldMetadataEligibleForFieldsWidget,
+} from 'twenty-shared/utils';
 
 export const computeFieldsWidgetViewFieldsAndGroupsToCreate = ({
   objectFlatFieldMetadatas,
   viewUniversalIdentifier,
   flatApplication,
   labelIdentifierFieldMetadataUniversalIdentifier,
+  objectNameSingular,
 }: {
   objectFlatFieldMetadatas: UniversalFlatFieldMetadata[];
   viewUniversalIdentifier: string;
   flatApplication: FlatApplication;
   labelIdentifierFieldMetadataUniversalIdentifier: string | null;
+  objectNameSingular: string;
 }): {
   flatViewFieldGroupsToCreate: UniversalFlatViewFieldGroup[];
   flatViewFieldsToCreate: UniversalFlatViewField[];
@@ -37,6 +42,11 @@ export const computeFieldsWidgetViewFieldsAndGroupsToCreate = ({
 
   const standardFields = eligibleFields.filter((field) => !field.isCustom);
   const customFields = eligibleFields.filter((field) => field.isCustom);
+
+  const isFieldVisible = (field: UniversalFlatFieldMetadata) =>
+    isActivityTargetField(field.name, objectNameSingular) ||
+    (field.type !== FieldMetadataType.RELATION &&
+      field.type !== FieldMetadataType.MORPH_RELATION);
 
   const sortedStandardFields = [...standardFields].sort((a, b) => {
     const aIsLabel =
@@ -71,10 +81,6 @@ export const computeFieldsWidgetViewFieldsAndGroupsToCreate = ({
   });
 
   sortedStandardFields.forEach((field, index) => {
-    const isVisible =
-      field.type !== FieldMetadataType.RELATION &&
-      field.type !== FieldMetadataType.MORPH_RELATION;
-
     flatViewFieldsToCreate.push({
       fieldMetadataUniversalIdentifier: field.universalIdentifier,
       viewUniversalIdentifier,
@@ -83,7 +89,7 @@ export const computeFieldsWidgetViewFieldsAndGroupsToCreate = ({
       updatedAt: createdAt,
       deletedAt: null,
       universalIdentifier: v4(),
-      isVisible,
+      isVisible: isFieldVisible(field),
       isActive: true,
       size: DEFAULT_VIEW_FIELD_SIZE,
       position: index,
@@ -112,10 +118,6 @@ export const computeFieldsWidgetViewFieldsAndGroupsToCreate = ({
     });
 
     customFields.forEach((field, index) => {
-      const isVisible =
-        field.type !== FieldMetadataType.RELATION &&
-        field.type !== FieldMetadataType.MORPH_RELATION;
-
       flatViewFieldsToCreate.push({
         fieldMetadataUniversalIdentifier: field.universalIdentifier,
         viewUniversalIdentifier,
@@ -124,7 +126,7 @@ export const computeFieldsWidgetViewFieldsAndGroupsToCreate = ({
         updatedAt: createdAt,
         deletedAt: null,
         universalIdentifier: v4(),
-        isVisible,
+        isVisible: isFieldVisible(field),
         isActive: true,
         size: DEFAULT_VIEW_FIELD_SIZE,
         position: index,
