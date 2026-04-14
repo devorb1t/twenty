@@ -3,7 +3,7 @@ import { styled } from '@linaria/react';
 import { useLingui } from '@lingui/react/macro';
 import { format, getYear } from 'date-fns';
 
-import { CalendarEventRow } from '@/activities/calendar/components/CalendarEventRow';
+import { CalendarDayCardContent } from '@/activities/calendar/components/CalendarDayCardContent';
 import { CalendarMonthCard } from '@/activities/calendar/components/CalendarMonthCard';
 import { TIMELINE_CALENDAR_EVENTS_DEFAULT_PAGE_SIZE } from '@/activities/calendar/constants/Calendar';
 import { CalendarContext } from '@/activities/calendar/contexts/CalendarContext';
@@ -25,7 +25,6 @@ import {
   AnimatedPlaceholderEmptyTextContainer,
   AnimatedPlaceholderEmptyTitle,
   Card,
-  CardContent,
   EMPTY_PLACEHOLDER_TRANSITION_PROPS,
   Section,
 } from 'twenty-ui/layout';
@@ -148,9 +147,11 @@ export const CalendarEventsCard = () => {
             </StyledTitleContainer>
             <Card fullWidth>
               {recurringEvents.map((event, index) => (
-                <CardContent key={event.id} divider={index < recurringEvents.length - 1}>
-                  <CalendarEventRow calendarEvent={event} />
-                </CardContent>
+                <CalendarDayCardContent
+                  key={event.id}
+                  calendarEvents={[event]}
+                  divider={index < recurringEvents.length - 1}
+                />
               ))}
             </Card>
           </Section>
