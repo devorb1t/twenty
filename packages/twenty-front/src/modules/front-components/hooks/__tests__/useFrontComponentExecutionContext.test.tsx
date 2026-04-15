@@ -87,7 +87,7 @@ jest.mock('@/ui/utilities/state/jotai/hooks/useSetAtomFamilyState', () => ({
 }));
 
 jest.mock('@/ui/layout/contexts/LayoutRenderingContext', () => ({
-  useLayoutRenderingContext: () => ({
+  useOptionalLayoutRenderingContext: () => ({
     targetRecordIdentifier: mockTargetRecordIdentifier,
   }),
 }));

@@ -14,7 +14,7 @@ import { useNavigateSidePanel } from '@/side-panel/hooks/useNavigateSidePanel';
 import { useSidePanelMenu } from '@/side-panel/hooks/useSidePanelMenu';
 import { sidePanelSearchState } from '@/side-panel/states/sidePanelSearchState';
 import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
-import { useLayoutRenderingContext } from '@/ui/layout/contexts/LayoutRenderingContext';
+import { useOptionalLayoutRenderingContext } from '@/ui/layout/contexts/LayoutRenderingContext';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { useSetAtomFamilyState } from '@/ui/utilities/state/jotai/hooks/useSetAtomFamilyState';
 import { assertUnreachable, isDefined } from 'twenty-shared/utils';
@@ -123,12 +123,12 @@ export const useFrontComponentExecutionContext = ({
       }
     };
 
-  const { targetRecordIdentifier } = useLayoutRenderingContext();
+  const layoutRenderingContext = useOptionalLayoutRenderingContext();
 
   const executionContext: FrontComponentExecutionContext = {
     frontComponentId,
     userId: currentUser?.id ?? null,
-    recordId: targetRecordIdentifier?.id ?? null,
+    recordId: layoutRenderingContext?.targetRecordIdentifier?.id ?? null,
   };
 
   const unmountFrontComponent: FrontComponentHostCommunicationApi['unmountFrontComponent'] =
