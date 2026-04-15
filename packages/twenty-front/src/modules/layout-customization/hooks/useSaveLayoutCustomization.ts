@@ -6,6 +6,7 @@ import { navigationMenuItemsDraftState } from '@/navigation-menu-item/common/sta
 import { navigationMenuItemsSelector } from '@/navigation-menu-item/common/states/navigationMenuItemsSelector';
 import { filterWorkspaceNavigationMenuItems } from '@/navigation-menu-item/common/utils/filterWorkspaceNavigationMenuItems';
 import { useSaveNavigationMenuItemsDraft } from '@/navigation-menu-item/edit/hooks/useSaveNavigationMenuItemsDraft';
+import { useCreatePendingFieldWidgetTableViews } from '@/page-layout/hooks/useCreatePendingFieldWidgetTableViews';
 import { useCreatePendingFieldsWidgetViews } from '@/page-layout/hooks/useCreatePendingFieldsWidgetViews';
 import { useSavePageLayoutWidgetsData } from '@/page-layout/hooks/useSavePageLayoutWidgetsData';
 import { useUpdatePageLayoutWithTabsAndWidgets } from '@/page-layout/hooks/useUpdatePageLayoutWithTabsAndWidgets';
@@ -41,6 +42,8 @@ export const useSaveLayoutCustomization = () => {
     useUpdatePageLayoutWithTabsAndWidgets();
   const { createPendingFieldsWidgetViews } =
     useCreatePendingFieldsWidgetViews();
+  const { createPendingFieldWidgetTableViews } =
+    useCreatePendingFieldWidgetTableViews();
   const { exitLayoutCustomizationMode } = useExitLayoutCustomizationMode();
   const { savePageLayoutWidgetsData } = useSavePageLayoutWidgetsData();
 
@@ -108,6 +111,7 @@ export const useSaveLayoutCustomization = () => {
         );
 
         await createPendingFieldsWidgetViews(pageLayoutId);
+        await createPendingFieldWidgetTableViews(pageLayoutId);
 
         if (isPageLayoutStructureDirty) {
           const updateInput = convertPageLayoutDraftToUpdateInput(draft, {
@@ -180,6 +184,7 @@ export const useSaveLayoutCustomization = () => {
     saveCommandMenuItemsDraft,
     isCommandMenuItemsDirty,
     createPendingFieldsWidgetViews,
+    createPendingFieldWidgetTableViews,
     updatePageLayoutWithTabsAndWidgets,
     savePageLayoutWidgetsData,
     exitLayoutCustomizationMode,

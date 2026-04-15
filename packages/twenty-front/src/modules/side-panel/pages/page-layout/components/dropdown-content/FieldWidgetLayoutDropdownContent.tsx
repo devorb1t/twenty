@@ -1,5 +1,5 @@
 import { useFieldMetadataItemById } from '@/object-metadata/hooks/useFieldMetadataItemById';
-import { getFieldWidgetAvailableDisplayModes } from '@/page-layout/widgets/field/utils/getFieldWidgetDisplayModeConfig';
+import { getFieldWidgetAvailableDisplayModesForField } from '@/page-layout/widgets/field/utils/getFieldWidgetDisplayModeConfig';
 import { usePageLayoutIdFromContextStore } from '@/side-panel/pages/page-layout/hooks/usePageLayoutIdFromContextStore';
 import { useUpdateCurrentWidgetConfig } from '@/side-panel/pages/page-layout/hooks/useUpdateCurrentWidgetConfig';
 import { useWidgetInEditMode } from '@/side-panel/pages/page-layout/hooks/useWidgetInEditMode';
@@ -18,8 +18,10 @@ import {
   IconFileText,
   IconLayoutKanban,
   IconListDetails,
+  IconTable,
 } from 'twenty-ui/display';
 import { MenuItemSelect } from 'twenty-ui/navigation';
+import { v4 } from 'uuid';
 import {
   FieldDisplayMode,
   type FieldConfiguration,
@@ -29,7 +31,7 @@ const DISPLAY_MODE_ICONS: Record<FieldDisplayMode, IconComponent> = {
   [FieldDisplayMode.FIELD]: IconListDetails,
   [FieldDisplayMode.CARD]: IconLayoutKanban,
   [FieldDisplayMode.EDITOR]: IconFileText,
-  [FieldDisplayMode.VIEW]: IconListDetails,
+  [FieldDisplayMode.VIEW]: IconTable,
 };
 
 export const FieldWidgetLayoutDropdownContent = () => {
@@ -45,6 +47,7 @@ export const FieldWidgetLayoutDropdownContent = () => {
 
   const currentDisplayMode = fieldConfiguration?.fieldDisplayMode;
   const currentFieldMetadataId = fieldConfiguration?.fieldMetadataId;
+  const currentViewId = fieldConfiguration?.viewId;
 
   const { fieldMetadataItem } = useFieldMetadataItemById(
     currentFieldMetadataId ?? '',
@@ -53,7 +56,7 @@ export const FieldWidgetLayoutDropdownContent = () => {
   const layoutOptions = useMemo(
     () =>
       fieldMetadataItem
-        ? getFieldWidgetAvailableDisplayModes(fieldMetadataItem.type)
+        ? getFieldWidgetAvailableDisplayModesForField(fieldMetadataItem)
         : [FieldDisplayMode.FIELD],
     [fieldMetadataItem],
   );
@@ -73,9 +76,18 @@ export const FieldWidgetLayoutDropdownContent = () => {
   const { closeDropdown } = useCloseDropdown();
 
   const handleSelectLayout = (fieldDisplayMode: FieldDisplayMode) => {
+    // Generate a viewId up-front for VIEW mode so the draft carries it; the
+    // actual TABLE_WIDGET view is created on Save. Null it on any other mode
+    // so an abandoned selection does not leak a pending view creation.
+    const nextViewId =
+      fieldDisplayMode === FieldDisplayMode.VIEW
+        ? (currentViewId ?? v4())
+        : null;
+
     updateCurrentWidgetConfig({
       configToUpdate: {
         fieldDisplayMode,
+        viewId: nextViewId,
       },
     });
     closeDropdown();
@@ -85,6 +97,7 @@ export const FieldWidgetLayoutDropdownContent = () => {
     [FieldDisplayMode.FIELD]: t`Field`,
     [FieldDisplayMode.CARD]: t`Card`,
     [FieldDisplayMode.EDITOR]: t`Editor`,
+    [FieldDisplayMode.VIEW]: t`Table`,
   };
 
   return (

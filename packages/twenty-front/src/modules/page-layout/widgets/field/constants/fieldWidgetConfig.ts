@@ -1,11 +1,14 @@
 import { FieldMetadataType } from 'twenty-shared/types';
 import { FieldDisplayMode } from '~/generated-metadata/graphql';
 
-type FieldWidgetFieldTypeConfig = {
+export type FieldWidgetFieldTypeConfig = {
   availableDisplayModes: FieldDisplayMode[];
   defaultDisplayMode: FieldDisplayMode;
 };
 
+// Static fallback used when only the field type is known (e.g. when the field
+// has not been selected yet). Relation-type-sensitive modes like VIEW are
+// resolved at runtime in getFieldWidgetDisplayModeConfig.
 export const FIELD_WIDGET_CONFIG: Partial<
   Record<FieldMetadataType, FieldWidgetFieldTypeConfig>
 > = {

@@ -1864,6 +1864,7 @@ export type FieldConfiguration = {
   configurationType: WidgetConfigurationType;
   fieldDisplayMode: FieldDisplayMode;
   fieldMetadataId: Scalars['String'];
+  viewId?: Maybe<Scalars['String']>;
 };
 
 export type FieldConnection = {

@@ -100,6 +100,7 @@ export type FieldConfiguration = {
   configurationType: 'FIELD';
   fieldMetadataId: string;
   fieldDisplayMode: 'CARD' | 'EDITOR' | 'FIELD' | 'VIEW';
+  viewId?: string | null;
 };
 
 export type FieldsConfiguration = {

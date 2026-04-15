@@ -4,7 +4,7 @@ import { useUpdatePageLayoutWidget } from '@/page-layout/hooks/useUpdatePageLayo
 import { useFieldWidgetEligibleFields } from '@/page-layout/widgets/field/hooks/useFieldWidgetEligibleFields';
 import {
   getFieldWidgetDefaultDisplayMode,
-  isDisplayModeValidForFieldType,
+  isDisplayModeValidForField,
 } from '@/page-layout/widgets/field/utils/getFieldWidgetDisplayModeConfig';
 import { usePageLayoutIdFromContextStore } from '@/side-panel/pages/page-layout/hooks/usePageLayoutIdFromContextStore';
 import { useUpdateCurrentWidgetConfig } from '@/side-panel/pages/page-layout/hooks/useUpdateCurrentWidgetConfig';
@@ -80,11 +80,16 @@ export const FieldWidgetFieldDropdownContent = () => {
     const needsDisplayModeSwitch =
       isDefined(selectedField) &&
       isDefined(currentDisplayMode) &&
-      !isDisplayModeValidForFieldType(selectedField.type, currentDisplayMode);
+      !isDisplayModeValidForField(selectedField, currentDisplayMode);
 
+    // Changing the underlying field invalidates any previously generated
+    // viewId (it targeted the previous relation's related object), so null
+    // it out here and let the Layout dropdown regenerate if the user
+    // re-selects VIEW mode.
     updateCurrentWidgetConfig({
       configToUpdate: {
         fieldMetadataId,
+        viewId: null,
         ...(needsDisplayModeSwitch && {
           fieldDisplayMode: getFieldWidgetDefaultDisplayMode(
             selectedField.type,
