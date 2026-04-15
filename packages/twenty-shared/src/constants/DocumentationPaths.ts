@@ -44,12 +44,15 @@ export const DOCUMENTATION_PATHS = {
   DEVELOPERS_SELF_HOST_CAPABILITIES_UPGRADE_GUIDE:
     '/developers/self-host/capabilities/upgrade-guide',
   GETTING_STARTED_CORE_CONCEPTS_AI: '/getting-started/core-concepts/ai',
+  GETTING_STARTED_CORE_CONCEPTS_APPS: '/getting-started/core-concepts/apps',
   GETTING_STARTED_CORE_CONCEPTS_CALENDAR_AND_EMAIL:
     '/getting-started/core-concepts/calendar-and-email',
   GETTING_STARTED_CORE_CONCEPTS_DASHBOARDS:
     '/getting-started/core-concepts/dashboards',
   GETTING_STARTED_CORE_CONCEPTS_DATA_MODEL:
     '/getting-started/core-concepts/data-model',
+  GETTING_STARTED_CORE_CONCEPTS_GLOSSARY:
+    '/getting-started/core-concepts/glossary',
   GETTING_STARTED_CORE_CONCEPTS_LAYOUT: '/getting-started/core-concepts/layout',
   GETTING_STARTED_CORE_CONCEPTS_WORKFLOWS:
     '/getting-started/core-concepts/workflows',

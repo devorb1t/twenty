@@ -54,7 +54,9 @@
                   "getting-started/core-concepts/workflows",
                   "getting-started/core-concepts/calendar-and-email",
                   "getting-started/core-concepts/ai",
-                  "getting-started/core-concepts/dashboards"
+                  "getting-started/core-concepts/apps",
+                  "getting-started/core-concepts/dashboards",
+                  "getting-started/core-concepts/glossary"
                 ]
               }
             ]
@@ -434,7 +436,9 @@
                   "l/fr/getting-started/core-concepts/workflows",
                   "l/fr/getting-started/core-concepts/calendar-and-email",
                   "l/fr/getting-started/core-concepts/ai",
-                  "l/fr/getting-started/core-concepts/dashboards"
+                  "l/fr/getting-started/core-concepts/apps",
+                  "l/fr/getting-started/core-concepts/dashboards",
+                  "l/fr/getting-started/core-concepts/glossary"
                 ]
               }
             ]
@@ -814,7 +818,9 @@
                   "l/ar/getting-started/core-concepts/workflows",
                   "l/ar/getting-started/core-concepts/calendar-and-email",
                   "l/ar/getting-started/core-concepts/ai",
-                  "l/ar/getting-started/core-concepts/dashboards"
+                  "l/ar/getting-started/core-concepts/apps",
+                  "l/ar/getting-started/core-concepts/dashboards",
+                  "l/ar/getting-started/core-concepts/glossary"
                 ]
               }
             ]
@@ -1194,7 +1200,9 @@
                   "l/cs/getting-started/core-concepts/workflows",
                   "l/cs/getting-started/core-concepts/calendar-and-email",
                   "l/cs/getting-started/core-concepts/ai",
-                  "l/cs/getting-started/core-concepts/dashboards"
+                  "l/cs/getting-started/core-concepts/apps",
+                  "l/cs/getting-started/core-concepts/dashboards",
+                  "l/cs/getting-started/core-concepts/glossary"
                 ]
               }
             ]
@@ -1574,7 +1582,9 @@
                   "l/de/getting-started/core-concepts/workflows",
                   "l/de/getting-started/core-concepts/calendar-and-email",
                   "l/de/getting-started/core-concepts/ai",
-                  "l/de/getting-started/core-concepts/dashboards"
+                  "l/de/getting-started/core-concepts/apps",
+                  "l/de/getting-started/core-concepts/dashboards",
+                  "l/de/getting-started/core-concepts/glossary"
                 ]
               }
             ]
@@ -1954,7 +1964,9 @@
                   "l/es/getting-started/core-concepts/workflows",
                   "l/es/getting-started/core-concepts/calendar-and-email",
                   "l/es/getting-started/core-concepts/ai",
-                  "l/es/getting-started/core-concepts/dashboards"
+                  "l/es/getting-started/core-concepts/apps",
+                  "l/es/getting-started/core-concepts/dashboards",
+                  "l/es/getting-started/core-concepts/glossary"
                 ]
               }
             ]
@@ -2334,7 +2346,9 @@
                   "l/it/getting-started/core-concepts/workflows",
                   "l/it/getting-started/core-concepts/calendar-and-email",
                   "l/it/getting-started/core-concepts/ai",
-                  "l/it/getting-started/core-concepts/dashboards"
+                  "l/it/getting-started/core-concepts/apps",
+                  "l/it/getting-started/core-concepts/dashboards",
+                  "l/it/getting-started/core-concepts/glossary"
                 ]
               }
             ]
@@ -2714,7 +2728,9 @@
                   "l/ja/getting-started/core-concepts/workflows",
                   "l/ja/getting-started/core-concepts/calendar-and-email",
                   "l/ja/getting-started/core-concepts/ai",
-                  "l/ja/getting-started/core-concepts/dashboards"
+                  "l/ja/getting-started/core-concepts/apps",
+                  "l/ja/getting-started/core-concepts/dashboards",
+                  "l/ja/getting-started/core-concepts/glossary"
                 ]
               }
             ]
@@ -3094,7 +3110,9 @@
                   "l/ko/getting-started/core-concepts/workflows",
                   "l/ko/getting-started/core-concepts/calendar-and-email",
                   "l/ko/getting-started/core-concepts/ai",
-                  "l/ko/getting-started/core-concepts/dashboards"
+                  "l/ko/getting-started/core-concepts/apps",
+                  "l/ko/getting-started/core-concepts/dashboards",
+                  "l/ko/getting-started/core-concepts/glossary"
                 ]
               }
             ]
@@ -3474,7 +3492,9 @@
                   "l/pt/getting-started/core-concepts/workflows",
                   "l/pt/getting-started/core-concepts/calendar-and-email",
                   "l/pt/getting-started/core-concepts/ai",
-                  "l/pt/getting-started/core-concepts/dashboards"
+                  "l/pt/getting-started/core-concepts/apps",
+                  "l/pt/getting-started/core-concepts/dashboards",
+                  "l/pt/getting-started/core-concepts/glossary"
                 ]
               }
             ]
@@ -3854,7 +3874,9 @@
                   "l/ro/getting-started/core-concepts/workflows",
                   "l/ro/getting-started/core-concepts/calendar-and-email",
                   "l/ro/getting-started/core-concepts/ai",
-                  "l/ro/getting-started/core-concepts/dashboards"
+                  "l/ro/getting-started/core-concepts/apps",
+                  "l/ro/getting-started/core-concepts/dashboards",
+                  "l/ro/getting-started/core-concepts/glossary"
                 ]
               }
             ]
@@ -4234,7 +4256,9 @@
                   "l/ru/getting-started/core-concepts/workflows",
                   "l/ru/getting-started/core-concepts/calendar-and-email",
                   "l/ru/getting-started/core-concepts/ai",
-                  "l/ru/getting-started/core-concepts/dashboards"
+                  "l/ru/getting-started/core-concepts/apps",
+                  "l/ru/getting-started/core-concepts/dashboards",
+                  "l/ru/getting-started/core-concepts/glossary"
                 ]
               }
             ]
@@ -4614,7 +4638,9 @@
                   "l/tr/getting-started/core-concepts/workflows",
                   "l/tr/getting-started/core-concepts/calendar-and-email",
                   "l/tr/getting-started/core-concepts/ai",
-                  "l/tr/getting-started/core-concepts/dashboards"
+                  "l/tr/getting-started/core-concepts/apps",
+                  "l/tr/getting-started/core-concepts/dashboards",
+                  "l/tr/getting-started/core-concepts/glossary"
                 ]
               }
             ]
@@ -4994,7 +5020,9 @@
                   "l/zh/getting-started/core-concepts/workflows",
                   "l/zh/getting-started/core-concepts/calendar-and-email",
                   "l/zh/getting-started/core-concepts/ai",
-                  "l/zh/getting-started/core-concepts/dashboards"
+                  "l/zh/getting-started/core-concepts/apps",
+                  "l/zh/getting-started/core-concepts/dashboards",
+                  "l/zh/getting-started/core-concepts/glossary"
                 ]
               }
             ]
