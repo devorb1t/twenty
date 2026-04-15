@@ -8,9 +8,9 @@ import { type FieldDefinition } from '@/object-record/record-field/ui/types/Fiel
 import { type FieldRelationMetadata } from '@/object-record/record-field/ui/types/FieldMetadata';
 
 const StyledContainer = styled.div`
-  width: 100%;
   max-height: 400px;
   overflow: auto;
+  width: 100%;
 `;
 
 type FieldWidgetRelationTableProps = {

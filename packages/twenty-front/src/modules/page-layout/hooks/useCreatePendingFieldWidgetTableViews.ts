@@ -1,9 +1,8 @@
 import { objectMetadataItemsSelector } from '@/object-metadata/states/objectMetadataItemsSelector';
-import { type EnrichedObjectMetadataItem } from '@/object-metadata/types/EnrichedObjectMetadataItem';
-import { type FieldMetadataItem } from '@/object-metadata/types/FieldMetadataItem';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutPersistedComponentState } from '@/page-layout/states/pageLayoutPersistedComponentState';
 import { type FieldConfiguration } from '@/page-layout/types/FieldConfiguration';
+import { resolveRelatedObjectForFieldWidget } from '@/page-layout/utils/resolveRelatedObjectForFieldWidget';
 import { filterFieldsForRecordTableViewCreation } from '@/page-layout/widgets/record-table/utils/filterFieldsForRecordTableViewCreation';
 import { sortFieldsByRelevanceForRecordTableWidget } from '@/page-layout/widgets/record-table/utils/sortFieldsByRelevanceForRecordTableWidget';
 import { usePerformViewAPIPersist } from '@/views/hooks/internal/usePerformViewAPIPersist';
@@ -20,39 +19,6 @@ import { v4 } from 'uuid';
 
 const DEFAULT_VIEW_FIELD_SIZE = 180;
 const INITIAL_VISIBLE_FIELDS_COUNT_IN_WIDGET = 6;
-
-const resolveRelatedObject = (
-  objectMetadataItems: EnrichedObjectMetadataItem[],
-  parentObjectMetadataId: string,
-  fieldMetadataId: string,
-):
-  | { field: FieldMetadataItem; relatedObject: EnrichedObjectMetadataItem }
-  | undefined => {
-  const parentObject = objectMetadataItems.find(
-    (item) => item.id === parentObjectMetadataId,
-  );
-
-  if (!isDefined(parentObject)) {
-    return undefined;
-  }
-
-  const field = parentObject.fields.find((f) => f.id === fieldMetadataId);
-  const relatedObjectId = field?.relation?.targetObjectMetadata.id;
-
-  if (!isDefined(field) || !isDefined(relatedObjectId)) {
-    return undefined;
-  }
-
-  const relatedObject = objectMetadataItems.find(
-    (item) => item.id === relatedObjectId,
-  );
-
-  if (!isDefined(relatedObject)) {
-    return undefined;
-  }
-
-  return { field, relatedObject };
-};
 
 export const useCreatePendingFieldWidgetTableViews = () => {
   const { performViewAPICreate } = usePerformViewAPIPersist();
@@ -120,11 +86,11 @@ export const useCreatePendingFieldWidgetTableViews = () => {
           continue;
         }
 
-        const resolved = resolveRelatedObject(
+        const resolved = resolveRelatedObjectForFieldWidget({
           objectMetadataItems,
           parentObjectMetadataId,
-          config.fieldMetadataId,
-        );
+          fieldMetadataId: config.fieldMetadataId,
+        });
 
         if (!isDefined(resolved)) {
           continue;

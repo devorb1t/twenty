@@ -348,8 +348,12 @@ export const fromPageLayoutWidgetConfigurationToUniversalConfiguration = ({
     }
 
     case WidgetConfigurationType.FIELD: {
-      const { fieldMetadataId, fieldDisplayMode, configurationType } =
-        configuration;
+      const {
+        fieldMetadataId,
+        fieldDisplayMode,
+        configurationType,
+        viewId,
+      } = configuration;
 
       const fieldMetadataUniversalIdentifier =
         getFieldMetadataUniversalIdentifier({
@@ -358,10 +362,27 @@ export const fromPageLayoutWidgetConfigurationToUniversalConfiguration = ({
           shouldThrowOnMissingIdentifier,
         });
 
+      let viewUniversalIdentifier: string | null | undefined = undefined;
+
+      if (isDefined(viewId)) {
+        viewUniversalIdentifier = viewUniversalIdentifierById[viewId] ?? null;
+
+        if (
+          !isDefined(viewUniversalIdentifier) &&
+          shouldThrowOnMissingIdentifier
+        ) {
+          throw new FlatEntityMapsException(
+            `View universal identifier not found for id: ${viewId}`,
+            FlatEntityMapsExceptionCode.RELATION_UNIVERSAL_IDENTIFIER_NOT_FOUND,
+          );
+        }
+      }
+
       return {
         configurationType,
         fieldMetadataId: fieldMetadataUniversalIdentifier ?? fieldMetadataId,
         fieldDisplayMode,
+        viewId: viewUniversalIdentifier,
       };
     }
 

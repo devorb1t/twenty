@@ -1,4 +1,5 @@
 import { useFieldMetadataItemById } from '@/object-metadata/hooks/useFieldMetadataItemById';
+import { useSeedDraftViewForFieldWidgetTable } from '@/page-layout/hooks/useSeedDraftViewForFieldWidgetTable';
 import { getFieldWidgetAvailableDisplayModesForField } from '@/page-layout/widgets/field/utils/getFieldWidgetDisplayModeConfig';
 import { usePageLayoutIdFromContextStore } from '@/side-panel/pages/page-layout/hooks/usePageLayoutIdFromContextStore';
 import { useUpdateCurrentWidgetConfig } from '@/side-panel/pages/page-layout/hooks/useUpdateCurrentWidgetConfig';
@@ -21,6 +22,7 @@ import {
   IconTable,
 } from 'twenty-ui/display';
 import { MenuItemSelect } from 'twenty-ui/navigation';
+import { isDefined } from 'twenty-shared/utils';
 import { v4 } from 'uuid';
 import {
   FieldDisplayMode,
@@ -73,7 +75,12 @@ export const FieldWidgetLayoutDropdownContent = () => {
   const { updateCurrentWidgetConfig } =
     useUpdateCurrentWidgetConfig(pageLayoutId);
 
+  const { seedDraftViewForFieldWidgetTable } =
+    useSeedDraftViewForFieldWidgetTable();
+
   const { closeDropdown } = useCloseDropdown();
+
+  const parentObjectMetadataId = widgetInEditMode?.objectMetadataId;
 
   const handleSelectLayout = (fieldDisplayMode: FieldDisplayMode) => {
     // Generate a viewId up-front for VIEW mode so the draft carries it; the
@@ -90,6 +97,22 @@ export const FieldWidgetLayoutDropdownContent = () => {
         viewId: nextViewId,
       },
     });
+
+    // Seed a synthetic view into the client metadata store so RecordTableWidget
+    // can render immediately, before the real view is persisted on Save.
+    if (
+      fieldDisplayMode === FieldDisplayMode.VIEW &&
+      isDefined(nextViewId) &&
+      isDefined(currentFieldMetadataId) &&
+      isDefined(parentObjectMetadataId)
+    ) {
+      seedDraftViewForFieldWidgetTable({
+        viewId: nextViewId,
+        fieldMetadataId: currentFieldMetadataId,
+        parentObjectMetadataId,
+      });
+    }
+
     closeDropdown();
   };
 
