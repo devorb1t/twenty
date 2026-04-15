@@ -182,7 +182,9 @@ const halftoneFragmentShader = `
     float hoverHalftoneMask = 0.0;
     if (hoverHalftoneActive > 0.0) {
       float hoverHalftoneRadiusPx = hoverHalftoneRadius * logicalResolution.y;
-      hoverHalftoneMask = smoothstep(hoverHalftoneRadiusPx, 0.0, fragDist);
+      hoverHalftoneMask =
+        smoothstep(hoverHalftoneRadiusPx, 0.0, fragDist) *
+        clamp(hoverHalftoneActive, 0.0, 1.0);
     }
 
     float hoverFlowMask = 0.0;
@@ -259,6 +261,8 @@ const halftoneFragmentShader = `
 
 const IMAGE_POINTER_FOLLOW = 0.38;
 const IMAGE_POINTER_VELOCITY_DAMPING = 0.82;
+const IMAGE_HOVER_FADE_IN = 18;
+const IMAGE_HOVER_FADE_OUT = 7;
 const MAX_PREVIEW_PIXEL_RATIO = 2;
 
 const CanvasMount = styled.div<{ $background: string }>`
@@ -322,6 +326,7 @@ type InteractionState = {
   activePointerId: number | null;
   autoElapsed: number;
   dragging: boolean;
+  hoverStrength: number;
   mouseX: number;
   mouseY: number;
   pointerInside: boolean;
@@ -359,6 +364,38 @@ function createRenderTarget(width: number, height: number) {
   });
 }
 
+function syncImageElementTexture(
+  resources: SceneResources,
+  imageElement: HTMLImageElement | null,
+) {
+  if (resources.imageTexture) {
+    resources.imageTexture.dispose();
+    resources.imageTexture = null;
+  }
+
+  if (!imageElement) {
+    resources.imageMaterial.uniforms.tImage.value = null;
+    resources.imageMaterial.uniforms.imageSize.value.set(1, 1);
+    return;
+  }
+
+  const texture = new THREE.Texture(imageElement);
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.generateMipmaps = false;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.needsUpdate = true;
+  texture.colorSpace = THREE.SRGBColorSpace;
+
+  resources.imageTexture = texture;
+  resources.imageMaterial.uniforms.tImage.value = texture;
+  resources.imageMaterial.uniforms.imageSize.value.set(
+    imageElement.naturalWidth,
+    imageElement.naturalHeight,
+  );
+}
+
 function createInteractionState(
   initialPose?: Partial<HalftoneExportPose>,
 ): InteractionState {
@@ -366,6 +403,7 @@ function createInteractionState(
     activePointerId: null,
     autoElapsed: initialPose?.autoElapsed ?? 0,
     dragging: false,
+    hoverStrength: 0,
     mouseX: 0.5,
     mouseY: 0.5,
     pointerInside: false,
@@ -535,6 +573,7 @@ function resetInteractionState(
 ) {
   interactionState.activePointerId = null;
   interactionState.dragging = false;
+  interactionState.hoverStrength = 0;
   interactionState.mouseX = 0.5;
   interactionState.mouseY = 0.5;
   interactionState.pointerInside = false;
@@ -577,6 +616,7 @@ export function HalftoneCanvas({
   const poseChangeReference = useRef(onPoseChange);
   const previewDistanceReference = useRef(previewDistance);
   const geometryReference = useRef(geometry);
+  const imageElementReference = useRef(imageElement);
   const snapshotReference = useRef(snapshotRef);
 
   useEffect(() => {
@@ -656,38 +696,15 @@ export function HalftoneCanvas({
   }, [snapshotRef]);
 
   useEffect(() => {
+    imageElementReference.current = imageElement;
+
     const resources = resourcesReference.current;
 
     if (!resources) {
       return;
     }
 
-    if (imageElement) {
-      if (resources.imageTexture) {
-        resources.imageTexture.dispose();
-      }
-
-      const texture = new THREE.Texture(imageElement);
-      texture.wrapS = THREE.ClampToEdgeWrapping;
-      texture.wrapT = THREE.ClampToEdgeWrapping;
-      texture.generateMipmaps = false;
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      texture.needsUpdate = true;
-      texture.colorSpace = THREE.SRGBColorSpace;
-      resources.imageTexture = texture;
-      resources.imageMaterial.uniforms.tImage.value = texture;
-      resources.imageMaterial.uniforms.imageSize.value.set(
-        imageElement.naturalWidth,
-        imageElement.naturalHeight,
-      );
-    } else {
-      if (resources.imageTexture) {
-        resources.imageTexture.dispose();
-        resources.imageTexture = null;
-        resources.imageMaterial.uniforms.tImage.value = null;
-      }
-    }
+    syncImageElementTexture(resources, imageElement);
   }, [imageElement]);
 
   useEffect(() => {
@@ -1030,6 +1047,7 @@ export function HalftoneCanvas({
       }
 
       syncResources(resources, settingsReference.current);
+      syncImageElementTexture(resources, imageElementReference.current);
 
       const captureSnapshot: HalftoneSnapshotFn = async (
         snapshotWidth: number,
@@ -1570,7 +1588,17 @@ export function HalftoneCanvas({
         halftoneMaterial.uniforms.cropToBounds.value = isImageMode ? 1 : 0;
 
         if (isImageMode) {
-          const pointerActive = interaction.pointerInside;
+          const hoverEasing =
+            1 -
+            Math.exp(
+              -delta *
+                (interaction.pointerInside
+                  ? IMAGE_HOVER_FADE_IN
+                  : IMAGE_HOVER_FADE_OUT),
+            );
+          interaction.hoverStrength +=
+            ((interaction.pointerInside ? 1 : 0) - interaction.hoverStrength) *
+            hoverEasing;
 
           interaction.smoothedMouseX +=
             (interaction.mouseX - interaction.smoothedMouseX) *
@@ -1591,22 +1619,23 @@ export function HalftoneCanvas({
           );
           halftoneMaterial.uniforms.dragOffset.value.set(0, 0);
           halftoneMaterial.uniforms.hoverHalftoneActive.value =
-            pointerActive && activeSettings.animation.hoverHalftoneEnabled
-              ? 1
+            activeSettings.animation.hoverHalftoneEnabled
+              ? interaction.hoverStrength
               : 0;
           halftoneMaterial.uniforms.hoverHalftonePowerShift.value =
-            pointerActive && activeSettings.animation.hoverHalftoneEnabled
+            activeSettings.animation.hoverHalftoneEnabled
               ? activeSettings.animation.hoverHalftonePowerShift
               : 0;
           halftoneMaterial.uniforms.hoverHalftoneRadius.value =
             activeSettings.animation.hoverHalftoneRadius;
           halftoneMaterial.uniforms.hoverHalftoneWidthShift.value =
-            pointerActive && activeSettings.animation.hoverHalftoneEnabled
+            activeSettings.animation.hoverHalftoneEnabled
               ? activeSettings.animation.hoverHalftoneWidthShift
               : 0;
           halftoneMaterial.uniforms.hoverLightStrength.value =
-            pointerActive && activeSettings.animation.hoverLightEnabled
-              ? activeSettings.animation.hoverLightIntensity
+            activeSettings.animation.hoverLightEnabled
+              ? activeSettings.animation.hoverLightIntensity *
+                interaction.hoverStrength
               : 0;
           halftoneMaterial.uniforms.hoverLightRadius.value =
             activeSettings.animation.hoverLightRadius;
