@@ -121,14 +121,25 @@ export class ApiKeyResolver {
     }
   }
 
-  @ResolveField(() => RoleDTO)
+  @ResolveField(() => RoleDTO, { nullable: true })
   async role(
     @Parent() apiKey: ApiKeyEntity,
     @AuthWorkspace() workspace: WorkspaceEntity,
-  ): Promise<RoleDTO> {
-    return this.apiKeyRoleService.getRoleDtoByApiKeyId({
-      apiKeyId: apiKey.id,
-      workspaceId: workspace.id,
-    });
+  ): Promise<RoleDTO | null> {
+    try {
+      return await this.apiKeyRoleService.getRoleDtoByApiKeyId({
+        apiKeyId: apiKey.id,
+        workspaceId: workspace.id,
+      });
+    } catch (error) {
+      if (
+        error instanceof ApiKeyException &&
+        error.code === ApiKeyExceptionCode.API_KEY_NO_ROLE_ASSIGNED
+      ) {
+        return null;
+      }
+
+      throw error;
+    }
   }
 }
