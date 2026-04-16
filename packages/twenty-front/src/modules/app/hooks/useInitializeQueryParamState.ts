@@ -11,40 +11,45 @@ import { useStore } from 'jotai';
 export const useInitializeQueryParamState = () => {
   const store = useStore();
   const initializeQueryParamState = useCallback(() => {
-    const handlers: Record<string, (value: string) => void> = {
-      billingCheckoutSession: (value: string) => {
-        const billingCheckoutSession = store.get(
-          billingCheckoutSessionState.atom,
-        );
+    const billingCheckoutSessionHandler = (value: string) => {
+      const billingCheckoutSession = store.get(
+        billingCheckoutSessionState.atom,
+      );
 
-        try {
-          const parsedValue = JSON.parse(decodeURIComponent(value));
+      try {
+        const parsedValue = JSON.parse(decodeURIComponent(value));
 
-          if (
-            typeof parsedValue === 'object' &&
-            parsedValue !== null &&
-            'plan' in parsedValue &&
-            'interval' in parsedValue &&
-            'requirePaymentMethod' in parsedValue &&
-            !deepEqual(billingCheckoutSession, parsedValue)
-          ) {
-            store.set(
-              billingCheckoutSessionState.atom,
-              parsedValue as BillingCheckoutSession,
-            );
-          }
-        } catch (error) {
-          // oxlint-disable-next-line no-console
-          console.error(
-            'Failed to parse billingCheckoutSession from URL',
-            error,
-          );
+        if (
+          typeof parsedValue === 'object' &&
+          parsedValue !== null &&
+          'plan' in parsedValue &&
+          'interval' in parsedValue &&
+          'requirePaymentMethod' in parsedValue &&
+          !deepEqual(billingCheckoutSession, parsedValue)
+        ) {
           store.set(
             billingCheckoutSessionState.atom,
-            BILLING_CHECKOUT_SESSION_DEFAULT_VALUE,
+            parsedValue as BillingCheckoutSession,
           );
         }
-      },
+      } catch (error) {
+        // oxlint-disable-next-line no-console
+        console.error(
+          'Failed to parse billingCheckoutSession from URL',
+          error,
+        );
+        store.set(
+          billingCheckoutSessionState.atom,
+          BILLING_CHECKOUT_SESSION_DEFAULT_VALUE,
+        );
+      }
+    };
+
+    const handlers: Record<string, (value: string) => void> = {
+      // Internal frontend links use 'billingCheckoutSession'
+      billingCheckoutSession: billingCheckoutSessionHandler,
+      // OAuth redirect URLs from the server use 'billingCheckoutSessionState'
+      billingCheckoutSessionState: billingCheckoutSessionHandler,
       returnToPath: (value: string) => {
         if (isValidReturnToPath(value)) {
           store.set(returnToPathState.atom, value);
