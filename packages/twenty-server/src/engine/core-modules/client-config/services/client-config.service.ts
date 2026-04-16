@@ -49,11 +49,16 @@ export class ClientConfigService {
       sdkPackage === AI_SDK_BEDROCK ||
       sdkPackage === AI_SDK_XAI;
 
-    const hasNativeTwitterSearch = sdkPackage === AI_SDK_XAI;
-
     const isWebSearchDriverEnabled =
       this.twentyConfigService.get('WEB_SEARCH_DRIVER') !==
       WebSearchDriverType.DISABLED;
+
+    const useProviderNativeSearch =
+      this.twentyConfigService.get('WEB_SEARCH_PREFER_NATIVE') ||
+      !isWebSearchDriverEnabled;
+
+    const hasNativeTwitterSearch =
+      sdkPackage === AI_SDK_XAI && useProviderNativeSearch;
 
     const webSearch = hasNativeWebSearch || isWebSearchDriverEnabled;
 

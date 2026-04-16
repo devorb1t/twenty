@@ -66,8 +66,8 @@ export const SettingsAgentModelCapabilities = ({
   };
 
   const isCapabilityEnabled = (capability: AgentCapabilityKey) => {
-    if (capability === 'codeInterpreter') {
-      return modelConfiguration.codeInterpreter?.enabled !== false;
+    if (capability === 'webSearch' || capability === 'codeInterpreter') {
+      return modelConfiguration[capability]?.enabled !== false;
     }
 
     return modelConfiguration[capability]?.enabled || false;

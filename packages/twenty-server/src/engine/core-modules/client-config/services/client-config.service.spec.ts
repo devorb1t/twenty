@@ -4,10 +4,13 @@ import { NodeEnvironment } from 'src/engine/core-modules/twenty-config/interface
 import { SupportDriver } from 'src/engine/core-modules/twenty-config/interfaces/support.interface';
 
 import { CaptchaDriverType } from 'src/engine/core-modules/captcha/interfaces';
+import { CodeInterpreterDriverType } from 'src/engine/core-modules/code-interpreter/code-interpreter.interface';
 import { ClientConfigService } from 'src/engine/core-modules/client-config/services/client-config.service';
 import { DomainServerConfigService } from 'src/engine/core-modules/domain/domain-server-config/services/domain-server-config.service';
 import { PUBLIC_FEATURE_FLAGS } from 'src/engine/core-modules/feature-flag/constants/public-feature-flag.const';
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
+import { WebSearchDriverType } from 'src/engine/core-modules/web-search/web-search.interface';
+import { AI_SDK_XAI } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
 import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { MaintenanceModeService } from 'src/engine/core-modules/admin-panel/maintenance-mode.service';
 
@@ -15,6 +18,7 @@ describe('ClientConfigService', () => {
   let service: ClientConfigService;
   let twentyConfigService: TwentyConfigService;
   let domainServerConfigService: DomainServerConfigService;
+  let aiModelRegistryService: AiModelRegistryService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -56,6 +60,9 @@ describe('ClientConfigService', () => {
     twentyConfigService = module.get<TwentyConfigService>(TwentyConfigService);
     domainServerConfigService = module.get<DomainServerConfigService>(
       DomainServerConfigService,
+    );
+    aiModelRegistryService = module.get<AiModelRegistryService>(
+      AiModelRegistryService,
     );
   });
 
@@ -103,6 +110,9 @@ describe('ClientConfigService', () => {
             CLOUDFLARE_ZONE_ID: undefined,
             ALLOW_REQUESTS_TO_TWENTY_ICONS: false,
             CLICKHOUSE_URL: undefined,
+            WEB_SEARCH_DRIVER: WebSearchDriverType.DISABLED,
+            WEB_SEARCH_PREFER_NATIVE: false,
+            CODE_INTERPRETER_TYPE: CodeInterpreterDriverType.DISABLED,
           };
 
           return mockValues[key];
@@ -239,6 +249,73 @@ describe('ClientConfigService', () => {
       const result = await service.getClientConfig();
 
       expect(result.canManageFeatureFlags).toBe(true);
+    });
+
+    it('hides x search when external web search is preferred', async () => {
+      jest
+        .spyOn(aiModelRegistryService, 'getAdminFilteredModels')
+        .mockReturnValue([
+          {
+            modelId: 'xai-model',
+            sdkPackage: AI_SDK_XAI,
+            model: {} as never,
+            providerName: 'xai',
+          },
+        ]);
+
+      jest
+        .spyOn(twentyConfigService, 'get')
+        .mockImplementation((key: string) => {
+          if (key === 'WEB_SEARCH_DRIVER') return WebSearchDriverType.EXA;
+          if (key === 'WEB_SEARCH_PREFER_NATIVE') return false;
+          if (key === 'CODE_INTERPRETER_TYPE')
+            return CodeInterpreterDriverType.DISABLED;
+
+          return undefined;
+        });
+
+      const result = await service.getClientConfig();
+      const xaiModel = result.aiModels.find(
+        (model) => model.modelId === 'xai-model',
+      );
+
+      expect(xaiModel?.capabilities).toEqual({
+        webSearch: true,
+      });
+    });
+
+    it('keeps x search available when native web search is preferred', async () => {
+      jest
+        .spyOn(aiModelRegistryService, 'getAdminFilteredModels')
+        .mockReturnValue([
+          {
+            modelId: 'xai-model',
+            sdkPackage: AI_SDK_XAI,
+            model: {} as never,
+            providerName: 'xai',
+          },
+        ]);
+
+      jest
+        .spyOn(twentyConfigService, 'get')
+        .mockImplementation((key: string) => {
+          if (key === 'WEB_SEARCH_DRIVER') return WebSearchDriverType.EXA;
+          if (key === 'WEB_SEARCH_PREFER_NATIVE') return true;
+          if (key === 'CODE_INTERPRETER_TYPE')
+            return CodeInterpreterDriverType.DISABLED;
+
+          return undefined;
+        });
+
+      const result = await service.getClientConfig();
+      const xaiModel = result.aiModels.find(
+        (model) => model.modelId === 'xai-model',
+      );
+
+      expect(xaiModel?.capabilities).toEqual({
+        webSearch: true,
+        twitterSearch: true,
+      });
     });
   });
 });
