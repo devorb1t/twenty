@@ -5334,6 +5334,9 @@ export default {
             "availabilityObjectMetadataId": [
                 3
             ],
+            "pageLayoutId": [
+                3
+            ],
             "applicationId": [
                 3
             ],
@@ -10666,6 +10669,9 @@ export default {
             "payload": [
                 15
             ],
+            "pageLayoutId": [
+                3
+            ],
             "__typename": [
                 1
             ]
@@ -10700,6 +10706,9 @@ export default {
             ],
             "hotKeys": [
                 1
+            ],
+            "pageLayoutId": [
+                3
             ],
             "__typename": [
                 1
