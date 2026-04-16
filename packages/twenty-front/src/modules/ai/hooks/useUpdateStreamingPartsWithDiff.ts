@@ -36,11 +36,9 @@ export const useUpdateStreamingPartsWithDiff = () => {
           continue;
         }
 
-        const clonedMessage = structuredClone(incomingMessage);
-
         jotaiStore.set(
           agentChatMessageFamilyCallbackState(incomingMessage.id),
-          clonedMessage,
+          incomingMessage,
         );
 
         processStreamingMessageUpdate(incomingMessage);
