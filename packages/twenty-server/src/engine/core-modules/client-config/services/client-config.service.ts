@@ -1,35 +1,35 @@
 import { Injectable } from '@nestjs/common';
 
 import { isNonEmptyString } from '@sniptt/guards';
-import { isDefined } from 'twenty-shared/utils';
 import { type AiSdkPackage } from 'twenty-shared/ai';
+import { isDefined } from 'twenty-shared/utils';
 
+import { CodeInterpreterDriverType } from 'src/engine/core-modules/code-interpreter/code-interpreter.interface';
+import { NodeEnvironment } from 'src/engine/core-modules/twenty-config/interfaces/node-environment.interface';
+import { SupportDriver } from 'src/engine/core-modules/twenty-config/interfaces/support.interface';
+import { WebSearchDriverType } from 'src/engine/core-modules/web-search/web-search.interface';
 import {
   AI_SDK_ANTHROPIC,
   AI_SDK_BEDROCK,
   AI_SDK_OPENAI,
   AI_SDK_XAI,
 } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
-import { NodeEnvironment } from 'src/engine/core-modules/twenty-config/interfaces/node-environment.interface';
-import { SupportDriver } from 'src/engine/core-modules/twenty-config/interfaces/support.interface';
-import { CodeInterpreterDriverType } from 'src/engine/core-modules/code-interpreter/code-interpreter.interface';
-import { WebSearchDriverType } from 'src/engine/core-modules/web-search/web-search.interface';
 
 import { MaintenanceModeService } from 'src/engine/core-modules/admin-panel/maintenance-mode.service';
 import {
+  type AgentCapabilities,
   type ClientAIModelConfig,
   type ClientConfig,
-  type AgentCapabilities,
 } from 'src/engine/core-modules/client-config/client-config.entity';
 import { DomainServerConfigService } from 'src/engine/core-modules/domain/domain-server-config/services/domain-server-config.service';
 import { PUBLIC_FEATURE_FLAGS } from 'src/engine/core-modules/feature-flag/constants/public-feature-flag.const';
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
+import { MODEL_FAMILY_LABELS } from 'src/engine/metadata-modules/ai/ai-models/constants/model-family-labels.const';
+import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import {
   AUTO_SELECT_FAST_MODEL_ID,
   AUTO_SELECT_SMART_MODEL_ID,
 } from 'twenty-shared/constants';
-import { MODEL_FAMILY_LABELS } from 'src/engine/metadata-modules/ai/ai-models/constants/model-family-labels.const';
-import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 
 @Injectable()
 export class ClientConfigService {
@@ -53,12 +53,10 @@ export class ClientConfigService {
       this.twentyConfigService.get('WEB_SEARCH_DRIVER') !==
       WebSearchDriverType.DISABLED;
 
-    const useProviderNativeSearch =
-      this.twentyConfigService.get('WEB_SEARCH_PREFER_NATIVE') ||
-      !isWebSearchDriverEnabled;
-
-    const hasNativeTwitterSearch =
-      sdkPackage === AI_SDK_XAI && useProviderNativeSearch;
+    // is this the right place to check for native twitter search?
+    // if so, we should move it to the agent model config service?
+    // seems weird to have it here in the client config service?
+    const hasNativeTwitterSearch = sdkPackage === AI_SDK_XAI;
 
     const webSearch = hasNativeWebSearch || isWebSearchDriverEnabled;
 

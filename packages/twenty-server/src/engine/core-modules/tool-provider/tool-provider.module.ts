@@ -13,6 +13,7 @@ import { NativeModelToolProvider } from 'src/engine/core-modules/tool-provider/p
 import { ViewFieldToolProvider } from 'src/engine/core-modules/tool-provider/providers/view-field-tool.provider';
 import { ViewToolProvider } from 'src/engine/core-modules/tool-provider/providers/view-tool.provider';
 import { WorkflowToolProvider } from 'src/engine/core-modules/tool-provider/providers/workflow-tool.provider';
+import { AgentToolRuntimeService } from 'src/engine/core-modules/tool-provider/services/agent-tool-runtime.service';
 import { ToolExecutorService } from 'src/engine/core-modules/tool-provider/services/tool-executor.service';
 import { ToolModule } from 'src/engine/core-modules/tool/tool.module';
 import { UserEntity } from 'src/engine/core-modules/user/user.entity';
@@ -104,8 +105,9 @@ import { ToolRegistryService } from './services/tool-registry.service';
         WorkflowToolProvider,
       ],
     },
+    AgentToolRuntimeService,
     ToolRegistryService,
   ],
-  exports: [ToolRegistryService],
+  exports: [AgentToolRuntimeService, ToolRegistryService],
 })
 export class ToolProviderModule {}

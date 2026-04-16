@@ -6,10 +6,10 @@ import { isDefined } from 'twenty-shared/utils';
 import { type NativeToolProvider } from 'src/engine/core-modules/tool-provider/interfaces/native-tool-provider.interface';
 import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
 
-import { ToolCategory } from 'twenty-shared/ai';
 import { WebSearchService } from 'src/engine/core-modules/web-search/web-search.service';
 import { AgentModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/agent-model-config.service';
 import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
+import { ToolCategory } from 'twenty-shared/ai';
 
 // SDK-native tools (anthropic webSearch, etc.) are opaque and not serializable.
 // This provider keeps generateTools() and is excluded from the descriptor system.
@@ -41,9 +41,11 @@ export class NativeModelToolProvider implements NativeToolProvider {
       `Web search strategy: ${useProviderNativeWebSearch ? 'native (provider SDK)' : 'external (EXA)'}`,
     );
 
-    if (!useProviderNativeWebSearch) {
-      return {};
-    }
+    // why removed this?
+    // lets be explicit about it
+    // if (!useProviderNativeWebSearch) {
+    //   return {};
+    // }
 
     const registeredModel =
       await this.aiModelRegistryService.resolveModelForAgent(context.agent);

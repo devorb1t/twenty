@@ -16,8 +16,11 @@ type AgentCapabilityKey = keyof Pick<
 >;
 
 const StyledCapabilitiesContainer = styled.div`
-  gap: ${themeCssVariables.spacing[2]};
+  display: flex;
+  flex-direction: column;
+  gap: ${themeCssVariables.spacing[1]};
 `;
+
 type SettingsAgentModelCapabilitiesProps = {
   selectedModelId: string;
   modelConfiguration: ModelConfiguration;

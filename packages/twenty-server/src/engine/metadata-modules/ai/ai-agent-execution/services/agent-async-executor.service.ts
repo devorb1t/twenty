@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import {
+  APICallError,
   generateText,
   jsonSchema,
   Output,
@@ -16,7 +17,13 @@ import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/
 
 import { isUserAuthContext } from 'src/engine/core-modules/auth/guards/is-user-auth-context.guard';
 import { type WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
+import { AgentToolRuntimeService } from 'src/engine/core-modules/tool-provider/services/agent-tool-runtime.service';
 import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
+import {
+  EXECUTE_TOOL_TOOL_NAME,
+  LEARN_TOOLS_TOOL_NAME,
+} from 'src/engine/core-modules/tool-provider/tools';
+import { type ToolIndexEntry } from 'src/engine/core-modules/tool-provider/types/tool-index-entry.type';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { type AgentExecutionResult } from 'src/engine/metadata-modules/ai/ai-agent-execution/types/agent-execution-result.type';
 import {
@@ -32,10 +39,26 @@ import { extractCacheCreationTokensFromSteps } from 'src/engine/metadata-modules
 import { mergeLanguageModelUsage } from 'src/engine/metadata-modules/ai/ai-billing/utils/merge-language-model-usage.util';
 import { AI_TELEMETRY_CONFIG } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-telemetry.const';
 import { AgentModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/agent-model-config.service';
-import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
+import {
+  AiModelRegistryService,
+  type RegisteredAIModel,
+} from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { RoleTargetEntity } from 'src/engine/metadata-modules/role-target/role-target.entity';
 import { type RolePermissionConfig } from 'src/engine/twenty-orm/types/role-permission-config';
 import { ToolCategory } from 'twenty-shared/ai';
+
+type AgentExecutionErrorLogContext = {
+  agentId?: string;
+  workspaceId?: string;
+  modelId?: string;
+  sdkPackage?: string;
+  toolNames: string[];
+};
+
+const WORKFLOW_AGENT_LAZY_TOOL_CATEGORIES = [
+  ToolCategory.DATABASE_CRUD,
+  ToolCategory.ACTION,
+] as const;
 
 // Agent execution within workflows uses database and action tools only.
 // Workflow tools are intentionally excluded to avoid circular dependencies
@@ -47,6 +70,7 @@ export class AgentAsyncExecutorService {
   constructor(
     private readonly aiModelRegistryService: AiModelRegistryService,
     private readonly agentModelConfigService: AgentModelConfigService,
+    private readonly agentToolRuntimeService: AgentToolRuntimeService,
     private readonly toolRegistry: ToolRegistryService,
     @InjectRepository(RoleTargetEntity)
     private readonly roleTargetRepository: Repository<RoleTargetEntity>,
@@ -99,6 +123,111 @@ export class AgentAsyncExecutorService {
     return { intersectionOf: allRoleIds };
   }
 
+  private getApiCallErrorDetailsForLog(
+    error: unknown,
+  ): Record<string, unknown> | undefined {
+    const cause =
+      error instanceof Error
+        ? (error as Error & { cause?: unknown }).cause
+        : undefined;
+    const apiCallError = APICallError.isInstance(error)
+      ? error
+      : APICallError.isInstance(cause)
+        ? cause
+        : undefined;
+
+    if (apiCallError) {
+      return {
+        name: apiCallError.name,
+        message: apiCallError.message,
+        url: apiCallError.url,
+        statusCode: apiCallError.statusCode,
+        responseBody: apiCallError.responseBody,
+        isRetryable: apiCallError.isRetryable,
+      };
+    }
+  }
+
+  private getErrorDetailsForLog(error: unknown): Record<string, unknown> {
+    const apiCallErrorDetails = this.getApiCallErrorDetailsForLog(error);
+
+    if (apiCallErrorDetails) {
+      return apiCallErrorDetails;
+    }
+
+    if (error instanceof Error) {
+      return {
+        name: error.name,
+        message: error.message,
+      };
+    }
+
+    return {
+      message: String(error),
+    };
+  }
+
+  private getAgentExecutionErrorLogPayload(
+    error: unknown,
+    context: AgentExecutionErrorLogContext,
+  ): Record<string, unknown> {
+    return {
+      agentId: context.agentId,
+      workspaceId: context.workspaceId,
+      modelId: context.modelId,
+      sdkPackage: context.sdkPackage,
+      toolCount: context.toolNames.length,
+      toolNames: context.toolNames,
+      nativeSearchToolNames: context.toolNames.filter(
+        (toolName) => toolName === 'web_search' || toolName === 'x_search',
+      ),
+      error: this.getErrorDetailsForLog(error),
+    };
+  }
+
+  private buildWorkflowToolCatalogPrompt({
+    toolCatalog,
+    directToolNames,
+  }: {
+    toolCatalog: ToolIndexEntry[];
+    directToolNames: string[];
+  }): string {
+    const toolsByCategory = new Map<ToolCategory, ToolIndexEntry[]>();
+
+    for (const tool of toolCatalog) {
+      const existing = toolsByCategory.get(tool.category) ?? [];
+
+      existing.push(tool);
+      toolsByCategory.set(tool.category, existing);
+    }
+
+    const directToolsSection =
+      directToolNames.length > 0
+        ? `Direct native model tools available now: ${directToolNames.map((toolName) => `\`${toolName}\``).join(', ')}.`
+        : 'No direct native model tools are available.';
+
+    const sections = [
+      `## Available Workflow Tools
+
+${directToolsSection}
+
+For database and action tools, first call \`${LEARN_TOOLS_TOOL_NAME}\` with the exact tool name to learn its schema, then call \`${EXECUTE_TOOL_TOOL_NAME}\` with matching arguments. Do not call tools that are not listed below.`,
+    ];
+
+    for (const category of WORKFLOW_AGENT_LAZY_TOOL_CATEGORIES) {
+      const tools = toolsByCategory.get(category);
+
+      if (!tools || tools.length === 0) {
+        continue;
+      }
+
+      sections.push(`### ${category}
+${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
+    }
+
+    return sections.join('\n\n');
+  }
+
   async executeAgent({
     agent,
     userPrompt,
@@ -112,6 +241,10 @@ export class AgentAsyncExecutorService {
     rolePermissionConfig?: RolePermissionConfig;
     authContext?: WorkspaceAuthContext;
   }): Promise<AgentExecutionResult> {
+    let registeredModelForErrorLog: RegisteredAIModel | undefined;
+    let generatedToolNamesForErrorLog: string[] = [];
+    let lazyWorkflowToolCountForLog = 0;
+
     try {
       if (agent) {
         const workspace = await this.workspaceRepository.findOneBy({
@@ -129,8 +262,11 @@ export class AgentAsyncExecutorService {
       const registeredModel =
         await this.aiModelRegistryService.resolveModelForAgent(agent);
 
+      registeredModelForErrorLog = registeredModel;
+
       let tools: ToolSet = {};
       let providerOptions = {};
+      let workflowToolCatalogPrompt = '';
 
       if (agent) {
         const effectiveRoleConfig = await this.getEffectiveRolePermissionConfig(
@@ -139,53 +275,60 @@ export class AgentAsyncExecutorService {
           rolePermissionConfig,
         );
 
-        // Workflow context: DATABASE_CRUD, ACTION, and NATIVE_MODEL tools only
-        // Workflow tools are excluded to prevent circular dependencies
         const roleId = this.extractRoleIds(effectiveRoleConfig)[0] ?? '';
+        const toolProviderContext: ToolProviderContext = {
+          workspaceId: agent.workspaceId,
+          roleId,
+          rolePermissionConfig: effectiveRoleConfig ?? { unionOf: [] },
+          authContext,
+          actorContext,
+          agent: agent as unknown as ToolProviderContext['agent'],
+          userId:
+            isDefined(authContext) && isUserAuthContext(authContext)
+              ? authContext.user.id
+              : undefined,
+          userWorkspaceId:
+            isDefined(authContext) && isUserAuthContext(authContext)
+              ? authContext.userWorkspaceId
+              : undefined,
+        };
 
-        tools = await this.toolRegistry.getToolsByCategories(
+        const nativeModelTools = await this.toolRegistry.getToolsByCategories(
+          toolProviderContext,
           {
-            workspaceId: agent.workspaceId,
-            roleId,
-            rolePermissionConfig: effectiveRoleConfig ?? { unionOf: [] },
-            authContext,
-            actorContext,
-            agent: agent as unknown as ToolProviderContext['agent'],
-            userId:
-              isDefined(authContext) && isUserAuthContext(authContext)
-                ? authContext.user.id
-                : undefined,
-            userWorkspaceId:
-              isDefined(authContext) && isUserAuthContext(authContext)
-                ? authContext.userWorkspaceId
-                : undefined,
-          },
-          {
-            categories: [
-              ToolCategory.DATABASE_CRUD,
-              ToolCategory.ACTION,
-              ToolCategory.NATIVE_MODEL,
-            ],
+            categories: [ToolCategory.NATIVE_MODEL],
             wrapWithErrorContext: false,
           },
         );
+
+        const toolRuntime = await this.agentToolRuntimeService.buildToolRuntime(
+          {
+            context: toolProviderContext,
+            directTools: nativeModelTools,
+            lazyToolCategories: WORKFLOW_AGENT_LAZY_TOOL_CATEGORIES,
+          },
+        );
+
+        tools = toolRuntime.runtimeTools;
+        lazyWorkflowToolCountForLog = toolRuntime.lazyToolCatalog.length;
+        workflowToolCatalogPrompt = this.buildWorkflowToolCatalogPrompt({
+          toolCatalog: toolRuntime.lazyToolCatalog,
+          directToolNames: toolRuntime.directToolNames,
+        });
 
         providerOptions =
           this.agentModelConfigService.getProviderOptions(registeredModel);
       }
 
-      const modelTools = this.agentModelConfigService.prepareToolSetForModel(
-        registeredModel,
-        tools,
-      );
+      generatedToolNamesForErrorLog = Object.keys(tools);
 
       this.logger.log(
-        `Generated ${Object.keys(modelTools).length} tools for agent`,
+        `Generated ${generatedToolNamesForErrorLog.length} runtime tools and ${lazyWorkflowToolCountForLog} lazy workflow tools for agent`,
       );
 
       const textResponse = await generateText({
-        system: `${WORKFLOW_SYSTEM_PROMPTS.BASE}\n\n${agent ? agent.prompt : ''}`,
-        tools: modelTools,
+        system: `${WORKFLOW_SYSTEM_PROMPTS.BASE}\n\n${workflowToolCatalogPrompt}\n\n${agent ? agent.prompt : ''}`,
+        tools,
         model: registeredModel.model,
         prompt: userPrompt,
         stopWhen: stepCountIs(AGENT_CONFIG.MAX_STEPS),
@@ -261,6 +404,21 @@ export class AgentAsyncExecutorService {
       if (error instanceof AgentException) {
         throw error;
       }
+
+      this.logger.error(
+        `Workflow agent execution failed: ${JSON.stringify(
+          this.getAgentExecutionErrorLogPayload(error, {
+            agentId: agent?.id,
+            workspaceId: agent?.workspaceId,
+            modelId: registeredModelForErrorLog?.modelId,
+            sdkPackage: registeredModelForErrorLog?.sdkPackage,
+            toolNames: generatedToolNamesForErrorLog,
+          }),
+          null,
+          2,
+        )}`,
+        error instanceof Error ? error.stack : undefined,
+      );
 
       throw new AgentException(
         error instanceof Error ? error.message : 'Agent execution failed',

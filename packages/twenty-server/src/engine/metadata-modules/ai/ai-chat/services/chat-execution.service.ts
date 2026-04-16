@@ -23,16 +23,12 @@ import { CodeInterpreterService } from 'src/engine/core-modules/code-interpreter
 import { WorkspaceDomainsService } from 'src/engine/core-modules/domain/workspace-domains/services/workspace-domains.service';
 import { ExceptionHandlerService } from 'src/engine/core-modules/exception-handler/exception-handler.service';
 import { COMMON_PRELOAD_TOOLS } from 'src/engine/core-modules/tool-provider/constants/common-preload-tools.const';
-import { wrapToolsWithOutputSerialization } from 'src/engine/core-modules/tool-provider/output-serialization/wrap-tools-with-output-serialization.util';
-import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
+import { AgentToolRuntimeService } from 'src/engine/core-modules/tool-provider/services/agent-tool-runtime.service';
 import {
-  createExecuteToolTool,
-  createLearnToolsTool,
   createLoadSkillTool,
-  EXECUTE_TOOL_TOOL_NAME,
-  LEARN_TOOLS_TOOL_NAME,
   LOAD_SKILL_TOOL_NAME,
 } from 'src/engine/core-modules/tool-provider/tools';
+import { WebSearchService } from 'src/engine/core-modules/web-search/web-search.service';
 import { type WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { AgentActorContextService } from 'src/engine/metadata-modules/ai/ai-agent-execution/services/agent-actor-context.service';
 import { AGENT_CONFIG } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-config.const';
@@ -57,10 +53,8 @@ import {
   AiModelRegistryService,
   type RegisteredAIModel,
 } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
-import { AgentModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/agent-model-config.service';
 import { SdkProviderFactoryService } from 'src/engine/metadata-modules/ai/ai-models/services/sdk-provider-factory.service';
 import { type AIModelConfig } from 'src/engine/metadata-modules/ai/ai-models/types/ai-model-config.type';
-import { WebSearchService } from 'src/engine/core-modules/web-search/web-search.service';
 import { SkillService } from 'src/engine/metadata-modules/skill/skill.service';
 
 export type ChatExecutionOptions = {
@@ -85,10 +79,9 @@ export class ChatExecutionService {
   private readonly logger = new Logger(ChatExecutionService.name);
 
   constructor(
-    private readonly toolRegistry: ToolRegistryService,
+    private readonly agentToolRuntimeService: AgentToolRuntimeService,
     private readonly skillService: SkillService,
     private readonly aiModelRegistryService: AiModelRegistryService,
-    private readonly agentModelConfigService: AgentModelConfigService,
     private readonly aiBillingService: AiBillingService,
     private readonly agentActorContextService: AgentActorContextService,
     private readonly workspaceDomainsService: WorkspaceDomainsService,
@@ -130,20 +123,6 @@ export class ChatExecutionService {
       ? this.buildContextFromBrowsingContext(workspace, browsingContext)
       : undefined;
 
-    const toolCatalog = await this.toolRegistry.buildToolIndex(
-      workspace.id,
-      roleId,
-      { userId, userWorkspaceId },
-    );
-
-    const skillCatalog = await this.skillService.findAllFlatSkills(
-      workspace.id,
-    );
-
-    this.logger.log(
-      `Built tool catalog with ${toolCatalog.length} tools, ${skillCatalog.length} skills available`,
-    );
-
     const useNativeSearch = this.webSearchService.shouldUseNativeSearch();
 
     this.logger.log(
@@ -154,11 +133,6 @@ export class ChatExecutionService {
       ...COMMON_PRELOAD_TOOLS,
       ...(useNativeSearch ? [] : ['web_search']),
     ];
-
-    const preloadedTools = await this.toolRegistry.getToolsByName(
-      toolNamesToPreload,
-      toolContext,
-    );
 
     const resolvedModelId = modelId ?? workspace.smartModel;
 
@@ -176,36 +150,32 @@ export class ChatExecutionService {
       registeredModel.modelId,
     );
 
-    const { tools: nativeSearchTools, callableToolNames: searchToolNames } =
-      useNativeSearch
-        ? this.getNativeWebSearchTools(registeredModel)
-        : { tools: {}, callableToolNames: [] };
+    const { tools: nativeSearchTools } = useNativeSearch
+      ? this.getNativeWebSearchTools(registeredModel)
+      : { tools: {} };
 
-    // Direct tools: native provider tools + preloaded tools.
-    // These are callable directly AND as fallback through execute_tool.
-    const directTools: ToolSet = {
-      ...wrapToolsWithOutputSerialization(preloadedTools),
-      ...nativeSearchTools,
-    };
+    const toolRuntime = await this.agentToolRuntimeService.buildToolRuntime({
+      context: toolContext,
+      directTools: nativeSearchTools,
+      preloadedToolNames: toolNamesToPreload,
+      wrapPreloadedToolsWithOutputSerialization: true,
+    });
 
-    const preloadedToolNames = [
-      ...Object.keys(preloadedTools),
-      ...searchToolNames,
-    ];
+    const toolCatalog = toolRuntime.toolCatalog;
+    const skillCatalog = await this.skillService.findAllFlatSkills(
+      workspace.id,
+    );
+
+    this.logger.log(
+      `Built tool catalog with ${toolCatalog.length} tools, ${skillCatalog.length} skills available`,
+    );
+
+    const preloadedToolNames = toolRuntime.directToolNames;
 
     // ToolSet is constant for the entire conversation — no mutation.
     // learn_tools returns schemas as text; execute_tool dispatches to cached tools.
     const activeTools: ToolSet = {
-      ...directTools,
-      [LEARN_TOOLS_TOOL_NAME]: createLearnToolsTool(
-        this.toolRegistry,
-        toolContext,
-      ),
-      [EXECUTE_TOOL_TOOL_NAME]: createExecuteToolTool(
-        this.toolRegistry,
-        toolContext,
-        directTools,
-      ),
+      ...toolRuntime.runtimeTools,
       [LOAD_SKILL_TOOL_NAME]: createLoadSkillTool(
         (skillNames) =>
           this.skillService.findFlatSkillsByNames(skillNames, workspace.id),
@@ -218,11 +188,6 @@ export class ChatExecutionService {
         },
       ),
     };
-
-    const modelTools = this.agentModelConfigService.prepareToolSetForModel(
-      registeredModel,
-      activeTools,
-    );
 
     let processedMessages: UIMessage[] = messages;
 
@@ -255,7 +220,7 @@ export class ChatExecutionService {
     );
 
     this.logger.log(
-      `Starting chat execution with model ${registeredModel.modelId}, ${Object.keys(modelTools).length} active tools`,
+      `Starting chat execution with model ${registeredModel.modelId}, ${Object.keys(activeTools).length} active tools`,
     );
 
     const systemMessage: SystemModelMessage = {
@@ -356,7 +321,7 @@ export class ChatExecutionService {
     const stream = streamText({
       model: registeredModel.model,
       messages: [systemMessage, ...modelMessages],
-      tools: modelTools,
+      tools: activeTools,
       abortSignal,
       stopWhen: stepCountIs(AGENT_CONFIG.MAX_STEPS),
       experimental_telemetry: AI_TELEMETRY_CONFIG,
@@ -468,9 +433,8 @@ export class ChatExecutionService {
 
   private getNativeWebSearchTools(model: RegisteredAIModel): {
     tools: ToolSet;
-    callableToolNames: string[];
   } {
-    const empty = { tools: {}, callableToolNames: [] };
+    const empty = { tools: {} };
     const providerName = model.providerName;
 
     if (!providerName) {
@@ -488,7 +452,6 @@ export class ChatExecutionService {
 
         return {
           tools: { web_search: provider.tools.webSearch_20250305() },
-          callableToolNames: ['web_search'],
         };
       }
       case AI_SDK_BEDROCK:
@@ -503,7 +466,6 @@ export class ChatExecutionService {
 
         return {
           tools: { web_search: provider.tools.webSearch() },
-          callableToolNames: ['web_search'],
         };
       }
       default:

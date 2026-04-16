@@ -3,12 +3,11 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { type ToolExecutionOptions, type ToolSet, jsonSchema } from 'ai';
 
 import { type NativeToolProvider } from 'src/engine/core-modules/tool-provider/interfaces/native-tool-provider.interface';
-import { type ToolProvider } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider.interface';
 import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
+import { type ToolProvider } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider.interface';
 import { type ToolRetrievalOptions } from 'src/engine/core-modules/tool-provider/interfaces/tool-retrieval-options.type';
 
 import { TOOL_PROVIDERS } from 'src/engine/core-modules/tool-provider/constants/tool-providers.token';
-import { ToolCategory } from 'twenty-shared/ai';
 import { NativeModelToolProvider } from 'src/engine/core-modules/tool-provider/providers/native-model-tool.provider';
 import { ToolExecutorService } from 'src/engine/core-modules/tool-provider/services/tool-executor.service';
 import { type LearnToolsAspect } from 'src/engine/core-modules/tool-provider/tools/learn-tools.tool';
@@ -19,6 +18,7 @@ import { wrapWithErrorHandler } from 'src/engine/core-modules/tool-provider/util
 import { type ToolOutput } from 'src/engine/core-modules/tool/types/tool-output.type';
 import { wrapJsonSchemaForExecution } from 'src/engine/core-modules/tool/utils/wrap-tool-for-execution.util';
 import { type RolePermissionConfig } from 'src/engine/twenty-orm/types/role-permission-config';
+import { ToolCategory } from 'twenty-shared/ai';
 
 @Injectable()
 export class ToolRegistryService {
@@ -135,14 +135,16 @@ export class ToolRegistryService {
     roleId: string,
     options?: { userId?: string; userWorkspaceId?: string },
   ): Promise<ToolIndexEntry[]> {
-    const context = this.buildContextFromToolContext({
+    return this.getCatalogByContext({
       workspaceId,
       roleId,
       userId: options?.userId,
       userWorkspaceId: options?.userWorkspaceId,
     });
+  }
 
-    return this.getCatalog(context);
+  async getCatalogByContext(context: ToolContext): Promise<ToolIndexEntry[]> {
+    return this.getCatalog(this.buildContextFromToolContext(context));
   }
 
   async getToolsByName(
@@ -301,15 +303,18 @@ export class ToolRegistryService {
   private buildContextFromToolContext(
     context: ToolContext,
   ): ToolProviderContext {
-    const rolePermissionConfig: RolePermissionConfig = {
-      unionOf: [context.roleId],
-    };
+    const rolePermissionConfig: RolePermissionConfig =
+      context.rolePermissionConfig ?? {
+        unionOf: [context.roleId],
+      };
 
     return {
       workspaceId: context.workspaceId,
       roleId: context.roleId,
       rolePermissionConfig,
       authContext: context.authContext,
+      actorContext: context.actorContext,
+      agent: context.agent,
       userId: context.userId,
       userWorkspaceId: context.userWorkspaceId,
       onCodeExecutionUpdate: context.onCodeExecutionUpdate,
