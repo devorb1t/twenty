@@ -22,6 +22,7 @@ import type {
 import { styled } from '@linaria/react';
 import { type MutableRefObject, useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { createSiteWebGlRenderer } from '@/lib/webgl';
 
 const passThroughVertexShader = `
   varying vec2 vUv;
@@ -738,7 +739,7 @@ export function HalftoneCanvas({
     const getRenderWidth = () =>
       Math.max(Math.round(getVirtualWidth() * getRenderScale()), 1);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+    const renderer = createSiteWebGlRenderer({ antialias: false, alpha: true });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setPixelRatio(1);
     renderer.setClearColor(0x000000, 0);
