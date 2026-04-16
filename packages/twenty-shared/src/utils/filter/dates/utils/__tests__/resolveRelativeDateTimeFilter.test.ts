@@ -26,6 +26,31 @@ describe('resolveRelativeDateTimeFilter', () => {
       expect(result.end?.day).toBe(23);
     });
 
+    it('should compute calendar-aligned for NEXT 1 WEEK', () => {
+      const result = resolveRelativeDateTimeFilter(
+        { direction: 'NEXT', amount: 1, unit: 'WEEK' },
+        referenceZdt,
+      );
+
+      // Mar 15 is Friday, next week starts Monday Mar 18
+      expect(result.start?.month).toBe(3);
+      expect(result.start?.day).toBe(18);
+      expect(result.end?.month).toBe(3);
+      expect(result.end?.day).toBe(25);
+    });
+
+    it('should compute calendar-aligned for NEXT 1 MONTH', () => {
+      const result = resolveRelativeDateTimeFilter(
+        { direction: 'NEXT', amount: 1, unit: 'MONTH' },
+        referenceZdt,
+      );
+
+      expect(result.start?.month).toBe(4);
+      expect(result.start?.day).toBe(1);
+      expect(result.end?.month).toBe(5);
+      expect(result.end?.day).toBe(1);
+    });
+
     it('should compute for NEXT 1 QUARTER', () => {
       const result = resolveRelativeDateTimeFilter(
         { direction: 'NEXT', amount: 1, unit: 'QUARTER' },
@@ -68,6 +93,32 @@ describe('resolveRelativeDateTimeFilter', () => {
 
       expect(result.end?.hour).toBe(0);
       expect(result.start?.day).toBe(12);
+    });
+
+    it('should compute calendar-aligned for PAST 1 WEEK', () => {
+      const result = resolveRelativeDateTimeFilter(
+        { direction: 'PAST', amount: 1, unit: 'WEEK' },
+        referenceZdt,
+      );
+
+      // Mar 15 is Friday, current week starts Monday Mar 11, past 1 week = Mar 4-11
+      expect(result.start?.month).toBe(3);
+      expect(result.start?.day).toBe(4);
+      expect(result.end?.month).toBe(3);
+      expect(result.end?.day).toBe(11);
+    });
+
+    it('should compute calendar-aligned for PAST 1 MONTH', () => {
+      const result = resolveRelativeDateTimeFilter(
+        { direction: 'PAST', amount: 1, unit: 'MONTH' },
+        referenceZdt,
+      );
+
+      // Current month starts Mar 1, past 1 month = Feb 1-Mar 1
+      expect(result.start?.month).toBe(2);
+      expect(result.start?.day).toBe(1);
+      expect(result.end?.month).toBe(3);
+      expect(result.end?.day).toBe(1);
     });
 
     it('should compute for PAST 1 QUARTER', () => {
