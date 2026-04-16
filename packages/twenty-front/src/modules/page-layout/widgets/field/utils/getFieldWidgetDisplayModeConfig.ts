@@ -7,11 +7,22 @@ import {
   type FieldWidgetFieldTypeConfig,
 } from '@/page-layout/widgets/field/constants/fieldWidgetConfig';
 
-type FieldMetadataItemLike = Pick<FieldMetadataItem, 'type' | 'settings'>;
+type FieldMetadataItemLike = Pick<
+  FieldMetadataItem,
+  'type' | 'settings' | 'relation'
+>;
 
-const isOneToManyRelation = (fieldMetadataItem: FieldMetadataItemLike) =>
-  fieldMetadataItem.type === FieldMetadataType.RELATION &&
-  fieldMetadataItem.settings?.relationType === RelationType.ONE_TO_MANY;
+const isOneToManyRelation = (fieldMetadataItem: FieldMetadataItemLike) => {
+  if (fieldMetadataItem.type !== FieldMetadataType.RELATION) {
+    return false;
+  }
+
+  const relationType =
+    fieldMetadataItem.relation?.type ??
+    fieldMetadataItem.settings?.relationType;
+
+  return relationType === RelationType.ONE_TO_MANY;
+};
 
 export const getFieldWidgetConfig = (fieldType: FieldMetadataType) =>
   FIELD_WIDGET_CONFIG[fieldType];

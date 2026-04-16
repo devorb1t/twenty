@@ -170,6 +170,7 @@ export const FieldWidget = ({ widget }: FieldWidgetProps) => {
           fieldDefinition={fieldDefinition}
           viewId={viewId}
           widgetId={widget.id}
+          targetRecordId={targetRecord.id}
         />
       );
     }

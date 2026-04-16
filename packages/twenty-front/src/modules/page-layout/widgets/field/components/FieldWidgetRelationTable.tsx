@@ -6,6 +6,7 @@ import { RecordTableWidget } from '@/object-record/record-table-widget/component
 import { RecordTableWidgetProvider } from '@/object-record/record-table-widget/components/RecordTableWidgetProvider';
 import { type FieldDefinition } from '@/object-record/record-field/ui/types/FieldDefinition';
 import { type FieldRelationMetadata } from '@/object-record/record-field/ui/types/FieldMetadata';
+import { FieldWidgetRelationTableScopedFilterEffect } from '@/page-layout/widgets/field/components/FieldWidgetRelationTableScopedFilterEffect';
 
 const StyledContainer = styled.div`
   max-height: 400px;
@@ -17,12 +18,14 @@ type FieldWidgetRelationTableProps = {
   fieldDefinition: FieldDefinition<FieldRelationMetadata>;
   viewId: string;
   widgetId: string;
+  targetRecordId: string;
 };
 
 export const FieldWidgetRelationTable = ({
   fieldDefinition,
   viewId,
   widgetId,
+  targetRecordId,
 }: FieldWidgetRelationTableProps) => {
   const relatedObjectMetadataId =
     fieldDefinition.metadata.relationObjectMetadataId;
@@ -34,11 +37,6 @@ export const FieldWidgetRelationTable = ({
     return null;
   }
 
-  // TODO: scope the table to records where the inverse relation
-  // (fieldDefinition.metadata.relationFieldMetadataId) points at the current
-  // target record. This requires injecting an implicit filter into the
-  // RecordTableWidget query layer, which the existing provider does not yet
-  // expose as a prop.
   return (
     <StyledContainer>
       <RecordTableWidgetProvider
@@ -46,6 +44,14 @@ export const FieldWidgetRelationTable = ({
         viewId={viewId}
         widgetId={widgetId}
       >
+        <FieldWidgetRelationTableScopedFilterEffect
+          viewId={viewId}
+          widgetId={widgetId}
+          inverseRelationFieldMetadataId={
+            fieldDefinition.metadata.relationFieldMetadataId
+          }
+          targetRecordId={targetRecordId}
+        />
         <RecordTableWidget />
       </RecordTableWidgetProvider>
     </StyledContainer>
