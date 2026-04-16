@@ -1,9 +1,10 @@
 import { type EnrichedObjectMetadataItem } from '@/object-metadata/types/EnrichedObjectMetadataItem';
 import { useLoadRecordIndexStates } from '@/object-record/record-index/hooks/useLoadRecordIndexStates';
 import { lastLoadedRecordTableWidgetViewIdComponentState } from '@/object-record/record-table-widget/states/lastLoadedRecordTableWidgetViewIdComponentState';
-import { useAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentState';
+import { useAtomComponentStateCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateCallbackState';
 import { useAtomFamilySelectorValue } from '@/ui/utilities/state/jotai/hooks/useAtomFamilySelectorValue';
 import { viewFromViewIdFamilySelector } from '@/views/states/selectors/viewFromViewIdFamilySelector';
+import { useStore } from 'jotai';
 import { useEffect } from 'react';
 import { isDefined } from 'twenty-shared/utils';
 
@@ -18,10 +19,11 @@ export const RecordTableWidgetViewLoadEffect = ({
 }: RecordTableWidgetViewLoadEffectProps) => {
   const { loadRecordIndexStates } = useLoadRecordIndexStates();
 
-  const [
-    lastLoadedRecordTableWidgetViewId,
-    setLastLoadedRecordTableWidgetViewId,
-  ] = useAtomComponentState(lastLoadedRecordTableWidgetViewIdComponentState);
+  const store = useStore();
+
+  const lastLoadedAtom = useAtomComponentStateCallbackState(
+    lastLoadedRecordTableWidgetViewIdComponentState,
+  );
 
   const viewFromViewId = useAtomFamilySelectorValue(
     viewFromViewIdFamilySelector,
@@ -42,27 +44,29 @@ export const RecordTableWidgetViewLoadEffect = ({
       return;
     }
 
+    const lastLoaded = store.get(lastLoadedAtom);
+
     if (
-      viewId === lastLoadedRecordTableWidgetViewId?.viewId &&
+      viewId === lastLoaded?.viewId &&
       objectMetadataItem.updatedAt ===
-        lastLoadedRecordTableWidgetViewId?.objectMetadataItemUpdatedAt
+        lastLoaded?.objectMetadataItemUpdatedAt
     ) {
       return;
     }
 
-    loadRecordIndexStates(viewFromViewId, objectMetadataItem);
-
-    setLastLoadedRecordTableWidgetViewId({
+    store.set(lastLoadedAtom, {
       viewId,
       objectMetadataItemUpdatedAt: objectMetadataItem.updatedAt,
     });
+
+    loadRecordIndexStates(viewFromViewId, objectMetadataItem);
   }, [
     viewId,
-    lastLoadedRecordTableWidgetViewId,
-    setLastLoadedRecordTableWidgetViewId,
     viewFromViewId,
     viewHasFields,
     objectMetadataItem,
+    store,
+    lastLoadedAtom,
     loadRecordIndexStates,
   ]);
 

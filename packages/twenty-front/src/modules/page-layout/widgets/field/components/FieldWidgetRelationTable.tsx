@@ -2,11 +2,10 @@ import { styled } from '@linaria/react';
 import { isDefined } from 'twenty-shared/utils';
 
 import { useObjectMetadataItemById } from '@/object-metadata/hooks/useObjectMetadataItemById';
-import { RecordTableWidget } from '@/object-record/record-table-widget/components/RecordTableWidget';
 import { RecordTableWidgetProvider } from '@/object-record/record-table-widget/components/RecordTableWidgetProvider';
 import { type FieldDefinition } from '@/object-record/record-field/ui/types/FieldDefinition';
 import { type FieldRelationMetadata } from '@/object-record/record-field/ui/types/FieldMetadata';
-import { FieldWidgetRelationTableScopedFilterEffect } from '@/page-layout/widgets/field/components/FieldWidgetRelationTableScopedFilterEffect';
+import { FieldWidgetRelationTableGatedContent } from '@/page-layout/widgets/field/components/FieldWidgetRelationTableGatedContent';
 
 const StyledContainer = styled.div`
   max-height: 400px;
@@ -44,7 +43,7 @@ export const FieldWidgetRelationTable = ({
         viewId={viewId}
         widgetId={widgetId}
       >
-        <FieldWidgetRelationTableScopedFilterEffect
+        <FieldWidgetRelationTableGatedContent
           viewId={viewId}
           widgetId={widgetId}
           inverseRelationFieldMetadataId={
@@ -52,7 +51,6 @@ export const FieldWidgetRelationTable = ({
           }
           targetRecordId={targetRecordId}
         />
-        <RecordTableWidget />
       </RecordTableWidgetProvider>
     </StyledContainer>
   );

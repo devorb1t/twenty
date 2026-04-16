@@ -1,25 +1,29 @@
 import { currentRecordFiltersComponentState } from '@/object-record/record-filter/states/currentRecordFiltersComponentState';
 import { type RecordFilter } from '@/object-record/record-filter/types/RecordFilter';
+import { RecordTableWidget } from '@/object-record/record-table-widget/components/RecordTableWidget';
 import { lastLoadedRecordTableWidgetViewIdComponentState } from '@/object-record/record-table-widget/states/lastLoadedRecordTableWidgetViewIdComponentState';
+import { FieldWidgetRelationTableShimmer } from '@/page-layout/widgets/field/components/FieldWidgetRelationTableShimmer';
 import { useAtomComponentStateCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateCallbackState';
 import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue';
 import { useStore } from 'jotai';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ViewFilterOperand } from '~/generated-metadata/graphql';
 
-type FieldWidgetRelationTableScopedFilterEffectProps = {
+type FieldWidgetRelationTableGatedContentProps = {
   viewId: string;
   widgetId: string;
   inverseRelationFieldMetadataId: string;
   targetRecordId: string;
 };
 
-export const FieldWidgetRelationTableScopedFilterEffect = ({
+export const FieldWidgetRelationTableGatedContent = ({
   viewId,
   widgetId,
   inverseRelationFieldMetadataId,
   targetRecordId,
-}: FieldWidgetRelationTableScopedFilterEffectProps) => {
+}: FieldWidgetRelationTableGatedContentProps) => {
+  const [isScopedFilterReady, setIsScopedFilterReady] = useState(false);
+
   const lastLoadedViewId = useAtomComponentStateValue(
     lastLoadedRecordTableWidgetViewIdComponentState,
   );
@@ -38,6 +42,7 @@ export const FieldWidgetRelationTableScopedFilterEffect = ({
     const lastLoaded = store.get(lastLoadedAtom);
 
     if (lastLoaded?.viewId !== viewId) {
+      setIsScopedFilterReady(false);
       return;
     }
 
@@ -55,24 +60,24 @@ export const FieldWidgetRelationTableScopedFilterEffect = ({
           }),
     );
 
-    if (alreadyApplied) {
-      return;
+    if (!alreadyApplied) {
+      const scopedFilter: RecordFilter = {
+        id: filterId,
+        fieldMetadataId: inverseRelationFieldMetadataId,
+        value: JSON.stringify({
+          isCurrentWorkspaceMemberSelected: false,
+          selectedRecordIds: [targetRecordId],
+        }),
+        displayValue: '',
+        label: '',
+        type: 'RELATION',
+        operand: ViewFilterOperand.IS,
+      };
+
+      store.set(currentRecordFiltersAtom, [scopedFilter]);
     }
 
-    const scopedFilter: RecordFilter = {
-      id: filterId,
-      fieldMetadataId: inverseRelationFieldMetadataId,
-      value: JSON.stringify({
-        isCurrentWorkspaceMemberSelected: false,
-        selectedRecordIds: [targetRecordId],
-      }),
-      displayValue: '',
-      label: '',
-      type: 'RELATION',
-      operand: ViewFilterOperand.IS,
-    };
-
-    store.set(currentRecordFiltersAtom, [scopedFilter]);
+    setIsScopedFilterReady(true);
   }, [
     lastLoadedViewId,
     viewId,
@@ -84,5 +89,9 @@ export const FieldWidgetRelationTableScopedFilterEffect = ({
     currentRecordFiltersAtom,
   ]);
 
-  return null;
+  if (!isScopedFilterReady) {
+    return <FieldWidgetRelationTableShimmer />;
+  }
+
+  return <RecordTableWidget />;
 };

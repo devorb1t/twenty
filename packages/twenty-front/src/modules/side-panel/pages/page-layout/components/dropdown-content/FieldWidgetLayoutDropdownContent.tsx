@@ -111,6 +111,7 @@ export const FieldWidgetLayoutDropdownContent = () => {
         fieldMetadataId: currentFieldMetadataId,
         parentObjectMetadataId,
       });
+
     }
 
     closeDropdown();
