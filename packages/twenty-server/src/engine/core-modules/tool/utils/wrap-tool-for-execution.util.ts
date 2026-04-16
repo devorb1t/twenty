@@ -33,7 +33,7 @@ export const wrapJsonSchemaForExecution = (
 
   return {
     ...schema,
-    type: typeof schema.type === 'string' ? schema.type : 'object',
+    type: 'object',
     properties: {
       loadingMessage: {
         type: 'string',
