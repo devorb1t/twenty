@@ -1,5 +1,6 @@
 import { useFieldMetadataItemById } from '@/object-metadata/hooks/useFieldMetadataItemById';
 import { isDefined } from 'twenty-shared/utils';
+import { useSeedDraftViewForFieldWidgetTable } from '@/page-layout/hooks/useSeedDraftViewForFieldWidgetTable';
 import { useUpdatePageLayoutWidget } from '@/page-layout/hooks/useUpdatePageLayoutWidget';
 import { useFieldWidgetEligibleFields } from '@/page-layout/widgets/field/hooks/useFieldWidgetEligibleFields';
 import {
@@ -23,7 +24,11 @@ import { t } from '@lingui/core/macro';
 import { useState } from 'react';
 import { useIcons } from 'twenty-ui/display';
 import { MenuItemSelect } from 'twenty-ui/navigation';
-import { type FieldConfiguration } from '~/generated-metadata/graphql';
+import { v4 } from 'uuid';
+import {
+  FieldDisplayMode,
+  type FieldConfiguration,
+} from '~/generated-metadata/graphql';
 import { filterBySearchQuery } from '~/utils/filterBySearchQuery';
 
 export const FieldWidgetFieldDropdownContent = () => {
@@ -57,6 +62,11 @@ export const FieldWidgetFieldDropdownContent = () => {
 
   const { updatePageLayoutWidget } = useUpdatePageLayoutWidget(pageLayoutId);
 
+  const { seedDraftViewForFieldWidgetTable } =
+    useSeedDraftViewForFieldWidgetTable();
+
+  const parentObjectMetadataId = widgetInEditMode?.objectMetadataId;
+
   const { closeDropdown } = useCloseDropdown();
 
   const { getIcon } = useIcons();
@@ -82,14 +92,17 @@ export const FieldWidgetFieldDropdownContent = () => {
       isDefined(currentDisplayMode) &&
       !isDisplayModeValidForField(selectedField, currentDisplayMode);
 
-    // Changing the underlying field invalidates any previously generated
-    // viewId (it targeted the previous relation's related object), so null
-    // it out here and let the Layout dropdown regenerate if the user
-    // re-selects VIEW mode.
+    const staysInTableMode =
+      currentDisplayMode === FieldDisplayMode.VIEW &&
+      isDefined(selectedField) &&
+      isDisplayModeValidForField(selectedField, FieldDisplayMode.VIEW);
+
+    const nextViewId = staysInTableMode ? v4() : null;
+
     updateCurrentWidgetConfig({
       configToUpdate: {
         fieldMetadataId,
-        viewId: null,
+        viewId: nextViewId,
         ...(needsDisplayModeSwitch && {
           fieldDisplayMode: getFieldWidgetDefaultDisplayMode(
             selectedField.type,
@@ -97,6 +110,18 @@ export const FieldWidgetFieldDropdownContent = () => {
         }),
       },
     });
+
+    if (
+      staysInTableMode &&
+      isDefined(nextViewId) &&
+      isDefined(parentObjectMetadataId)
+    ) {
+      seedDraftViewForFieldWidgetTable({
+        viewId: nextViewId,
+        fieldMetadataId,
+        parentObjectMetadataId,
+      });
+    }
 
     if (widgetInEditMode && selectedField) {
       updatePageLayoutWidget(widgetInEditMode.id, {
