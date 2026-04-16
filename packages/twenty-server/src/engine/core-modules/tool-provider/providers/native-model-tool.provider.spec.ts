@@ -9,8 +9,6 @@ import {
 } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { type FlatAgentWithRoleId } from 'src/engine/metadata-modules/flat-agent/types/flat-agent.type';
 
-// seems wierd to add a whole test just to test some small change we added?
-
 describe('NativeModelToolProvider', () => {
   const agent = {
     id: 'agent-id',

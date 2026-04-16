@@ -17,7 +17,7 @@ import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/
 
 import { isUserAuthContext } from 'src/engine/core-modules/auth/guards/is-user-auth-context.guard';
 import { type WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
-import { AgentToolRuntimeService } from 'src/engine/core-modules/tool-provider/services/agent-tool-runtime.service';
+import { LazyToolRuntimeService } from 'src/engine/core-modules/tool-provider/services/lazy-tool-runtime.service';
 import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
 import {
   EXECUTE_TOOL_TOOL_NAME,
@@ -70,7 +70,7 @@ export class AgentAsyncExecutorService {
   constructor(
     private readonly aiModelRegistryService: AiModelRegistryService,
     private readonly agentModelConfigService: AgentModelConfigService,
-    private readonly agentToolRuntimeService: AgentToolRuntimeService,
+    private readonly lazyToolRuntimeService: LazyToolRuntimeService,
     private readonly toolRegistry: ToolRegistryService,
     @InjectRepository(RoleTargetEntity)
     private readonly roleTargetRepository: Repository<RoleTargetEntity>,
@@ -301,7 +301,7 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
           },
         );
 
-        const toolRuntime = await this.agentToolRuntimeService.buildToolRuntime(
+        const toolRuntime = await this.lazyToolRuntimeService.buildToolRuntime(
           {
             context: toolProviderContext,
             directTools: nativeModelTools,

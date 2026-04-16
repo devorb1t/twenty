@@ -11,13 +11,11 @@ import { TOOL_PROVIDERS } from 'src/engine/core-modules/tool-provider/constants/
 import { NativeModelToolProvider } from 'src/engine/core-modules/tool-provider/providers/native-model-tool.provider';
 import { ToolExecutorService } from 'src/engine/core-modules/tool-provider/services/tool-executor.service';
 import { type LearnToolsAspect } from 'src/engine/core-modules/tool-provider/tools/learn-tools.tool';
-import { type ToolContext } from 'src/engine/core-modules/tool-provider/types/tool-context.type';
 import { type ToolDescriptor } from 'src/engine/core-modules/tool-provider/types/tool-descriptor.type';
 import { type ToolIndexEntry } from 'src/engine/core-modules/tool-provider/types/tool-index-entry.type';
 import { wrapWithErrorHandler } from 'src/engine/core-modules/tool-provider/utils/tool-error.util';
 import { type ToolOutput } from 'src/engine/core-modules/tool/types/tool-output.type';
 import { wrapJsonSchemaForExecution } from 'src/engine/core-modules/tool/utils/wrap-tool-for-execution.util';
-import { type RolePermissionConfig } from 'src/engine/twenty-orm/types/role-permission-config';
 import { ToolCategory } from 'twenty-shared/ai';
 
 @Injectable()
@@ -135,29 +133,24 @@ export class ToolRegistryService {
     roleId: string,
     options?: { userId?: string; userWorkspaceId?: string },
   ): Promise<ToolIndexEntry[]> {
-    return this.getCatalogByContext({
+    return this.getCatalog({
       workspaceId,
       roleId,
+      rolePermissionConfig: { unionOf: [roleId] },
       userId: options?.userId,
       userWorkspaceId: options?.userWorkspaceId,
     });
   }
 
-  async getCatalogByContext(context: ToolContext): Promise<ToolIndexEntry[]> {
-    return this.getCatalog(this.buildContextFromToolContext(context));
-  }
-
   async getToolsByName(
     names: string[],
-    context: ToolContext,
+    context: ToolProviderContext,
   ): Promise<ToolSet> {
-    const fullContext = this.buildContextFromToolContext(context);
-
-    const index = await this.getCatalog(fullContext);
+    const index = await this.getCatalog(context);
     const nameSet = new Set(names);
     const matchingEntries = index.filter((entry) => nameSet.has(entry.name));
 
-    const schemas = await this.resolveSchemas(names, fullContext);
+    const schemas = await this.resolveSchemas(names, context);
 
     const descriptors: ToolDescriptor[] = matchingEntries
       .filter((entry) => schemas.has(entry.name))
@@ -166,26 +159,24 @@ export class ToolRegistryService {
         inputSchema: schemas.get(entry.name)!,
       }));
 
-    return this.hydrateToolSet(descriptors, fullContext);
+    return this.hydrateToolSet(descriptors, context);
   }
 
   async getToolInfo(
     names: string[],
-    context: ToolContext,
+    context: ToolProviderContext,
     aspects: LearnToolsAspect[] = ['description', 'schema'],
   ): Promise<
     Array<{ name: string; description?: string; inputSchema?: object }>
   > {
-    const fullContext = this.buildContextFromToolContext(context);
-
-    const index = await this.getCatalog(fullContext);
+    const index = await this.getCatalog(context);
     const nameSet = new Set(names);
     const matchingEntries = index.filter((entry) => nameSet.has(entry.name));
 
     let schemas: Map<string, object> | undefined;
 
     if (aspects.includes('schema')) {
-      schemas = await this.resolveSchemas(names, fullContext);
+      schemas = await this.resolveSchemas(names, context);
     }
 
     return matchingEntries.map((entry) => {
@@ -210,13 +201,11 @@ export class ToolRegistryService {
   async resolveAndExecute(
     toolName: string,
     args: Record<string, unknown>,
-    context: ToolContext,
+    context: ToolProviderContext,
     _options: ToolExecutionOptions,
   ): Promise<ToolOutput> {
     try {
-      const fullContext = this.buildContextFromToolContext(context);
-
-      const index = await this.getCatalog(fullContext);
+      const index = await this.getCatalog(context);
       const entry = index.find((indexEntry) => indexEntry.name === toolName);
 
       if (!entry) {
@@ -227,7 +216,7 @@ export class ToolRegistryService {
         };
       }
 
-      return await this.toolExecutorService.dispatch(entry, args, fullContext);
+      return await this.toolExecutorService.dispatch(entry, args, context);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -298,26 +287,5 @@ export class ToolRegistryService {
     );
 
     return toolSet;
-  }
-
-  private buildContextFromToolContext(
-    context: ToolContext,
-  ): ToolProviderContext {
-    const rolePermissionConfig: RolePermissionConfig =
-      context.rolePermissionConfig ?? {
-        unionOf: [context.roleId],
-      };
-
-    return {
-      workspaceId: context.workspaceId,
-      roleId: context.roleId,
-      rolePermissionConfig,
-      authContext: context.authContext,
-      actorContext: context.actorContext,
-      agent: context.agent,
-      userId: context.userId,
-      userWorkspaceId: context.userWorkspaceId,
-      onCodeExecutionUpdate: context.onCodeExecutionUpdate,
-    };
   }
 }

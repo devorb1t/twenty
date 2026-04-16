@@ -53,10 +53,7 @@ export class ClientConfigService {
       this.twentyConfigService.get('WEB_SEARCH_DRIVER') !==
       WebSearchDriverType.DISABLED;
 
-    // is this the right place to check for native twitter search?
-    // if so, we should move it to the agent model config service?
-    // seems weird to have it here in the client config service?
-    const hasNativeTwitterSearch = sdkPackage === AI_SDK_XAI;
+    const hasXSearchCapability = sdkPackage === AI_SDK_XAI;
 
     const webSearch = hasNativeWebSearch || isWebSearchDriverEnabled;
 
@@ -64,13 +61,13 @@ export class ClientConfigService {
       this.twentyConfigService.get('CODE_INTERPRETER_TYPE') !==
       CodeInterpreterDriverType.DISABLED;
 
-    if (!webSearch && !hasNativeTwitterSearch && !codeInterpreter) {
+    if (!webSearch && !hasXSearchCapability && !codeInterpreter) {
       return undefined;
     }
 
     return {
       ...(webSearch && { webSearch }),
-      ...(hasNativeTwitterSearch && { twitterSearch: true }),
+      ...(hasXSearchCapability && { twitterSearch: true }),
       ...(codeInterpreter && { codeInterpreter }),
     };
   }

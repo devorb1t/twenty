@@ -23,7 +23,10 @@ import { CodeInterpreterService } from 'src/engine/core-modules/code-interpreter
 import { WorkspaceDomainsService } from 'src/engine/core-modules/domain/workspace-domains/services/workspace-domains.service';
 import { ExceptionHandlerService } from 'src/engine/core-modules/exception-handler/exception-handler.service';
 import { COMMON_PRELOAD_TOOLS } from 'src/engine/core-modules/tool-provider/constants/common-preload-tools.const';
-import { AgentToolRuntimeService } from 'src/engine/core-modules/tool-provider/services/agent-tool-runtime.service';
+import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
+import { wrapToolsWithOutputSerialization } from 'src/engine/core-modules/tool-provider/output-serialization/wrap-tools-with-output-serialization.util';
+import { LazyToolRuntimeService } from 'src/engine/core-modules/tool-provider/services/lazy-tool-runtime.service';
+import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
 import {
   createLoadSkillTool,
   LOAD_SKILL_TOOL_NAME,
@@ -79,7 +82,8 @@ export class ChatExecutionService {
   private readonly logger = new Logger(ChatExecutionService.name);
 
   constructor(
-    private readonly agentToolRuntimeService: AgentToolRuntimeService,
+    private readonly lazyToolRuntimeService: LazyToolRuntimeService,
+    private readonly toolRegistry: ToolRegistryService,
     private readonly skillService: SkillService,
     private readonly aiModelRegistryService: AiModelRegistryService,
     private readonly aiBillingService: AiBillingService,
@@ -110,9 +114,10 @@ export class ChatExecutionService {
         workspace.id,
       );
 
-    const toolContext = {
+    const toolProviderContext: ToolProviderContext = {
       workspaceId: workspace.id,
       roleId,
+      rolePermissionConfig: { unionOf: [roleId] },
       actorContext,
       userId,
       userWorkspaceId,
@@ -154,11 +159,17 @@ export class ChatExecutionService {
       ? this.getNativeWebSearchTools(registeredModel)
       : { tools: {} };
 
-    const toolRuntime = await this.agentToolRuntimeService.buildToolRuntime({
-      context: toolContext,
-      directTools: nativeSearchTools,
-      preloadedToolNames: toolNamesToPreload,
-      wrapPreloadedToolsWithOutputSerialization: true,
+    const preloadedTools = await this.toolRegistry.getToolsByName(
+      toolNamesToPreload,
+      toolProviderContext,
+    );
+
+    const toolRuntime = await this.lazyToolRuntimeService.buildToolRuntime({
+      context: toolProviderContext,
+      directTools: {
+        ...wrapToolsWithOutputSerialization(preloadedTools),
+        ...nativeSearchTools,
+      },
     });
 
     const toolCatalog = toolRuntime.toolCatalog;

@@ -41,12 +41,6 @@ export class NativeModelToolProvider implements NativeToolProvider {
       `Web search strategy: ${useProviderNativeWebSearch ? 'native (provider SDK)' : 'external (EXA)'}`,
     );
 
-    // why removed this?
-    // lets be explicit about it
-    // if (!useProviderNativeWebSearch) {
-    //   return {};
-    // }
-
     const registeredModel =
       await this.aiModelRegistryService.resolveModelForAgent(context.agent);
 
