@@ -1,4 +1,4 @@
-export type WidgetActionId = 'edit' | 'see-all';
+export type WidgetActionId = 'edit' | 'see-all' | 'fields';
 
 export type WidgetAction = {
   id: WidgetActionId;
