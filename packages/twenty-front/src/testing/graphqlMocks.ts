@@ -18,21 +18,21 @@ import { GET_PUBLIC_WORKSPACE_DATA_BY_DOMAIN } from '@/auth/graphql/queries/getP
 import { LIST_PLANS } from '@/settings/billing/graphql/queries/listPlans';
 import { GET_ROLES } from '@/settings/roles/graphql/queries/getRolesQuery';
 import { mockBillingPlans } from '~/testing/mock-data/billing-plans';
+import { mockedBackendCommandMenuItems } from '~/testing/mock-data/command-menu-items';
 import { mockedCompanyRecords } from '~/testing/mock-data/generated/data/companies/mock-companies-data';
 import { mockedTaskRecords } from '~/testing/mock-data/generated/data/tasks/mock-tasks-data';
 import { mockedStandardObjectMetadataQueryResult } from '~/testing/mock-data/generated/metadata/objects/mock-objects-metadata';
 import { mockedRoles } from '~/testing/mock-data/generated/metadata/roles/mock-roles-data';
-import { mockedBackendCommandMenuItems } from '~/testing/mock-data/command-menu-items';
 
 import { type Task } from '@/activities/types/Task';
 import { FIND_MINIMAL_METADATA } from '@/metadata-store/graphql/queries/findMinimalMetadata';
+import { getEmptyPageInfo } from '@/object-record/cache/utils/getEmptyPageInfo';
+import { getRecordFromRecordNode } from '@/object-record/cache/utils/getRecordFromRecordNode';
 import {
   getConnectionTypename,
   getEdgeTypename,
   isDefined,
 } from 'twenty-shared/utils';
-import { getEmptyPageInfo } from '@/object-record/cache/utils/getEmptyPageInfo';
-import { getRecordFromRecordNode } from '@/object-record/cache/utils/getRecordFromRecordNode';
 import { mockedApiKeys } from '~/testing/mock-data/generated/metadata/api-keys/mock-api-keys-data';
 import { mockedMinimalMetadata } from '~/testing/mock-data/generated/metadata/minimal/mock-minimal-metadata';
 import { mockedNavigationMenuItems } from '~/testing/mock-data/generated/metadata/navigation-menu-items/mock-navigation-menu-items-data';
@@ -645,6 +645,13 @@ export const graphqlMocks = {
               secret: 'sample-secret',
             },
           ],
+        },
+      });
+    }),
+    metadataGraphql.query('FindManyFrontComponents', () => {
+      return HttpResponse.json({
+        data: {
+          frontComponents: [],
         },
       });
     }),

@@ -27,7 +27,6 @@ import { isFieldSelect } from '@/object-record/record-field/ui/types/guards/isFi
 import { isFieldSelectValue } from '@/object-record/record-field/ui/types/guards/isFieldSelectValue';
 import { recordStoreFamilySelector } from '@/object-record/record-store/states/selectors/recordStoreFamilySelector';
 
-import { useObjectMetadataItemById } from '@/object-metadata/hooks/useObjectMetadataItemById';
 import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
 import { getRecordFromRecordNode } from '@/object-record/cache/utils/getRecordFromRecordNode';
 import { useUpdateOneRecord } from '@/object-record/hooks/useUpdateOneRecord';
@@ -63,10 +62,6 @@ export const usePersistField = ({
 }: {
   objectMetadataItemId: string;
 }) => {
-  const { objectMetadataItem } = useObjectMetadataItemById({
-    objectId: objectMetadataItemId,
-  });
-
   const { objectMetadataItems } = useObjectMetadataItems();
 
   const { updateOneRecord } = useUpdateOneRecord();
@@ -157,6 +152,16 @@ export const usePersistField = ({
 
       if (fieldIsRawJson && fieldIsUIReadOnly) {
         return;
+      }
+
+      const objectMetadataItem = objectMetadataItems.find(
+        (item) => item.id === objectMetadataItemId,
+      );
+
+      if (!isDefined(objectMetadataItem)) {
+        throw new Error(
+          `Object metadata item not found for id ${objectMetadataItemId}`,
+        );
       }
 
       const isValuePersistable =
@@ -290,7 +295,7 @@ export const usePersistField = ({
       }
     },
     [
-      objectMetadataItem?.nameSingular,
+      objectMetadataItemId,
       objectMetadataItems,
       store,
       updateOneRecord,

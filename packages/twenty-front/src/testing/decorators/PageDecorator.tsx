@@ -1,5 +1,7 @@
-import { ApolloProvider } from '@apollo/client/react';
+import { ClientConfigProviderEffect } from '@/client-config/components/ClientConfigProviderEffect';
+import { ApolloCoreClientMockedProvider } from '@/object-metadata/hooks/__mocks__/ApolloCoreClientMockedProvider';
 import { loadDevMessages } from '@apollo/client/dev';
+import { ApolloProvider } from '@apollo/client/react';
 import { type Decorator } from '@storybook/react-vite';
 import { Provider as JotaiProvider } from 'jotai';
 import { HelmetProvider } from 'react-helmet-async';
@@ -10,19 +12,18 @@ import {
   Route,
   RouterProvider,
 } from 'react-router-dom';
-import { ClientConfigProviderEffect } from '@/client-config/components/ClientConfigProviderEffect';
-import { ApolloCoreClientMockedProvider } from '@/object-metadata/hooks/__mocks__/ApolloCoreClientMockedProvider';
 
-import { DefaultLayout } from '@/ui/layout/page/components/DefaultLayout';
 import { MinimalMetadataGater } from '@/metadata-store/components/MinimalMetadataGater';
-import { UserMetadataProviderInitialEffect } from '@/metadata-store/effect-components/UserMetadataProviderInitialEffect';
 import { IsMinimalMetadataReadyEffect } from '@/metadata-store/effect-components/IsMinimalMetadataReadyEffect';
 import { MinimalMetadataLoadEffect } from '@/metadata-store/effect-components/MinimalMetadataLoadEffect';
+import { UserMetadataProviderInitialEffect } from '@/metadata-store/effect-components/UserMetadataProviderInitialEffect';
+import { DefaultLayout } from '@/ui/layout/page/components/DefaultLayout';
 import { jotaiStore } from '@/ui/utilities/state/jotai/jotaiStore';
 import { useState } from 'react';
 import { ClientConfigProvider } from '~/modules/client-config/components/ClientConfigProvider';
 import { mockedApolloClient } from '~/testing/mockedApolloClient';
 
+import { CommandRunner } from '@/command-menu-item/engine-command/components/CommandRunner';
 import { MainContextStoreProvider } from '@/context-store/components/MainContextStoreProvider';
 import { PreComputedChipGeneratorsProvider } from '@/object-metadata/components/PreComputedChipGeneratorsProvider';
 import { RecordComponentInstanceContextsWrapper } from '@/object-record/components/RecordComponentInstanceContextsWrapper';
@@ -104,6 +105,7 @@ const Providers = () => {
                     </FullHeightStorybookLayout>
                   </PreComputedChipGeneratorsProvider>
                   <MainContextStoreProvider />
+                  <CommandRunner />
                 </ApolloCoreClientMockedProvider>
               </MinimalMetadataGater>
             </ClientConfigProvider>

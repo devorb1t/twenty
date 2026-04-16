@@ -21,6 +21,7 @@ export const mockedBackendCommandMenuItems: CommandMenuItemFieldsFragment[] = [
     conditionalAvailabilityExpression: 'targetObjectReadPermissions.person',
     availabilityType: CommandMenuItemAvailabilityType.GLOBAL,
     availabilityObjectMetadataId: null,
+    payload: null,
   },
   {
     __typename: 'CommandMenuItem',
@@ -39,6 +40,7 @@ export const mockedBackendCommandMenuItems: CommandMenuItemFieldsFragment[] = [
       'targetObjectReadPermissions.opportunity',
     availabilityType: CommandMenuItemAvailabilityType.GLOBAL,
     availabilityObjectMetadataId: null,
+    payload: null,
   },
   {
     __typename: 'CommandMenuItem',
@@ -56,6 +58,7 @@ export const mockedBackendCommandMenuItems: CommandMenuItemFieldsFragment[] = [
     conditionalAvailabilityExpression: null,
     availabilityType: CommandMenuItemAvailabilityType.GLOBAL,
     availabilityObjectMetadataId: null,
+    payload: null,
   },
   {
     __typename: 'CommandMenuItem',
@@ -73,6 +76,7 @@ export const mockedBackendCommandMenuItems: CommandMenuItemFieldsFragment[] = [
     conditionalAvailabilityExpression: 'targetObjectReadPermissions.task',
     availabilityType: CommandMenuItemAvailabilityType.GLOBAL,
     availabilityObjectMetadataId: null,
+    payload: null,
   },
   {
     __typename: 'CommandMenuItem',
@@ -90,6 +94,26 @@ export const mockedBackendCommandMenuItems: CommandMenuItemFieldsFragment[] = [
     conditionalAvailabilityExpression: 'targetObjectReadPermissions.note',
     availabilityType: CommandMenuItemAvailabilityType.GLOBAL,
     availabilityObjectMetadataId: null,
+    payload: null,
+  },
+  {
+    __typename: 'CommandMenuItem',
+    id: 'mock-edit-record-page-layout',
+    workflowVersionId: null,
+    frontComponentId: null,
+    frontComponent: null,
+    engineComponentKey: EngineComponentKey.EDIT_RECORD_PAGE_LAYOUT,
+    label: 'Edit Layout',
+    icon: 'IconPencil',
+    shortLabel: 'Edit Layout',
+    position: 18,
+    isPinned: false,
+    hotKeys: null,
+    conditionalAvailabilityExpression:
+      'pageType == "RECORD_PAGE" and featureFlags.IS_RECORD_PAGE_LAYOUT_EDITING_ENABLED and noneDefined(selectedRecords, "deletedAt") and objectPermissions.canUpdateObjectRecords and objectMetadataItem.nameSingular != "dashboard"',
+    availabilityType: CommandMenuItemAvailabilityType.RECORD_SELECTION,
+    availabilityObjectMetadataId: null,
+    payload: null,
   },
   {
     __typename: 'CommandMenuItem',
@@ -107,6 +131,7 @@ export const mockedBackendCommandMenuItems: CommandMenuItemFieldsFragment[] = [
     conditionalAvailabilityExpression: null,
     availabilityType: CommandMenuItemAvailabilityType.GLOBAL,
     availabilityObjectMetadataId: null,
+    payload: null,
   },
   {
     __typename: 'CommandMenuItem',
@@ -124,5 +149,6 @@ export const mockedBackendCommandMenuItems: CommandMenuItemFieldsFragment[] = [
     conditionalAvailabilityExpression: null,
     availabilityType: CommandMenuItemAvailabilityType.FALLBACK,
     availabilityObjectMetadataId: null,
+    payload: null,
   },
 ];

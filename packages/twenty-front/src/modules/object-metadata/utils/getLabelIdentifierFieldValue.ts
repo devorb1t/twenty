@@ -8,7 +8,7 @@ export const getLabelIdentifierFieldValue = (
   labelIdentifierFieldMetadataItem: FieldMetadataItem | undefined,
 ): string => {
   if (!isDefined(labelIdentifierFieldMetadataItem)) {
-    return record.id;
+    return record.id ?? '';
   }
 
   const recordIdentifierValue = record[labelIdentifierFieldMetadataItem.name];

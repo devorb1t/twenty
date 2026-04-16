@@ -1,10 +1,10 @@
+import { type CurrentUserWorkspace } from '@/auth/states/currentUserWorkspaceState';
+import { CUSTOM_WORKSPACE_APPLICATION_MOCK } from '@/object-metadata/hooks/__tests__/constants/CustomWorkspaceApplicationMock.test.constant';
+import { type WorkspaceMember } from '@/workspace-member/types/WorkspaceMember';
 import {
   AUTO_SELECT_FAST_MODEL_ID,
   AUTO_SELECT_SMART_MODEL_ID,
 } from 'twenty-shared/constants';
-import { type CurrentUserWorkspace } from '@/auth/states/currentUserWorkspaceState';
-import { CUSTOM_WORKSPACE_APPLICATION_MOCK } from '@/object-metadata/hooks/__tests__/constants/CustomWorkspaceApplicationMock.test.constant';
-import { type WorkspaceMember } from '@/workspace-member/types/WorkspaceMember';
 import {
   OnboardingStatus,
   PermissionFlagType,
@@ -14,6 +14,7 @@ import {
   type Workspace,
   WorkspaceActivationStatus,
   WorkspaceMemberDateFormatEnum,
+  WorkspaceMemberNumberFormatEnum,
   WorkspaceMemberTimeFormatEnum,
 } from '~/generated-metadata/graphql';
 import { mockBillingPlans } from '~/testing/mock-data/billing-plans';
@@ -33,6 +34,7 @@ type MockedUser = Pick<
   | 'userVars'
   | 'availableWorkspaces'
   | 'hasPassword'
+  | 'deletedWorkspaceMembers'
 > & {
   workspaceMember: WorkspaceMember | null;
   locale: string;
@@ -161,6 +163,26 @@ export const mockCurrentWorkspace = {
   databaseSchema: null,
   isTwoFactorAuthenticationEnforced: false,
   eventLogRetentionDays: 90,
+  customDomain: null,
+  defaultRole: {
+    __typename: 'Role',
+    id: '5722c41f-6ed1-42e7-a61c-525a377d4a83',
+    label: 'Admin',
+    description: 'Admin role',
+    icon: 'IconUserCog',
+    canUpdateAllSettings: true,
+    canAccessAllTools: true,
+    isEditable: false,
+    canReadAllObjectRecords: true,
+    canUpdateAllObjectRecords: true,
+    canSoftDeleteAllObjectRecords: true,
+    canDestroyAllObjectRecords: true,
+    canBeAssignedToUsers: true,
+    canBeAssignedToAgents: false,
+    canBeAssignedToApiKeys: true,
+  },
+  aiAdditionalInstructions: null,
+  editableProfileFields: [],
   __typename: 'Workspace',
 } as const satisfies Workspace;
 
@@ -181,6 +203,9 @@ export const mockedWorkspaceMemberData: WorkspaceMember = {
   dateFormat: WorkspaceMemberDateFormatEnum.DAY_FIRST,
   timeFormat: WorkspaceMemberTimeFormatEnum.HOUR_24,
   timeZone: 'America/New_York',
+  userWorkspaceId: '7dfbc3f7-6e5e-4128-957e-8d86808cdf6e',
+  calendarStartDay: 0,
+  numberFormat: WorkspaceMemberNumberFormatEnum.SYSTEM,
 };
 
 export const mockedUserData: MockedUser = {
@@ -196,7 +221,9 @@ export const mockedUserData: MockedUser = {
     'a95afad9ff6f0b364e2a3fd3e246a1a852c22b6e55a3ca33745a86c201f9c10d',
   workspaceMember: mockedWorkspaceMemberData,
   currentWorkspace: mockCurrentWorkspace,
+  deletedWorkspaceMembers: [],
   currentUserWorkspace: {
+    id: '7dfbc3f7-6e5e-4128-957e-8d86808cdf6e',
     permissionFlags: [
       PermissionFlagType.WORKSPACE_MEMBERS,
       PermissionFlagType.CONNECTED_ACCOUNTS,
