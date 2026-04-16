@@ -165,8 +165,8 @@ export type Agent = {
 
 export type AgentCapabilities = {
   __typename?: 'AgentCapabilities';
-  twitterSearch?: Maybe<Scalars['Boolean']>;
-  webSearch?: Maybe<Scalars['Boolean']>;
+  twitterSearch: Scalars['Boolean'];
+  webSearch: Scalars['Boolean'];
 };
 
 export type AgentChatEvent = {
@@ -931,7 +931,7 @@ export type CheckUserExist = {
 
 export type ClientAiModelConfig = {
   __typename?: 'ClientAIModelConfig';
-  capabilities?: Maybe<AgentCapabilities>;
+  capabilities: AgentCapabilities;
   contextWindowTokens?: Maybe<Scalars['Float']>;
   dataResidency?: Maybe<Scalars['String']>;
   inputCostPerMillionTokens?: Maybe<Scalars['Float']>;
