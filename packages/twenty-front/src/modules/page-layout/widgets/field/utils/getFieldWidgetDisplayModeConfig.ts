@@ -2,6 +2,7 @@ import { FieldMetadataType, RelationType } from 'twenty-shared/types';
 import { FieldDisplayMode } from '~/generated-metadata/graphql';
 
 import { type FieldMetadataItem } from '@/object-metadata/types/FieldMetadataItem';
+import { hasJunctionConfig } from '@/object-record/record-field/ui/utils/junction/hasJunctionConfig';
 import {
   FIELD_WIDGET_CONFIG,
   type FieldWidgetFieldTypeConfig,
@@ -12,8 +13,14 @@ type FieldMetadataItemLike = Pick<
   'type' | 'settings' | 'relation'
 >;
 
-const isOneToManyRelation = (fieldMetadataItem: FieldMetadataItemLike) => {
+const isNonJunctionOneToManyRelation = (
+  fieldMetadataItem: FieldMetadataItemLike,
+) => {
   if (fieldMetadataItem.type !== FieldMetadataType.RELATION) {
+    return false;
+  }
+
+  if (hasJunctionConfig(fieldMetadataItem.settings)) {
     return false;
   }
 
@@ -36,7 +43,7 @@ export const getFieldWidgetConfigForField = (
     return undefined;
   }
 
-  if (isOneToManyRelation(fieldMetadataItem)) {
+  if (isNonJunctionOneToManyRelation(fieldMetadataItem)) {
     return {
       ...baseConfig,
       availableDisplayModes: [
