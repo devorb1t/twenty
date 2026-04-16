@@ -18,6 +18,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { createSiteWebGlRenderer } from '@/lib/webgl';
 
 const DRACO_DECODER_PATH =
   'https://www.gstatic.com/draco/versioned/decoders/1.5.6/';
@@ -831,7 +832,7 @@ function HelpedHalftoneCanvas({
         1,
       );
 
-    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+    const renderer = createSiteWebGlRenderer({ antialias: false, alpha: true });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setPixelRatio(1);
     renderer.setClearColor(0x000000, 0);
