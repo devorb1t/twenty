@@ -150,10 +150,7 @@ export const mapGenerateTextStepsToPersistableParts = async ({
             toolName: contentPart.toolCall.toolName,
             toolCallId: contentPart.toolCall.toolCallId,
             input: contentPart.toolCall.input,
-            state: 'approval-requested',
-            approval: {
-              id: contentPart.approvalId,
-            },
+            state: 'input-available',
           });
           break;
         default:

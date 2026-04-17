@@ -28,7 +28,6 @@ describe('mapUIMessagePartsToPersistableParts', () => {
     toolCallId: 'tool-call-1',
     input: { query: 'hello' },
     state: 'approval-requested',
-    approval: { id: 'approval-1' },
   } as ExtendedUIMessagePart;
 
   const threadTitlePart = {
@@ -57,7 +56,7 @@ describe('mapUIMessagePartsToPersistableParts', () => {
       expected: [{ type: 'file', fileId: 'file-1', filename: 'notes.txt' }],
     },
     {
-      name: 'dynamic tool approval parts',
+      name: 'dynamic tool parts with approval states',
       parts: [dynamicToolPart],
       expected: [
         {
@@ -65,8 +64,7 @@ describe('mapUIMessagePartsToPersistableParts', () => {
           toolName: 'search',
           toolCallId: 'tool-call-1',
           input: { query: 'hello' },
-          state: 'approval-requested',
-          approval: { id: 'approval-1' },
+          state: 'input-available',
         },
       ],
     },

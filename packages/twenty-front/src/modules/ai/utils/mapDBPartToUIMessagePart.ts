@@ -2,7 +2,6 @@ import { type ReasoningUIPart, type ToolUIPart } from 'ai';
 import {
   type ExtendedFileUIPart,
   type ExtendedUIMessagePart,
-  getToolApproval,
 } from 'twenty-shared/ai';
 import { type AgentMessagePart } from '~/generated-metadata/graphql';
 
@@ -65,8 +64,6 @@ export const mapDBPartToUIMessagePart = (
     default:
       {
         if (part.type.includes('tool-') === true) {
-          const approval = getToolApproval(part.errorDetails);
-
           return {
             type: part.type as `tool-${string}`,
             toolCallId: part.toolCallId ?? '',
@@ -74,7 +71,6 @@ export const mapDBPartToUIMessagePart = (
             output: part.toolOutput,
             state: part.state,
             ...(part.errorMessage ? { errorText: part.errorMessage } : {}),
-            ...(approval ? { approval } : {}),
           } as ToolUIPart;
         }
       }

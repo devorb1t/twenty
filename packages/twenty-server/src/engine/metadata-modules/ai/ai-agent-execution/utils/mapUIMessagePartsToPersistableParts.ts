@@ -7,6 +7,10 @@ import {
 import { type PersistableAgentMessagePart } from 'src/engine/metadata-modules/ai/ai-agent-execution/types/persistable-agent-message-part.type';
 
 type PersistableToolUIPart = DynamicToolUIPart | ToolUIPart;
+type PersistableToolPartState = Extract<
+  PersistableAgentMessagePart,
+  { type: `tool-${string}` }
+>['state'];
 
 const isPersistableToolUIPart = (
   part: ExtendedUIMessagePart,
@@ -15,6 +19,16 @@ const isPersistableToolUIPart = (
     'toolCallId' in part &&
     (part.type === 'dynamic-tool' || part.type.startsWith('tool-'))
   );
+};
+
+const normalizePersistableToolState = (
+  state: PersistableToolUIPart['state'],
+): PersistableToolPartState => {
+  if (state === 'approval-requested' || state === 'approval-responded') {
+    return 'input-available';
+  }
+
+  return state;
 };
 
 const assertUnreachable = (value: never): never => {
@@ -40,8 +54,7 @@ export const mapUIMessagePartsToPersistableParts = (
         input: part.input,
         output: 'output' in part ? part.output : undefined,
         errorText: 'errorText' in part ? part.errorText : undefined,
-        state: part.state,
-        approval: 'approval' in part ? part.approval : undefined,
+        state: normalizePersistableToolState(part.state),
       });
       continue;
     }

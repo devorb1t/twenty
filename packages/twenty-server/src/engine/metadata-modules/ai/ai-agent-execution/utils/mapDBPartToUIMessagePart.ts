@@ -1,7 +1,6 @@
 import {
   type ExtendedFileUIPart,
   type ExtendedUIMessagePart,
-  getToolApproval,
 } from 'twenty-shared/ai';
 
 import { type AgentMessagePartEntity } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message-part.entity';
@@ -58,8 +57,6 @@ export const mapDBPartToUIMessagePart = (
       return null;
     default: {
       if (part.type.includes('tool-') && part.toolCallId) {
-        const approval = getToolApproval(part.errorDetails);
-
         return {
           type: part.type,
           toolCallId: part.toolCallId,
@@ -67,7 +64,6 @@ export const mapDBPartToUIMessagePart = (
           output: part.toolOutput,
           state: part.state,
           ...(part.errorMessage ? { errorText: part.errorMessage } : {}),
-          ...(approval ? { approval } : {}),
         } as ExtendedUIMessagePart;
       }
 

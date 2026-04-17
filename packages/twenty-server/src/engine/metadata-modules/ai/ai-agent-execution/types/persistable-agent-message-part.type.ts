@@ -5,12 +5,6 @@ type PersistableProviderMetadata = Record<
   Record<string, JSONValue | undefined>
 >;
 
-export type PersistableToolApproval = {
-  id: string;
-  approved?: boolean;
-  reason?: string;
-};
-
 type PersistableTextPart = {
   type: 'text';
   text: string;
@@ -63,14 +57,11 @@ type PersistableToolPart = {
   state:
     | 'input-streaming'
     | 'input-available'
-    | 'approval-requested'
-    | 'approval-responded'
     | 'output-available'
     | 'output-error'
     | 'output-denied';
   output?: unknown;
   errorText?: string;
-  approval?: PersistableToolApproval;
 };
 
 export type PersistableAgentMessagePart =

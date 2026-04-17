@@ -32,7 +32,6 @@ export const mapPersistablePartsToDatabaseParts = (
         toolInput: part.input,
         toolOutput: part.output,
         errorMessage: part.errorText,
-        errorDetails: part.approval ? { approval: part.approval } : null,
         state: part.state,
       };
     }
