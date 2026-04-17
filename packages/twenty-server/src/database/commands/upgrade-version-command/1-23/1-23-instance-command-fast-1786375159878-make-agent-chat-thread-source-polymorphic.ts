@@ -33,6 +33,9 @@ export class MakeAgentChatThreadSourcePolymorphicFastInstanceCommand
       'ALTER TABLE "core"."agentChatThread" DROP CONSTRAINT IF EXISTS "CHK_agent_chat_thread_source"',
     );
     await queryRunner.query(
+      'DELETE FROM "core"."agentChatThread" WHERE "workflowRunId" IS NOT NULL',
+    );
+    await queryRunner.query(
       'ALTER TABLE "core"."agentChatThread" ALTER COLUMN "userWorkspaceId" SET NOT NULL',
     );
     await queryRunner.query(

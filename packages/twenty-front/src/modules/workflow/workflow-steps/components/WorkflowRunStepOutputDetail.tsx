@@ -2,6 +2,7 @@ import { TabList } from '@/ui/layout/tab-list/components/TabList';
 import { activeTabIdComponentState } from '@/ui/layout/tab-list/states/activeTabIdComponentState';
 import { type SingleTabProps } from '@/ui/layout/tab-list/types/SingleTabProps';
 import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue';
+import { usePermissionFlagMap } from '@/settings/roles/hooks/usePermissionFlagMap';
 import { useWorkflowRun } from '@/workflow/hooks/useWorkflowRun';
 import { useWorkflowRunIdOrThrow } from '@/workflow/hooks/useWorkflowRunIdOrThrow';
 import { getStepDefinitionOrThrow } from '@/workflow/utils/getStepDefinitionOrThrow';
@@ -23,6 +24,7 @@ import {
 } from 'twenty-ui/json-visualizer';
 import { IconJson, IconTimelineEvent } from 'twenty-ui/display';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
+import { PermissionFlagType } from '~/generated-metadata/graphql';
 import { useCopyToClipboard } from '~/hooks/useCopyToClipboard';
 
 const WORKFLOW_RUN_AI_AGENT_OUTPUT_TABS = {
@@ -65,25 +67,32 @@ const WorkflowRunAiAgentOutputDetail = ({
       workflowRunId,
       workflowStepId,
     });
+  const permissionMap = usePermissionFlagMap();
+  const hasAiPermission = permissionMap[PermissionFlagType.AI];
 
   const activeTabId = useAtomComponentStateValue(
     activeTabIdComponentState,
     aiAgentOutputTabListComponentInstanceId,
   );
   const currentAiAgentOutputTabId =
-    (activeTabId as WorkflowRunAiAgentOutputTabId) ??
-    WORKFLOW_RUN_AI_AGENT_OUTPUT_TABS.RESULT;
+    activeTabId === WORKFLOW_RUN_AI_AGENT_OUTPUT_TABS.TRACE && hasAiPermission
+      ? WORKFLOW_RUN_AI_AGENT_OUTPUT_TABS.TRACE
+      : WORKFLOW_RUN_AI_AGENT_OUTPUT_TABS.RESULT;
   const aiAgentOutputTabs: SingleTabProps<WorkflowRunAiAgentOutputTabId>[] = [
     {
       id: WORKFLOW_RUN_AI_AGENT_OUTPUT_TABS.RESULT,
       title: hasError ? t`Error` : t`Result`,
       Icon: IconJson,
     },
-    {
-      id: WORKFLOW_RUN_AI_AGENT_OUTPUT_TABS.TRACE,
-      title: t`Trace`,
-      Icon: IconTimelineEvent,
-    },
+    ...(hasAiPermission
+      ? [
+          {
+            id: WORKFLOW_RUN_AI_AGENT_OUTPUT_TABS.TRACE,
+            title: t`Trace`,
+            Icon: IconTimelineEvent,
+          },
+        ]
+      : []),
   ];
 
   return (

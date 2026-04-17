@@ -1,6 +1,7 @@
 import { GET_WORKFLOW_AGENT_TRACE_SUMMARY } from '@/ai/graphql/queries/getWorkflowAgentTrace';
 import { formatAiDisplayCost } from '@/ai/utils/formatAiDisplayCost';
 import { billingState } from '@/client-config/states/billingState';
+import { usePermissionFlagMap } from '@/settings/roles/hooks/usePermissionFlagMap';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { useQuery } from '@apollo/client/react';
 import { styled } from '@linaria/react';
@@ -8,6 +9,7 @@ import { t } from '@lingui/core/macro';
 import { isDefined } from 'twenty-shared/utils';
 import { StepStatus } from 'twenty-shared/workflow';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
+import { PermissionFlagType } from '~/generated-metadata/graphql';
 import { formatNumber } from '~/utils/format/formatNumber';
 
 type WorkflowRunAiAgentExecutionSummaryProps = {
@@ -88,12 +90,15 @@ export const WorkflowRunAiAgentExecutionSummary = ({
   workflowStepId,
   status,
 }: WorkflowRunAiAgentExecutionSummaryProps) => {
+  const permissionMap = usePermissionFlagMap();
+  const hasAiPermission = permissionMap[PermissionFlagType.AI];
+
   const { data } = useQuery<WorkflowAgentTraceSummaryResult>(
     GET_WORKFLOW_AGENT_TRACE_SUMMARY,
     {
       variables: { workflowRunId, workflowStepId },
       fetchPolicy: 'cache-and-network',
-      skip: !shouldQueryTraceForStatus(status),
+      skip: !hasAiPermission || !shouldQueryTraceForStatus(status),
     },
   );
 
