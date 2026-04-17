@@ -10,6 +10,7 @@ import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.ent
 import { GlobalWorkspaceDataSource } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-datasource';
 import { GlobalWorkspaceOrmManager } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-orm.manager';
 import { buildSystemAuthContext } from 'src/engine/twenty-orm/utils/build-system-auth-context.util';
+import { WorkspaceMigrationRunnerException } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-runner/exceptions/workspace-migration-runner.exception';
 
 export type WorkspaceIteratorArgs = {
   workspaceIds?: string[];
@@ -104,12 +105,23 @@ export class WorkspaceIteratorService {
       }
     }
 
-    report.fail.forEach(({ error, workspaceId }) =>
+    report.fail.forEach(({ error, workspaceId }) => {
       this.logger.error(
         `Error in workspace ${workspaceId}: ${error.message}`,
         error.stack,
-      ),
-    );
+      );
+
+      if (error instanceof WorkspaceMigrationRunnerException && error.errors) {
+        for (const [label, innerError] of Object.entries(error.errors)) {
+          if (!innerError) continue;
+
+          this.logger.error(
+            `Caused by ${label} in workspace ${workspaceId}: ${innerError.message}`,
+            innerError.stack,
+          );
+        }
+      }
+    });
 
     return report;
   }
