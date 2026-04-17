@@ -98,6 +98,8 @@ export const mapGenerateTextStepsToPersistableParts = async ({
           }
           break;
         case 'file': {
+          // Workflow traces keep generated files as inspectable artifacts.
+          // They are not promoted into the workflow step output schema.
           const filename = buildGeneratedFileFilename({
             mediaType: contentPart.file.mediaType,
             partIndex,

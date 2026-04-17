@@ -138,6 +138,8 @@ export class AiAgentWorkflowAction implements WorkflowAction {
           cacheCreationTokens,
         });
 
+        // Trace persistence is observability-only. Artifacts such as generated
+        // files stay attached to the trace UI and do not change the step output.
         await this.tracePersistenceService.persistTrace({
           steps: executionSteps,
           userPrompt: resolvedPrompt,
