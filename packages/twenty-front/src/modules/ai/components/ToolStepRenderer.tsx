@@ -17,6 +17,7 @@ import { isToolOutputInspectable } from '@/ai/utils/isToolOutputInspectable';
 import { useLingui } from '@lingui/react/macro';
 import { type ToolUIPart } from 'ai';
 import { isToolPartErrored } from 'twenty-shared/ai';
+import { isPlainObject } from 'twenty-shared/utils';
 import { type JsonValue } from 'type-fest';
 import { useCopyToClipboard } from '~/hooks/useCopyToClipboard';
 
@@ -162,17 +163,19 @@ export const ToolStepRenderer = ({
 
   if (toolName === 'code_interpreter') {
     const codeInput = toolInput as { code?: string } | undefined;
-    const codeOutput = outputObj as {
-      stdout?: string;
-      stderr?: string;
-      exitCode?: number;
-      files?: Array<{
-        fileId: string;
-        filename: string;
-        url: string;
-        mimeType?: string;
-      }>;
-    } | null;
+    const codeOutput = isPlainObject(outputObj?.result)
+      ? (outputObj.result as {
+          stdout?: string;
+          stderr?: string;
+          exitCode?: number;
+          files?: Array<{
+            fileId: string;
+            filename: string;
+            url: string;
+            mimeType?: string;
+          }>;
+        })
+      : null;
 
     const isRunning = !outputObj && !hasError && isStreaming;
 

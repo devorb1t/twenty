@@ -119,6 +119,8 @@ export const WorkflowAiAgentPromptTab = ({
     await updateAgentField({
       modelId,
     });
+
+    onActionUpdate?.({ ...action });
   };
 
   const handleModelConfigurationChange = async (
@@ -127,6 +129,8 @@ export const WorkflowAiAgentPromptTab = ({
     await updateAgentField({
       modelConfiguration: configuration,
     });
+
+    onActionUpdate?.({ ...action });
   };
 
   const handleOutputSchemaChange = (updatedFields: OutputSchemaField[]) => {
