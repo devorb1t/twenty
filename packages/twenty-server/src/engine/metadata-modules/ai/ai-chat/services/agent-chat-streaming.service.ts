@@ -79,7 +79,7 @@ export class AgentChatStreamingService {
     if (!thread) {
       throw new AgentException(
         'Thread not found',
-        AgentExceptionCode.AGENT_EXECUTION_FAILED,
+        AgentExceptionCode.AGENT_NOT_FOUND,
       );
     }
 

@@ -97,7 +97,7 @@ export class AgentChatService {
     if (!thread) {
       throw new AgentException(
         'Thread not found',
-        AgentExceptionCode.AGENT_EXECUTION_FAILED,
+        AgentExceptionCode.AGENT_NOT_FOUND,
       );
     }
 
@@ -180,7 +180,7 @@ export class AgentChatService {
     if (!thread) {
       throw new AgentException(
         'Thread not found',
-        AgentExceptionCode.AGENT_EXECUTION_FAILED,
+        AgentExceptionCode.AGENT_NOT_FOUND,
       );
     }
 
