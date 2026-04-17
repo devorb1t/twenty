@@ -38,37 +38,37 @@ export const mapDBPartToUIMessagePart = (
     case 'text':
       return {
         type: 'text',
-        text: part.textContent!,
+        text: part.textContent ?? '',
       };
     case 'reasoning':
       return {
         type: 'reasoning',
-        text: part.reasoningContent!,
+        text: part.reasoningContent ?? '',
         state: part.state as ReasoningUIPart['state'],
       };
     case 'file':
       return {
         type: 'file',
-        mediaType: part.fileMediaType!,
-        filename: part.fileFilename!,
-        url: part.fileUrl!,
-        fileId: part.fileId!,
+        mediaType: part.fileMediaType ?? 'application/octet-stream',
+        filename: part.fileFilename ?? '',
+        url: part.fileUrl ?? '',
+        fileId: part.fileId ?? '',
       } as ExtendedFileUIPart;
     case 'source-url':
       return {
         type: 'source-url',
-        sourceId: part.sourceUrlSourceId!,
-        url: part.sourceUrlUrl!,
-        title: part.sourceUrlTitle!,
+        sourceId: part.sourceUrlSourceId ?? '',
+        url: part.sourceUrlUrl ?? '',
+        title: part.sourceUrlTitle ?? '',
         providerMetadata: part.providerMetadata ?? undefined,
       };
     case 'source-document':
       return {
         type: 'source-document',
-        sourceId: part.sourceDocumentSourceId!,
-        mediaType: part.sourceDocumentMediaType!,
-        title: part.sourceDocumentTitle!,
-        filename: part.sourceDocumentFilename!,
+        sourceId: part.sourceDocumentSourceId ?? '',
+        mediaType: part.sourceDocumentMediaType ?? '',
+        title: part.sourceDocumentTitle ?? '',
+        filename: part.sourceDocumentFilename ?? '',
         providerMetadata: part.providerMetadata ?? undefined,
       };
     case 'step-start':
@@ -79,8 +79,8 @@ export const mapDBPartToUIMessagePart = (
       return {
         type: part.type,
         data: {
-          text: part.textContent!,
-          state: part.state!,
+          text: part.textContent ?? '',
+          state: part.state ?? '',
         },
       };
     default:
@@ -90,10 +90,10 @@ export const mapDBPartToUIMessagePart = (
 
           return {
             type: part.type as `tool-${string}`,
-            toolCallId: part.toolCallId!,
+            toolCallId: part.toolCallId ?? '',
             input: part.toolInput ?? {},
             output: part.toolOutput,
-            errorText: part.errorMessage!,
+            errorText: part.errorMessage ?? '',
             state: part.state,
             ...(approval ? { approval } : {}),
           } as ToolUIPart;

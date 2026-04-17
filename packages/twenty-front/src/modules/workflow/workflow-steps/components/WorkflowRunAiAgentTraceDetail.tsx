@@ -73,8 +73,8 @@ export const WorkflowRunAiAgentTraceDetail = ({
     );
   }
 
-  const displayableMessages = (turn.messages as AgentMessage[]).filter(
-    (msg) => msg.parts.length > 0,
+  const displayableMessages = turn.messages.filter(
+    (message) => message.parts.length > 0,
   );
 
   const uiMessages = mapDBMessagesToUIMessages(displayableMessages);

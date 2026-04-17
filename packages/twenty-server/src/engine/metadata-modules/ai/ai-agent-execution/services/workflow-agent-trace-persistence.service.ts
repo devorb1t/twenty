@@ -187,7 +187,7 @@ export class WorkflowAgentTracePersistenceService {
       select: ['id'],
     });
 
-    const threadData = {
+    const threadInsertPayload = {
       title,
       totalInputTokens,
       totalOutputTokens,
@@ -217,7 +217,7 @@ export class WorkflowAgentTracePersistenceService {
       userWorkspaceId: null,
       workflowRunId,
       workflowStepId,
-      ...threadData,
+      ...threadInsertPayload,
     });
 
     return insertResult.identifiers[0].id as string;
