@@ -23,7 +23,7 @@ export const useViewFieldAggregateOperation = () => {
     aggregateOperation: ExtendedAggregateOperations | null,
   ) => {
     if (!currentViewField) {
-      throw new Error('ViewField not found');
+      return;
     }
     await performViewFieldAPIUpdate([
       {
