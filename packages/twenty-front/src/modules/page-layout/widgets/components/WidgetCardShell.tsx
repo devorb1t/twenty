@@ -67,9 +67,6 @@ export const WidgetCardShell = ({
 }: WidgetCardShellProps) => {
   const { theme } = useContext(ThemeContext);
 
-  const dataTestId =
-    widget.type === WidgetType.FIELDS ? 'record-fields-widget' : widget.id;
-
   return (
     <WidgetComponentInstanceContext.Provider value={{ instanceId: widget.id }}>
       <WidgetCard
@@ -84,7 +81,7 @@ export const WidgetCardShell = ({
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         data-widget-id={widget.id}
-        data-testid={dataTestId}
+        data-testid={widget.id}
         className="widget"
       >
         {showHeader && (
