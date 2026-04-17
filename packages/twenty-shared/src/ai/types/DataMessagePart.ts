@@ -1,4 +1,4 @@
-import { isDefined } from '@/utils/validation/isDefined';
+import { isNonEmptyString } from '@sniptt/guards';
 
 export type CodeExecutionFile = {
   fileId: string;
@@ -20,9 +20,9 @@ export const isExtendedFileUIPart = (
 ): part is ExtendedFileUIPart => {
   return (
     part.type === 'file' &&
-    isDefined(part.fileId) &&
-    isDefined(part.url) &&
-    isDefined(part.mediaType)
+    isNonEmptyString(part.fileId) &&
+    isNonEmptyString(part.url) &&
+    isNonEmptyString(part.mediaType)
   );
 };
 

@@ -330,7 +330,6 @@ const ThinkingToolStepRow = ({
         <AnimatedExpandableContainer isExpanded={isExpanded} mode="fit-content">
           <StyledToolDetailsContainer>
             {hasError ? (
-              // Trim legacy empty errorText values so the fallback is visible.
               <StyledToolErrorText>
                 {part.errorText?.trim() || t`Unknown error`}
               </StyledToolErrorText>

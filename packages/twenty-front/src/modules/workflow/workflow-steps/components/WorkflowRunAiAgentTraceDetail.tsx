@@ -1,25 +1,21 @@
+import { SKELETON_LOADER_HEIGHT_SIZES } from '@/activities/components/SkeletonLoader';
 import { AIChatAssistantMessageRenderer } from '@/ai/components/AIChatAssistantMessageRenderer';
 import { AgentChatFilePreview } from '@/ai/components/internal/AgentChatFilePreview';
 import { GET_WORKFLOW_AGENT_TRACE } from '@/ai/graphql/queries/getWorkflowAgentTrace';
 import { mapDBMessagesToUIMessages } from '@/ai/utils/mapDBMessagesToUIMessages';
 import { usePermissionFlagMap } from '@/settings/roles/hooks/usePermissionFlagMap';
+import { WorkflowRunAiAgentTracePrompt } from '@/workflow/workflow-steps/components/WorkflowRunAiAgentTracePrompt';
 import { useQuery } from '@apollo/client/react';
 import { styled } from '@linaria/react';
 import { t } from '@lingui/core/macro';
-import { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import {
   type ExtendedUIMessagePart,
   isExtendedFileUIPart,
 } from 'twenty-shared/ai';
+import { getSafeUrl } from 'twenty-shared/utils';
 import { AvatarOrIcon, Chip, ChipVariant } from 'twenty-ui/components';
-import {
-  IconChevronRight,
-  IconExternalLink,
-  IconFileText,
-  IconWorld,
-} from 'twenty-ui/display';
-import { AnimatedExpandableContainer } from 'twenty-ui/layout';
+import { IconExternalLink, IconFileText, IconWorld } from 'twenty-ui/display';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 import { StepStatus } from 'twenty-shared/workflow';
 import {
@@ -38,63 +34,6 @@ const StyledContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${themeCssVariables.spacing[2]};
-`;
-
-const StyledPromptSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${themeCssVariables.spacing[1]};
-`;
-
-const StyledPromptToggle = styled.button`
-  align-items: center;
-  background: none;
-  border: none;
-  border-radius: ${themeCssVariables.border.radius.sm};
-  color: ${themeCssVariables.font.color.tertiary};
-  cursor: pointer;
-  display: flex;
-  font-family: inherit;
-  font-size: ${themeCssVariables.font.size.md};
-  font-weight: ${themeCssVariables.font.weight.regular};
-  gap: ${themeCssVariables.spacing[2]};
-  line-height: ${themeCssVariables.text.lineHeight.md};
-  min-height: 24px;
-  padding: 0;
-  transition: color calc(${themeCssVariables.animation.duration.fast} * 1s)
-    ease-in-out;
-  width: fit-content;
-
-  &:hover {
-    color: ${themeCssVariables.font.color.primary};
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${themeCssVariables.color.blue};
-    outline-offset: 2px;
-  }
-`;
-
-const StyledChevron = styled.span<{ isExpanded: boolean }>`
-  align-items: center;
-  color: ${themeCssVariables.font.color.light};
-  display: inline-flex;
-  justify-content: center;
-  transform: rotate(${({ isExpanded }) => (isExpanded ? '90deg' : '0deg')});
-  transition: transform calc(${themeCssVariables.animation.duration.fast} * 1s)
-    ease-in-out;
-`;
-
-const StyledPromptBody = styled.div`
-  background: ${themeCssVariables.background.transparent.lighter};
-  border: 1px solid ${themeCssVariables.border.color.light};
-  border-radius: ${themeCssVariables.border.radius.sm};
-  color: ${themeCssVariables.font.color.tertiary};
-  font-size: ${themeCssVariables.font.size.md};
-  line-height: ${themeCssVariables.text.lineHeight.lg};
-  margin-top: ${themeCssVariables.spacing[1]};
-  padding: ${themeCssVariables.spacing[3]};
-  white-space: pre-wrap;
 `;
 
 const StyledMessagesList = styled.div`
@@ -185,10 +124,13 @@ const WorkflowTraceSourceChip = ({
     />
   );
 
-  if (sourcePart.type === 'source-url' && sourcePart.url.length > 0) {
+  const safeHref =
+    sourcePart.type === 'source-url' ? getSafeUrl(sourcePart.url) : undefined;
+
+  if (safeHref) {
     return (
       <StyledExternalSourceLink
-        href={sourcePart.url}
+        href={safeHref}
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -227,10 +169,9 @@ export const WorkflowRunAiAgentTraceDetail = ({
       skip: !hasAiPermission || !shouldQueryTraceForStatus(status),
     },
   );
-  const [isPromptExpanded, setIsPromptExpanded] = useState(false);
 
   if (loading) {
-    return <Skeleton height={100} />;
+    return <Skeleton height={SKELETON_LOADER_HEIGHT_SIZES.columns.m} />;
   }
 
   const turn = data?.workflowAgentTrace;
@@ -250,26 +191,7 @@ export const WorkflowRunAiAgentTraceDetail = ({
 
   return (
     <StyledContainer>
-      {promptText.length > 0 && (
-        <StyledPromptSection>
-          <StyledPromptToggle
-            type="button"
-            aria-expanded={isPromptExpanded}
-            onClick={() => setIsPromptExpanded((previous) => !previous)}
-          >
-            <StyledChevron isExpanded={isPromptExpanded}>
-              <IconChevronRight size={14} />
-            </StyledChevron>
-            {t`Prompt`}
-          </StyledPromptToggle>
-          <AnimatedExpandableContainer
-            isExpanded={isPromptExpanded}
-            mode="fit-content"
-          >
-            <StyledPromptBody>{promptText}</StyledPromptBody>
-          </AnimatedExpandableContainer>
-        </StyledPromptSection>
-      )}
+      <WorkflowRunAiAgentTracePrompt promptText={promptText} />
       <StyledMessagesList>
         {uiMessages.map((message) => {
           const renderableMessageParts = message.parts.filter(

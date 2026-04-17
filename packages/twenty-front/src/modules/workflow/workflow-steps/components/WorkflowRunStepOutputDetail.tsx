@@ -198,8 +198,6 @@ export const WorkflowRunStepOutputDetail = ({ stepId }: { stepId: string }) => {
   }
 
   return (
-    <>
-      <WorkflowRunStepJsonContainer>{resultTree}</WorkflowRunStepJsonContainer>
-    </>
+    <WorkflowRunStepJsonContainer>{resultTree}</WorkflowRunStepJsonContainer>
   );
 };

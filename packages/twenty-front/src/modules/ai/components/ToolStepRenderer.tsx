@@ -262,7 +262,6 @@ export const ToolStepRenderer = ({
         <AnimatedExpandableContainer isExpanded={isExpanded} mode="fit-content">
           <StyledContentContainer>
             {hasError ? (
-              // Trim legacy empty errorText values so the fallback is visible.
               errorText?.trim() || t`Unknown error`
             ) : (
               <>

@@ -69,10 +69,7 @@ export class WorkflowAgentTracePersistenceService {
     const persistableParts = await mapGenerateTextStepsToPersistableParts({
       steps: params.steps,
       uploadGeneratedFile: async ({ file, filename }) => {
-        // Files are uploaded before the DB transaction; a later transaction
-        // failure can leave orphan uploads, which is acceptable here because
-        // the files are cheap to regenerate and keeping DB transactions short
-        // matters more than strict storage rollback.
+        // Upload outside the DB transaction; orphan files are acceptable since regeneration is cheap.
         const uploadedFile = await this.fileAIChatService.uploadFile({
           file,
           filename,
@@ -138,9 +135,7 @@ export class WorkflowAgentTracePersistenceService {
 
       return insertResult.identifiers[0].id as string;
     } catch (error) {
-      // A concurrent persistTrace for the same (workspaceId, workflowRunId,
-      // workflowStepId) can race past findOne and hit the partial unique
-      // index. Re-read to get the winning thread id instead of failing.
+      // Re-read on unique-violation: a concurrent insert may have raced past findOne.
       if (!isUniqueViolationError(error)) {
         throw error;
       }

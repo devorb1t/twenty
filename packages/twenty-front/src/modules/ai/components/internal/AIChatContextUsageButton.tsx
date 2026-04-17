@@ -14,7 +14,7 @@ import {
   type AgentChatLastMessageUsage,
 } from '@/ai/states/agentChatUsageComponentFamilyState';
 import { currentAIChatThreadState } from '@/ai/states/currentAIChatThreadState';
-import { formatAiDisplayCost } from '@/ai/utils/formatAiDisplayCost';
+import { formatAiCost } from '@/ai/utils/formatAiCost';
 import { SettingsBillingLabelValueItem } from '@/settings/billing/components/internal/SettingsBillingLabelValueItem';
 import { billingState } from '@/client-config/states/billingState';
 import { useAtomComponentFamilyStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentFamilyStateValue';
@@ -201,7 +201,7 @@ export const AIChatContextUsageButton = () => {
                 />
                 <SettingsBillingLabelValueItem
                   label={t`Cost`}
-                  value={formatAiDisplayCost(
+                  value={formatAiCost(
                     lastMessage.inputCredits + lastMessage.outputCredits,
                     { isBillingEnabled },
                   )}
@@ -232,7 +232,7 @@ export const AIChatContextUsageButton = () => {
             />
             <SettingsBillingLabelValueItem
               label={t`Total cost`}
-              value={formatAiDisplayCost(totalCredits, { isBillingEnabled })}
+              value={formatAiCost(totalCredits, { isBillingEnabled })}
             />
           </StyledSection>
         </StyledHoverCard>

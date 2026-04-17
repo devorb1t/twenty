@@ -1,5 +1,5 @@
-import { GET_WORKFLOW_AGENT_TRACE_SUMMARY } from '@/ai/graphql/queries/getWorkflowAgentTrace';
-import { formatAiDisplayCost } from '@/ai/utils/formatAiDisplayCost';
+import { GET_WORKFLOW_AGENT_TRACE_SUMMARY } from '@/ai/graphql/queries/getWorkflowAgentTraceSummary';
+import { formatAiCost } from '@/ai/utils/formatAiCost';
 import { billingState } from '@/client-config/states/billingState';
 import { usePermissionFlagMap } from '@/settings/roles/hooks/usePermissionFlagMap';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
@@ -117,7 +117,7 @@ export const WorkflowRunAiAgentExecutionSummary = ({
     getStatusLabel(status),
     ...(totalTokens > 0 ? [getTokenCountLabel(totalTokens)] : []),
     ...(totalCredits > 0
-      ? [formatAiDisplayCost(totalCredits, { isBillingEnabled })]
+      ? [formatAiCost(totalCredits, { isBillingEnabled })]
       : []),
   ];
 
