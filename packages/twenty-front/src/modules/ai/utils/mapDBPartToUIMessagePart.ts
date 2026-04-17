@@ -9,6 +9,28 @@ import { type AgentMessagePart } from '~/generated-metadata/graphql';
 // A parallel mapping for TypeORM entities exists in the server at:
 // packages/twenty-server/src/engine/metadata-modules/ai/ai-agent-execution/utils/mapDBPartsToUIMessageParts.ts
 
+const getToolApproval = (errorDetails: unknown) => {
+  const approval =
+    errorDetails &&
+    typeof errorDetails === 'object' &&
+    'approval' in errorDetails &&
+    typeof errorDetails.approval === 'object' &&
+    errorDetails.approval !== null
+      ? (errorDetails.approval as Record<string, unknown>)
+      : null;
+
+  if (!approval || typeof approval.id !== 'string') {
+    return undefined;
+  }
+
+  return {
+    id: approval.id,
+    approved:
+      typeof approval.approved === 'boolean' ? approval.approved : undefined,
+    reason: typeof approval.reason === 'string' ? approval.reason : undefined,
+  };
+};
+
 export const mapDBPartToUIMessagePart = (
   part: AgentMessagePart,
 ): ExtendedUIMessagePart => {
@@ -64,6 +86,8 @@ export const mapDBPartToUIMessagePart = (
     default:
       {
         if (part.type.includes('tool-') === true) {
+          const approval = getToolApproval(part.errorDetails);
+
           return {
             type: part.type as `tool-${string}`,
             toolCallId: part.toolCallId!,
@@ -71,6 +95,7 @@ export const mapDBPartToUIMessagePart = (
             output: part.toolOutput,
             errorText: part.errorMessage!,
             state: part.state,
+            ...(approval ? { approval } : {}),
           } as ToolUIPart;
         }
       }

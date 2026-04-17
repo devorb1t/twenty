@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { WorkspaceDomainsModule } from 'src/engine/core-modules/domain/workspace-domains/workspace-domains.module';
+import { FileAIChatModule } from 'src/engine/core-modules/file/file-ai-chat/file-ai-chat.module';
 import { FileUrlModule } from 'src/engine/core-modules/file/file-url/file-url.module';
 import { ToolProviderModule } from 'src/engine/core-modules/tool-provider/tool-provider.module';
 import { UserWorkspaceModule } from 'src/engine/core-modules/user-workspace/user-workspace.module';
@@ -30,6 +31,7 @@ import { WorkflowAgentTracePersistenceService } from './services/workflow-agent-
     AiBillingModule,
     AiModelsModule,
     AiAgentModule,
+    FileAIChatModule,
     FileUrlModule,
     WorkspaceDomainsModule,
     UserWorkspaceModule,

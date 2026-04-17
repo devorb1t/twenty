@@ -11,9 +11,10 @@ import {
 } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message.entity';
 import { AgentMessagePartEntity } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message-part.entity';
 import { AgentTurnEntity } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-turn.entity';
+import { mapGenerateTextStepsToPersistableParts } from 'src/engine/metadata-modules/ai/ai-agent-execution/utils/mapGenerateTextStepsToPersistableParts';
+import { mapPersistablePartsToDBParts } from 'src/engine/metadata-modules/ai/ai-agent-execution/utils/mapPersistablePartsToDBParts';
 import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/entities/agent-chat-thread.entity';
-import { mapGenerateTextStepsToUIMessageParts } from 'src/engine/metadata-modules/ai/ai-agent-execution/utils/mapGenerateTextStepsToUIMessageParts';
-import { mapUIMessagePartsToDBParts } from 'src/engine/metadata-modules/ai/ai-agent-execution/utils/mapUIMessagePartsToDBParts';
+import { FileAIChatService } from 'src/engine/core-modules/file/file-ai-chat/services/file-ai-chat.service';
 
 const MAX_THREAD_TITLE_LENGTH = 100;
 
@@ -26,6 +27,7 @@ export class WorkflowAgentTracePersistenceService {
   constructor(
     @InjectRepository(AgentChatThreadEntity)
     private readonly threadRepository: Repository<AgentChatThreadEntity>,
+    private readonly fileAIChatService: FileAIChatService,
   ) {}
 
   async persistTrace({
@@ -56,10 +58,29 @@ export class WorkflowAgentTracePersistenceService {
     conversationSize: number;
   }): Promise<{ turnId: string; threadId: string }> {
     const title = userPrompt.substring(0, MAX_THREAD_TITLE_LENGTH);
-    const uiParts = mapGenerateTextStepsToUIMessageParts(steps);
+    const persistableParts = await mapGenerateTextStepsToPersistableParts({
+      steps,
+      uploadGeneratedFile: async ({ file, filename }) => {
+        // Files are uploaded before the DB transaction; a later transaction
+        // failure can leave orphan uploads, which is acceptable here because
+        // the files are cheap to regenerate and keeping DB transactions short
+        // matters more than strict storage rollback.
+        const uploadedFile = await this.fileAIChatService.uploadFile({
+          file,
+          filename,
+          workspaceId,
+        });
+
+        return {
+          fileId: uploadedFile.id,
+          filename,
+        };
+      },
+    });
+
     const persistedTrace = await this.threadRepository.manager.transaction(
       async (entityManager) => {
-        const threadId = await this.insertThread({
+        const threadId = await this.getOrCreateWorkflowTraceThread({
           entityManager,
           workspaceId,
           title,
@@ -101,9 +122,9 @@ export class WorkflowAgentTracePersistenceService {
           workspaceId,
         });
 
-        if (uiParts.length > 0) {
-          const dbParts = mapUIMessagePartsToDBParts(
-            uiParts,
+        if (persistableParts.length > 0) {
+          const dbParts = mapPersistablePartsToDBParts(
+            persistableParts,
             assistantMessageId,
             workspaceId,
           );
@@ -122,13 +143,13 @@ export class WorkflowAgentTracePersistenceService {
     );
 
     this.logger.log(
-      `Persisted workflow agent trace: turnId=${persistedTrace.turnId} threadId=${persistedTrace.threadId} steps=${steps.length} parts=${uiParts.length}`,
+      `Persisted workflow agent trace: turnId=${persistedTrace.turnId} threadId=${persistedTrace.threadId} steps=${steps.length} parts=${persistableParts.length}`,
     );
 
     return persistedTrace;
   }
 
-  private async insertThread({
+  private async getOrCreateWorkflowTraceThread({
     entityManager,
     workspaceId,
     title,
@@ -153,21 +174,51 @@ export class WorkflowAgentTracePersistenceService {
     contextWindowTokens: number;
     conversationSize: number;
   }) {
-    const insertResult = await entityManager
-      .getRepository(AgentChatThreadEntity)
-      .insert({
+    const threadRepository = entityManager.getRepository(AgentChatThreadEntity);
+    // Workflow actions currently execute sequentially for a given
+    // (workspaceId, workflowRunId, workflowStepId), so this read-then-insert
+    // flow is sufficient despite the usual TOCTOU caveat.
+    const existingThread = await threadRepository.findOne({
+      where: {
         workspaceId,
-        userWorkspaceId: null,
         workflowRunId,
         workflowStepId,
+      },
+      select: ['id'],
+    });
+
+    const threadData = {
+      title,
+      totalInputTokens,
+      totalOutputTokens,
+      totalInputCredits,
+      totalOutputCredits,
+      contextWindowTokens,
+      conversationSize,
+    };
+
+    if (existingThread) {
+      await threadRepository.update(existingThread.id, {
         title,
-        totalInputTokens,
-        totalOutputTokens,
-        totalInputCredits,
-        totalOutputCredits,
+        totalInputTokens: () => `"totalInputTokens" + ${totalInputTokens}`,
+        totalOutputTokens: () => `"totalOutputTokens" + ${totalOutputTokens}`,
+        totalInputCredits: () => `"totalInputCredits" + ${totalInputCredits}`,
+        totalOutputCredits: () =>
+          `"totalOutputCredits" + ${totalOutputCredits}`,
         contextWindowTokens,
         conversationSize,
       });
+
+      return existingThread.id;
+    }
+
+    const insertResult = await threadRepository.insert({
+      workspaceId,
+      userWorkspaceId: null,
+      workflowRunId,
+      workflowStepId,
+      ...threadData,
+    });
 
     return insertResult.identifiers[0].id as string;
   }

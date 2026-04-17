@@ -9,6 +9,36 @@ import { type AgentMessagePartEntity } from 'src/engine/metadata-modules/ai/ai-a
 // A parallel mapping for GraphQL DTOs exists in the frontend at:
 // packages/twenty-front/src/modules/ai/utils/mapDBPartToUIMessagePart.ts
 
+const getToolApproval = (
+  errorDetails: Record<string, unknown> | null,
+):
+  | {
+      id: string;
+      approved?: boolean;
+      reason?: string;
+    }
+  | undefined => {
+  const approval =
+    errorDetails &&
+    typeof errorDetails === 'object' &&
+    'approval' in errorDetails &&
+    typeof errorDetails.approval === 'object' &&
+    errorDetails.approval !== null
+      ? (errorDetails.approval as Record<string, unknown>)
+      : null;
+
+  if (!approval || typeof approval.id !== 'string') {
+    return undefined;
+  }
+
+  return {
+    id: approval.id,
+    approved:
+      typeof approval.approved === 'boolean' ? approval.approved : undefined,
+    reason: typeof approval.reason === 'string' ? approval.reason : undefined,
+  };
+};
+
 export const mapDBPartToUIMessagePart = (
   part: AgentMessagePartEntity,
 ): ExtendedUIMessagePart | null => {
@@ -57,6 +87,8 @@ export const mapDBPartToUIMessagePart = (
       return null;
     default: {
       if (part.type.includes('tool-') && part.toolCallId) {
+        const approval = getToolApproval(part.errorDetails);
+
         return {
           type: part.type,
           toolCallId: part.toolCallId,
@@ -64,6 +96,7 @@ export const mapDBPartToUIMessagePart = (
           output: part.toolOutput,
           errorText: part.errorMessage ?? '',
           state: part.state,
+          ...(approval ? { approval } : {}),
         } as ExtendedUIMessagePart;
       }
 
