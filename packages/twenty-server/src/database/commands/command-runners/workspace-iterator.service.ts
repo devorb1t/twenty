@@ -113,12 +113,18 @@ export class WorkspaceIteratorService {
 
       if (error instanceof WorkspaceMigrationRunnerException && error.errors) {
         for (const [label, innerError] of Object.entries(error.errors)) {
-          if (!innerError) continue;
+          if (innerError === undefined || innerError === null) continue;
 
-          this.logger.error(
-            `Caused by ${label} in workspace ${workspaceId}: ${innerError.message}`,
-            innerError.stack,
-          );
+          if (innerError instanceof Error) {
+            this.logger.error(
+              `Caused by ${label} in workspace ${workspaceId}: ${innerError.message}`,
+              innerError.stack,
+            );
+          } else {
+            this.logger.error(
+              `Caused by ${label} in workspace ${workspaceId}: ${String(innerError)}`,
+            );
+          }
         }
       }
     });
