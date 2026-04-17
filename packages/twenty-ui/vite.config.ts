@@ -104,6 +104,13 @@ export default defineConfig(({ command }) => {
               path.resolve(__dirname, `dist/${file}`),
             );
           }
+          const themeAssets = ['light-noise.png', 'dark-noise.jpg'];
+          for (const file of themeAssets) {
+            fs.copyFileSync(
+              path.resolve(__dirname, `src/theme-constants/${file}`),
+              path.resolve(__dirname, `dist/${file}`),
+            );
+          }
         },
       },
     ],
