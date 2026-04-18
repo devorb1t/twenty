@@ -749,31 +749,51 @@ export class LambdaDriver implements LogicFunctionDriver {
       }
     }
 
-    await this.deleteAllLayerVersions({
-      lambdaClient: await this.getLambdaClient(),
-      layerName,
-    });
+    // Lock on the SDK layer name to serialize the destructive
+    // delete-and-republish across logic functions sharing the same app.
+    const sdkLayerLockTtlMs = 120_000;
+    const sdkLayerLockRetryMs = 500;
+    const sdkLayerLockMaxRetries = 240;
 
-    const sdkArchiveBuffer =
-      await this.sdkClientArchiveService.downloadArchiveBuffer({
-        workspaceId: flatApplication.workspaceId,
-        applicationId: flatApplication.id,
-        applicationUniversalIdentifier,
-      });
+    return this.cacheLockService.withLock(
+      async () => {
+        const sdkArchiveBuffer =
+          await this.sdkClientArchiveService.downloadArchiveBuffer({
+            workspaceId: flatApplication.workspaceId,
+            applicationId: flatApplication.id,
+            applicationUniversalIdentifier,
+          });
 
-    const zipBuffer = await this.reprefixZipEntries({
-      sourceBuffer: sdkArchiveBuffer,
-      prefix: 'nodejs/node_modules/twenty-client-sdk',
-    });
+        const zipBuffer = await this.reprefixZipEntries({
+          sourceBuffer: sdkArchiveBuffer,
+          prefix: 'nodejs/node_modules/twenty-client-sdk',
+        });
 
-    const arn = await this.publishLayer({ layerName, zipBuffer });
+        // Publish the new layer version before deleting old ones so that
+        // concurrent fast-path readers still hold a valid ARN while the
+        // new version is being created.
+        const arn = await this.publishLayer({ layerName, zipBuffer });
 
-    await this.sdkClientArchiveService.markSdkLayerFresh({
-      applicationId: flatApplication.id,
-      workspaceId: flatApplication.workspaceId,
-    });
+        await this.deleteAllLayerVersions({
+          lambdaClient: await this.getLambdaClient(),
+          layerName,
+          excludeVersionArn: arn,
+        });
 
-    return arn;
+        await this.sdkClientArchiveService.markSdkLayerFresh({
+          applicationId: flatApplication.id,
+          workspaceId: flatApplication.workspaceId,
+        });
+
+        return arn;
+      },
+      `sdk-layer-build:${layerName}`,
+      {
+        ttl: sdkLayerLockTtlMs,
+        ms: sdkLayerLockRetryMs,
+        maxRetries: sdkLayerLockMaxRetries,
+      },
+    );
   }
 
   // Re-wraps zip entries under a new prefix path without extracting to disk.
@@ -842,9 +862,11 @@ export class LambdaDriver implements LogicFunctionDriver {
   private async deleteAllLayerVersions({
     lambdaClient,
     layerName,
+    excludeVersionArn,
   }: {
     lambdaClient: Lambda;
     layerName: string;
+    excludeVersionArn?: string;
   }): Promise<void> {
     let marker: string | undefined;
 
@@ -857,7 +879,9 @@ export class LambdaDriver implements LogicFunctionDriver {
         }),
       );
 
-      const versions = listResult.LayerVersions ?? [];
+      const versions = (listResult.LayerVersions ?? []).filter(
+        (version) => version.LayerVersionArn !== excludeVersionArn,
+      );
 
       await Promise.all(
         versions.map((version) =>
