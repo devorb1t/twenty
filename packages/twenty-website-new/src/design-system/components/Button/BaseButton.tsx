@@ -48,7 +48,7 @@ export const buttonBaseStyles = `
 
   &[data-variant='outlined'][data-color='primary'] {
     --button-label-color: ${theme.colors.secondary.text[100]};
-    --button-label-hover-color: ${theme.colors.primary.text[100]};
+    --button-label-hover-color: ${theme.colors.secondary.text[100]};
   }
 
   &:is(:hover, :focus-visible) {
@@ -73,7 +73,7 @@ const Label = styled.span`
   color: var(--button-label-color);
   position: relative;
   transition: color 220ms ease;
-  z-index: 1;
+  z-index: 2;
 `;
 
 export type BaseButtonProps = {
@@ -126,6 +126,7 @@ export function BaseButton({
     case 'outlined.primary':
       fillColor = 'none';
       hoverFillColor = theme.colors.primary.background[100];
+      hoverFillOpacity = 0.05;
       strokeColor = theme.colors.primary.background[100];
       break;
     case 'outlined.secondary':
