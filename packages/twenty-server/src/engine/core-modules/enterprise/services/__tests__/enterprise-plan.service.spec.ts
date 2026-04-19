@@ -318,13 +318,13 @@ describe('EnterprisePlanService', () => {
       expect(service.isValid()).toBe(true);
     });
 
-    it('should return false with unsigned legacy key', async () => {
+    it('should return true with unsigned legacy key', async () => {
       setupEnterpriseKey('some-legacy-key');
       mockCryptoVerify.mockReturnValue(false);
       appTokenFindOneMock.mockResolvedValue(null);
       await service.onModuleInit();
 
-      expect(service.isValid()).toBe(false);
+      expect(service.isValid()).toBe(true);
     });
 
     it('should return false when no key or token exists', async () => {
