@@ -42,6 +42,10 @@ export const wrapJsonSchemaForExecution = (
 export const stripLoadingMessage = <T extends Record<string, unknown>>(
   parameters: T,
 ): Omit<T, 'loadingMessage'> => {
+  if (!parameters) {
+    return {} as Omit<T, 'loadingMessage'>;
+  }
+
   const { loadingMessage: _, ...rest } = parameters;
 
   return rest;
