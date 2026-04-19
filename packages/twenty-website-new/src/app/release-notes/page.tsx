@@ -7,9 +7,11 @@ import { LinkButton } from '@/design-system/components';
 import { Pages } from '@/enums/pages';
 import { fetchCommunityStats } from '@/lib/community/fetch-community-stats';
 import { mergeSocialLinkLabels } from '@/lib/community/merge-social-link-labels';
+import { fetchGithubReleases } from '@/lib/github/fetch-github-releases';
 import { fetchLatestGithubReleaseTag } from '@/lib/github/fetch-latest-release-tag';
 import { getVisibleReleaseNotes } from '@/lib/releases/get-visible-releases';
 import { loadLocalReleaseNotes } from '@/lib/releases/load-local-release-notes';
+import { mergeLocalAndGithubReleaseNotes } from '@/lib/releases/merge-release-notes';
 import { Hero } from '@/sections/Hero/components';
 import { Menu } from '@/sections/Menu/components';
 import { ReleaseNotes } from '@/sections/ReleaseNotes/components';
@@ -24,11 +26,13 @@ export const metadata: Metadata = {
 };
 
 export default async function ReleaseNotesPage() {
-  const allNotes = loadLocalReleaseNotes();
-  const [latestTag, stats] = await Promise.all([
+  const localNotes = loadLocalReleaseNotes();
+  const [latestTag, githubReleases, stats] = await Promise.all([
     fetchLatestGithubReleaseTag(),
+    fetchGithubReleases(),
     fetchCommunityStats(),
   ]);
+  const allNotes = mergeLocalAndGithubReleaseNotes(localNotes, githubReleases);
   const menuSocialLinks = mergeSocialLinkLabels(MENU_DATA.socialLinks, stats);
   const visibleNotes =
     process.env.NODE_ENV === 'development'
