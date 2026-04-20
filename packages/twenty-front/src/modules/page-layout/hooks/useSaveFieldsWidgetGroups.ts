@@ -6,6 +6,7 @@ import { fieldsWidgetGroupsDraftComponentState } from '@/page-layout/states/fiel
 import { fieldsWidgetGroupsPersistedComponentState } from '@/page-layout/states/fieldsWidgetGroupsPersistedComponentState';
 import { fieldsWidgetUngroupedFieldsDraftComponentState } from '@/page-layout/states/fieldsWidgetUngroupedFieldsDraftComponentState';
 import { fieldsWidgetUngroupedFieldsPersistedComponentState } from '@/page-layout/states/fieldsWidgetUngroupedFieldsPersistedComponentState';
+import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { useMutation } from '@apollo/client/react';
 import { useStore } from 'jotai';
 import { useCallback } from 'react';
