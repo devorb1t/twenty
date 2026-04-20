@@ -3,9 +3,9 @@ import { type I18n } from '@lingui/core';
 import { isDefined } from 'twenty-shared/utils';
 
 import { generateMessageId } from 'src/engine/core-modules/i18n/utils/generateMessageId';
-import { type PageLayoutTabOverrides } from 'src/engine/metadata-modules/page-layout-tab/entities/page-layout-tab.entity';
+import { type PageLayoutWidgetOverrides } from 'src/engine/metadata-modules/page-layout-widget/entities/page-layout-widget.entity';
 
-export const resolvePageLayoutTabTitle = ({
+export const resolvePageLayoutWidgetTitle = ({
   title,
   applicationId,
   twentyStandardApplicationId,
@@ -15,7 +15,7 @@ export const resolvePageLayoutTabTitle = ({
   title: string;
   applicationId: string;
   twentyStandardApplicationId: string;
-  overrides?: PageLayoutTabOverrides | null;
+  overrides?: PageLayoutWidgetOverrides | null;
   i18nInstance: I18n;
 }): string => {
   if (applicationId !== twentyStandardApplicationId) {
