@@ -121,9 +121,8 @@ export class AiModelConfigService {
           return [];
         }
 
-        const anthropicProvider = this.sdkProviderFactory.getRawAnthropicProvider(
-          model.providerName,
-        );
+        const anthropicProvider =
+          this.sdkProviderFactory.getRawAnthropicProvider(model.providerName);
 
         if (!anthropicProvider) {
           return [];
@@ -169,7 +168,9 @@ export class AiModelConfigService {
           return [];
         }
 
-        return [[SEARCH_TOOL_NAMES.webSearch, openAiProvider.tools.webSearch()]];
+        return [
+          [SEARCH_TOOL_NAMES.webSearch, openAiProvider.tools.webSearch()],
+        ];
       }
       case AI_SDK_XAI: {
         const xaiProvider = this.sdkProviderFactory.getRawXaiProvider(

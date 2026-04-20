@@ -10,7 +10,8 @@ import { type SdkProviderFactoryService } from 'src/engine/metadata-modules/ai/a
 describe('AiModelConfigService', () => {
   const createService = (
     sdkProviderFactory: Partial<SdkProviderFactoryService>,
-  ) => new AiModelConfigService(sdkProviderFactory as SdkProviderFactoryService);
+  ) =>
+    new AiModelConfigService(sdkProviderFactory as SdkProviderFactoryService);
 
   const xSearchTool = { type: 'provider', id: 'xai.x_search', args: {} };
   const webSearchTool = { type: 'provider', id: 'xai.web_search', args: {} };

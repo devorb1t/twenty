@@ -54,9 +54,7 @@ import {
   AI_SDK_BEDROCK,
 } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
 import { AI_TELEMETRY_CONFIG } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-telemetry.const';
-import {
-  AiModelRegistryService,
-} from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
+import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { type AiModelConfig } from 'src/engine/metadata-modules/ai/ai-models/types/ai-model-config.type';
 import { AiModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-config.service';
 import { WebSearchService } from 'src/engine/core-modules/web-search/web-search.service';
@@ -161,12 +159,10 @@ export class ChatExecutionService {
       registeredModel.modelId,
     );
 
-    const nativeSearchTools = this.aiModelConfigService.getChatNativeSearchTools(
-      registeredModel,
-      {
+    const nativeSearchTools =
+      this.aiModelConfigService.getChatNativeSearchTools(registeredModel, {
         useProviderNativeWebSearch: useNativeSearch,
-      },
-    );
+      });
     const hasNativeWebSearch = Object.prototype.hasOwnProperty.call(
       nativeSearchTools,
       SEARCH_TOOL_NAMES.webSearch,
@@ -203,9 +199,7 @@ export class ChatExecutionService {
       ? new Set([SEARCH_TOOL_NAMES.webSearch])
       : undefined;
     const toolCatalogForPrompt = hasNativeWebSearch
-      ? toolCatalog.filter(
-          (tool) => tool.name !== SEARCH_TOOL_NAMES.webSearch,
-        )
+      ? toolCatalog.filter((tool) => tool.name !== SEARCH_TOOL_NAMES.webSearch)
       : toolCatalog;
 
     // ToolSet is constant for the entire conversation — no mutation.

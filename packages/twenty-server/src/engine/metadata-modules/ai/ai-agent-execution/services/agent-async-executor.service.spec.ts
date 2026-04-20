@@ -261,10 +261,7 @@ describe('AgentAsyncExecutorService', () => {
         },
       }),
       {
-        categories: [
-          ToolCategory.DATABASE_CRUD,
-          ToolCategory.ACTION,
-        ],
+        categories: [ToolCategory.DATABASE_CRUD, ToolCategory.ACTION],
         wrapWithErrorContext: false,
       },
     );
