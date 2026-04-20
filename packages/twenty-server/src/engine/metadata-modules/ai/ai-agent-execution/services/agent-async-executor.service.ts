@@ -270,22 +270,6 @@ export class AgentAsyncExecutorService {
         throw error;
       }
 
-      const errorDetails =
-        typeof error === 'object' && error !== null
-          ? {
-              name: 'name' in error ? error.name : undefined,
-              message: 'message' in error ? error.message : undefined,
-              statusCode: 'statusCode' in error ? error.statusCode : undefined,
-              responseBody:
-                'responseBody' in error ? error.responseBody : undefined,
-              cause: 'cause' in error ? error.cause : undefined,
-            }
-          : { message: String(error) };
-
-      this.logger.error(
-        `Workflow agent execution failed: agentId=${agent?.id ?? 'none'} modelId=${agent?.modelId ?? 'unknown'} savedAgentRoleId=${effectiveAgentPermissions?.agentRoleId ?? 'none'} toolCount=${generatedToolCount} error=${JSON.stringify(errorDetails)}`,
-      );
-
       throw new AiException(
         error instanceof Error ? error.message : 'Agent execution failed',
         AiExceptionCode.AGENT_EXECUTION_FAILED,

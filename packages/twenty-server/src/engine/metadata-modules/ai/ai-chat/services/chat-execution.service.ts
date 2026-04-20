@@ -142,16 +142,7 @@ export class ChatExecutionService {
     );
 
     const useNativeSearch = this.webSearchService.shouldUseNativeSearch();
-
-    const toolNamesToPreload = [
-      ...COMMON_PRELOAD_TOOLS,
-      ...(useNativeSearch ? [] : ['web_search']),
-    ];
-
-    const preloadedTools = await this.toolRegistry.getToolsByName(
-      toolNamesToPreload,
-      toolContext,
-    );
+    const externalWebSearchEnabled = this.webSearchService.isEnabled();
 
     const resolvedModelId = modelId ?? workspace.smartModel;
 
@@ -173,6 +164,19 @@ export class ChatExecutionService {
       this.aiModelConfigService.getChatNativeSearchTools(registeredModel, {
         useProviderNativeWebSearch: useNativeSearch,
       });
+    const hasNativeWebSearch = Object.hasOwn(nativeSearchTools, 'web_search');
+
+    const toolNamesToPreload = [
+      ...COMMON_PRELOAD_TOOLS,
+      ...(!hasNativeWebSearch && externalWebSearchEnabled
+        ? ['web_search']
+        : []),
+    ];
+
+    const preloadedTools = await this.toolRegistry.getToolsByName(
+      toolNamesToPreload,
+      toolContext,
+    );
 
     // Direct tools: native provider tools + preloaded tools.
     // These are callable directly AND as fallback through execute_tool.
@@ -185,6 +189,12 @@ export class ChatExecutionService {
       ...Object.keys(preloadedTools),
       ...searchToolNames,
     ];
+    const excludedChatToolNames = hasNativeWebSearch
+      ? new Set(['web_search'])
+      : undefined;
+    const toolCatalogForPrompt = hasNativeWebSearch
+      ? toolCatalog.filter((tool) => tool.name !== 'web_search')
+      : toolCatalog;
 
     // ToolSet is constant for the entire conversation — no mutation.
     // learn_tools returns schemas as text; execute_tool dispatches to cached tools.
@@ -193,11 +203,13 @@ export class ChatExecutionService {
       [LEARN_TOOLS_TOOL_NAME]: createLearnToolsTool(
         this.toolRegistry,
         toolContext,
+        excludedChatToolNames,
       ),
       [EXECUTE_TOOL_TOOL_NAME]: createExecuteToolTool(
         this.toolRegistry,
         toolContext,
         directTools,
+        excludedChatToolNames,
       ),
       [LOAD_SKILL_TOOL_NAME]: createLoadSkillTool(
         (skillNames) =>
@@ -233,7 +245,7 @@ export class ChatExecutionService {
     }
 
     const systemPrompt = this.systemPromptBuilder.buildFullPrompt(
-      toolCatalog,
+      toolCatalogForPrompt,
       skillCatalog,
       preloadedToolNames,
       contextString,
@@ -329,7 +341,7 @@ export class ChatExecutionService {
         userWorkspaceId,
       );
 
-      if (useNativeSearch) {
+      if (hasNativeWebSearch) {
         const nativeWebSearchCallCount =
           countNativeWebSearchCallsFromSteps(steps);
 
