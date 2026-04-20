@@ -34,10 +34,7 @@ describe('AiModelConfigService', () => {
     );
 
     expect(result).toEqual({
-      tools: {
-        x_search: xSearchTool,
-      },
-      callableToolNames: ['x_search'],
+      x_search: xSearchTool,
     });
   });
 
@@ -60,11 +57,8 @@ describe('AiModelConfigService', () => {
     );
 
     expect(result).toEqual({
-      tools: {
-        web_search: webSearchTool,
-        x_search: xSearchTool,
-      },
-      callableToolNames: ['web_search', 'x_search'],
+      web_search: webSearchTool,
+      x_search: xSearchTool,
     });
   });
 
@@ -81,9 +75,6 @@ describe('AiModelConfigService', () => {
       { useProviderNativeWebSearch: false },
     );
 
-    expect(result).toEqual({
-      tools: {},
-      callableToolNames: [],
-    });
+    expect(result).toEqual({});
   });
 });

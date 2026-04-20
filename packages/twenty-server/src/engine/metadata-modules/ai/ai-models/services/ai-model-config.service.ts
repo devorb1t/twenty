@@ -15,11 +15,6 @@ import {
 import { type RegisteredAiModel } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { SdkProviderFactoryService } from 'src/engine/metadata-modules/ai/ai-models/services/sdk-provider-factory.service';
 
-type ChatNativeSearchTools = {
-  tools: ToolSet;
-  callableToolNames: string[];
-};
-
 type NativeSearchToolEntry = [string, ToolSet[string]];
 
 @Injectable()
@@ -67,16 +62,13 @@ export class AiModelConfigService {
   getChatNativeSearchTools(
     model: RegisteredAiModel,
     options: { useProviderNativeWebSearch: boolean },
-  ): ChatNativeSearchTools {
+  ): ToolSet {
     const toolEntries = this.getNativeSearchToolEntries(model, {
       exposeWebSearch: options.useProviderNativeWebSearch,
       exposeTwitterSearch: model.sdkPackage === AI_SDK_XAI,
     });
 
-    return {
-      tools: Object.fromEntries(toolEntries) as ToolSet,
-      callableToolNames: toolEntries.map(([toolName]) => toolName),
-    };
+    return Object.fromEntries(toolEntries) as ToolSet;
   }
 
   private getAnthropicProviderOptions(

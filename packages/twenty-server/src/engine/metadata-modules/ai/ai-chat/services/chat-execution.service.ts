@@ -160,10 +160,12 @@ export class ChatExecutionService {
       registeredModel.modelId,
     );
 
-    const { tools: nativeSearchTools, callableToolNames: searchToolNames } =
-      this.aiModelConfigService.getChatNativeSearchTools(registeredModel, {
+    const nativeSearchTools = this.aiModelConfigService.getChatNativeSearchTools(
+      registeredModel,
+      {
         useProviderNativeWebSearch: useNativeSearch,
-      });
+      },
+    );
     const hasNativeWebSearch = Object.hasOwn(nativeSearchTools, 'web_search');
 
     const toolNamesToPreload = [
@@ -187,7 +189,7 @@ export class ChatExecutionService {
 
     const preloadedToolNames = [
       ...Object.keys(preloadedTools),
-      ...searchToolNames,
+      ...Object.keys(nativeSearchTools),
     ];
     const excludedChatToolNames = hasNativeWebSearch
       ? new Set(['web_search'])
