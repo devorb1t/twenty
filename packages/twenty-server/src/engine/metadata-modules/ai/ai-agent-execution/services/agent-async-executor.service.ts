@@ -199,6 +199,7 @@ export class AgentAsyncExecutorService {
               authContext,
               actorContext,
               agent: toToolProviderAgent(agent),
+              modelSdkPackage: registeredModel.sdkPackage,
               userId:
                 isDefined(authContext) && isUserAuthContext(authContext)
                   ? authContext.user.id

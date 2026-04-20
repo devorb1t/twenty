@@ -13,6 +13,7 @@ import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/
 import { type ToolProvider } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider.interface';
 
 import { getFlatFieldsFromFlatObjectMetadata } from 'src/engine/api/graphql/workspace-schema-builder/utils/get-flat-fields-for-flat-object-metadata.util';
+import { AI_SDK_XAI } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
 import { generateCreateManyRecordInputSchema } from 'src/engine/core-modules/record-crud/utils/generate-create-many-record-input-schema.util';
 import { generateCreateRecordInputSchema } from 'src/engine/core-modules/record-crud/utils/generate-create-record-input-schema.util';
 import { generateUpdateManyRecordInputSchema } from 'src/engine/core-modules/record-crud/utils/generate-update-many-record-input-schema.util';
@@ -81,7 +82,7 @@ export class DatabaseToolProvider implements ToolProvider {
     const isWorkflowAgentExecution =
       context.executionScope === 'workflow_agent';
     const shouldSanitizeSchemasForXaiWorkflow =
-      isWorkflowAgentExecution && context.agent?.modelId.startsWith('xai/');
+      isWorkflowAgentExecution && context.modelSdkPackage === AI_SDK_XAI;
 
     const allFlatObjects = Object.values(
       flatObjectMetadataMaps.byUniversalIdentifier,
