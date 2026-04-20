@@ -9,7 +9,9 @@ jest.mock('ai', () => {
 
 import { generateText, type ToolSet } from 'ai';
 
+import { SEARCH_TOOL_NAMES } from 'src/engine/core-modules/tool-provider/constants/search-tool-names.const';
 import { type ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
+import { type WebSearchService } from 'src/engine/core-modules/web-search/web-search.service';
 import { type WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { AgentAsyncExecutorService } from 'src/engine/metadata-modules/ai/ai-agent-execution/services/agent-async-executor.service';
 import { WORKFLOW_SYSTEM_PROMPTS } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-system-prompts.const';
@@ -32,10 +34,14 @@ describe('AgentAsyncExecutorService', () => {
 
   const createService = ({
     roleId,
-    tools = {},
+    roleScopedTools = {},
+    noRoleFallbackActionTools = {},
+    nativeModelTools = {},
   }: {
     roleId?: string;
-    tools?: ToolSet;
+    roleScopedTools?: ToolSet;
+    noRoleFallbackActionTools?: ToolSet;
+    nativeModelTools?: ToolSet;
   }) => {
     const aiModelRegistryService = {
       validateModelAvailability: jest.fn(),
@@ -44,11 +50,34 @@ describe('AgentAsyncExecutorService', () => {
 
     const aiModelConfigService = {
       getProviderOptions: jest.fn().mockReturnValue({}),
+      getNativeModelTools: jest.fn().mockReturnValue(nativeModelTools),
     } as unknown as jest.Mocked<AiModelConfigService>;
 
     const toolRegistry = {
-      getToolsByCategories: jest.fn().mockResolvedValue(tools),
+      getToolsByCategories: jest
+        .fn()
+        .mockImplementation((_context, options) => {
+          if (
+            options.categories?.includes(ToolCategory.DATABASE_CRUD) &&
+            options.categories?.includes(ToolCategory.ACTION)
+          ) {
+            return Promise.resolve(roleScopedTools);
+          }
+
+          if (
+            options.categories?.length === 1 &&
+            options.categories[0] === ToolCategory.ACTION
+          ) {
+            return Promise.resolve(noRoleFallbackActionTools);
+          }
+
+          return Promise.resolve({});
+        }),
     } as unknown as jest.Mocked<ToolRegistryService>;
+
+    const webSearchService = {
+      shouldUseNativeSearch: jest.fn().mockReturnValue(true),
+    } as unknown as jest.Mocked<WebSearchService>;
 
     const roleTargetRepository = {
       findOne: jest.fn().mockResolvedValue(roleId ? { roleId } : null),
@@ -64,6 +93,7 @@ describe('AgentAsyncExecutorService', () => {
       aiModelRegistryService,
       aiModelConfigService,
       toolRegistry,
+      webSearchService,
       roleTargetRepository as never,
       workspaceRepository as never,
     );
@@ -96,9 +126,30 @@ describe('AgentAsyncExecutorService', () => {
     } as never);
   });
 
-  it('does not load any tools when the agent has no explicit role', async () => {
-    const { service, toolRegistry } = createService({
+  it('keeps native and fallback tools available when the agent has no explicit role', async () => {
+    const noRoleFallbackActionTools = {
+      web_search: {
+        description: 'Search the web',
+        inputSchema: {},
+        execute: jest.fn(),
+      },
+      code_interpreter: {
+        description: 'Run code',
+        inputSchema: {},
+        execute: jest.fn(),
+      },
+    } as unknown as ToolSet;
+    const nativeModelTools = {
+      x_search: {
+        description: 'Search X',
+        inputSchema: {},
+        execute: jest.fn(),
+      },
+    } as unknown as ToolSet;
+    const { service, aiModelConfigService, toolRegistry } = createService({
       roleId: undefined,
+      noRoleFallbackActionTools,
+      nativeModelTools,
     });
 
     await service.executeAgent({
@@ -107,11 +158,37 @@ describe('AgentAsyncExecutorService', () => {
       rolePermissionConfig: { unionOf: ['workflow-role-id'] },
     });
 
-    expect(toolRegistry.getToolsByCategories).not.toHaveBeenCalled();
+    expect(toolRegistry.getToolsByCategories).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workspaceId: 'workspace-id',
+        roleId: 'workflow-role-id',
+        rolePermissionConfig: { unionOf: ['workflow-role-id'] },
+        executionScope: 'workflow_agent',
+        agent: {
+          modelId: 'xai/grok',
+          modelConfiguration: agent.modelConfiguration,
+        },
+      }),
+      {
+        categories: [ToolCategory.ACTION],
+        wrapWithErrorContext: false,
+      },
+    );
+    expect(aiModelConfigService.getNativeModelTools).toHaveBeenCalledWith(
+      registeredModel,
+      {
+        modelId: 'xai/grok',
+        modelConfiguration: agent.modelConfiguration,
+      },
+      { useProviderNativeWebSearch: true },
+    );
     expect(mockedGenerateText).toHaveBeenCalledWith(
       expect.objectContaining({
         system: `${WORKFLOW_SYSTEM_PROMPTS.BASE}\n\n${agent.prompt}`,
-        tools: {},
+        tools: {
+          ...noRoleFallbackActionTools,
+          ...nativeModelTools,
+        },
       }),
     );
   });
@@ -144,7 +221,14 @@ describe('AgentAsyncExecutorService', () => {
   });
 
   it('intersects the saved agent role with workflow execution permissions', async () => {
-    const tools = {
+    const roleScopedTools = {
+      find_companies: {
+        description: 'Find companies',
+        inputSchema: {},
+        execute: jest.fn(),
+      },
+    } as unknown as ToolSet;
+    const nativeModelTools = {
       x_search: {
         description: 'Search X',
         inputSchema: {},
@@ -153,7 +237,8 @@ describe('AgentAsyncExecutorService', () => {
     } as unknown as ToolSet;
     const { service, aiModelConfigService, toolRegistry } = createService({
       roleId: 'agent-role-id',
-      tools,
+      roleScopedTools,
+      nativeModelTools,
     });
 
     await service.executeAgent({
@@ -179,13 +264,73 @@ describe('AgentAsyncExecutorService', () => {
         categories: [
           ToolCategory.DATABASE_CRUD,
           ToolCategory.ACTION,
-          ToolCategory.NATIVE_MODEL,
         ],
         wrapWithErrorContext: false,
       },
     );
+    expect(toolRegistry.getToolsByCategories).toHaveBeenCalledTimes(1);
+    expect(aiModelConfigService.getNativeModelTools).toHaveBeenCalledWith(
+      registeredModel,
+      {
+        modelId: 'xai/grok',
+        modelConfiguration: agent.modelConfiguration,
+      },
+      { useProviderNativeWebSearch: true },
+    );
     expect(aiModelConfigService.getProviderOptions).toHaveBeenCalledWith(
       registeredModel,
+    );
+    expect(mockedGenerateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tools: {
+          ...roleScopedTools,
+          ...nativeModelTools,
+        },
+      }),
+    );
+  });
+
+  it('does not load external web search when native web search is already available', async () => {
+    const noRoleFallbackActionTools = {
+      web_search: {
+        description: 'Search the web',
+        inputSchema: {},
+        execute: jest.fn(),
+      },
+    } as unknown as ToolSet;
+    const nativeModelTools = {
+      [SEARCH_TOOL_NAMES.webSearch]: {
+        description: 'Native search the web',
+        inputSchema: {},
+        execute: jest.fn(),
+      },
+    } as unknown as ToolSet;
+    const { service, toolRegistry } = createService({
+      roleId: undefined,
+      noRoleFallbackActionTools,
+      nativeModelTools,
+    });
+
+    await service.executeAgent({
+      agent,
+      userPrompt: 'Find a record.',
+      rolePermissionConfig: { unionOf: ['workflow-role-id'] },
+    });
+
+    expect(toolRegistry.getToolsByCategories).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workspaceId: 'workspace-id',
+        roleId: 'workflow-role-id',
+      }),
+      {
+        categories: [ToolCategory.ACTION],
+        wrapWithErrorContext: false,
+      },
+    );
+    expect(mockedGenerateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tools: nativeModelTools,
+      }),
     );
   });
 });

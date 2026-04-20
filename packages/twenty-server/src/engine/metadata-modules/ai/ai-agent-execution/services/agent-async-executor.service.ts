@@ -14,16 +14,18 @@ import { type Repository } from 'typeorm';
 
 import { isUserAuthContext } from 'src/engine/core-modules/auth/guards/is-user-auth-context.guard';
 import { type WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
+import { SEARCH_TOOL_NAMES } from 'src/engine/core-modules/tool-provider/constants/search-tool-names.const';
 import { type ToolProviderAgent } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-agent.type';
 import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
+import { WebSearchService } from 'src/engine/core-modules/web-search/web-search.service';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { type AgentExecutionResult } from 'src/engine/metadata-modules/ai/ai-agent-execution/types/agent-execution-result.type';
 import { AGENT_CONFIG } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-config.const';
 import { WORKFLOW_SYSTEM_PROMPTS } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-system-prompts.const';
 import { type AgentEntity } from 'src/engine/metadata-modules/ai/ai-agent/entities/agent.entity';
 import { repairToolCall } from 'src/engine/metadata-modules/ai/ai-agent/utils/repair-tool-call.util';
-import { countNativeXSearchCallsFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-x-search-calls-from-steps.util';
 import { countNativeWebSearchCallsFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-web-search-calls-from-steps.util';
+import { countNativeXSearchCallsFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-x-search-calls-from-steps.util';
 import { extractCacheCreationTokensFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/extract-cache-creation-tokens.util';
 import { mergeLanguageModelUsage } from 'src/engine/metadata-modules/ai/ai-billing/utils/merge-language-model-usage.util';
 import { AI_TELEMETRY_CONFIG } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-telemetry.const';
@@ -47,6 +49,14 @@ const toToolProviderAgent = (agent: AgentEntity): ToolProviderAgent => ({
   modelConfiguration: agent.modelConfiguration,
 });
 
+const WORKFLOW_NO_ROLE_FALLBACK_TOOL_NAMES = [
+  'code_interpreter',
+  SEARCH_TOOL_NAMES.webSearch,
+] as const;
+const WORKFLOW_NO_ROLE_FALLBACK_TOOL_NAMES_SET: ReadonlySet<string> = new Set(
+  WORKFLOW_NO_ROLE_FALLBACK_TOOL_NAMES,
+);
+
 // Agent execution within workflows uses database and action tools only.
 // Workflow tools are intentionally excluded to avoid circular dependencies
 // and recursive workflow execution.
@@ -58,6 +68,7 @@ export class AgentAsyncExecutorService {
     private readonly aiModelRegistryService: AiModelRegistryService,
     private readonly aiModelConfigService: AiModelConfigService,
     private readonly toolRegistry: ToolRegistryService,
+    private readonly webSearchService: WebSearchService,
     @InjectRepository(RoleTargetEntity)
     private readonly roleTargetRepository: Repository<RoleTargetEntity>,
     @InjectRepository(WorkspaceEntity)
@@ -148,42 +159,94 @@ export class AgentAsyncExecutorService {
       let providerOptions = {};
 
       if (agent) {
+        const toolProviderAgent = toToolProviderAgent(agent);
+        const workflowRoleIds = this.extractRoleIds(rolePermissionConfig);
+        const workflowRoleId = workflowRoleIds[0];
+        const workflowToolContextBase = {
+          workspaceId: agent.workspaceId,
+          executionScope: 'workflow_agent' as const,
+          authContext,
+          actorContext,
+          agent: toolProviderAgent,
+          userId:
+            isDefined(authContext) && isUserAuthContext(authContext)
+              ? authContext.user.id
+              : undefined,
+          userWorkspaceId:
+            isDefined(authContext) && isUserAuthContext(authContext)
+              ? authContext.userWorkspaceId
+              : undefined,
+        };
+
         effectiveAgentPermissions = await this.getEffectiveRolePermissionConfig(
           agent.id,
           agent.workspaceId,
           rolePermissionConfig,
         );
 
+        let roleScopedTools: ToolSet = {};
+
         if (effectiveAgentPermissions) {
-          tools = await this.toolRegistry.getToolsByCategories(
+          roleScopedTools = await this.toolRegistry.getToolsByCategories(
             {
-              workspaceId: agent.workspaceId,
+              ...workflowToolContextBase,
               roleId: effectiveAgentPermissions.agentRoleId,
               rolePermissionConfig:
                 effectiveAgentPermissions.rolePermissionConfig,
-              executionScope: 'workflow_agent',
-              authContext,
-              actorContext,
-              agent: toToolProviderAgent(agent),
-              userId:
-                isDefined(authContext) && isUserAuthContext(authContext)
-                  ? authContext.user.id
-                  : undefined,
-              userWorkspaceId:
-                isDefined(authContext) && isUserAuthContext(authContext)
-                  ? authContext.userWorkspaceId
-                  : undefined,
             },
             {
-              categories: [
-                ToolCategory.DATABASE_CRUD,
-                ToolCategory.ACTION,
-                ToolCategory.NATIVE_MODEL,
-              ],
+              categories: [ToolCategory.DATABASE_CRUD, ToolCategory.ACTION],
               wrapWithErrorContext: false,
             },
           );
         }
+
+        const nativeModelTools = this.aiModelConfigService.getNativeModelTools(
+          registeredModel,
+          toolProviderAgent,
+          {
+            useProviderNativeWebSearch:
+              this.webSearchService.shouldUseNativeSearch(),
+          },
+        );
+
+        let noRoleFallbackTools: ToolSet = {};
+
+        if (
+          !effectiveAgentPermissions &&
+          rolePermissionConfig &&
+          workflowRoleId
+        ) {
+          // Temporary workflow fallback: until capability-backed tools are
+          // split out of ACTION, keep the workflow capability tools available
+          // for no-role agents without reopening broader action-tool access.
+          // TODO: We need to take capabilities out of action tools and put them in a separate category
+          const actionTools = await this.toolRegistry.getToolsByCategories(
+            {
+              ...workflowToolContextBase,
+              roleId: workflowRoleId,
+              rolePermissionConfig,
+            },
+            {
+              categories: [ToolCategory.ACTION],
+              wrapWithErrorContext: false,
+            },
+          );
+
+          noRoleFallbackTools = Object.fromEntries(
+            Object.entries(actionTools).filter(([toolName]) =>
+              WORKFLOW_NO_ROLE_FALLBACK_TOOL_NAMES_SET.has(toolName),
+            ),
+          ) as ToolSet;
+        }
+
+        // Keep native tools last so provider-native web_search overrides the
+        // external fallback when both share the same tool name.
+        tools = {
+          ...roleScopedTools,
+          ...noRoleFallbackTools,
+          ...nativeModelTools,
+        };
 
         providerOptions =
           this.aiModelConfigService.getProviderOptions(registeredModel);
