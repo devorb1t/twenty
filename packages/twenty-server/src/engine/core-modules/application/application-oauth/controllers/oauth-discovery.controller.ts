@@ -45,6 +45,7 @@ export class OAuthDiscoveryController {
       introspection_endpoint: `${issuer}/oauth/introspect`,
       scopes_supported: ALL_OAUTH_SCOPES,
       response_types_supported: ['code'],
+      response_modes_supported: ['query'],
       grant_types_supported: [
         'authorization_code',
         'client_credentials',
