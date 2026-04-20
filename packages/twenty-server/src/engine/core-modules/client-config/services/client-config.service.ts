@@ -18,7 +18,7 @@ import {
 import { MaintenanceModeService } from 'src/engine/core-modules/admin-panel/maintenance-mode.service';
 import {
   type AgentCapabilities,
-  type ClientAIModelConfig,
+  type ClientAiModelConfig,
   type ClientConfig,
 } from 'src/engine/core-modules/client-config/client-config.entity';
 import { DomainServerConfigService } from 'src/engine/core-modules/domain/domain-server-config/services/domain-server-config.service';
@@ -85,7 +85,7 @@ export class ClientConfigService {
         ? (resolvedProviders[providerName]?.label ?? providerName)
         : undefined;
 
-    const aiModels: ClientAIModelConfig[] = availableModels.map(
+    const aiModels: ClientAiModelConfig[] = availableModels.map(
       (registeredModel) => {
         const modelConfig = this.aiModelRegistryService.getModelConfig(
           registeredModel.modelId,

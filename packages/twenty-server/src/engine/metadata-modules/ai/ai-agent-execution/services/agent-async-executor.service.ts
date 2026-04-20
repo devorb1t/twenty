@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import {
-  APICallError,
   generateText,
   jsonSchema,
   Output,
@@ -13,12 +12,10 @@ import { type ActorMetadata } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { type Repository } from 'typeorm';
 
-import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
-import { type ToolProviderAgent } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-agent.type';
-
 import { isUserAuthContext } from 'src/engine/core-modules/auth/guards/is-user-auth-context.guard';
 import { type WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
-import { ExceptionHandlerService } from 'src/engine/core-modules/exception-handler/exception-handler.service';
+import { type ToolProviderAgent } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-agent.type';
+import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
 import { LazyToolRuntimeService } from 'src/engine/core-modules/tool-provider/services/lazy-tool-runtime.service';
 import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
 import {
@@ -28,10 +25,6 @@ import {
 import { type ToolIndexEntry } from 'src/engine/core-modules/tool-provider/types/tool-index-entry.type';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { type AgentExecutionResult } from 'src/engine/metadata-modules/ai/ai-agent-execution/types/agent-execution-result.type';
-import {
-  AgentException,
-  AgentExceptionCode,
-} from 'src/engine/metadata-modules/ai/ai-agent/agent.exception';
 import { AGENT_CONFIG } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-config.const';
 import { WORKFLOW_SYSTEM_PROMPTS } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-system-prompts.const';
 import { type AgentEntity } from 'src/engine/metadata-modules/ai/ai-agent/entities/agent.entity';
@@ -39,12 +32,13 @@ import { repairToolCall } from 'src/engine/metadata-modules/ai/ai-agent/utils/re
 import { countNativeWebSearchCallsFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-web-search-calls-from-steps.util';
 import { extractCacheCreationTokensFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/extract-cache-creation-tokens.util';
 import { mergeLanguageModelUsage } from 'src/engine/metadata-modules/ai/ai-billing/utils/merge-language-model-usage.util';
-import { AI_TELEMETRY_CONFIG } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-telemetry.const';
-import { AgentModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/agent-model-config.service';
 import {
-  AiModelRegistryService,
-  type RegisteredAIModel,
-} from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
+  AiException,
+  AiExceptionCode,
+} from 'src/engine/metadata-modules/ai/ai.exception';
+import { AI_TELEMETRY_CONFIG } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-telemetry.const';
+import { AiModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-config.service';
+import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { RoleTargetEntity } from 'src/engine/metadata-modules/role-target/role-target.entity';
 import { type RolePermissionConfig } from 'src/engine/twenty-orm/types/role-permission-config';
 import { ToolCategory } from 'twenty-shared/ai';
@@ -68,10 +62,9 @@ export class AgentAsyncExecutorService {
 
   constructor(
     private readonly aiModelRegistryService: AiModelRegistryService,
-    private readonly agentModelConfigService: AgentModelConfigService,
+    private readonly aiModelConfigService: AiModelConfigService,
     private readonly lazyToolRuntimeService: LazyToolRuntimeService,
     private readonly toolRegistry: ToolRegistryService,
-    private readonly exceptionHandlerService: ExceptionHandlerService,
     @InjectRepository(RoleTargetEntity)
     private readonly roleTargetRepository: Repository<RoleTargetEntity>,
     @InjectRepository(WorkspaceEntity)
@@ -179,7 +172,6 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
     rolePermissionConfig?: RolePermissionConfig;
     authContext?: WorkspaceAuthContext;
   }): Promise<AgentExecutionResult> {
-    let resolvedModelForLog: RegisteredAIModel | undefined;
     let lazyWorkflowToolCount = 0;
 
     try {
@@ -198,8 +190,6 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
 
       const registeredModel =
         await this.aiModelRegistryService.resolveModelForAgent(agent);
-
-      resolvedModelForLog = registeredModel;
 
       let tools: ToolSet = {};
       let providerOptions = {};
@@ -251,8 +241,9 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
           directToolNames: toolRuntime.directToolNames,
         });
 
-        providerOptions =
-          this.agentModelConfigService.getProviderOptions(registeredModel);
+        providerOptions = this.aiModelConfigService.getProviderOptions(
+          registeredModel,
+        );
       }
 
       const runtimeToolCount = Object.keys(tools).length;
@@ -320,9 +311,9 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
       });
 
       if (structuredResult.output == null) {
-        throw new AgentException(
+        throw new AiException(
           'Failed to generate structured output from execution results',
-          AgentExceptionCode.AGENT_EXECUTION_FAILED,
+          AiExceptionCode.AGENT_EXECUTION_FAILED,
         );
       }
 
@@ -336,38 +327,13 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
         nativeWebSearchCallCount,
       };
     } catch (error) {
-      if (error instanceof AgentException) {
+      if (error instanceof AiException) {
         throw error;
       }
 
-      const cause =
-        error instanceof Error
-          ? (error as Error & { cause?: unknown }).cause
-          : undefined;
-      const apiCallError = APICallError.isInstance(error)
-        ? error
-        : APICallError.isInstance(cause)
-          ? cause
-          : undefined;
-      const statusSuffix = apiCallError?.statusCode
-        ? ` status=${apiCallError.statusCode}`
-        : '';
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-
-      this.logger.error(
-        `Workflow agent execution failed [workspace=${agent?.workspaceId} agent=${agent?.id} model=${resolvedModelForLog?.modelId}${statusSuffix}]: ${errorMessage}`,
-        error instanceof Error ? error.stack : undefined,
-      );
-
-      this.exceptionHandlerService.captureExceptions(
-        [error],
-        agent ? { workspace: { id: agent.workspaceId } } : undefined,
-      );
-
-      throw new AgentException(
+      throw new AiException(
         error instanceof Error ? error.message : 'Agent execution failed',
-        AgentExceptionCode.AGENT_EXECUTION_FAILED,
+        AiExceptionCode.AGENT_EXECUTION_FAILED,
       );
     }
   }

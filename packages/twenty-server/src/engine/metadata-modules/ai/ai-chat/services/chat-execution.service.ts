@@ -54,10 +54,10 @@ import {
 import { AI_TELEMETRY_CONFIG } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-telemetry.const';
 import {
   AiModelRegistryService,
-  type RegisteredAIModel,
+  type RegisteredAiModel,
 } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { SdkProviderFactoryService } from 'src/engine/metadata-modules/ai/ai-models/services/sdk-provider-factory.service';
-import { type AIModelConfig } from 'src/engine/metadata-modules/ai/ai-models/types/ai-model-config.type';
+import { type AiModelConfig } from 'src/engine/metadata-modules/ai/ai-models/types/ai-model-config.type';
 import { SkillService } from 'src/engine/metadata-modules/skill/skill.service';
 
 export type ChatExecutionOptions = {
@@ -74,7 +74,7 @@ export type ChatExecutionOptions = {
 
 export type ChatExecutionResult = {
   stream: ReturnType<typeof streamText>;
-  modelConfig: AIModelConfig;
+  modelConfig: AiModelConfig;
 };
 
 @Injectable()
@@ -444,7 +444,7 @@ export class ChatExecutionService {
     return context;
   }
 
-  private getNativeWebSearchTools(model: RegisteredAIModel): {
+  private getNativeWebSearchTools(model: RegisteredAiModel): {
     tools: ToolSet;
   } {
     const empty = { tools: {} };

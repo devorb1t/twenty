@@ -7,7 +7,7 @@ import { type NativeToolProvider } from 'src/engine/core-modules/tool-provider/i
 import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
 
 import { WebSearchService } from 'src/engine/core-modules/web-search/web-search.service';
-import { AgentModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/agent-model-config.service';
+import { AiModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-config.service';
 import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { ToolCategory } from 'twenty-shared/ai';
 
@@ -20,7 +20,7 @@ export class NativeModelToolProvider implements NativeToolProvider {
   readonly category = ToolCategory.NATIVE_MODEL;
 
   constructor(
-    private readonly agentModelConfigService: AgentModelConfigService,
+    private readonly aiModelConfigService: AiModelConfigService,
     private readonly aiModelRegistryService: AiModelRegistryService,
     private readonly webSearchService: WebSearchService,
   ) {}
@@ -44,7 +44,7 @@ export class NativeModelToolProvider implements NativeToolProvider {
     const registeredModel =
       await this.aiModelRegistryService.resolveModelForAgent(context.agent);
 
-    return this.agentModelConfigService.getNativeModelTools(
+    return this.aiModelConfigService.getNativeModelTools(
       registeredModel,
       context.agent,
       { useProviderNativeWebSearch },
