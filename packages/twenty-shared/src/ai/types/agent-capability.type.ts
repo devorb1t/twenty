@@ -1,4 +1,1 @@
-export type AgentCapability =
-  | 'webSearch'
-  | 'twitterSearch'
-  | 'codeInterpreter';
+export type AgentCapability = 'webSearch' | 'twitterSearch' | 'codeInterpreter';
