@@ -1,6 +1,7 @@
 import assert from 'assert';
 
 import { type gmail_v1 } from 'googleapis';
+import { convert } from 'html-to-text';
 
 import { getAttachmentData } from 'src/modules/messaging/message-import-manager/drivers/gmail/utils/get-attachment-data.util';
 import { getBodyData } from 'src/modules/messaging/message-import-manager/drivers/gmail/utils/get-body-data.util';
@@ -25,8 +26,18 @@ export const parseGmailMessage = (message: gmail_v1.Schema$Message) => {
   assert(historyId, 'History-ID is missing');
   assert(internalDate, 'Internal date is missing');
 
-  const bodyData = getBodyData(message);
-  const text = bodyData ? Buffer.from(bodyData, 'base64').toString() : '';
+  const bodyResult = getBodyData(message);
+
+  let text = '';
+
+  if (bodyResult) {
+    const rawText = Buffer.from(bodyResult.data, 'base64').toString();
+
+    text =
+      bodyResult.mimeType === 'text/html'
+        ? convert(rawText, { wordwrap: false, preserveNewlines: true }).trim()
+        : rawText;
+  }
 
   const attachments = getAttachmentData(message);
 
