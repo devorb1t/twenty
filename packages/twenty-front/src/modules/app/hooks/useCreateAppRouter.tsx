@@ -28,11 +28,10 @@ const RecordShowPage = lazy(() =>
   })),
 );
 
-const SignInUp = lazy(() =>
-  import('~/pages/auth/SignInUp').then((module) => ({
-    default: module.SignInUp,
-  })),
-);
+// SignInUp is statically imported because /welcome is the landing page
+// for unauthenticated users — lazy-loading it adds a network waterfall
+// step that delays LCP by ~500ms.
+import { SignInUp } from '~/pages/auth/SignInUp';
 
 const PasswordReset = lazy(() =>
   import('~/pages/auth/PasswordReset').then((module) => ({
@@ -123,19 +122,11 @@ export const useCreateAppRouter = (
           <Route path={AppPath.VerifyEmail} element={<VerifyEmailEffect />} />
           <Route
             path={AppPath.SignInUp}
-            element={
-              <LazyRoute fallback={null}>
-                <SignInUp />
-              </LazyRoute>
-            }
+            element={<SignInUp />}
           />
           <Route
             path={AppPath.Invite}
-            element={
-              <LazyRoute fallback={null}>
-                <SignInUp />
-              </LazyRoute>
-            }
+            element={<SignInUp />}
           />
           <Route
             path={AppPath.ResetPassword}
