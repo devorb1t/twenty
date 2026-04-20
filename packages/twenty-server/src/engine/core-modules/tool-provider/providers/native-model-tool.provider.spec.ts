@@ -2,10 +2,10 @@ import { NativeModelToolProvider } from './native-model-tool.provider';
 
 import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
 import { type WebSearchService } from 'src/engine/core-modules/web-search/web-search.service';
-import { type AgentModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/agent-model-config.service';
+import { type AiModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-config.service';
 import {
   type AiModelRegistryService,
-  type RegisteredAIModel,
+  type RegisteredAiModel,
 } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { type FlatAgentWithRoleId } from 'src/engine/metadata-modules/flat-agent/types/flat-agent.type';
 
@@ -29,12 +29,12 @@ describe('NativeModelToolProvider', () => {
   it('asks for native model tools even when external web search is preferred', async () => {
     const registeredModel = {
       modelId: 'xai-model',
-    } as RegisteredAIModel;
-    const agentModelConfigService = {
+    } as RegisteredAiModel;
+    const aiModelConfigService = {
       getNativeModelTools: jest.fn().mockReturnValue({
         x_search: { type: 'provider', id: 'xai.x_search', args: {} },
       }),
-    } as Pick<AgentModelConfigService, 'getNativeModelTools'>;
+    } as Pick<AiModelConfigService, 'getNativeModelTools'>;
     const aiModelRegistryService = {
       resolveModelForAgent: jest.fn().mockResolvedValue(registeredModel),
     } as Pick<AiModelRegistryService, 'resolveModelForAgent'>;
@@ -43,7 +43,7 @@ describe('NativeModelToolProvider', () => {
     } as Pick<WebSearchService, 'shouldUseNativeSearch'>;
 
     const provider = new NativeModelToolProvider(
-      agentModelConfigService as AgentModelConfigService,
+      aiModelConfigService as AiModelConfigService,
       aiModelRegistryService as AiModelRegistryService,
       webSearchService as WebSearchService,
     );
@@ -53,7 +53,7 @@ describe('NativeModelToolProvider', () => {
     expect(tools).toEqual({
       x_search: { type: 'provider', id: 'xai.x_search', args: {} },
     });
-    expect(agentModelConfigService.getNativeModelTools).toHaveBeenCalledWith(
+    expect(aiModelConfigService.getNativeModelTools).toHaveBeenCalledWith(
       registeredModel,
       agent,
       { useProviderNativeWebSearch: false },

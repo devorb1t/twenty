@@ -9,17 +9,16 @@ jest.mock('ai', () => {
 
 import { generateText, type ToolSet } from 'ai';
 
-import { type ExceptionHandlerService } from 'src/engine/core-modules/exception-handler/exception-handler.service';
 import { type LazyToolRuntimeService } from 'src/engine/core-modules/tool-provider/services/lazy-tool-runtime.service';
 import { type ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
 import { type ToolIndexEntry } from 'src/engine/core-modules/tool-provider/types/tool-index-entry.type';
 import { type WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { AgentAsyncExecutorService } from 'src/engine/metadata-modules/ai/ai-agent-execution/services/agent-async-executor.service';
 import { type AgentEntity } from 'src/engine/metadata-modules/ai/ai-agent/entities/agent.entity';
-import { type AgentModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/agent-model-config.service';
+import { type AiModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-config.service';
 import {
   type AiModelRegistryService,
-  type RegisteredAIModel,
+  type RegisteredAiModel,
 } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { ToolCategory } from 'twenty-shared/ai';
 
@@ -56,7 +55,7 @@ describe('AgentAsyncExecutorService', () => {
       modelId: 'openai/gpt-4o',
       sdkPackage: '@ai-sdk/openai',
       model: {} as never,
-    } as RegisteredAIModel;
+    } as RegisteredAiModel;
 
     const nativeModelTools = {
       web_search: createTool('web_search'),
@@ -78,9 +77,9 @@ describe('AgentAsyncExecutorService', () => {
       resolveModelForAgent: jest.fn().mockReturnValue(registeredModel),
     } as unknown as jest.Mocked<AiModelRegistryService>;
 
-    const agentModelConfigService = {
+    const aiModelConfigService = {
       getProviderOptions: jest.fn().mockReturnValue({}),
-    } as unknown as jest.Mocked<AgentModelConfigService>;
+    } as unknown as jest.Mocked<AiModelConfigService>;
 
     const lazyToolRuntimeService = {
       buildToolRuntime: jest.fn().mockResolvedValue({
@@ -96,10 +95,6 @@ describe('AgentAsyncExecutorService', () => {
       getToolsByCategories: jest.fn().mockResolvedValue(nativeModelTools),
     } as unknown as jest.Mocked<ToolRegistryService>;
 
-    const exceptionHandlerService = {
-      captureExceptions: jest.fn(),
-    } as unknown as jest.Mocked<ExceptionHandlerService>;
-
     const roleTargetRepository = {
       findOne: jest.fn().mockResolvedValue({ roleId: 'agent-role-id' }),
     };
@@ -111,10 +106,9 @@ describe('AgentAsyncExecutorService', () => {
 
     const service = new AgentAsyncExecutorService(
       aiModelRegistryService,
-      agentModelConfigService,
+      aiModelConfigService,
       lazyToolRuntimeService,
       toolRegistry,
-      exceptionHandlerService,
       roleTargetRepository as never,
       workspaceRepository as never,
     );
@@ -165,7 +159,7 @@ describe('AgentAsyncExecutorService', () => {
       lazyToolCategories: [ToolCategory.DATABASE_CRUD, ToolCategory.ACTION],
     });
 
-    expect(agentModelConfigService.getProviderOptions).toHaveBeenCalledWith(
+    expect(aiModelConfigService.getProviderOptions).toHaveBeenCalledWith(
       registeredModel,
     );
     expect(mockedGenerateText).toHaveBeenCalledWith(
