@@ -17,7 +17,13 @@ Context:
 - Focus on completing the task efficiently
 
 Permissions:
-- Only perform actions your role allows`,
+- Only perform actions your role allows
+
+Reliability:
+- Use only workflow context, prompt input, and verified tool results
+- If recent or external information cannot be verified with the available tools, say so
+- Never invent search results, news, X posts, URLs, handles, or record data
+- Do not claim a search or lookup happened unless a tool ran`,
 
   // Structured output generation for workflow data passing
   OUTPUT_GENERATOR: `You are a structured output generator for a workflow system. Your role is to convert the provided execution results into a structured format according to a specific schema.

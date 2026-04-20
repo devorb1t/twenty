@@ -6,14 +6,14 @@ import { isDefined } from 'twenty-shared/utils';
 import { z } from 'zod';
 
 import { type GenerateDescriptorOptions } from 'src/engine/core-modules/tool-provider/interfaces/generate-descriptor-options.type';
-import { type ToolProvider } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider.interface';
 import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
+import { type ToolProvider } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider.interface';
 
+import { CodeInterpreterService } from 'src/engine/core-modules/code-interpreter/code-interpreter.service';
 import { type StaticToolHandler } from 'src/engine/core-modules/tool-provider/interfaces/static-tool-handler.interface';
 import { ToolExecutorService } from 'src/engine/core-modules/tool-provider/services/tool-executor.service';
 import { type ToolDescriptor } from 'src/engine/core-modules/tool-provider/types/tool-descriptor.type';
 import { type ToolIndexEntry } from 'src/engine/core-modules/tool-provider/types/tool-index-entry.type';
-import { CodeInterpreterService } from 'src/engine/core-modules/code-interpreter/code-interpreter.service';
 import { CodeInterpreterTool } from 'src/engine/core-modules/tool/tools/code-interpreter-tool/code-interpreter-tool';
 import { DraftEmailTool } from 'src/engine/core-modules/tool/tools/email-tool/draft-email-tool';
 import { SendEmailTool } from 'src/engine/core-modules/tool/tools/email-tool/send-email-tool';
@@ -81,6 +81,8 @@ export class ActionToolProvider implements ToolProvider {
   ): Promise<(ToolIndexEntry | ToolDescriptor)[]> {
     const includeSchemas = options?.includeSchemas ?? true;
     const descriptors: (ToolIndexEntry | ToolDescriptor)[] = [];
+    const isWorkflowAgentExecution =
+      context.executionScope === 'workflow_agent';
 
     const hasHttpPermission = await this.permissionsService.hasToolPermission(
       context.rolePermissionConfig,
@@ -113,21 +115,23 @@ export class ActionToolProvider implements ToolProvider {
       );
     }
 
-    descriptors.push(
-      this.buildDescriptor(
-        'search_help_center',
-        this.searchHelpCenterTool,
-        includeSchemas,
-      ),
-    );
+    if (!isWorkflowAgentExecution) {
+      descriptors.push(
+        this.buildDescriptor(
+          'search_help_center',
+          this.searchHelpCenterTool,
+          includeSchemas,
+        ),
+      );
 
-    descriptors.push(
-      this.buildDescriptor(
-        'navigate_app',
-        this.navigateAppTool,
-        includeSchemas,
-      ),
-    );
+      descriptors.push(
+        this.buildDescriptor(
+          'navigate_app',
+          this.navigateAppTool,
+          includeSchemas,
+        ),
+      );
+    }
 
     const agent = context.agent;
     const isCodeInterpreterEnabledForContext = !isDefined(agent)
