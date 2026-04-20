@@ -1,5 +1,6 @@
 import { theme } from '@/theme';
 import { styled } from '@linaria/react';
+import type { ReactNode } from 'react';
 import { ButtonShape } from './ButtonShape';
 
 export type ButtonSize = 'regular' | 'small';
@@ -69,9 +70,22 @@ export const buttonBaseStyles = `
   }
 `;
 
+const Content = styled.span`
+  align-items: center;
+  display: inline-flex;
+  gap: ${theme.spacing(2)};
+  position: relative;
+  z-index: 1;
+`;
+
+const IconSlot = styled.span`
+  color: var(--button-label-color);
+  display: inline-flex;
+  transition: color 220ms ease;
+`;
+
 const Label = styled.span`
   color: var(--button-label-color);
-  position: relative;
   transition: color 220ms ease;
   z-index: 2;
 `;
@@ -79,11 +93,14 @@ const Label = styled.span`
 export type BaseButtonProps = {
   color: 'primary' | 'secondary';
   label: string;
+  leadingIcon?: ReactNode;
   size?: ButtonSize;
   variant: 'contained' | 'outlined';
 };
 
 const secondaryContainedHoverFillColor = theme.colors.secondary.background.hover;
+const primaryOutlinedHoverFillColor = theme.colors.primary.background[100];
+const primaryOutlinedHoverFillOpacity = 0.05;
 const secondaryOutlinedHoverFillColor = theme.colors.primary.text[100];
 const secondaryOutlinedHoverFillOpacity = 0.05;
 
@@ -104,6 +121,7 @@ const HoverFill = styled.span`
 export function BaseButton({
   color,
   label,
+  leadingIcon,
   size = 'regular',
   variant,
 }: BaseButtonProps) {
@@ -125,8 +143,8 @@ export function BaseButton({
       break;
     case 'outlined.primary':
       fillColor = 'none';
-      hoverFillColor = theme.colors.primary.background[100];
-      hoverFillOpacity = 0.05;
+      hoverFillColor = primaryOutlinedHoverFillColor;
+      hoverFillOpacity = primaryOutlinedHoverFillOpacity;
       strokeColor = theme.colors.primary.background[100];
       break;
     case 'outlined.secondary':
@@ -152,7 +170,10 @@ export function BaseButton({
       <HoverFill data-slot="button-hover-fill" style={{ opacity: hoverFillOpacity }}>
         <ButtonShape fillColor={hoverFillColor} height={height} strokeColor="none" />
       </HoverFill>
-      <Label data-slot="button-label">{label}</Label>
+      <Content>
+        {leadingIcon ? <IconSlot>{leadingIcon}</IconSlot> : null}
+        <Label data-slot="button-label">{label}</Label>
+      </Content>
     </>
   );
 }
