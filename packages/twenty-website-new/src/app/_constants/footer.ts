@@ -29,7 +29,7 @@ export const FOOTER_DATA: FooterDataType = {
         },
         {
           label: 'User Guide',
-          href: 'https://docs.twenty.com/user-guide/introduction',
+          href: 'https://docs.twenty.com/getting-started/introduction',
           external: true,
         },
         { label: 'Release Notes', href: '/release-notes', external: false },
