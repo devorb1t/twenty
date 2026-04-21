@@ -28,7 +28,7 @@ import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/use
 import { useQuery } from '@apollo/client/react';
 import { t } from '@lingui/core/macro';
 import { useStore } from 'jotai';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { SidePanelPages } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { IconApps, IconList } from 'twenty-ui/display';
@@ -115,7 +115,11 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
   }, [existingWidget]);
 
   const removeExistingWidgetIfReplacing = useCallback(() => {
-    if (!isReplaceMode || !isDefined(pageLayoutEditingWidgetId)) {
+    if (
+      !isReplaceMode ||
+      !isDefined(pageLayoutEditingWidgetId) ||
+      !isDefined(tabId)
+    ) {
       return;
     }
 
@@ -145,6 +149,10 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
   );
 
   const handleCreateFieldsWidget = useCallback(() => {
+    if (!isDefined(tabId)) {
+      return;
+    }
+
     const replacePositionIndex = getExistingWidgetPositionIndex();
 
     const viewId = uuidv4();
@@ -191,6 +199,10 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
   ]);
 
   const handleCreateFieldWidget = useCallback(() => {
+    if (!isDefined(tabId)) {
+      return;
+    }
+
     const replacePositionIndex = getExistingWidgetPositionIndex();
     removeExistingWidgetIfReplacing();
 
@@ -264,6 +276,10 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
 
   const handleCreateFrontComponentWidget = useCallback(
     (frontComponent: FrontComponent) => {
+      if (!isDefined(tabId)) {
+        return;
+      }
+
       const replacePositionIndex = getExistingWidgetPositionIndex();
       removeExistingWidgetIfReplacing();
 
@@ -325,6 +341,16 @@ export const SidePanelPageLayoutRecordPageWidgetTypeSelect = () => {
       tabId,
     ],
   );
+
+  useEffect(() => {
+    if (!isDefined(tabId)) {
+      closeSidePanelMenu();
+    }
+  }, [tabId, closeSidePanelMenu]);
+
+  if (!isDefined(tabId)) {
+    return null;
+  }
 
   const selectableItemIds = [
     'fields',

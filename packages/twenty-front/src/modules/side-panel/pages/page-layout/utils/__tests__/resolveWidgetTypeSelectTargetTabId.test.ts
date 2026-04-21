@@ -33,16 +33,16 @@ describe('resolveWidgetTypeSelectTargetTabId', () => {
     expect(result).toBe('tab-2');
   });
 
-  it('should throw when the editing widget is not found in any tab', () => {
+  it('should return null when the editing widget is not found in any tab', () => {
     const tabs = [makeTab('tab-1', ['widget-a'])];
 
-    expect(() =>
-      resolveWidgetTypeSelectTargetTabId({
-        pageLayoutEditingWidgetId: 'non-existent',
-        tabs,
-        widgetCreationTargetTabId: null,
-      }),
-    ).toThrow('Cannot find tab containing editing widget non-existent');
+    const result = resolveWidgetTypeSelectTargetTabId({
+      pageLayoutEditingWidgetId: 'non-existent',
+      tabs,
+      widgetCreationTargetTabId: null,
+    });
+
+    expect(result).toBeNull();
   });
 
   it('should return widgetCreationTargetTabId when no editing widget is set', () => {
@@ -57,17 +57,15 @@ describe('resolveWidgetTypeSelectTargetTabId', () => {
     expect(result).toBe('tab-1');
   });
 
-  it('should throw when both pageLayoutEditingWidgetId and widgetCreationTargetTabId are null', () => {
+  it('should return null when both pageLayoutEditingWidgetId and widgetCreationTargetTabId are null', () => {
     const tabs = [makeTab('tab-1')];
 
-    expect(() =>
-      resolveWidgetTypeSelectTargetTabId({
-        pageLayoutEditingWidgetId: null,
-        tabs,
-        widgetCreationTargetTabId: null,
-      }),
-    ).toThrow(
-      'widgetCreationTargetTabId must be set when navigating to widget type select without an editing widget',
-    );
+    const result = resolveWidgetTypeSelectTargetTabId({
+      pageLayoutEditingWidgetId: null,
+      tabs,
+      widgetCreationTargetTabId: null,
+    });
+
+    expect(result).toBeNull();
   });
 });

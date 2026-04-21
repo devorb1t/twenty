@@ -9,25 +9,21 @@ export const resolveWidgetTypeSelectTargetTabId = ({
   pageLayoutEditingWidgetId: string | null;
   tabs: PageLayoutTab[];
   widgetCreationTargetTabId: string | null;
-}): string => {
+}): string | null => {
   if (isDefined(pageLayoutEditingWidgetId)) {
     const editingWidgetTab = tabs.find((tab) =>
       tab.widgets.some((widget) => widget.id === pageLayoutEditingWidgetId),
     );
 
     if (!isDefined(editingWidgetTab)) {
-      throw new Error(
-        `Cannot find tab containing editing widget ${pageLayoutEditingWidgetId}`,
-      );
+      return null;
     }
 
     return editingWidgetTab.id;
   }
 
   if (!isDefined(widgetCreationTargetTabId)) {
-    throw new Error(
-      'widgetCreationTargetTabId must be set when navigating to widget type select without an editing widget',
-    );
+    return null;
   }
 
   return widgetCreationTargetTabId;
