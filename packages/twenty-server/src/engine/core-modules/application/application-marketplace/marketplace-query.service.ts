@@ -88,12 +88,31 @@ export class MarketplaceQueryService {
       name: app?.displayName ?? registration.name,
       description: app?.description ?? '',
       icon: app?.icon ?? 'IconApps',
-      author: app?.author ?? 'Unknown',
+      author: this.resolveAuthorString(app?.author),
       category: app?.category ?? '',
       logo: app?.logoUrl ?? undefined,
       sourcePackage: registration.sourcePackage ?? undefined,
       isFeatured: registration.isFeatured,
     };
+  }
+
+  // Manifest author may be a plain string or an npm-style object
+  // (e.g. { name: "foo", url: "…" }) when fetched from third-party CDN manifests.
+  private resolveAuthorString(author: unknown): string {
+    if (typeof author === 'string') {
+      return author;
+    }
+
+    if (
+      typeof author === 'object' &&
+      author !== null &&
+      'name' in author &&
+      typeof (author as Record<string, unknown>).name === 'string'
+    ) {
+      return (author as Record<string, unknown>).name as string;
+    }
+
+    return 'Unknown';
   }
 
   private toMarketplaceAppDetailDTO(

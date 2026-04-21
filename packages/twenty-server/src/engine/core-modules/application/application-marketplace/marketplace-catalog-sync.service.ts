@@ -24,6 +24,24 @@ export class MarketplaceCatalogSyncService {
     this.logger.log('Marketplace catalog sync completed');
   }
 
+  // CDN manifest author may be an npm-style object ({ name, url }) instead of a string.
+  private normalizeAuthorField(author: unknown): string | undefined {
+    if (typeof author === 'string') {
+      return author;
+    }
+
+    if (
+      typeof author === 'object' &&
+      author !== null &&
+      'name' in author &&
+      typeof (author as Record<string, unknown>).name === 'string'
+    ) {
+      return (author as Record<string, unknown>).name as string;
+    }
+
+    return undefined;
+  }
+
   private async syncRegistryApps(): Promise<void> {
     const packages = await this.marketplaceService.fetchAppsFromRegistry();
 
@@ -58,15 +76,19 @@ export class MarketplaceCatalogSyncService {
             pkg.version,
           ));
 
-        const manifest = aboutDescription
-          ? {
-              ...fetchedManifest,
-              application: {
-                ...fetchedManifest.application,
-                aboutDescription,
-              },
-            }
-          : fetchedManifest;
+        const normalizedAuthor =
+          this.normalizeAuthorField(fetchedManifest.application.author);
+
+        const manifest = {
+          ...fetchedManifest,
+          application: {
+            ...fetchedManifest.application,
+            ...(aboutDescription ? { aboutDescription } : {}),
+            ...(normalizedAuthor !== fetchedManifest.application.author
+              ? { author: normalizedAuthor }
+              : {}),
+          },
+        };
 
         const cdnBaseUrl = this.twentyConfigService.get('APP_REGISTRY_CDN_URL');
 
