@@ -16,6 +16,7 @@ setup_and_migrate_db() {
         yarn database:init:prod
     fi
 
+    yarn database:migrate:prod --force --include-slow
     yarn command:prod cache:flush
     yarn command:prod upgrade
     yarn command:prod cache:flush
