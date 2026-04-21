@@ -1,10 +1,7 @@
 import { currentWorkspaceState } from '@/auth/states/currentWorkspaceState';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { useContext } from 'react';
-import {
-  TWENTY_STANDARD_APPLICATION_NAME,
-  TWENTY_STANDARD_APPLICATION_UNIVERSAL_IDENTIFIER,
-} from 'twenty-shared/application';
+import { TWENTY_STANDARD_APPLICATION_UNIVERSAL_IDENTIFIER } from 'twenty-shared/application';
 import { isDefined } from 'twenty-shared/utils';
 import { ThemeContext } from 'twenty-ui/theme-constants';
 
@@ -20,6 +17,18 @@ type UseApplicationAvatarColorsArgs = {
   universalIdentifier?: string | null;
 };
 
+const STANDARD_APPLICATION_AVATAR_COLORS: ApplicationAvatarColors = {
+  // The standard application avatar follows the Figma `Colors/Blue` palette,
+  // which is Radix's pure blue and not Twenty's `theme.color.blue*` tokens
+  // (those map to the indigo palette).
+  // oxlint-disable-next-line twenty/no-hardcoded-colors
+  backgroundColor: '#CEE7FE',
+  // oxlint-disable-next-line twenty/no-hardcoded-colors
+  borderColor: '#B7D9F8',
+  // oxlint-disable-next-line twenty/no-hardcoded-colors
+  color: '#113264',
+};
+
 export const useApplicationAvatarColors = (
   application: UseApplicationAvatarColorsArgs | null | undefined,
 ): ApplicationAvatarColors | undefined => {
@@ -31,20 +40,16 @@ export const useApplicationAvatarColors = (
   }
 
   const isStandard =
+    isDefined(application.universalIdentifier) &&
     application.universalIdentifier ===
-      TWENTY_STANDARD_APPLICATION_UNIVERSAL_IDENTIFIER ||
-    application.name === TWENTY_STANDARD_APPLICATION_NAME;
+      TWENTY_STANDARD_APPLICATION_UNIVERSAL_IDENTIFIER;
 
   const isCustom =
     isDefined(currentWorkspace?.workspaceCustomApplication?.id) &&
     currentWorkspace.workspaceCustomApplication.id === application.id;
 
   if (isStandard) {
-    return {
-      backgroundColor: theme.color.blue5,
-      borderColor: theme.color.blue6,
-      color: theme.color.blue12,
-    };
+    return STANDARD_APPLICATION_AVATAR_COLORS;
   }
 
   if (isCustom) {
