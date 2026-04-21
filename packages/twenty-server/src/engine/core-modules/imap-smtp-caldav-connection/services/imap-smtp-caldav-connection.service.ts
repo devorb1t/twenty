@@ -134,10 +134,24 @@ export class ImapSmtpCaldavService {
       await client.listCalendars();
       await client.validateSyncCollectionSupport();
     } catch (error) {
-      this.logger.error(
-        `CALDAV connection failed: ${error.message}`,
-        error.stack,
-      );
+      const isUserError =
+        error.message?.includes('CALDAV_SYNC_COLLECTION_NOT_SUPPORTED') ||
+        error.message === 'Invalid credentials' ||
+        error.message === 'cannot find homeUrl' ||
+        error.message === 'cannot find calendarUserAddresses' ||
+        error.message === 'No calendar with event support found' ||
+        error.code === 'FailedToOpenSocket';
+
+      if (isUserError) {
+        this.logger.warn(
+          `CALDAV connection test failed (user/server issue): ${error.message}`,
+        );
+      } else {
+        this.logger.error(
+          `CALDAV connection failed: ${error.message}`,
+          error.stack,
+        );
+      }
 
       if (error.message?.includes('CALDAV_SYNC_COLLECTION_NOT_SUPPORTED')) {
         throw new UserInputError(`CALDAV connection failed: ${error.message}`, {
@@ -151,8 +165,24 @@ export class ImapSmtpCaldavService {
         });
       }
 
+      if (error.message === 'Invalid credentials') {
+        throw new UserInputError(`CALDAV connection failed: ${error.message}`, {
+          userFriendlyMessage: msg`Invalid CALDAV credentials. Please check your username and password.`,
+        });
+      }
+
+      if (
+        error.message === 'cannot find homeUrl' ||
+        error.message === 'cannot find calendarUserAddresses' ||
+        error.message === 'No calendar with event support found'
+      ) {
+        throw new UserInputError(`CALDAV connection failed: ${error.message}`, {
+          userFriendlyMessage: msg`We couldn't discover calendars on your CalDAV server. Please verify your server URL is correct and that your server supports CalDAV calendar discovery.`,
+        });
+      }
+
       throw new UserInputError(`CALDAV connection failed: ${error.message}`, {
-        userFriendlyMessage: msg`Invalid CALDAV credentials. Please check your username and password.`,
+        userFriendlyMessage: msg`We encountered an issue connecting to your CalDAV server. Please check your settings and try again.`,
       });
     }
 
