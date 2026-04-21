@@ -89,19 +89,19 @@ export class ApplicationDTO {
   @Field(() => RoleDTO, { nullable: true })
   defaultLogicFunctionRole?: RoleDTO;
 
-  @Field(() => [AgentDTO])
+  @Field(() => [AgentDTO], { nullable: true })
   agents?: AgentDTO[];
 
-  @Field(() => [FrontComponentDTO])
+  @Field(() => [FrontComponentDTO], { nullable: true })
   frontComponents?: FrontComponentDTO[];
 
-  @Field(() => [LogicFunctionDTO])
+  @Field(() => [LogicFunctionDTO], { nullable: true })
   logicFunctions?: LogicFunctionDTO[];
 
-  @Field(() => [ObjectMetadataDTO])
+  @Field(() => [ObjectMetadataDTO], { nullable: true })
   objects?: ObjectMetadataDTO[];
 
-  @Field(() => [ApplicationVariableEntityDTO])
+  @Field(() => [ApplicationVariableEntityDTO], { nullable: true })
   applicationVariables?: ApplicationVariableEntityDTO[];
 
   @IsOptional()
