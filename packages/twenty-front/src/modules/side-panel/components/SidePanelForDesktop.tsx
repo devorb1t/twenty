@@ -18,7 +18,7 @@ import { useAtomState } from '@/ui/utilities/state/jotai/hooks/useAtomState';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomState';
 import { styled } from '@linaria/react';
-import { useCallback, useState } from 'react';
+import { type TransitionEvent, useCallback, useState } from 'react';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
 const StyledSidePanelWrapper = styled.div<{
@@ -81,7 +81,16 @@ export const SidePanelForDesktop = () => {
 
   const shouldShowContent = isSidePanelOpened || shouldRenderContent;
 
-  const handleTransitionEnd = () => {
+  const handleTransitionEnd = (
+    event: TransitionEvent<HTMLDivElement>,
+  ) => {
+    if (
+      event.target !== event.currentTarget ||
+      event.propertyName !== 'width'
+    ) {
+      return;
+    }
+
     if (isSidePanelOpened) {
       // Open animation completed - ensure content persists for close animation
       setShouldRenderContent(true);
