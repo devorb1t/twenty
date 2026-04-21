@@ -135,9 +135,18 @@ const assertIsSubscription = (
     );
   }
 
-  if (subscription.billingSubscriptionItems.length !== 2) {
+  const hasLicensedItem = subscription.billingSubscriptionItems.some(
+    (item) =>
+      item.billingProduct?.metadata.priceUsageBased === BillingUsageType.LICENSED,
+  );
+  const hasMeteredItem = subscription.billingSubscriptionItems.some(
+    (item) =>
+      item.billingProduct?.metadata.priceUsageBased === BillingUsageType.METERED,
+  );
+
+  if (!hasLicensedItem || !hasMeteredItem) {
     throw new BillingException(
-      'Subscription must have exactly two subscription items. Check that stripe and database are in sync',
+      'Subscription must have at least one licensed and one metered subscription item. Check that stripe and database are in sync',
       BillingExceptionCode.BILLING_SUBSCRIPTION_INVALID,
       {
         userFriendlyMessage: msg`Your billing subscription is corrupted. Please contact support.`,

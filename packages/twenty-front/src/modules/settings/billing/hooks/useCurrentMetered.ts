@@ -30,9 +30,6 @@ export const useCurrentMetered = () => {
   const items =
     currentWorkspace.currentBillingSubscription?.billingSubscriptionItems;
   if (!items) throw new Error('billingSubscriptionItems is undefined');
-  if (items.length !== 2) {
-    throw new Error('billingSubscriptionItems must contain 2 items.');
-  }
 
   const currentMeteredBillingSubscriptionItem = findOrThrow(
     items,
