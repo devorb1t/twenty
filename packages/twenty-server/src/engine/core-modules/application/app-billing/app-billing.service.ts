@@ -34,7 +34,7 @@ export class AppBillingService {
       USAGE_RECORDED,
       [
         {
-          resourceType: UsageResourceType.AI,
+          resourceType: UsageResourceType.APP,
           operationType: charge.operationType,
           creditsUsedMicro: charge.creditsUsedMicro,
           quantity: charge.quantity,

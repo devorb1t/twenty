@@ -141,12 +141,21 @@ export class PreInstalledAppsService implements OnApplicationBootstrap {
       return;
     }
 
-    const registrations = await this.applicationRegistrationRepository.find({
-      where: packageNames.map((sourcePackage) => ({
-        sourcePackage,
-        sourceType: ApplicationRegistrationSourceType.NPM,
-      })),
-    });
+    let registrations = await this.findRegistrationsForPackages(packageNames);
+
+    // If a registration is missing, bootstrap may have failed (CDN outage,
+    // cold-start race with workspace creation). Retry resolution once so
+    // new workspaces aren't stuck missing apps until the admin runs the
+    // backfill command.
+    if (registrations.length < packageNames.length) {
+      this.logger.log(
+        `Missing ${packageNames.length - registrations.length} pre-installed app registration(s) on workspace ${workspaceId}, retrying resolution`,
+      );
+
+      await this.ensureRegistrationsExist();
+
+      registrations = await this.findRegistrationsForPackages(packageNames);
+    }
 
     await Promise.allSettled(
       registrations.map(async (registration) => {
@@ -193,13 +202,24 @@ export class PreInstalledAppsService implements OnApplicationBootstrap {
         continue;
       }
 
-      const encryptedValue = variable.isSecret
-        ? this.secretEncryptionService.encrypt(envValue)
-        : envValue;
-
+      // ApplicationRegistrationVariable.encryptedValue is always stored
+      // encrypted regardless of `isSecret` (matches the write path in
+      // ApplicationRegistrationVariableService). isSecret governs display
+      // only, not storage.
       await this.applicationRegistrationVariableRepository.update(variable.id, {
-        encryptedValue,
+        encryptedValue: this.secretEncryptionService.encrypt(envValue),
       });
     }
+  }
+
+  private async findRegistrationsForPackages(
+    packageNames: string[],
+  ): Promise<ApplicationRegistrationEntity[]> {
+    return this.applicationRegistrationRepository.find({
+      where: packageNames.map((sourcePackage) => ({
+        sourcePackage,
+        sourceType: ApplicationRegistrationSourceType.NPM,
+      })),
+    });
   }
 }

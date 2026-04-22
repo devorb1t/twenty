@@ -270,10 +270,15 @@ export class LogicFunctionExecutorService {
 
     const envMap: Record<string, string> = {};
 
+    // ApplicationRegistrationVariable.encryptedValue is always written
+    // encrypted (ApplicationRegistrationVariableService.createVariable and
+    // .updateVariable call encrypt unconditionally), independent of
+    // `isSecret`. `isSecret` is display metadata — the storage contract is
+    // not conditional, so decryption isn't either.
     for (const variable of serverVariables) {
-      envMap[variable.key] = variable.isSecret
-        ? this.secretEncryptionService.decrypt(variable.encryptedValue)
-        : variable.encryptedValue;
+      envMap[variable.key] = this.secretEncryptionService.decrypt(
+        variable.encryptedValue,
+      );
     }
 
     return envMap;

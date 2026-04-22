@@ -1,7 +1,7 @@
 import {
-  BadRequestException,
   Body,
   Controller,
+  ForbiddenException,
   Post,
   Req,
   UseGuards,
@@ -31,8 +31,11 @@ export class AppBillingController {
   ): Promise<{ success: true }> {
     const authContext = request.user as AuthContext | undefined;
 
+    // The JWT is valid (AuthGuard passed) but didn't resolve to an
+    // application context — e.g. a user access token. Reject with 403:
+    // the caller is authenticated, just not authorized for this endpoint.
     if (!authContext?.application || !authContext.workspace) {
-      throw new BadRequestException(
+      throw new ForbiddenException(
         'App billing endpoint requires an APPLICATION_ACCESS token. The caller must be a logic function running inside an installed application.',
       );
     }
