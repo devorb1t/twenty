@@ -132,4 +132,37 @@ describe('fromViewManifestToUniversalFlatView', () => {
       'field-uuid-date',
     );
   });
+
+  it('should preserve shouldHideEmptyGroups and anyFieldFilterValue from the manifest', () => {
+    const result = fromViewManifestToUniversalFlatView({
+      viewManifest: {
+        universalIdentifier: 'view-uuid-6',
+        name: 'Kanban Board',
+        objectUniversalIdentifier: 'object-uuid-1',
+        type: ViewType.KANBAN,
+        shouldHideEmptyGroups: true,
+        anyFieldFilterValue: 'search-query',
+      },
+      applicationUniversalIdentifier,
+      now,
+    });
+
+    expect(result.shouldHideEmptyGroups).toBe(true);
+    expect(result.anyFieldFilterValue).toBe('search-query');
+  });
+
+  it('should default shouldHideEmptyGroups to false and anyFieldFilterValue to null when omitted', () => {
+    const result = fromViewManifestToUniversalFlatView({
+      viewManifest: {
+        universalIdentifier: 'view-uuid-7',
+        name: 'All Records',
+        objectUniversalIdentifier: 'object-uuid-1',
+      },
+      applicationUniversalIdentifier,
+      now,
+    });
+
+    expect(result.shouldHideEmptyGroups).toBe(false);
+    expect(result.anyFieldFilterValue).toBeNull();
+  });
 });
