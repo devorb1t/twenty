@@ -6,6 +6,8 @@ import {
 import { Font, pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 
+import { BLOCK_SCHEMA } from '@/blocknote-editor/blocks/Schema';
+
 const registerInterFonts = (() => {
   let registrationPromise: Promise<void> | null = null;
 
@@ -43,6 +45,7 @@ export const exportBlockNoteEditorToPdf = async (
 
   const editor = BlockNoteEditor.create({
     initialContent: parsedBody,
+    schema: BLOCK_SCHEMA,
   });
 
   const exporter = new PDFExporter(editor.schema, pdfDefaultSchemaMappings, {
