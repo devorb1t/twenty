@@ -1908,6 +1908,30 @@ type DeletedWorkspaceMember {
   userWorkspaceId: UUID
 }
 
+type MarketplaceApp {
+  id: String!
+  name: String!
+  description: String!
+  icon: String!
+  author: String!
+  category: String!
+  logo: String
+  sourcePackage: String
+  isFeatured: Boolean!
+}
+
+type MarketplaceAppDetail {
+  universalIdentifier: String!
+  id: String!
+  name: String!
+  sourceType: ApplicationRegistrationSourceType!
+  sourcePackage: String
+  latestAvailableVersion: String
+  isListed: Boolean!
+  isFeatured: Boolean!
+  manifest: JSON
+}
+
 type Relation {
   type: RelationType!
   sourceObjectMetadata: Object!
@@ -2195,30 +2219,6 @@ type File {
   path: String!
   size: Float!
   createdAt: DateTime!
-}
-
-type MarketplaceApp {
-  id: String!
-  name: String!
-  description: String!
-  icon: String!
-  author: String!
-  category: String!
-  logo: String
-  sourcePackage: String
-  isFeatured: Boolean!
-}
-
-type MarketplaceAppDetail {
-  universalIdentifier: String!
-  id: String!
-  name: String!
-  sourceType: ApplicationRegistrationSourceType!
-  sourcePackage: String
-  latestAvailableVersion: String
-  isListed: Boolean!
-  isFeatured: Boolean!
-  manifest: JSON
 }
 
 type PublicDomain {
@@ -3008,10 +3008,6 @@ type Query {
     sorting: [AgentChatThreadSort!]! = [{field: updatedAt, direction: DESC}]
   ): AgentChatThreadConnection!
   agentTurns(agentId: UUID!): [AgentTurn!]!
-  eventLogs(input: EventLogQueryInput!): EventLogQueryResult!
-  pieChartData(input: PieChartDataInput!): PieChartData!
-  lineChartData(input: LineChartDataInput!): LineChartData!
-  barChartData(input: BarChartDataInput!): BarChartData!
   checkUserExists(email: String!, captchaToken: String): CheckUserExist!
   checkWorkspaceInviteHashIsValid(inviteHash: String!): WorkspaceInviteHashValid!
   findWorkspaceFromInviteHash(inviteHash: String!): Workspace!
@@ -3027,7 +3023,15 @@ type Query {
   currentWorkspace: Workspace!
   getPublicWorkspaceDataByDomain(origin: String): PublicWorkspaceData!
   getPublicWorkspaceDataById(id: UUID!): PublicWorkspaceDataSummary!
+  findManyMarketplaceApps: [MarketplaceApp!]!
+  findMarketplaceAppDetail(universalIdentifier: String!): MarketplaceAppDetail!
+  findManyApplications: [Application!]!
+  findOneApplication(id: UUID, universalIdentifier: UUID): Application!
   getSSOIdentityProviders: [FindAvailableSSOIDP!]!
+  eventLogs(input: EventLogQueryInput!): EventLogQueryResult!
+  pieChartData(input: PieChartDataInput!): PieChartData!
+  lineChartData(input: LineChartDataInput!): LineChartData!
+  barChartData(input: BarChartDataInput!): BarChartData!
   getConnectedImapSmtpCaldavAccount(id: UUID!): ConnectedImapSmtpCaldavAccount!
   getAutoCompleteAddress(address: String!, token: String!, country: String, isFieldCity: Boolean): [AutocompleteResult!]!
   getAddressDetails(placeId: String!, token: String!): PlaceDetailsResult!
@@ -3035,10 +3039,6 @@ type Query {
   getPostgresCredentials: PostgresCredentials
   findManyPublicDomains: [PublicDomain!]!
   getEmailingDomains: [EmailingDomain!]!
-  findManyMarketplaceApps: [MarketplaceApp!]!
-  findMarketplaceAppDetail(universalIdentifier: String!): MarketplaceAppDetail!
-  findManyApplications: [Application!]!
-  findOneApplication(id: UUID, universalIdentifier: UUID): Application!
 }
 
 input GetApiKeyInput {
@@ -3297,7 +3297,6 @@ type Mutation {
   deactivateSkill(id: UUID!): Skill!
   evaluateAgentTurn(turnId: UUID!): AgentTurnEvaluation!
   runEvaluationInput(agentId: UUID!, input: String!): AgentTurn!
-  duplicateDashboard(id: UUID!): DuplicatedDashboard!
   getAuthorizationUrlForSSO(input: GetAuthorizationUrlForSSOInput!): GetAuthorizationUrlForSSO!
   getLoginTokenFromCredentials(email: String!, password: String!, captchaToken: String, locale: String, verifyEmailRedirectPath: String, origin: String!): LoginToken!
   signIn(email: String!, password: String!, captchaToken: String, locale: String, verifyEmailRedirectPath: String): AvailableWorkspacesAndAccessTokens!
@@ -3336,10 +3335,17 @@ type Mutation {
   updateWorkspace(data: UpdateWorkspaceInput!): Workspace!
   deleteCurrentWorkspace: Workspace!
   checkCustomDomainValidRecords: DomainValidRecords
+  installMarketplaceApp(universalIdentifier: String!, version: String): Boolean!
+  syncMarketplaceCatalog: Boolean!
+  installApplication(appRegistrationId: String!, version: String): Boolean!
+  runWorkspaceMigration(workspaceMigration: WorkspaceMigrationInput!): Boolean!
+  uninstallApplication(universalIdentifier: String!): Boolean!
+  updateOneApplicationVariable(key: String!, value: String!, applicationId: UUID!): Boolean!
   createOIDCIdentityProvider(input: SetupOIDCSsoInput!): SetupSso!
   createSAMLIdentityProvider(input: SetupSAMLSsoInput!): SetupSso!
   deleteSSOIdentityProvider(input: DeleteSsoInput!): DeleteSso!
   editSSOIdentityProvider(input: EditSsoInput!): EditSso!
+  duplicateDashboard(id: UUID!): DuplicatedDashboard!
   impersonate(userId: UUID!, workspaceId: UUID!): Impersonate!
   sendEmail(input: SendEmailInput!): SendEmailOutput!
   startChannelSync(connectedAccountId: UUID!): ChannelSyncSuccess!
@@ -3354,12 +3360,6 @@ type Mutation {
   deleteEmailingDomain(id: String!): Boolean!
   verifyEmailingDomain(id: String!): EmailingDomain!
   createOneAppToken(input: CreateOneAppTokenInput!): AppToken!
-  installMarketplaceApp(universalIdentifier: String!, version: String): Boolean!
-  syncMarketplaceCatalog: Boolean!
-  installApplication(appRegistrationId: String!, version: String): Boolean!
-  runWorkspaceMigration(workspaceMigration: WorkspaceMigrationInput!): Boolean!
-  uninstallApplication(universalIdentifier: String!): Boolean!
-  updateOneApplicationVariable(key: String!, value: String!, applicationId: UUID!): Boolean!
   createDevelopmentApplication(universalIdentifier: String!, name: String!): DevelopmentApplication!
   generateApplicationToken(applicationId: UUID!): ApplicationTokenPair!
   syncApplication(manifest: JSON!): WorkspaceMigration!
@@ -4285,6 +4285,22 @@ input UpdateWorkspaceInput {
   useRecommendedModels: Boolean
 }
 
+input WorkspaceMigrationInput {
+  actions: [WorkspaceMigrationDeleteActionInput!]!
+}
+
+input WorkspaceMigrationDeleteActionInput {
+  type: WorkspaceMigrationActionType!
+  metadataName: AllMetadataName!
+  universalIdentifier: String!
+}
+
+enum WorkspaceMigrationActionType {
+  delete
+  create
+  update
+}
+
 input SetupOIDCSsoInput {
   name: String!
   issuer: String!
@@ -4352,22 +4368,6 @@ input CreateOneAppTokenInput {
 
 input CreateAppTokenInput {
   expiresAt: DateTime!
-}
-
-input WorkspaceMigrationInput {
-  actions: [WorkspaceMigrationDeleteActionInput!]!
-}
-
-input WorkspaceMigrationDeleteActionInput {
-  type: WorkspaceMigrationActionType!
-  metadataName: AllMetadataName!
-  universalIdentifier: String!
-}
-
-enum WorkspaceMigrationActionType {
-  delete
-  create
-  update
 }
 
 enum FileFolder {
