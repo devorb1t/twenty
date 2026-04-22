@@ -12,7 +12,7 @@ export default defineApplication({
   serverVariables: {
     EXA_API_KEY: {
       description:
-        'Exa API key. Server admins can set this via the EXA_API_KEY env var, which is auto-seeded into this application registration at server bootstrap.',
+        'Exa API key. Set by the server admin on this registration after installation; the value is injected into every logic function execution.',
       isSecret: true,
       isRequired: true,
     },

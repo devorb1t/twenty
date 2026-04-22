@@ -4,7 +4,6 @@ import { plainToClass } from 'class-transformer';
 import {
   IsDefined,
   IsOptional,
-  IsString,
   IsUrl,
   ValidateIf,
   type ValidationError,
@@ -13,7 +12,6 @@ import {
 import { isDefined } from 'twenty-shared/utils';
 import { type LoggerOptions } from 'typeorm/logger/LoggerOptions';
 
-import { parsePreInstalledApps } from 'src/engine/core-modules/application/pre-installed-apps/utils/parse-pre-installed-apps.util';
 import { LogicFunctionDriverType } from 'src/engine/core-modules/logic-function/logic-function-drivers/interfaces/logic-function-driver.interface';
 import { type AwsRegion } from 'src/engine/core-modules/twenty-config/interfaces/aws-region.interface';
 import { NodeEnvironment } from 'src/engine/core-modules/twenty-config/interfaces/node-environment.interface';
@@ -675,19 +673,6 @@ export class ConfigVariables {
   @IsOptional()
   @CastToPositiveNumber()
   CODE_INTERPRETER_TIMEOUT_MS = 300_000;
-
-  @ConfigVariablesMetadata({
-    group: ConfigVariablesGroup.LLM,
-    description:
-      'Exa API key. Seeded into the @twenty-apps/exa application registration as a server-level variable at bootstrap, so logic function handlers can read it from their execution env. Required only when the Exa app is listed in PRE_INSTALLED_APPS.',
-    type: ConfigVariableType.STRING,
-    isSensitive: true,
-  })
-  @ValidateIf((env) =>
-    parsePreInstalledApps(env.PRE_INSTALLED_APPS).includes('@twenty-apps/exa'),
-  )
-  @IsString()
-  EXA_API_KEY?: string;
 
   @ConfigVariablesMetadata({
     group: ConfigVariablesGroup.ANALYTICS_CONFIG,

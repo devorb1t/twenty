@@ -3,16 +3,16 @@
 Exposes [Exa](https://exa.ai) structured web search to Twenty AI agents
 (chat + workflow agents + MCP) as the `app_exa_web_search` tool.
 
-## Configuration
+## Installation
 
-Server admin sets two env vars:
-
-- `PRE_INSTALLED_APPS=@twenty-apps/exa` — installs this app on every new
-  workspace. Existing workspaces backfill via the
-  `install-pre-installed-apps` CLI command.
-- `EXA_API_KEY=<key>` — auto-seeded into the application registration's
-  server variables at server bootstrap. No per-workspace configuration
-  needed.
+1. Register the app on the Twenty server once (admin API / UI):
+   `@twenty-apps/exa` from npm.
+2. Set `autoInstallOnNewWorkspaces=true` on the registration so it's
+   installed on every new workspace. Existing workspaces can be
+   backfilled via the `install-pre-installed-apps` CLI command.
+3. Set the `EXA_API_KEY` server variable on the registration to your Exa
+   API key. The value is injected into every logic function execution —
+   no per-workspace configuration needed.
 
 ## Billing
 

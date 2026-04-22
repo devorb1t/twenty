@@ -142,7 +142,7 @@ export class ChatExecutionService {
     // Preload the Exa app tool (shipped as `@twenty-apps/exa`) so chat has
     // structured web search ready without discovery. getToolsByName silently
     // skips the entry when the workspace doesn't have the Exa app installed
-    // (admin didn't add it to PRE_INSTALLED_APPS or backfill hasn't run).
+    // (admin hasn't registered it + flipped `autoInstallOnNewWorkspaces`).
     // TODO(app-preloading): move this list into the app manifest so any
     // app can declare `preloadedInChat: true` instead of hardcoding here.
     const toolNamesToPreload = [...COMMON_PRELOAD_TOOLS, 'app_exa_web_search'];
