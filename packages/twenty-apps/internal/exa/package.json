@@ -1,5 +1,5 @@
 {
-  "name": "exa",
+  "name": "twenty-exa",
   "version": "0.1.0",
   "description": "Structured web search powered by Exa, exposed to Twenty AI agents as a tool.",
   "license": "MIT",
@@ -21,8 +21,8 @@
   },
   "dependencies": {
     "exa-js": "^1.8.0",
-    "twenty-client-sdk": "0.9.0",
-    "twenty-sdk": "0.9.0"
+    "twenty-client-sdk": "2.0.0",
+    "twenty-sdk": "2.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.7.2",
