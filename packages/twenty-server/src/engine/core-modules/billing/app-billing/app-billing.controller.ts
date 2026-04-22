@@ -25,11 +25,8 @@ import { JwtAuthGuard } from 'src/engine/guards/jwt-auth.guard';
 import { NoPermissionGuard } from 'src/engine/guards/no-permission.guard';
 import { WorkspaceAuthGuard } from 'src/engine/guards/workspace-auth.guard';
 
-// Belt-and-suspenders cap: LogicFunctionExecutorService already throttles
-// executions, but application-access tokens are plain JWTs that an exfiltrating
-// app could use outside the logic-function runtime. Same budget shape as the
-// execution throttle — 1000 charges / 60s / (workspace, application) — so no
-// legitimate batch hits the ceiling.
+// Belt-and-suspenders on top of LogicFunctionExecutorService's execution
+// throttle: application-access tokens are JWTs usable outside the runtime.
 const APP_BILLING_CHARGE_THROTTLE_LIMIT = 1000;
 const APP_BILLING_CHARGE_THROTTLE_TTL_MS = 60_000;
 
@@ -49,17 +46,14 @@ export class AppBillingController {
     @Req() request: Request,
     @Body() charge: ChargeDto,
   ): Promise<void> {
-    // When billing is disabled the USAGE_RECORDED listener is a no-op, so
-    // this endpoint is pure overhead. Return 404 so apps running against a
-    // Community instance fail fast instead of silently discarding charges.
+    // Billing disabled: no listener consumes the event — fail fast so apps
+    // don't silently discard charges on Community instances.
     if (!this.twentyConfigService.get('IS_BILLING_ENABLED')) {
       throw new NotFoundException();
     }
 
-    // JwtAuthGuard accepts any valid token type (user, api-key,
-    // application-access). `request.application` is only populated for
-    // application-access tokens — reject other authenticated callers here
-    // since this endpoint exists so installed apps can self-report usage.
+    // Reject user-access / api-key tokens — only application-access tokens
+    // populate `request.application`.
     if (!isDefined(request.application) || !isDefined(request.workspace)) {
       throw new ForbiddenException(
         'App billing endpoint requires an APPLICATION_ACCESS token.',

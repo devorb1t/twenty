@@ -6,9 +6,6 @@ import { Repository } from 'typeorm';
 import { ApplicationInstallService } from 'src/engine/core-modules/application/application-install/application-install.service';
 import { ApplicationRegistrationEntity } from 'src/engine/core-modules/application/application-registration/application-registration.entity';
 
-// Installs ApplicationRegistrations flagged `isPreInstalled=true` onto
-// workspaces. Used by the new-workspace hook and by the
-// `install-pre-installed-apps` CLI command (backfill for existing tenants).
 @Injectable()
 export class PreInstalledAppsService {
   private readonly logger = new Logger(PreInstalledAppsService.name);
@@ -19,9 +16,9 @@ export class PreInstalledAppsService {
     private readonly applicationRegistrationRepository: Repository<ApplicationRegistrationEntity>,
   ) {}
 
-  // Per-app failures are logged but never block the other installs or the
-  // workspace-creation path. ApplicationInstallService acquires a per-app
-  // cache lock internally, so installs are safe to run in parallel.
+  // Per-app failures are logged but never block the other installs —
+  // `ApplicationInstallService` holds a per-app cache lock so parallel
+  // installs are safe.
   async installOnWorkspace(workspaceId: string): Promise<void> {
     const registrations = await this.applicationRegistrationRepository.find({
       where: { isPreInstalled: true },

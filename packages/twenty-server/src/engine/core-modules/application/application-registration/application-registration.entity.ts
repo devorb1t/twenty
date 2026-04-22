@@ -124,11 +124,8 @@ export class ApplicationRegistrationEntity {
   @Column({ name: 'isFeatured', type: 'boolean', default: false })
   isFeatured: boolean;
 
-  // When true, newly created workspaces auto-install this registration, and
-  // the `install-pre-installed-apps` CLI command backfills existing
-  // workspaces. Set via admin UI / API — there is no env-var fast path,
-  // because this reflects a persisted instance-level policy, not deployment
-  // config.
+  // Auto-installed on every new workspace; existing workspaces are
+  // backfilled by the `install-pre-installed-apps` CLI command.
   @Field(() => Boolean)
   @Column({ type: 'boolean', default: false })
   isPreInstalled: boolean;
