@@ -1,10 +1,10 @@
-import Exa, { type BaseSearchOptions } from 'exa-js';
+import Exa from 'exa-js';
+import { chargeCredits } from 'twenty-sdk/billing';
 import { defineLogicFunction } from 'twenty-sdk/define';
 
 import { DEFAULT_NUM_RESULTS } from './constants/default-num-results.constant';
 import { exaWebSearchInputSchema } from './schemas/exa-web-search-input.schema';
 import { type ExaWebSearchInput } from './types/exa-web-search-input.type';
-import { chargeCredits } from '../utils/charge-credits';
 
 // Number of sentences surfaced per result — keeps the snippet compact
 // enough for an LLM to read many results without blowing the context.
@@ -68,10 +68,7 @@ const handler = async (
       exa.searchAndContents(query, {
         type: 'auto',
         numResults,
-        // exa-js types are out of sync with Exa's runtime API — see
-        // `exa-categories.constant.ts`. Runtime values are enforced by the
-        // JSON-Schema `enum` we declare for the tool input.
-        category: category as BaseSearchOptions['category'],
+        category,
         highlights: { numSentences: HIGHLIGHT_NUM_SENTENCES },
       }),
       new Promise<never>((_, reject) =>

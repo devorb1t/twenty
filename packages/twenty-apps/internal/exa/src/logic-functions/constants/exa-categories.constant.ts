@@ -1,8 +1,5 @@
-// Matches Exa's documented runtime API
-// (https://exa.ai/docs/reference/search). exa-js's TypeScript types are
-// out of sync — they list `github`, `tweet`, `linkedin profile` (which the
-// server rejects) and omit `people` (which the server accepts). Category
-// is cast at the exa.searchAndContents call site to bridge the gap.
+// Mirrors exa-js's `BaseSearchOptions['category']` union. Kept as a
+// runtime list so the tool's JSON-Schema `enum` can reference it.
 export const EXA_CATEGORIES = [
   'company',
   'research paper',

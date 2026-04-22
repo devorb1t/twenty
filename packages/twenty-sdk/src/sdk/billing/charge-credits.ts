@@ -5,7 +5,7 @@ import {
 
 const BILLING_CHARGE_TIMEOUT_MS = 5_000;
 
-type ChargeCreditsParams = {
+export type ChargeCreditsParams = {
   creditsUsedMicro: number;
   operationType: string;
   quantity?: number;
@@ -15,7 +15,7 @@ type ChargeCreditsParams = {
 // Records credit usage against the running application via the Twenty
 // server's `/app/billing/charge` endpoint. Reads `TWENTY_API_URL` and
 // `TWENTY_APP_ACCESS_TOKEN` from the execution env (injected by the
-// logic-function runtime). Silently no-ops when either is missing so
+// logic-function runtime). No-ops silently when either is missing so
 // local/test runs don't crash. Failures are non-fatal — a billing error
 // never surfaces as a tool failure.
 export const chargeCredits = async ({

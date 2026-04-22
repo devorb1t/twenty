@@ -20,9 +20,9 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "exa-js": "^1.8.0",
+    "exa-js": "^2.12.1",
     "twenty-client-sdk": "2.0.0",
-    "twenty-sdk": "2.0.0"
+    "twenty-sdk": "2.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.7.2",
