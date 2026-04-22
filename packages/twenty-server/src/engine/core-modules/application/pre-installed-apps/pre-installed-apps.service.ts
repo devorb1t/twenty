@@ -10,6 +10,7 @@ import { ApplicationRegistrationVariableEntity } from 'src/engine/core-modules/a
 import { ApplicationRegistrationEntity } from 'src/engine/core-modules/application/application-registration/application-registration.entity';
 import { ApplicationRegistrationSourceType } from 'src/engine/core-modules/application/application-registration/enums/application-registration-source-type.enum';
 import { ApplicationRegistrationService } from 'src/engine/core-modules/application/application-registration/application-registration.service';
+import { parsePreInstalledApps } from 'src/engine/core-modules/application/pre-installed-apps/utils/parse-pre-installed-apps.util';
 import { SecretEncryptionService } from 'src/engine/core-modules/secret-encryption/secret-encryption.service';
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 
@@ -49,12 +50,9 @@ export class PreInstalledAppsService implements OnApplicationBootstrap {
   }
 
   getPreInstalledPackageNames(): string[] {
-    const raw = this.twentyConfigService.get('PRE_INSTALLED_APPS') ?? '';
-
-    return raw
-      .split(',')
-      .map((name) => name.trim())
-      .filter((name) => name.length > 0);
+    return parsePreInstalledApps(
+      this.twentyConfigService.get('PRE_INSTALLED_APPS'),
+    );
   }
 
   // Idempotent: fetches each pre-installed package's manifest from the
