@@ -24,7 +24,7 @@ import { buildWorkspaceTableColumnSets } from 'src/database/commands/workspace-e
 import {
   formatSqlValue,
 } from 'src/database/commands/workspace-export/utils/format-sql-value.util';
-import { formatCopyValue } from './utils/format-copy-value.util';
+import { formatPgCopyField } from './utils/format-copy-value.util';
 
 const BATCH_SIZE = 50_000;
 
@@ -301,7 +301,7 @@ export class WorkspaceExportService {
 
       for (const row of rows) {
         const values = columnNames.map((columnName) =>
-          formatCopyValue(row[columnName], jsonColumns?.has(columnName)),
+          formatPgCopyField(row[columnName], jsonColumns?.has(columnName)),
         );
 
         if (!stream.write(values.join('\t') + '\n')) {
