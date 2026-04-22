@@ -21,10 +21,12 @@ import { getCoreEntityMetadatasWithWorkspaceId } from 'src/database/commands/wor
 import { generateWorkspaceSchemaDdl } from 'src/database/commands/workspace-export/utils/generate-workspace-schema-ddl.util';
 import { buildInsertPrefix } from 'src/database/commands/workspace-export/utils/build-insert-prefix.util';
 import { buildWorkspaceTableColumnSets } from 'src/database/commands/workspace-export/utils/build-workspace-table-column-sets.util';
-import { formatSqlValue } from 'src/database/commands/workspace-export/utils/format-sql-value.util';
-import { generateInsertStatement } from 'src/database/commands/workspace-export/utils/generate-insert-statement.util';
+import {
+  formatCopyValue,
+  formatSqlValue,
+} from 'src/database/commands/workspace-export/utils/format-sql-value.util';
 
-const BATCH_SIZE = 5000;
+const BATCH_SIZE = 50_000;
 
 type WorkspaceExportParams = {
   workspaceId: string;
@@ -174,7 +176,7 @@ export class WorkspaceExportService {
           whereClause: '"workspaceId" = $1',
           queryParameters: [workspaceId],
           jsonColumns: this.buildJsonColumnSet(entityMetadata),
-        });
+          });
       } catch (error) {
         this.logger.warn(`${entityMetadata.tableName}: skipped`, error);
       }
@@ -219,47 +221,103 @@ export class WorkspaceExportService {
     excludedColumns,
   }: WriteRowsOptions): Promise<void> {
     const whereFragment = whereClause ? ` WHERE ${whereClause}` : '';
-
-    const [{ count: totalCount }] = await queryRunner.query(
-      `SELECT COUNT(*)::int as count FROM "${schemaName}"."${tableName}"${whereFragment}`,
-      queryParameters,
-    );
-
-    if (totalCount === 0) return;
-
-    this.logger.log(`  ${displayName}: ${totalCount} rows`);
-
+    let columnNames: string[] | undefined;
     let insertPrefix: string | undefined;
+    let totalRows = 0;
 
-    for (let offset = 0; offset < totalCount; offset += BATCH_SIZE) {
+    for (let offset = 0; ; offset += BATCH_SIZE) {
       const rows: Record<string, unknown>[] = await queryRunner.query(
         `SELECT * FROM "${schemaName}"."${tableName}"${whereFragment} ORDER BY "id" LIMIT ${BATCH_SIZE} OFFSET ${offset}`,
         queryParameters,
       );
 
-      const batchStatements: string[] = [];
+      if (rows.length === 0) break;
 
-      for (const row of rows) {
-        const columnNames = Object.keys(row).filter(
+      if (!columnNames) {
+        columnNames = Object.keys(rows[0]).filter(
           (columnName) => !excludedColumns?.has(columnName),
         );
+        insertPrefix = buildInsertPrefix(schemaName, tableName, columnNames);
+      }
 
-        if (!insertPrefix) {
-          insertPrefix = buildInsertPrefix(schemaName, tableName, columnNames);
-        }
+      totalRows += rows.length;
 
+      const valueTuples: string[] = [];
+
+      for (const row of rows) {
         const formattedValues = columnNames.map((columnName) =>
           formatSqlValue(row[columnName], jsonColumns?.has(columnName)),
         );
 
-        batchStatements.push(
-          generateInsertStatement(insertPrefix, formattedValues),
+        valueTuples.push(`(${formattedValues.join(', ')})`);
+      }
+
+      const statement = `${insertPrefix}${valueTuples.join(', ')};\n`;
+
+      if (!stream.write(statement)) {
+        await once(stream, 'drain');
+      }
+
+      if (rows.length < BATCH_SIZE) break;
+    }
+
+    if (totalRows > 0) {
+      this.logger.log(`  ${displayName}: ${totalRows} rows`);
+    }
+  }
+
+  private async writeCopyRows({
+    schemaName,
+    tableName,
+    displayName,
+    queryRunner,
+    stream,
+    jsonColumns,
+    excludedColumns,
+  }: Omit<WriteRowsOptions, 'onConflictDoNothing'>): Promise<void> {
+    let columnNames: string[] | undefined;
+    let totalRows = 0;
+
+    for (let offset = 0; ; offset += BATCH_SIZE) {
+      const rows: Record<string, unknown>[] = await queryRunner.query(
+        `SELECT * FROM "${schemaName}"."${tableName}" ORDER BY "id" LIMIT ${BATCH_SIZE} OFFSET ${offset}`,
+      );
+
+      if (rows.length === 0) break;
+
+      if (!columnNames) {
+        columnNames = Object.keys(rows[0]).filter(
+          (columnName) => !excludedColumns?.has(columnName),
+        );
+
+        const escapedColumns = columnNames.map(escapeIdentifier).join(', ');
+
+        stream.write(
+          `COPY ${escapeIdentifier(schemaName)}.${escapeIdentifier(tableName)} (${escapedColumns}) FROM stdin;\n`,
         );
       }
 
-      if (!stream.write(batchStatements.join(''))) {
-        await once(stream, 'drain');
+      totalRows += rows.length;
+
+      for (const row of rows) {
+        const values = columnNames.map((columnName) =>
+          formatCopyValue(row[columnName], jsonColumns?.has(columnName)),
+        );
+
+        if (!stream.write(values.join('\t') + '\n')) {
+          await once(stream, 'drain');
+        }
       }
+
+      if (rows.length < BATCH_SIZE) break;
+    }
+
+    if (columnNames) {
+      stream.write('\\.\n\n');
+    }
+
+    if (totalRows > 0) {
+      this.logger.log(`  ${displayName}: ${totalRows} rows`);
     }
   }
 
@@ -319,7 +377,7 @@ export class WorkspaceExportService {
       );
 
       try {
-        await this.writeRows({
+        await this.writeCopyRows({
           schemaName,
           tableName,
           displayName: objectMetadata.nameSingular,
