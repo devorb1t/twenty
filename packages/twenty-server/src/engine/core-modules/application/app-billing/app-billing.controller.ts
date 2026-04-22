@@ -13,14 +13,17 @@ import { Request } from 'express';
 import { AppBillingService } from 'src/engine/core-modules/application/app-billing/app-billing.service';
 import { ChargeDto } from 'src/engine/core-modules/application/app-billing/dtos/charge.dto';
 import { type AuthContext } from 'src/engine/core-modules/auth/types/auth-context.type';
+import { NoPermissionGuard } from 'src/engine/guards/no-permission.guard';
 
 // Authenticated via an APPLICATION_ACCESS token (JwtAuthStrategy sets
 // request.user to the AuthContext with `application` + `workspace` when
 // the token type is APPLICATION_ACCESS). Apps receive the token in their
 // execution env as DEFAULT_APP_ACCESS_TOKEN, so no new auth mechanism
-// is introduced here.
+// is introduced here. NoPermissionGuard is used because the app token
+// itself is the authorization — permissions don't apply to server-to-app
+// billing events.
 @Controller('app/billing')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), NoPermissionGuard)
 export class AppBillingController {
   constructor(private readonly appBillingService: AppBillingService) {}
 
