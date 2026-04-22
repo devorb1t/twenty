@@ -1,4 +1,8 @@
 import Exa from 'exa-js';
+import {
+  DEFAULT_API_URL_NAME,
+  DEFAULT_APP_ACCESS_TOKEN_NAME,
+} from 'twenty-shared/application';
 import { defineLogicFunction } from 'twenty-sdk/define';
 
 import {
@@ -42,8 +46,8 @@ const chargeCredits = async (
   numResults: number,
   env: Record<string, string | undefined>,
 ): Promise<void> => {
-  const apiUrl = env.TWENTY_API_URL;
-  const token = env.TWENTY_APP_ACCESS_TOKEN;
+  const apiUrl = env[DEFAULT_API_URL_NAME];
+  const token = env[DEFAULT_APP_ACCESS_TOKEN_NAME];
 
   if (!apiUrl || !token) {
     return;

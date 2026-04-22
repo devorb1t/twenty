@@ -13,6 +13,7 @@ import {
 import { isDefined } from 'twenty-shared/utils';
 import { type LoggerOptions } from 'typeorm/logger/LoggerOptions';
 
+import { parsePreInstalledApps } from 'src/engine/core-modules/application/pre-installed-apps/utils/parse-pre-installed-apps.util';
 import { LogicFunctionDriverType } from 'src/engine/core-modules/logic-function/logic-function-drivers/interfaces/logic-function-driver.interface';
 import { type AwsRegion } from 'src/engine/core-modules/twenty-config/interfaces/aws-region.interface';
 import { NodeEnvironment } from 'src/engine/core-modules/twenty-config/interfaces/node-environment.interface';
@@ -683,10 +684,7 @@ export class ConfigVariables {
     isSensitive: true,
   })
   @ValidateIf((env) =>
-    (env.PRE_INSTALLED_APPS ?? '')
-      .split(',')
-      .map((name: string) => name.trim())
-      .includes('@twenty-apps/exa'),
+    parsePreInstalledApps(env.PRE_INSTALLED_APPS).includes('@twenty-apps/exa'),
   )
   @IsString()
   EXA_API_KEY?: string;
