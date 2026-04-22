@@ -5,6 +5,8 @@ import {
   Post,
   Req,
   UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -29,6 +31,7 @@ export class AppBillingController {
 
   @Post('charge')
   @UseGuards(NoPermissionGuard)
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async charge(
     @Req() request: Request,
     @Body() charge: ChargeDto,

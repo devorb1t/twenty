@@ -67,18 +67,16 @@ export class PreInstalledAppsService implements OnApplicationBootstrap {
       return [];
     }
 
-    const registryPackages = await this.marketplaceService
-      .fetchAppsFromRegistry()
-      .catch(() => []);
-
-    const versionByName = new Map(
-      registryPackages.map((pkg) => [pkg.name, pkg.version] as const),
-    );
-
     const resolvedRegistrations: ApplicationRegistrationEntity[] = [];
 
     for (const packageName of packageNames) {
-      const version = versionByName.get(packageName);
+      // Exact-name lookup, not the bounded catalog search — admin-declared
+      // packages must resolve regardless of where they sit in keyword-search
+      // ranking.
+      const version =
+        await this.marketplaceService.fetchLatestVersionFromRegistry(
+          packageName,
+        );
 
       if (!isDefined(version)) {
         this.logger.warn(
