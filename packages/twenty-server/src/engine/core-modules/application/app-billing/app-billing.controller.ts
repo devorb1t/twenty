@@ -23,11 +23,12 @@ import { NoPermissionGuard } from 'src/engine/guards/no-permission.guard';
 // itself is the authorization — permissions don't apply to server-to-app
 // billing events.
 @Controller('app/billing')
-@UseGuards(AuthGuard('jwt'), NoPermissionGuard)
+@UseGuards(AuthGuard('jwt'))
 export class AppBillingController {
   constructor(private readonly appBillingService: AppBillingService) {}
 
   @Post('charge')
+  @UseGuards(NoPermissionGuard)
   async charge(
     @Req() request: Request,
     @Body() charge: ChargeDto,
