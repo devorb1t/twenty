@@ -822,18 +822,19 @@ export class WorkspaceService extends TypeOrmQueryService<WorkspaceEntity> {
       this.exceptionHandlerService.captureExceptions([error as Error]);
     }
 
-    // Install apps declared in PRE_INSTALLED_APPS. Failures here are
-    // non-critical to workspace activation — the admin can backfill later via
-    // the `install-pre-installed-apps` CLI command.
-    try {
-      await this.preInstalledAppsService.installOnWorkspace(workspaceId);
-    } catch (error) {
-      this.logger.error(
-        `Non-critical: failed to install pre-installed apps for workspace ${workspaceId}`,
-        error,
-      );
-      this.exceptionHandlerService.captureExceptions([error as Error]);
-    }
+    // Install apps declared in PRE_INSTALLED_APPS asynchronously so a slow
+    // npm download / migration doesn't block workspace activation. Failures
+    // are non-critical — the admin can backfill later via the
+    // `install-pre-installed-apps` CLI command.
+    void this.preInstalledAppsService
+      .installOnWorkspace(workspaceId)
+      .catch((error) => {
+        this.logger.error(
+          `Non-critical: failed to install pre-installed apps for workspace ${workspaceId}`,
+          error,
+        );
+        this.exceptionHandlerService.captureExceptions([error as Error]);
+      });
   }
 
   async findOneWorkspaceById(id: string) {

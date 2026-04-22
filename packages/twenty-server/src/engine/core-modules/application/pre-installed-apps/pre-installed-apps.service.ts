@@ -130,8 +130,10 @@ export class PreInstalledAppsService implements OnApplicationBootstrap {
     return resolvedRegistrations;
   }
 
-  // Installs all pre-installed apps on a single workspace. Tolerates
-  // per-app failures so a bad install never blocks workspace creation.
+  // Installs all pre-installed apps on a single workspace. Per-app failures
+  // are logged but never block the other installs or workspace creation.
+  // ApplicationInstallService acquires a per-app cache lock internally, so
+  // installs are safe to run in parallel.
   async installOnWorkspace(workspaceId: string): Promise<void> {
     const packageNames = this.getPreInstalledPackageNames();
 
@@ -146,20 +148,22 @@ export class PreInstalledAppsService implements OnApplicationBootstrap {
       })),
     });
 
-    for (const registration of registrations) {
-      try {
-        await this.applicationInstallService.installApplication({
-          appRegistrationId: registration.id,
-          workspaceId,
-        });
-      } catch (error) {
-        this.logger.error(
-          `Failed to install pre-installed app "${registration.sourcePackage}" on workspace ${workspaceId}: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        );
-      }
-    }
+    await Promise.allSettled(
+      registrations.map(async (registration) => {
+        try {
+          await this.applicationInstallService.installApplication({
+            appRegistrationId: registration.id,
+            workspaceId,
+          });
+        } catch (error) {
+          this.logger.error(
+            `Failed to install pre-installed app "${registration.sourcePackage}" on workspace ${workspaceId}: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
+        }
+      }),
+    );
   }
 
   // Reads declared server variables on the registration and, for any that

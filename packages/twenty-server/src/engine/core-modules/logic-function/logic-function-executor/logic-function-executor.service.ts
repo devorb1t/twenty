@@ -7,7 +7,7 @@ import {
   DEFAULT_APP_ACCESS_TOKEN_NAME,
 } from 'twenty-shared/application';
 import { isDefined } from 'twenty-shared/utils';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { v4 } from 'uuid';
 
 import {
@@ -246,8 +246,13 @@ export class LogicFunctionExecutorService {
 
   // Resolves encrypted server-level variables (ApplicationRegistrationVariable)
   // for the application's registration. Returns an empty object when the
-  // application isn't linked to a registration (legacy LOCAL apps) or when no
-  // server variables are configured.
+  // application isn't linked to a registration (legacy LOCAL apps).
+  //
+  // Runs on every logic function execution — the query is indexed on
+  // applicationRegistrationId and filters unfilled rows server-side. Most
+  // apps have 0-3 server variables so the round-trip is cheap, but if this
+  // becomes a hot path, move to a WorkspaceCacheProvider mirroring
+  // WorkspaceApplicationVariableMapCacheService.
   private async buildServerVariableEnvMap(
     applicationRegistrationId: string | null,
   ): Promise<Record<string, string>> {
@@ -257,16 +262,15 @@ export class LogicFunctionExecutorService {
 
     const serverVariables =
       await this.applicationRegistrationVariableRepository.find({
-        where: { applicationRegistrationId },
+        where: {
+          applicationRegistrationId,
+          encryptedValue: Not(''),
+        },
       });
 
     const envMap: Record<string, string> = {};
 
     for (const variable of serverVariables) {
-      if (variable.encryptedValue === '') {
-        continue;
-      }
-
       envMap[variable.key] = variable.isSecret
         ? this.secretEncryptionService.decrypt(variable.encryptedValue)
         : variable.encryptedValue;
