@@ -22,9 +22,9 @@ import { generateWorkspaceSchemaDdl } from 'src/database/commands/workspace-expo
 import { buildInsertPrefix } from 'src/database/commands/workspace-export/utils/build-insert-prefix.util';
 import { buildWorkspaceTableColumnSets } from 'src/database/commands/workspace-export/utils/build-workspace-table-column-sets.util';
 import {
-  formatCopyValue,
   formatSqlValue,
 } from 'src/database/commands/workspace-export/utils/format-sql-value.util';
+import { formatCopyValue } from './utils/format-copy-value.util';
 
 const BATCH_SIZE = 50_000;
 
