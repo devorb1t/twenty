@@ -35,8 +35,14 @@ export { unmountFrontComponent } from './functions/unmountFrontComponent';
 export { updateProgress } from './functions/updateProgress';
 export { useFrontComponentExecutionContext } from './hooks/useFrontComponentExecutionContext';
 export { useFrontComponentId } from './hooks/useFrontComponentId';
+export { useGraphqlFilter } from './hooks/useGraphqlFilter';
+export { useNumberOfSelectedRecords } from './hooks/useNumberOfSelectedRecords';
+export { useObjectMetadataItemId } from './hooks/useObjectMetadataItemId';
+export { usePageType } from './hooks/usePageType';
 export { useRecordId } from './hooks/useRecordId';
 export { useUserId } from './hooks/useUserId';
+export { useViewId } from './hooks/useViewId';
+export { useViewType } from './hooks/useViewType';
 export type { FrontComponentExecutionContext } from './types/FrontComponentExecutionContext';
 export { getFrontComponentCommandErrorDedupeKey } from './utils/getFrontComponentCommandErrorDedupeKey';
 export type {

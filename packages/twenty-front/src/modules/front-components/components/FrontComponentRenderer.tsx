@@ -19,12 +19,14 @@ type FrontComponentRendererProps = {
   frontComponentId: string;
   commandMenuItemId?: string;
   recordId?: string;
+  contextStoreInstanceId?: string;
 };
 
 export const FrontComponentRenderer = ({
   frontComponentId,
   commandMenuItemId,
   recordId,
+  contextStoreInstanceId,
 }: FrontComponentRendererProps) => {
   const { colorScheme } = useContext(ThemeContext);
   const { enqueueErrorSnackBar } = useSnackBar();
@@ -39,6 +41,7 @@ export const FrontComponentRenderer = ({
       frontComponentId,
       commandMenuItemId,
       recordId,
+      contextStoreInstanceId,
     });
 
   const handleError = useCallback(

@@ -1,7 +1,1 @@
-import { type ViewSortDirection } from '~/generated-metadata/graphql';
-
-export type RecordSort = {
-  id: string;
-  fieldMetadataId: string;
-  direction: ViewSortDirection;
-};
+export type { RecordSort } from 'twenty-shared/types';

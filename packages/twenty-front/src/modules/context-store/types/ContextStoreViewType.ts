@@ -1,4 +1,1 @@
-export enum ContextStoreViewType {
-  Table = 'table',
-  Kanban = 'kanban',
-}
+export { ContextStoreViewType } from 'twenty-shared/types';

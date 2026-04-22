@@ -1,6 +1,24 @@
 import { act, renderHook } from '@testing-library/react';
 
+import { currentUserState } from '@/auth/states/currentUserState';
+import { currentWorkspaceMemberState } from '@/auth/states/currentWorkspaceMemberState';
+import { contextStoreAnyFieldFilterValueComponentState } from '@/context-store/states/contextStoreAnyFieldFilterValueComponentState';
+import { contextStoreCurrentObjectMetadataItemIdComponentState } from '@/context-store/states/contextStoreCurrentObjectMetadataItemIdComponentState';
+import { contextStoreCurrentPageTypeComponentState } from '@/context-store/states/contextStoreCurrentPageTypeComponentState';
+import { contextStoreCurrentViewIdComponentState } from '@/context-store/states/contextStoreCurrentViewIdComponentState';
+import { contextStoreCurrentViewTypeComponentState } from '@/context-store/states/contextStoreCurrentViewTypeComponentState';
+import { contextStoreFilterGroupsComponentState } from '@/context-store/states/contextStoreFilterGroupsComponentState';
+import { contextStoreFiltersComponentState } from '@/context-store/states/contextStoreFiltersComponentState';
+import { contextStoreNumberOfSelectedRecordsComponentState } from '@/context-store/states/contextStoreNumberOfSelectedRecordsComponentState';
+import {
+  contextStoreTargetedRecordsRuleComponentState,
+  type ContextStoreTargetedRecordsRule,
+} from '@/context-store/states/contextStoreTargetedRecordsRuleComponentState';
 import { useFrontComponentExecutionContext } from '@/front-components/hooks/useFrontComponentExecutionContext';
+import { objectMetadataItemsSelector } from '@/object-metadata/states/objectMetadataItemsSelector';
+import { type RecordFilter } from '@/object-record/record-filter/types/RecordFilter';
+import { ViewFilterOperand } from 'twenty-shared/types';
+import { getTestEnrichedObjectMetadataItemsMock } from '~/testing/utils/getTestEnrichedObjectMetadataItemsMock';
 
 const mockNavigateApp = jest.fn();
 const mockRequestAccessTokenRefresh = jest.fn();
@@ -16,7 +34,40 @@ const mockEnqueueWarningSnackBar = jest.fn();
 const mockCloseSidePanelMenu = jest.fn();
 const mockSetCommandMenuItemProgress = jest.fn();
 
+const enrichedObjectMetadataItems = getTestEnrichedObjectMetadataItemsMock();
+const personObjectMetadataItem = enrichedObjectMetadataItems.find(
+  (item) => item.nameSingular === 'person',
+)!;
+const personNameFieldId = personObjectMetadataItem.fields.find(
+  (field) => field.name === 'name',
+)!.id;
+
 let mockCurrentUser: { id: string } | null = { id: 'user-123' };
+let mockCurrentWorkspaceMember:
+  | { id: string; timeZone: string }
+  | null = { id: 'workspace-member-123', timeZone: 'Europe/Paris' };
+let mockObjectMetadataItems = enrichedObjectMetadataItems;
+
+const CONTEXT_STORE_DEFAULTS = new Map<unknown, unknown>([
+  [contextStoreCurrentPageTypeComponentState, null],
+  [contextStoreCurrentViewTypeComponentState, null],
+  [contextStoreCurrentViewIdComponentState, undefined],
+  [contextStoreCurrentObjectMetadataItemIdComponentState, undefined],
+  [
+    contextStoreTargetedRecordsRuleComponentState,
+    { mode: 'selection', selectedRecordIds: [] },
+  ],
+  [contextStoreNumberOfSelectedRecordsComponentState, 0],
+  [contextStoreFiltersComponentState, []],
+  [contextStoreFilterGroupsComponentState, []],
+  [contextStoreAnyFieldFilterValueComponentState, ''],
+]);
+
+const contextStoreOverrides = new Map<unknown, unknown>();
+
+const setContextStoreValue = (state: unknown, value: unknown) => {
+  contextStoreOverrides.set(state, value);
+};
 
 jest.mock('~/hooks/useNavigateApp', () => ({
   useNavigateApp: () => mockNavigateApp,
@@ -72,8 +123,29 @@ jest.mock('twenty-ui/display', () => ({
 }));
 
 jest.mock('@/ui/utilities/state/jotai/hooks/useAtomStateValue', () => ({
-  useAtomStateValue: () => mockCurrentUser,
+  useAtomStateValue: (atom: unknown) => {
+    if (atom === currentUserState) {
+      return mockCurrentUser;
+    }
+    if (atom === currentWorkspaceMemberState) {
+      return mockCurrentWorkspaceMember;
+    }
+    if (atom === objectMetadataItemsSelector) {
+      return mockObjectMetadataItems;
+    }
+    return undefined;
+  },
 }));
+
+jest.mock(
+  '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue',
+  () => ({
+    useAtomComponentStateValue: (componentState: unknown) =>
+      contextStoreOverrides.has(componentState)
+        ? contextStoreOverrides.get(componentState)
+        : CONTEXT_STORE_DEFAULTS.get(componentState),
+  }),
+);
 
 jest.mock('@/ui/utilities/state/jotai/hooks/useSetAtomState', () => ({
   useSetAtomState: () => mockSetSidePanelSearch,
@@ -90,6 +162,12 @@ describe('useFrontComponentExecutionContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCurrentUser = { id: 'user-123' };
+    mockCurrentWorkspaceMember = {
+      id: 'workspace-member-123',
+      timeZone: 'Europe/Paris',
+    };
+    mockObjectMetadataItems = enrichedObjectMetadataItems;
+    contextStoreOverrides.clear();
   });
 
   describe('executionContext', () => {
@@ -105,6 +183,12 @@ describe('useFrontComponentExecutionContext', () => {
         frontComponentId: FRONT_COMPONENT_ID,
         userId: 'user-123',
         recordId: 'record-456',
+        pageType: null,
+        viewType: null,
+        viewId: null,
+        objectMetadataItemId: null,
+        numberOfSelectedRecords: 0,
+        graphqlFilter: null,
       });
     });
 
@@ -128,6 +212,119 @@ describe('useFrontComponentExecutionContext', () => {
       );
 
       expect(result.current.executionContext.recordId).toBeNull();
+    });
+  });
+
+  describe('graphqlFilter', () => {
+    it('should be null when objectMetadataItem cannot be resolved', () => {
+      setContextStoreValue(
+        contextStoreCurrentObjectMetadataItemIdComponentState,
+        'unknown-object-id',
+      );
+      const { result } = renderHook(() =>
+        useFrontComponentExecutionContext({
+          frontComponentId: FRONT_COMPONENT_ID,
+        }),
+      );
+
+      expect(result.current.executionContext.graphqlFilter).toBeNull();
+    });
+
+    it('should return { id: { in: [] } } for empty selection mode', () => {
+      setContextStoreValue(
+        contextStoreCurrentObjectMetadataItemIdComponentState,
+        personObjectMetadataItem.id,
+      );
+      const targetedRecordsRule: ContextStoreTargetedRecordsRule = {
+        mode: 'selection',
+        selectedRecordIds: [],
+      };
+      setContextStoreValue(
+        contextStoreTargetedRecordsRuleComponentState,
+        targetedRecordsRule,
+      );
+
+      const { result } = renderHook(() =>
+        useFrontComponentExecutionContext({
+          frontComponentId: FRONT_COMPONENT_ID,
+        }),
+      );
+
+      expect(result.current.executionContext.graphqlFilter).toEqual({
+        id: { in: [] },
+      });
+    });
+
+    it('should compose selection mode with selected record ids', () => {
+      setContextStoreValue(
+        contextStoreCurrentObjectMetadataItemIdComponentState,
+        personObjectMetadataItem.id,
+      );
+      const targetedRecordsRule: ContextStoreTargetedRecordsRule = {
+        mode: 'selection',
+        selectedRecordIds: ['1', '2', '3'],
+      };
+      setContextStoreValue(
+        contextStoreTargetedRecordsRuleComponentState,
+        targetedRecordsRule,
+      );
+
+      const { result } = renderHook(() =>
+        useFrontComponentExecutionContext({
+          frontComponentId: FRONT_COMPONENT_ID,
+        }),
+      );
+
+      expect(result.current.executionContext.graphqlFilter).toEqual({
+        and: [{}, { id: { in: ['1', '2', '3'] } }, {}],
+      });
+    });
+
+    it('should compose exclusion mode with raw filters', () => {
+      setContextStoreValue(
+        contextStoreCurrentObjectMetadataItemIdComponentState,
+        personObjectMetadataItem.id,
+      );
+      const targetedRecordsRule: ContextStoreTargetedRecordsRule = {
+        mode: 'exclusion',
+        excludedRecordIds: ['1', '2', '3'],
+      };
+      setContextStoreValue(
+        contextStoreTargetedRecordsRuleComponentState,
+        targetedRecordsRule,
+      );
+      const filters: RecordFilter[] = [
+        {
+          id: 'name-filter',
+          fieldMetadataId: personNameFieldId,
+          value: 'John',
+          displayValue: 'John',
+          displayAvatarUrl: undefined,
+          operand: ViewFilterOperand.CONTAINS,
+          type: 'TEXT',
+          label: 'Name',
+        },
+      ];
+      setContextStoreValue(contextStoreFiltersComponentState, filters);
+
+      const { result } = renderHook(() =>
+        useFrontComponentExecutionContext({
+          frontComponentId: FRONT_COMPONENT_ID,
+        }),
+      );
+
+      expect(result.current.executionContext.graphqlFilter).toEqual({
+        and: [
+          {},
+          {
+            or: [
+              { name: { firstName: { ilike: '%John%' } } },
+              { name: { lastName: { ilike: '%John%' } } },
+            ],
+          },
+          { not: { id: { in: ['1', '2', '3'] } } },
+        ],
+      });
     });
   });
 

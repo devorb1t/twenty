@@ -3,6 +3,7 @@ import { Suspense, lazy } from 'react';
 
 import { isDefined } from 'twenty-shared/utils';
 
+import { MAIN_CONTEXT_STORE_INSTANCE_ID } from '@/context-store/constants/MainContextStoreInstanceId';
 import { useIsPageLayoutInEditMode } from '@/page-layout/hooks/useIsPageLayoutInEditMode';
 import { type PageLayoutWidget } from '@/page-layout/types/PageLayoutWidget';
 import { PageLayoutWidgetNoDataDisplay } from '@/page-layout/widgets/components/PageLayoutWidgetNoDataDisplay';
@@ -49,6 +50,7 @@ export const FrontComponentWidgetRenderer = ({
         <FrontComponentRenderer
           frontComponentId={frontComponentId}
           recordId={targetRecordIdentifier?.id}
+          contextStoreInstanceId={MAIN_CONTEXT_STORE_INSTANCE_ID}
         />
       </Suspense>
     </StyledContainer>

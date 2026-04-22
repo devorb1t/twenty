@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react';
 
+import { MAIN_CONTEXT_STORE_INSTANCE_ID } from '@/context-store/constants/MainContextStoreInstanceId';
 import { viewableFrontComponentIdComponentState } from '@/side-panel/pages/front-component/states/viewableFrontComponentIdComponentState';
 import { viewableFrontComponentRecordContextComponentState } from '@/side-panel/pages/front-component/states/viewableFrontComponentRecordContextComponentState';
 import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue';
@@ -29,6 +30,7 @@ export const SidePanelFrontComponentPage = () => {
       <FrontComponentRenderer
         frontComponentId={viewableFrontComponentId}
         recordId={viewableFrontComponentRecordContext?.recordId}
+        contextStoreInstanceId={MAIN_CONTEXT_STORE_INSTANCE_ID}
       />
     </Suspense>
   );

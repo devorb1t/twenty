@@ -1,6 +1,8 @@
 import { styled } from '@linaria/react';
 import { Suspense, lazy } from 'react';
 
+import { MAIN_CONTEXT_STORE_INSTANCE_ID } from '@/context-store/constants/MainContextStoreInstanceId';
+
 const FrontComponentRenderer = lazy(() =>
   import('@/front-components/components/FrontComponentRenderer').then(
     (module) => ({ default: module.FrontComponentRenderer }),
@@ -25,6 +27,7 @@ export const SettingsApplicationCustomTab = ({
       <Suspense fallback={null}>
         <FrontComponentRenderer
           frontComponentId={settingsCustomTabFrontComponentId}
+          contextStoreInstanceId={MAIN_CONTEXT_STORE_INSTANCE_ID}
         />
       </Suspense>
     </StyledContainer>

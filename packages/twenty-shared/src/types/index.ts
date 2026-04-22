@@ -59,6 +59,8 @@ export type { ConfigVariableValue } from './ConfigVariableValue';
 export type { ConfirmationModalCaller } from './ConfirmationModalCaller';
 export { ConnectedAccountProvider } from './ConnectedAccountProvider';
 export { ContextStorePageType } from './ContextStorePageType';
+export type { ContextStoreTargetedRecordsRule } from './ContextStoreTargetedRecordsRule';
+export { ContextStoreViewType } from './ContextStoreViewType';
 export { CoreObjectNameSingular } from './CoreObjectNameSingular';
 export { CrudOperationType } from './CrudOperationType';
 export type { EmailAttachment } from './EmailAttachment';
@@ -209,6 +211,8 @@ export type { RatioAggregateConfig } from './page-layout/ratio-aggregate-config.
 export type { PartialFieldMetadataItem } from './PartialFieldMetadataItem';
 export type { PartialFieldMetadataItemOption } from './PartialFieldMetadataOption';
 export type { QueryCursorDirection } from './QueryCursorDirection';
+export type { RLSDynamicValue, RecordFilter } from './RecordFilter';
+export type { RecordFilterGroup } from './RecordFilterGroup';
 export { RecordFilterGroupLogicalOperator } from './RecordFilterGroupLogicalOperator';
 export type { RecordFilterValueDependencies } from './RecordFilterValueDependencies';
 export type { RecordGqlFieldsDeprecated } from './RecordGqlFieldsDeprecated';
@@ -250,6 +254,8 @@ export type { RecordGqlOperationGqlRecordFields } from './RecordGqlOperationGqlR
 export type { RecordGqlOperationOrderBy } from './RecordGqlOperationOrderBy';
 export type { RecordGqlOperationSignature } from './RecordGqlOperationSignature';
 export type { RecordGqlOperationVariables } from './RecordGqlOperationVariables';
+export type { RecordShowParentView } from './RecordShowParentView';
+export type { RecordSort } from './RecordSort';
 export type { RelationAndMorphRelationFieldMetadataType } from './RelationAndMorphRelationFieldMetadataType';
 export type { RelationCreationPayload } from './RelationCreationPayload';
 export { RelationOnDeleteAction } from './RelationOnDeleteAction.type';
