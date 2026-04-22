@@ -8,7 +8,7 @@ const escapeCopyText = (text: string): string => {
     .replace(/\r/g, '\\r');
 };
 
-export const formatCopyValue = (
+export const formatPgCopyField = (
   value: unknown,
   isJsonColumn = false,
 ): string => {
