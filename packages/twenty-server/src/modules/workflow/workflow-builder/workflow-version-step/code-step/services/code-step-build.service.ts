@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { isDefined } from 'twenty-shared/utils';
 
@@ -12,6 +12,8 @@ import {
 
 @Injectable()
 export class CodeStepBuildService {
+  private readonly logger = new Logger(CodeStepBuildService.name);
+
   constructor(
     private readonly workspaceManyOrAllFlatEntityMapsCacheService: WorkspaceManyOrAllFlatEntityMapsCacheService,
     private readonly logicFunctionFromSourceService: LogicFunctionFromSourceService,
@@ -103,6 +105,10 @@ export class CodeStepBuildService {
         : undefined;
 
       if (!isDefined(applicationUniversalIdentifier)) {
+        this.logger.warn(
+          `Skipping build for logic function ${logicFunctionId}: ` +
+            `application not found for applicationId=${flatLogicFunction.applicationId}`,
+        );
         continue;
       }
 
