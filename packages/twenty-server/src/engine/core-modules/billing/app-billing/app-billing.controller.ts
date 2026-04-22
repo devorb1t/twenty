@@ -12,18 +12,12 @@ import {
 import { Request } from 'express';
 import { isDefined } from 'twenty-shared/utils';
 
-import { AppBillingService } from 'src/engine/core-modules/application/app-billing/app-billing.service';
-import { ChargeDto } from 'src/engine/core-modules/application/app-billing/dtos/charge.dto';
+import { AppBillingService } from 'src/engine/core-modules/billing/app-billing/app-billing.service';
+import { ChargeDto } from 'src/engine/core-modules/billing/app-billing/dtos/charge.dto';
 import { JwtAuthGuard } from 'src/engine/guards/jwt-auth.guard';
 import { NoPermissionGuard } from 'src/engine/guards/no-permission.guard';
 import { WorkspaceAuthGuard } from 'src/engine/guards/workspace-auth.guard';
 
-// JwtAuthGuard validates the bearer token (including APPLICATION_ACCESS
-// tokens — see jwt-auth.guard.ts) and binds `application`, `workspace`,
-// and optional user fields onto the request. WorkspaceAuthGuard then
-// asserts that the workspace is present; NoPermissionGuard marks this
-// endpoint as not gated by role permissions because the app token itself
-// is the authorization.
 @Controller('app/billing')
 @UseGuards(JwtAuthGuard, WorkspaceAuthGuard, NoPermissionGuard)
 export class AppBillingController {
@@ -35,13 +29,13 @@ export class AppBillingController {
     @Req() request: Request,
     @Body() charge: ChargeDto,
   ): Promise<{ success: true }> {
-    // JwtAuthGuard may accept a valid non-application token (user access
-    // token, api key) that still populates `workspace`. Reject those with
-    // 403 — the caller is authenticated, just not authorized for an app-
-    // only endpoint.
+    // JwtAuthGuard accepts any valid token type (user, api-key,
+    // application-access). `request.application` is only populated for
+    // application-access tokens — reject other authenticated callers here
+    // since this endpoint exists so installed apps can self-report usage.
     if (!isDefined(request.application) || !isDefined(request.workspace)) {
       throw new ForbiddenException(
-        'App billing endpoint requires an APPLICATION_ACCESS token. The caller must be a logic function running inside an installed application.',
+        'App billing endpoint requires an APPLICATION_ACCESS token.',
       );
     }
 

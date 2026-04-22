@@ -54,8 +54,8 @@ export default {
         173,
         176,
         179,
-        204,
-        219,
+        202,
+        217,
         253,
         254,
         264,
@@ -202,6 +202,9 @@ export default {
                 6
             ],
             "isFeatured": [
+                6
+            ],
+            "isPreInstalled": [
                 6
             ],
             "logoUrl": [
@@ -849,10 +852,10 @@ export default {
                 3
             ],
             "relation": [
-                203
+                201
             ],
             "morphRelations": [
-                203
+                201
             ],
             "object": [
                 49
@@ -911,7 +914,7 @@ export default {
                 39
             ],
             "objectMetadata": [
-                211,
+                209,
                 {
                     "paging": [
                         42,
@@ -924,7 +927,7 @@ export default {
                 }
             ],
             "indexFieldMetadatas": [
-                209,
+                207,
                 {
                     "paging": [
                         42,
@@ -1169,7 +1172,7 @@ export default {
                 40
             ],
             "fields": [
-                216,
+                214,
                 {
                     "paging": [
                         42,
@@ -1182,7 +1185,7 @@ export default {
                 }
             ],
             "indexMetadatas": [
-                214,
+                212,
                 {
                     "paging": [
                         42,
@@ -1772,7 +1775,7 @@ export default {
                 138
             ],
             "billingEntitlements": [
-                218
+                216
             ],
             "hasValidEnterpriseKey": [
                 6
@@ -3884,73 +3887,9 @@ export default {
                 1
             ]
         },
-        "MarketplaceApp": {
-            "id": [
-                1
-            ],
-            "name": [
-                1
-            ],
-            "description": [
-                1
-            ],
-            "icon": [
-                1
-            ],
-            "author": [
-                1
-            ],
-            "category": [
-                1
-            ],
-            "logo": [
-                1
-            ],
-            "sourcePackage": [
-                1
-            ],
-            "isFeatured": [
-                6
-            ],
-            "__typename": [
-                1
-            ]
-        },
-        "MarketplaceAppDetail": {
-            "universalIdentifier": [
-                1
-            ],
-            "id": [
-                1
-            ],
-            "name": [
-                1
-            ],
-            "sourceType": [
-                8
-            ],
-            "sourcePackage": [
-                1
-            ],
-            "latestAvailableVersion": [
-                1
-            ],
-            "isListed": [
-                6
-            ],
-            "isFeatured": [
-                6
-            ],
-            "manifest": [
-                15
-            ],
-            "__typename": [
-                1
-            ]
-        },
         "Relation": {
             "type": [
-                204
+                202
             ],
             "sourceObjectMetadata": [
                 49
@@ -3999,10 +3938,10 @@ export default {
         },
         "IndexConnection": {
             "pageInfo": [
-                206
+                204
             ],
             "edges": [
-                205
+                203
             ],
             "__typename": [
                 1
@@ -4021,10 +3960,10 @@ export default {
         },
         "IndexIndexFieldMetadatasConnection": {
             "pageInfo": [
-                206
+                204
             ],
             "edges": [
-                208
+                206
             ],
             "__typename": [
                 1
@@ -4043,10 +3982,10 @@ export default {
         },
         "IndexObjectMetadataConnection": {
             "pageInfo": [
-                206
+                204
             ],
             "edges": [
-                210
+                208
             ],
             "__typename": [
                 1
@@ -4065,10 +4004,10 @@ export default {
         },
         "ObjectConnection": {
             "pageInfo": [
-                206
+                204
             ],
             "edges": [
-                210
+                208
             ],
             "__typename": [
                 1
@@ -4076,10 +4015,10 @@ export default {
         },
         "ObjectIndexMetadatasConnection": {
             "pageInfo": [
-                206
+                204
             ],
             "edges": [
-                205
+                203
             ],
             "__typename": [
                 1
@@ -4098,10 +4037,10 @@ export default {
         },
         "ObjectFieldsConnection": {
             "pageInfo": [
-                206
+                204
             ],
             "edges": [
-                215
+                213
             ],
             "__typename": [
                 1
@@ -4109,10 +4048,10 @@ export default {
         },
         "FieldConnection": {
             "pageInfo": [
-                206
+                204
             ],
             "edges": [
-                215
+                213
             ],
             "__typename": [
                 1
@@ -4120,7 +4059,7 @@ export default {
         },
         "BillingEntitlement": {
             "key": [
-                219
+                217
             ],
             "value": [
                 6
@@ -4158,7 +4097,7 @@ export default {
                 1
             ],
             "records": [
-                220
+                218
             ],
             "__typename": [
                 1
@@ -4228,7 +4167,7 @@ export default {
         },
         "AvailableWorkspacesAndAccessTokens": {
             "tokens": [
-                228
+                226
             ],
             "availableWorkspaces": [
                 199
@@ -4283,7 +4222,7 @@ export default {
                 32
             ],
             "workspace": [
-                233
+                231
             ],
             "__typename": [
                 1
@@ -4332,7 +4271,7 @@ export default {
         },
         "AuthTokens": {
             "tokens": [
-                228
+                226
             ],
             "__typename": [
                 1
@@ -4373,7 +4312,7 @@ export default {
                 32
             ],
             "workspace": [
-                233
+                231
             ],
             "__typename": [
                 1
@@ -4395,7 +4334,7 @@ export default {
                 1
             ],
             "dailyUsage": [
-                244
+                242
             ],
             "__typename": [
                 1
@@ -4412,7 +4351,7 @@ export default {
                 185
             ],
             "timeSeries": [
-                244
+                242
             ],
             "periodStart": [
                 4
@@ -4421,7 +4360,7 @@ export default {
                 4
             ],
             "userDailyUsage": [
-                245
+                243
             ],
             "__typename": [
                 1
@@ -4461,6 +4400,70 @@ export default {
             ],
             "createdAt": [
                 4
+            ],
+            "__typename": [
+                1
+            ]
+        },
+        "MarketplaceApp": {
+            "id": [
+                1
+            ],
+            "name": [
+                1
+            ],
+            "description": [
+                1
+            ],
+            "icon": [
+                1
+            ],
+            "author": [
+                1
+            ],
+            "category": [
+                1
+            ],
+            "logo": [
+                1
+            ],
+            "sourcePackage": [
+                1
+            ],
+            "isFeatured": [
+                6
+            ],
+            "__typename": [
+                1
+            ]
+        },
+        "MarketplaceAppDetail": {
+            "universalIdentifier": [
+                1
+            ],
+            "id": [
+                1
+            ],
+            "name": [
+                1
+            ],
+            "sourceType": [
+                8
+            ],
+            "sourcePackage": [
+                1
+            ],
+            "latestAvailableVersion": [
+                1
+            ],
+            "isListed": [
+                6
+            ],
+            "isFeatured": [
+                6
+            ],
+            "manifest": [
+                15
             ],
             "__typename": [
                 1
@@ -5377,7 +5380,7 @@ export default {
         },
         "AgentChatThreadConnection": {
             "pageInfo": [
-                206
+                204
             ],
             "edges": [
                 296
@@ -5984,7 +5987,7 @@ export default {
                 }
             ],
             "objectRecordCounts": [
-                212
+                210
             ],
             "object": [
                 49,
@@ -5996,7 +5999,7 @@ export default {
                 }
             ],
             "objects": [
-                213,
+                211,
                 {
                     "paging": [
                         42,
@@ -6018,7 +6021,7 @@ export default {
                 }
             ],
             "indexMetadatas": [
-                207,
+                205,
                 {
                     "paging": [
                         42,
@@ -6067,7 +6070,7 @@ export default {
                 }
             ],
             "fields": [
-                217,
+                215,
                 {
                     "paging": [
                         42,
@@ -6219,7 +6222,7 @@ export default {
                 }
             ],
             "checkUserExists": [
-                241,
+                239,
                 {
                     "email": [
                         1,
@@ -6231,7 +6234,7 @@ export default {
                 }
             ],
             "checkWorkspaceInviteHashIsValid": [
-                242,
+                240,
                 {
                     "inviteHash": [
                         1,
@@ -6249,7 +6252,7 @@ export default {
                 }
             ],
             "validatePasswordResetToken": [
-                236,
+                234,
                 {
                     "passwordResetToken": [
                         1,
@@ -6334,18 +6337,6 @@ export default {
                     "id": [
                         3,
                         "UUID!"
-                    ]
-                }
-            ],
-            "findManyMarketplaceApps": [
-                201
-            ],
-            "findMarketplaceAppDetail": [
-                202,
-                {
-                    "universalIdentifier": [
-                        1,
-                        "String!"
                     ]
                 }
             ],
@@ -6444,7 +6435,7 @@ export default {
                 }
             ],
             "getUsageAnalytics": [
-                246,
+                244,
                 {
                     "input": [
                         340
@@ -6459,6 +6450,18 @@ export default {
             ],
             "getEmailingDomains": [
                 252
+            ],
+            "findManyMarketplaceApps": [
+                248
+            ],
+            "findMarketplaceAppDetail": [
+                249,
+                {
+                    "universalIdentifier": [
+                        1,
+                        "String!"
+                    ]
+                }
             ],
             "__typename": [
                 1
@@ -7615,7 +7618,7 @@ export default {
                 }
             ],
             "upsertRowLevelPermissionPredicates": [
-                222,
+                220,
                 {
                     "input": [
                         417,
@@ -7914,7 +7917,7 @@ export default {
                 }
             ],
             "getAuthorizationUrlForSSO": [
-                231,
+                229,
                 {
                     "input": [
                         442,
@@ -7923,7 +7926,7 @@ export default {
                 }
             ],
             "getLoginTokenFromCredentials": [
-                240,
+                238,
                 {
                     "email": [
                         1,
@@ -7949,7 +7952,7 @@ export default {
                 }
             ],
             "signIn": [
-                229,
+                227,
                 {
                     "email": [
                         1,
@@ -7971,7 +7974,7 @@ export default {
                 }
             ],
             "verifyEmailAndGetLoginToken": [
-                237,
+                235,
                 {
                     "emailVerificationToken": [
                         1,
@@ -7991,7 +7994,7 @@ export default {
                 }
             ],
             "verifyEmailAndGetWorkspaceAgnosticToken": [
-                229,
+                227,
                 {
                     "emailVerificationToken": [
                         1,
@@ -8007,7 +8010,7 @@ export default {
                 }
             ],
             "getAuthTokensFromOTP": [
-                239,
+                237,
                 {
                     "otp": [
                         1,
@@ -8027,7 +8030,7 @@ export default {
                 }
             ],
             "signUp": [
-                229,
+                227,
                 {
                     "email": [
                         1,
@@ -8049,7 +8052,7 @@ export default {
                 }
             ],
             "signUpInWorkspace": [
-                234,
+                232,
                 {
                     "email": [
                         1,
@@ -8080,13 +8083,13 @@ export default {
                 }
             ],
             "signUpInNewWorkspace": [
-                234
+                232
             ],
             "generateTransientToken": [
-                235
+                233
             ],
             "getAuthTokensFromLoginToken": [
-                239,
+                237,
                 {
                     "loginToken": [
                         1,
@@ -8099,7 +8102,7 @@ export default {
                 }
             ],
             "authorizeApp": [
-                227,
+                225,
                 {
                     "clientId": [
                         1,
@@ -8121,7 +8124,7 @@ export default {
                 }
             ],
             "renewToken": [
-                239,
+                237,
                 {
                     "appToken": [
                         1,
@@ -8130,7 +8133,7 @@ export default {
                 }
             ],
             "generateApiKeyToken": [
-                238,
+                236,
                 {
                     "apiKeyId": [
                         3,
@@ -8143,7 +8146,7 @@ export default {
                 }
             ],
             "emailPasswordResetLink": [
-                230,
+                228,
                 {
                     "email": [
                         1,
@@ -8155,7 +8158,7 @@ export default {
                 }
             ],
             "updatePasswordViaResetToken": [
-                232,
+                230,
                 {
                     "passwordResetToken": [
                         1,
@@ -8256,7 +8259,7 @@ export default {
                 }
             ],
             "initiateOTPProvisioning": [
-                225,
+                223,
                 {
                     "loginToken": [
                         1,
@@ -8269,10 +8272,10 @@ export default {
                 }
             ],
             "initiateOTPProvisioningForAuthenticatedUser": [
-                225
+                223
             ],
             "deleteTwoFactorAuthenticationMethod": [
-                224,
+                222,
                 {
                     "twoFactorAuthenticationMethodId": [
                         3,
@@ -8281,7 +8284,7 @@ export default {
                 }
             ],
             "verifyTwoFactorAuthenticationMethodForAuthenticatedUser": [
-                226,
+                224,
                 {
                     "otp": [
                         1,
@@ -8357,22 +8360,7 @@ export default {
                 69
             ],
             "checkCustomDomainValidRecords": [
-                221
-            ],
-            "installMarketplaceApp": [
-                6,
-                {
-                    "universalIdentifier": [
-                        1,
-                        "String!"
-                    ],
-                    "version": [
-                        1
-                    ]
-                }
-            ],
-            "syncMarketplaceCatalog": [
-                6
+                219
             ],
             "installApplication": [
                 6,
@@ -8467,7 +8455,7 @@ export default {
                 }
             ],
             "impersonate": [
-                243,
+                241,
                 {
                     "userId": [
                         3,
@@ -8551,7 +8539,7 @@ export default {
                 }
             ],
             "checkPublicDomainValidRecords": [
-                221,
+                219,
                 {
                     "domain": [
                         1,
@@ -8599,8 +8587,23 @@ export default {
                     ]
                 }
             ],
+            "installMarketplaceApp": [
+                6,
+                {
+                    "universalIdentifier": [
+                        1,
+                        "String!"
+                    ],
+                    "version": [
+                        1
+                    ]
+                }
+            ],
+            "syncMarketplaceCatalog": [
+                6
+            ],
             "createDevelopmentApplication": [
-                247,
+                245,
                 {
                     "universalIdentifier": [
                         1,
@@ -8622,7 +8625,7 @@ export default {
                 }
             ],
             "syncApplication": [
-                248,
+                246,
                 {
                     "manifest": [
                         15,
@@ -8631,7 +8634,7 @@ export default {
                 }
             ],
             "uploadApplicationFile": [
-                249,
+                247,
                 {
                     "file": [
                         348,
@@ -10978,7 +10981,7 @@ export default {
                 }
             ],
             "logicFunctionLogs": [
-                223,
+                221,
                 {
                     "input": [
                         468,

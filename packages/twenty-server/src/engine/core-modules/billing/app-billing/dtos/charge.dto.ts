@@ -3,11 +3,13 @@ import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { UsageOperationType } from 'src/engine/core-modules/usage/enums/usage-operation-type.enum';
 import { UsageUnit } from 'src/engine/core-modules/usage/enums/usage-unit.enum';
 
-// Billing payload apps send to POST /app/billing/charge. `operationType` is
-// the existing workspace usage taxonomy — apps pick the appropriate entry
-// (e.g. WEB_SEARCH for search-style apps, CODE_EXECUTION for sandbox-style
-// apps). `unit` and `quantity` describe the billable thing; the credit
-// amount is expressed in micro-credits so fractional pricing works.
+// `operationType` + `unit` are not redundant: operationType is the semantic
+// category (WEB_SEARCH, CODE_EXECUTION) used by the billing/analytics
+// pipeline, while unit is how the quantity is counted (INVOCATION, TOKEN,
+// MINUTE, BYTE). The same operation can legitimately be billed on different
+// units — e.g. two code-interpreter apps pricing per MINUTE vs per
+// INVOCATION — and we mirror the existing `UsageEvent` shape so app-sourced
+// records flow through the same listeners as native ones.
 export class ChargeDto {
   @IsInt()
   @Min(0)

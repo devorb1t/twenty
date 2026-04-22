@@ -47,6 +47,7 @@ type ApplicationRegistration {
   latestAvailableVersion: String
   isListed: Boolean!
   isFeatured: Boolean!
+  isPreInstalled: Boolean!
   logoUrl: String
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -1908,30 +1909,6 @@ type DeletedWorkspaceMember {
   userWorkspaceId: UUID
 }
 
-type MarketplaceApp {
-  id: String!
-  name: String!
-  description: String!
-  icon: String!
-  author: String!
-  category: String!
-  logo: String
-  sourcePackage: String
-  isFeatured: Boolean!
-}
-
-type MarketplaceAppDetail {
-  universalIdentifier: String!
-  id: String!
-  name: String!
-  sourceType: ApplicationRegistrationSourceType!
-  sourcePackage: String
-  latestAvailableVersion: String
-  isListed: Boolean!
-  isFeatured: Boolean!
-  manifest: JSON
-}
-
 type Relation {
   type: RelationType!
   sourceObjectMetadata: Object!
@@ -2219,6 +2196,30 @@ type File {
   path: String!
   size: Float!
   createdAt: DateTime!
+}
+
+type MarketplaceApp {
+  id: String!
+  name: String!
+  description: String!
+  icon: String!
+  author: String!
+  category: String!
+  logo: String
+  sourcePackage: String
+  isFeatured: Boolean!
+}
+
+type MarketplaceAppDetail {
+  universalIdentifier: String!
+  id: String!
+  name: String!
+  sourceType: ApplicationRegistrationSourceType!
+  sourcePackage: String
+  latestAvailableVersion: String
+  isListed: Boolean!
+  isFeatured: Boolean!
+  manifest: JSON
 }
 
 type PublicDomain {
@@ -3023,8 +3024,6 @@ type Query {
   currentWorkspace: Workspace!
   getPublicWorkspaceDataByDomain(origin: String): PublicWorkspaceData!
   getPublicWorkspaceDataById(id: UUID!): PublicWorkspaceDataSummary!
-  findManyMarketplaceApps: [MarketplaceApp!]!
-  findMarketplaceAppDetail(universalIdentifier: String!): MarketplaceAppDetail!
   findManyApplications: [Application!]!
   findOneApplication(id: UUID, universalIdentifier: UUID): Application!
   getSSOIdentityProviders: [FindAvailableSSOIDP!]!
@@ -3039,6 +3038,8 @@ type Query {
   getPostgresCredentials: PostgresCredentials
   findManyPublicDomains: [PublicDomain!]!
   getEmailingDomains: [EmailingDomain!]!
+  findManyMarketplaceApps: [MarketplaceApp!]!
+  findMarketplaceAppDetail(universalIdentifier: String!): MarketplaceAppDetail!
 }
 
 input GetApiKeyInput {
@@ -3335,8 +3336,6 @@ type Mutation {
   updateWorkspace(data: UpdateWorkspaceInput!): Workspace!
   deleteCurrentWorkspace: Workspace!
   checkCustomDomainValidRecords: DomainValidRecords
-  installMarketplaceApp(universalIdentifier: String!, version: String): Boolean!
-  syncMarketplaceCatalog: Boolean!
   installApplication(appRegistrationId: String!, version: String): Boolean!
   runWorkspaceMigration(workspaceMigration: WorkspaceMigrationInput!): Boolean!
   uninstallApplication(universalIdentifier: String!): Boolean!
@@ -3360,6 +3359,8 @@ type Mutation {
   deleteEmailingDomain(id: String!): Boolean!
   verifyEmailingDomain(id: String!): EmailingDomain!
   createOneAppToken(input: CreateOneAppTokenInput!): AppToken!
+  installMarketplaceApp(universalIdentifier: String!, version: String): Boolean!
+  syncMarketplaceCatalog: Boolean!
   createDevelopmentApplication(universalIdentifier: String!, name: String!): DevelopmentApplication!
   generateApplicationToken(applicationId: UUID!): ApplicationTokenPair!
   syncApplication(manifest: JSON!): WorkspaceMigration!

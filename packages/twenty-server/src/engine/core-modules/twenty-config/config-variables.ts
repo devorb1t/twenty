@@ -696,15 +696,6 @@ export class ConfigVariables {
   EXA_API_KEY?: string;
 
   @ConfigVariablesMetadata({
-    group: ConfigVariablesGroup.ADVANCED_SETTINGS,
-    description:
-      'Comma-separated list of npm package names to auto-install on every new workspace. Existing workspaces are backfilled via the `install-pre-installed-apps` CLI command. Example: `@twenty-apps/exa,@twenty-apps/call-recorder`',
-    type: ConfigVariableType.STRING,
-  })
-  @IsOptional()
-  PRE_INSTALLED_APPS: string = '';
-
-  @ConfigVariablesMetadata({
     group: ConfigVariablesGroup.ANALYTICS_CONFIG,
     description: 'Enable or disable analytics for telemetry',
     type: ConfigVariableType.BOOLEAN,

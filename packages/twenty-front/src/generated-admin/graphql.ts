@@ -136,6 +136,7 @@ export type ApplicationRegistration = {
   id: Scalars['UUID'];
   isFeatured: Scalars['Boolean'];
   isListed: Scalars['Boolean'];
+  isPreInstalled: Scalars['Boolean'];
   latestAvailableVersion?: Maybe<Scalars['String']>;
   logoUrl?: Maybe<Scalars['String']>;
   name: Scalars['String'];

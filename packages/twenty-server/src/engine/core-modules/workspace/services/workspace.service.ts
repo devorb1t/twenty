@@ -822,10 +822,10 @@ export class WorkspaceService extends TypeOrmQueryService<WorkspaceEntity> {
       this.exceptionHandlerService.captureExceptions([error as Error]);
     }
 
-    // Install apps declared in PRE_INSTALLED_APPS asynchronously so a slow
-    // npm download / migration doesn't block workspace activation. Failures
-    // are non-critical — the admin can backfill later via the
-    // `install-pre-installed-apps` CLI command.
+    // Install apps flagged `isPreInstalled` asynchronously so a slow
+    // install doesn't block workspace activation. Failures are non-critical
+    // — the admin can backfill later via the `install-pre-installed-apps`
+    // CLI command.
     void this.preInstalledAppsService
       .installOnWorkspace(workspaceId)
       .catch((error) => {

@@ -106,42 +106,6 @@ export class MarketplaceService {
     }
   }
 
-  // Resolves the latest published version of an exact npm package name
-  // directly via `GET {registryUrl}/{packageName}` (standard npm registry
-  // API: returns a document whose `dist-tags.latest` names the most recent
-  // stable release). Used by PreInstalledAppsService to resolve admin-
-  // declared packages, which must succeed regardless of where the package
-  // ranks in keyword-search results — fetchAppsFromRegistry caps at 250
-  // results and any long-tail package could otherwise be silently missed.
-  async fetchLatestVersionFromRegistry(
-    packageName: string,
-  ): Promise<string | null> {
-    const registryUrl = this.twentyConfigService.get('APP_REGISTRY_URL');
-    const encodedName = encodeURIComponent(packageName).replace(/%40/g, '@');
-    const url = `${registryUrl.replace(/\/$/, '')}/${encodedName}`;
-
-    try {
-      const { data } = await axios.get(url, {
-        headers: { 'User-Agent': 'Twenty-Marketplace' },
-        timeout: 10_000,
-      });
-
-      const latest: unknown = data?.['dist-tags']?.latest;
-
-      if (typeof latest !== 'string' || latest.length === 0) {
-        return null;
-      }
-
-      return latest;
-    } catch (error) {
-      this.logger.warn(
-        `Failed to resolve latest version for "${packageName}" from registry: ${error instanceof Error ? error.message : String(error)}`,
-      );
-
-      return null;
-    }
-  }
-
   async fetchAppsFromRegistry(): Promise<RegistryPackageInfo[]> {
     const registryUrl = this.twentyConfigService.get('APP_REGISTRY_URL');
 

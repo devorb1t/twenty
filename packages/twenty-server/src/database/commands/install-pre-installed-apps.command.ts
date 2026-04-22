@@ -5,16 +5,16 @@ import { WorkspaceIteratorService } from 'src/database/commands/command-runners/
 import { type RunOnWorkspaceArgs } from 'src/database/commands/command-runners/workspace.command-runner';
 import { PreInstalledAppsService } from 'src/engine/core-modules/application/pre-installed-apps/pre-installed-apps.service';
 
-// Backfill command for the `PRE_INSTALLED_APPS` config. Iterates active and
-// suspended workspaces and installs every pre-installed app that isn't yet
-// installed. Idempotent — workspaces that already have the app skip over
-// cleanly (ApplicationInstallService short-circuits when the same version
-// is already present). Run after changing `PRE_INSTALLED_APPS` to roll the
-// change out to existing tenants.
+// Backfills pre-installed apps across active + suspended workspaces. An
+// ApplicationRegistration becomes pre-installed the moment an admin sets
+// `isPreInstalled=true`; new workspaces auto-install from that point
+// forward, and this command rolls the change out to tenants created before
+// the flag was flipped. Idempotent — ApplicationInstallService
+// short-circuits when the same version is already installed.
 @Command({
   name: 'install-pre-installed-apps',
   description:
-    'Install all apps listed in PRE_INSTALLED_APPS on every active and suspended workspace. Idempotent.',
+    'Install every application registration flagged `isPreInstalled` on every active and suspended workspace. Idempotent.',
 })
 export class InstallPreInstalledAppsCommand extends ActiveOrSuspendedWorkspaceCommandRunner {
   constructor(
