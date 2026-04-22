@@ -1,28 +1,20 @@
 import Exa from 'exa-js';
-import {
-  DEFAULT_API_URL_NAME,
-  DEFAULT_APP_ACCESS_TOKEN_NAME,
-} from 'twenty-shared/application';
 import { defineLogicFunction } from 'twenty-sdk/define';
 
-import {
-  DEFAULT_NUM_RESULTS,
-  exaWebSearchInputSchema,
-  type ExaWebSearchInput,
-} from './exa-web-search.schema';
+import { DEFAULT_NUM_RESULTS } from './constants/default-num-results.constant';
+import { exaWebSearchInputSchema } from './schemas/exa-web-search-input.schema';
+import { type ExaWebSearchInput } from './types/exa-web-search-input.type';
+import { chargeCredits } from '../utils/charge-credits';
 
 const MAX_HIGHLIGHT_CHARACTERS = 4000;
 
-// The outer runtime bounds the whole handler at `timeoutSeconds: 30`; these
-// inner bounds ensure we return a clean error instead of letting a slow
-// upstream consume the entire budget.
+// Inner bound — the runtime's `timeoutSeconds: 30` is the outer kill
+// switch; this one ensures we return a clean error on a slow Exa response.
 const EXA_SEARCH_TIMEOUT_MS = 25_000;
-const BILLING_CHARGE_TIMEOUT_MS = 5_000;
 
 // Exa auto-search pricing (2025): $0.007 covers the first 10 results,
-// additional results cost $0.001 each. Twenty's billing contract expresses
-// cost in micro-credits where 1 micro-credit = $0.000001
-// (DOLLAR_TO_CREDIT_MULTIPLIER = 1_000_000 server-side).
+// $0.001 per additional result. Twenty charges in micro-credits where
+// 1 USD = 1_000_000 micro-credits (DOLLAR_TO_CREDIT_MULTIPLIER).
 const MICRO_CREDITS_PER_DOLLAR = 1_000_000;
 const EXA_BASE_COST_DOLLARS = 0.007;
 const EXA_COST_PER_ADDITIONAL_RESULT_DOLLARS = 0.001;
@@ -48,60 +40,10 @@ const computeMicroCredits = (numResults: number): number => {
   return Math.round(dollars * MICRO_CREDITS_PER_DOLLAR);
 };
 
-const chargeCredits = async (
-  numResults: number,
-  env: Record<string, string | undefined>,
-): Promise<void> => {
-  const apiUrl = env[DEFAULT_API_URL_NAME];
-  const token = env[DEFAULT_APP_ACCESS_TOKEN_NAME];
-
-  if (!apiUrl || !token) {
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      `${apiUrl.replace(/\/$/, '')}/app/billing/charge`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          creditsUsedMicro: computeMicroCredits(numResults),
-          quantity: 1,
-          operationType: 'WEB_SEARCH',
-          resourceContext: 'exa',
-        }),
-        signal: AbortSignal.timeout(BILLING_CHARGE_TIMEOUT_MS),
-      },
-    );
-
-    // fetch() only rejects on network errors, not on 4xx/5xx responses —
-    // inspect the status explicitly so billing failures are visible.
-    if (!response.ok) {
-      const body = await response.text().catch(() => '');
-
-      console.error(
-        `exa_web_search: billing charge returned ${response.status} ${response.statusText}: ${body}`,
-      );
-    }
-  } catch (error) {
-    // Non-fatal — log and continue. The tool result is already computed;
-    // losing a billing event is preferable to surfacing a billing failure
-    // as a tool failure.
-    console.error(
-      `exa_web_search: failed to record billing: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
-};
-
 const handler = async (
   parameters: ExaWebSearchInput,
 ): Promise<HandlerResult> => {
-  const env = process.env;
-  const apiKey = env.EXA_API_KEY;
+  const apiKey = process.env.EXA_API_KEY;
 
   if (!apiKey) {
     return {
@@ -119,9 +61,7 @@ const handler = async (
   try {
     const exa = new Exa(apiKey);
 
-    // exa-js has no built-in timeout/abort option, so race it manually. This
-    // is the inner bound mentioned above — the logic-function runtime's
-    // `timeoutSeconds: 30` is the outer kill switch.
+    // exa-js has no built-in abort — race it manually.
     const response = await Promise.race([
       exa.search(query, {
         type: 'auto',
@@ -145,7 +85,11 @@ const handler = async (
       snippet: result.highlights?.join('\n') ?? '',
     }));
 
-    await chargeCredits(results.length, env);
+    await chargeCredits({
+      creditsUsedMicro: computeMicroCredits(results.length),
+      operationType: 'WEB_SEARCH',
+      resourceContext: 'exa',
+    });
 
     return {
       success: true,

@@ -139,10 +139,10 @@ export class ChatExecutionService {
       `Built tool catalog with ${toolCatalog.length} tools, ${skillCatalog.length} skills available`,
     );
 
-    // Preload the Exa app tool (shipped as `@twenty-apps/exa`) so chat has
-    // structured web search ready without discovery. getToolsByName silently
-    // skips the entry when the workspace doesn't have the Exa app installed
-    // (admin hasn't registered it + flipped `autoInstallOnNewWorkspaces`).
+    // Preload the Exa app tool (shipped as the `exa` npm package) so chat
+    // has structured web search ready without discovery. getToolsByName
+    // silently skips the entry when the workspace doesn't have the Exa app
+    // installed (admin hasn't registered it + flipped `isPreInstalled`).
     // TODO(app-preloading): move this list into the app manifest so any
     // app can declare `preloadedInChat: true` instead of hardcoding here.
     const toolNamesToPreload = [...COMMON_PRELOAD_TOOLS, 'app_exa_web_search'];

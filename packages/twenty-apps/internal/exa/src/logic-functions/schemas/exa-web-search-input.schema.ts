@@ -1,29 +1,11 @@
-// JSON Schema describing the input accepted by the exa_web_search tool.
-// Kept as a plain JSON Schema (not Zod) because this is shipped through the
-// application manifest and consumed by Twenty's tool provider at runtime.
+import { type InputJsonSchema } from 'twenty-shared/logic-function';
 
-export const DEFAULT_NUM_RESULTS = 10;
-export const MAX_NUM_RESULTS = 30;
+import { DEFAULT_NUM_RESULTS } from '../constants/default-num-results.constant';
+import { EXA_CATEGORIES } from '../constants/exa-categories.constant';
 
-export const EXA_CATEGORIES = [
-  'company',
-  'research paper',
-  'news',
-  'pdf',
-  'personal site',
-  'financial report',
-  'people',
-] as const;
+const MAX_NUM_RESULTS = 30;
 
-export type ExaCategory = (typeof EXA_CATEGORIES)[number];
-
-export type ExaWebSearchInput = {
-  query: string;
-  category?: ExaCategory;
-  numResults?: number;
-};
-
-export const exaWebSearchInputSchema = {
+export const exaWebSearchInputSchema: InputJsonSchema = {
   type: 'object',
   properties: {
     query: {
@@ -33,7 +15,7 @@ export const exaWebSearchInputSchema = {
     },
     category: {
       type: 'string',
-      enum: EXA_CATEGORIES,
+      enum: [...EXA_CATEGORIES],
       description:
         'Optional content category to focus the search. Use "company" for business/organization info, "people" for person profiles, "news" for recent articles, "research paper" for academic content.',
     },
@@ -46,4 +28,4 @@ export const exaWebSearchInputSchema = {
   },
   required: ['query'],
   additionalProperties: false,
-} as const;
+};
