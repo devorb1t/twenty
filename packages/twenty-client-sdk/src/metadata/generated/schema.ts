@@ -1622,6 +1622,32 @@ export interface DeletedWorkspaceMember {
     __typename: 'DeletedWorkspaceMember'
 }
 
+export interface MarketplaceApp {
+    id: Scalars['String']
+    name: Scalars['String']
+    description: Scalars['String']
+    icon: Scalars['String']
+    author: Scalars['String']
+    category: Scalars['String']
+    logo?: Scalars['String']
+    sourcePackage?: Scalars['String']
+    isFeatured: Scalars['Boolean']
+    __typename: 'MarketplaceApp'
+}
+
+export interface MarketplaceAppDetail {
+    universalIdentifier: Scalars['String']
+    id: Scalars['String']
+    name: Scalars['String']
+    sourceType: ApplicationRegistrationSourceType
+    sourcePackage?: Scalars['String']
+    latestAvailableVersion?: Scalars['String']
+    isListed: Scalars['Boolean']
+    isFeatured: Scalars['Boolean']
+    manifest?: Scalars['JSON']
+    __typename: 'MarketplaceAppDetail'
+}
+
 export interface Relation {
     type: RelationType
     sourceObjectMetadata: Object
@@ -1933,32 +1959,6 @@ export interface File {
     size: Scalars['Float']
     createdAt: Scalars['DateTime']
     __typename: 'File'
-}
-
-export interface MarketplaceApp {
-    id: Scalars['String']
-    name: Scalars['String']
-    description: Scalars['String']
-    icon: Scalars['String']
-    author: Scalars['String']
-    category: Scalars['String']
-    logo?: Scalars['String']
-    sourcePackage?: Scalars['String']
-    isFeatured: Scalars['Boolean']
-    __typename: 'MarketplaceApp'
-}
-
-export interface MarketplaceAppDetail {
-    universalIdentifier: Scalars['String']
-    id: Scalars['String']
-    name: Scalars['String']
-    sourceType: ApplicationRegistrationSourceType
-    sourcePackage?: Scalars['String']
-    latestAvailableVersion?: Scalars['String']
-    isListed: Scalars['Boolean']
-    isFeatured: Scalars['Boolean']
-    manifest?: Scalars['JSON']
-    __typename: 'MarketplaceAppDetail'
 }
 
 export interface PublicDomain {
@@ -2612,6 +2612,8 @@ export interface Query {
     currentWorkspace: Workspace
     getPublicWorkspaceDataByDomain: PublicWorkspaceData
     getPublicWorkspaceDataById: PublicWorkspaceDataSummary
+    findManyMarketplaceApps: MarketplaceApp[]
+    findMarketplaceAppDetail: MarketplaceAppDetail
     findManyApplications: Application[]
     findOneApplication: Application
     getSSOIdentityProviders: FindAvailableSSOIDP[]
@@ -2626,8 +2628,6 @@ export interface Query {
     getPostgresCredentials?: PostgresCredentials
     findManyPublicDomains: PublicDomain[]
     getEmailingDomains: EmailingDomain[]
-    findManyMarketplaceApps: MarketplaceApp[]
-    findMarketplaceAppDetail: MarketplaceAppDetail
     __typename: 'Query'
 }
 
@@ -2817,6 +2817,8 @@ export interface Mutation {
     updateWorkspace: Workspace
     deleteCurrentWorkspace: Workspace
     checkCustomDomainValidRecords?: DomainValidRecords
+    installMarketplaceApp: Scalars['Boolean']
+    syncMarketplaceCatalog: Scalars['Boolean']
     installApplication: Scalars['Boolean']
     runWorkspaceMigration: Scalars['Boolean']
     uninstallApplication: Scalars['Boolean']
@@ -2840,8 +2842,6 @@ export interface Mutation {
     deleteEmailingDomain: Scalars['Boolean']
     verifyEmailingDomain: EmailingDomain
     createOneAppToken: AppToken
-    installMarketplaceApp: Scalars['Boolean']
-    syncMarketplaceCatalog: Scalars['Boolean']
     createDevelopmentApplication: DevelopmentApplication
     generateApplicationToken: ApplicationTokenPair
     syncApplication: WorkspaceMigration
@@ -4563,6 +4563,34 @@ export interface DeletedWorkspaceMemberGenqlSelection{
     __scalar?: boolean | number
 }
 
+export interface MarketplaceAppGenqlSelection{
+    id?: boolean | number
+    name?: boolean | number
+    description?: boolean | number
+    icon?: boolean | number
+    author?: boolean | number
+    category?: boolean | number
+    logo?: boolean | number
+    sourcePackage?: boolean | number
+    isFeatured?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface MarketplaceAppDetailGenqlSelection{
+    universalIdentifier?: boolean | number
+    id?: boolean | number
+    name?: boolean | number
+    sourceType?: boolean | number
+    sourcePackage?: boolean | number
+    latestAvailableVersion?: boolean | number
+    isListed?: boolean | number
+    isFeatured?: boolean | number
+    manifest?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface RelationGenqlSelection{
     type?: boolean | number
     sourceObjectMetadata?: ObjectGenqlSelection
@@ -4911,34 +4939,6 @@ export interface FileGenqlSelection{
     path?: boolean | number
     size?: boolean | number
     createdAt?: boolean | number
-    __typename?: boolean | number
-    __scalar?: boolean | number
-}
-
-export interface MarketplaceAppGenqlSelection{
-    id?: boolean | number
-    name?: boolean | number
-    description?: boolean | number
-    icon?: boolean | number
-    author?: boolean | number
-    category?: boolean | number
-    logo?: boolean | number
-    sourcePackage?: boolean | number
-    isFeatured?: boolean | number
-    __typename?: boolean | number
-    __scalar?: boolean | number
-}
-
-export interface MarketplaceAppDetailGenqlSelection{
-    universalIdentifier?: boolean | number
-    id?: boolean | number
-    name?: boolean | number
-    sourceType?: boolean | number
-    sourcePackage?: boolean | number
-    latestAvailableVersion?: boolean | number
-    isListed?: boolean | number
-    isFeatured?: boolean | number
-    manifest?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -5641,6 +5641,8 @@ export interface QueryGenqlSelection{
     currentWorkspace?: WorkspaceGenqlSelection
     getPublicWorkspaceDataByDomain?: (PublicWorkspaceDataGenqlSelection & { __args?: {origin?: (Scalars['String'] | null)} })
     getPublicWorkspaceDataById?: (PublicWorkspaceDataSummaryGenqlSelection & { __args: {id: Scalars['UUID']} })
+    findManyMarketplaceApps?: MarketplaceAppGenqlSelection
+    findMarketplaceAppDetail?: (MarketplaceAppDetailGenqlSelection & { __args: {universalIdentifier: Scalars['String']} })
     findManyApplications?: ApplicationGenqlSelection
     findOneApplication?: (ApplicationGenqlSelection & { __args?: {id?: (Scalars['UUID'] | null), universalIdentifier?: (Scalars['UUID'] | null)} })
     getSSOIdentityProviders?: FindAvailableSSOIDPGenqlSelection
@@ -5655,8 +5657,6 @@ export interface QueryGenqlSelection{
     getPostgresCredentials?: PostgresCredentialsGenqlSelection
     findManyPublicDomains?: PublicDomainGenqlSelection
     getEmailingDomains?: EmailingDomainGenqlSelection
-    findManyMarketplaceApps?: MarketplaceAppGenqlSelection
-    findMarketplaceAppDetail?: (MarketplaceAppDetailGenqlSelection & { __args: {universalIdentifier: Scalars['String']} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -5865,6 +5865,8 @@ export interface MutationGenqlSelection{
     updateWorkspace?: (WorkspaceGenqlSelection & { __args: {data: UpdateWorkspaceInput} })
     deleteCurrentWorkspace?: WorkspaceGenqlSelection
     checkCustomDomainValidRecords?: DomainValidRecordsGenqlSelection
+    installMarketplaceApp?: { __args: {universalIdentifier: Scalars['String'], version?: (Scalars['String'] | null)} }
+    syncMarketplaceCatalog?: boolean | number
     installApplication?: { __args: {appRegistrationId: Scalars['String'], version?: (Scalars['String'] | null)} }
     runWorkspaceMigration?: { __args: {workspaceMigration: WorkspaceMigrationInput} }
     uninstallApplication?: { __args: {universalIdentifier: Scalars['String']} }
@@ -5888,8 +5890,6 @@ export interface MutationGenqlSelection{
     deleteEmailingDomain?: { __args: {id: Scalars['String']} }
     verifyEmailingDomain?: (EmailingDomainGenqlSelection & { __args: {id: Scalars['String']} })
     createOneAppToken?: (AppTokenGenqlSelection & { __args: {input: CreateOneAppTokenInput} })
-    installMarketplaceApp?: { __args: {universalIdentifier: Scalars['String'], version?: (Scalars['String'] | null)} }
-    syncMarketplaceCatalog?: boolean | number
     createDevelopmentApplication?: (DevelopmentApplicationGenqlSelection & { __args: {universalIdentifier: Scalars['String'], name: Scalars['String']} })
     generateApplicationToken?: (ApplicationTokenPairGenqlSelection & { __args: {applicationId: Scalars['UUID']} })
     syncApplication?: (WorkspaceMigrationGenqlSelection & { __args: {manifest: Scalars['JSON']} })
@@ -7359,6 +7359,22 @@ export interface LogicFunctionLogsInput {applicationId?: (Scalars['UUID'] | null
     
 
 
+    const MarketplaceApp_possibleTypes: string[] = ['MarketplaceApp']
+    export const isMarketplaceApp = (obj?: { __typename?: any } | null): obj is MarketplaceApp => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isMarketplaceApp"')
+      return MarketplaceApp_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const MarketplaceAppDetail_possibleTypes: string[] = ['MarketplaceAppDetail']
+    export const isMarketplaceAppDetail = (obj?: { __typename?: any } | null): obj is MarketplaceAppDetail => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isMarketplaceAppDetail"')
+      return MarketplaceAppDetail_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
     const Relation_possibleTypes: string[] = ['Relation']
     export const isRelation = (obj?: { __typename?: any } | null): obj is Relation => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isRelation"')
@@ -7715,22 +7731,6 @@ export interface LogicFunctionLogsInput {applicationId?: (Scalars['UUID'] | null
     export const isFile = (obj?: { __typename?: any } | null): obj is File => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isFile"')
       return File_possibleTypes.includes(obj.__typename)
-    }
-    
-
-
-    const MarketplaceApp_possibleTypes: string[] = ['MarketplaceApp']
-    export const isMarketplaceApp = (obj?: { __typename?: any } | null): obj is MarketplaceApp => {
-      if (!obj?.__typename) throw new Error('__typename is missing in "isMarketplaceApp"')
-      return MarketplaceApp_possibleTypes.includes(obj.__typename)
-    }
-    
-
-
-    const MarketplaceAppDetail_possibleTypes: string[] = ['MarketplaceAppDetail']
-    export const isMarketplaceAppDetail = (obj?: { __typename?: any } | null): obj is MarketplaceAppDetail => {
-      if (!obj?.__typename) throw new Error('__typename is missing in "isMarketplaceAppDetail"')
-      return MarketplaceAppDetail_possibleTypes.includes(obj.__typename)
     }
     
 
