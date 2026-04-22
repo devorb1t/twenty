@@ -13,6 +13,12 @@ import {
 
 const MAX_HIGHLIGHT_CHARACTERS = 4000;
 
+// The outer runtime bounds the whole handler at `timeoutSeconds: 30`; these
+// inner bounds ensure we return a clean error instead of letting a slow
+// upstream consume the entire budget.
+const EXA_SEARCH_TIMEOUT_MS = 25_000;
+const BILLING_CHARGE_TIMEOUT_MS = 5_000;
+
 // Exa auto-search pricing (2025): $0.007 covers the first 10 results,
 // additional results cost $0.001 each. Twenty's billing contract expresses
 // cost in micro-credits where 1 micro-credit = $0.000001
@@ -69,6 +75,7 @@ const chargeCredits = async (
           operationType: 'WEB_SEARCH',
           resourceContext: 'exa',
         }),
+        signal: AbortSignal.timeout(BILLING_CHARGE_TIMEOUT_MS),
       },
     );
 
@@ -113,14 +120,25 @@ const handler = async (
   try {
     const exa = new Exa(apiKey);
 
-    const response = await exa.search(query, {
-      type: 'auto',
-      numResults,
-      category,
-      contents: {
-        highlights: { maxCharacters: MAX_HIGHLIGHT_CHARACTERS },
-      },
-    });
+    // exa-js has no built-in timeout/abort option, so race it manually. This
+    // is the inner bound mentioned above — the logic-function runtime's
+    // `timeoutSeconds: 30` is the outer kill switch.
+    const response = await Promise.race([
+      exa.search(query, {
+        type: 'auto',
+        numResults,
+        category,
+        contents: {
+          highlights: { maxCharacters: MAX_HIGHLIGHT_CHARACTERS },
+        },
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error('Exa search timed out')),
+          EXA_SEARCH_TIMEOUT_MS,
+        ),
+      ),
+    ]);
 
     const results: ExaSearchResult[] = response.results.map((result) => ({
       title: result.title ?? '',
