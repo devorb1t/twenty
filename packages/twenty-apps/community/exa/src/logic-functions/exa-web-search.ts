@@ -71,7 +71,6 @@ const chargeCredits = async (
         body: JSON.stringify({
           creditsUsedMicro: computeMicroCredits(numResults),
           quantity: 1,
-          unit: 'INVOCATION',
           operationType: 'WEB_SEARCH',
           resourceContext: 'exa',
         }),
