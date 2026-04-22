@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 
 import {
   DEFAULT_API_KEY_NAME,
@@ -6,6 +7,7 @@ import {
   DEFAULT_APP_ACCESS_TOKEN_NAME,
 } from 'twenty-shared/application';
 import { isDefined } from 'twenty-shared/utils';
+import { Repository } from 'typeorm';
 import { v4 } from 'uuid';
 
 import {
@@ -16,6 +18,7 @@ import {
 
 import { ApplicationLogsService } from 'src/engine/core-modules/application-logs/application-logs.service';
 import { parseApplicationLogLines } from 'src/engine/core-modules/application-logs/utils/parse-application-log-lines';
+import { ApplicationRegistrationVariableEntity } from 'src/engine/core-modules/application/application-registration-variable/application-registration-variable.entity';
 import type { FlatApplicationVariable } from 'src/engine/core-modules/application/application-variable/types/flat-application-variable.type';
 import { FlatApplication } from 'src/engine/core-modules/application/types/flat-application.type';
 import { AuditService } from 'src/engine/core-modules/audit/services/audit.service';
@@ -69,6 +72,8 @@ export class LogicFunctionExecutorService {
     private readonly auditService: AuditService,
     private readonly applicationLogsService: ApplicationLogsService,
     private readonly workspaceEventEmitter: WorkspaceEventEmitter,
+    @InjectRepository(ApplicationRegistrationVariableEntity)
+    private readonly applicationRegistrationVariableRepository: Repository<ApplicationRegistrationVariableEntity>,
   ) {}
 
   async execute({
@@ -219,13 +224,55 @@ export class LogicFunctionExecutorService {
 
     const baseUrl = cleanServerUrl(this.twentyConfigService.get('SERVER_URL'));
 
+    const serverVariables = await this.buildServerVariableEnvMap(
+      flatApplication.applicationRegistrationId,
+    );
+    const workspaceVariables = buildEnvVar(
+      flatApplicationVariables,
+      this.secretEncryptionService,
+    );
+
     return {
       [DEFAULT_API_URL_NAME]: baseUrl ?? '',
       [DEFAULT_APP_ACCESS_TOKEN_NAME]: applicationAccessToken.token,
       [DEFAULT_API_KEY_NAME]: applicationAccessToken.token,
       APPLICATION_ID: flatApplication.id,
-      ...buildEnvVar(flatApplicationVariables, this.secretEncryptionService),
+      // Server variables first, workspace variables override. Workspace-level
+      // values let a specific tenant customize a server default.
+      ...serverVariables,
+      ...workspaceVariables,
     };
+  }
+
+  // Resolves encrypted server-level variables (ApplicationRegistrationVariable)
+  // for the application's registration. Returns an empty object when the
+  // application isn't linked to a registration (legacy LOCAL apps) or when no
+  // server variables are configured.
+  private async buildServerVariableEnvMap(
+    applicationRegistrationId: string | null,
+  ): Promise<Record<string, string>> {
+    if (!isDefined(applicationRegistrationId)) {
+      return {};
+    }
+
+    const serverVariables =
+      await this.applicationRegistrationVariableRepository.find({
+        where: { applicationRegistrationId },
+      });
+
+    const envMap: Record<string, string> = {};
+
+    for (const variable of serverVariables) {
+      if (variable.encryptedValue === '') {
+        continue;
+      }
+
+      envMap[variable.key] = variable.isSecret
+        ? this.secretEncryptionService.decrypt(variable.encryptedValue)
+        : variable.encryptedValue;
+    }
+
+    return envMap;
   }
 
   private async handleExecutionResult({
