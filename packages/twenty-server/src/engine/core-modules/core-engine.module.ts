@@ -103,8 +103,6 @@ import { FileModule } from './file/file.module';
     ApplicationUpgradeModule,
     ApplicationDevelopmentModule,
     MarketplaceModule,
-    PreInstalledAppsModule,
-    AppBillingModule,
     AppTokenModule,
     TimelineMessagingModule,
     TimelineCalendarEventModule,
@@ -168,6 +166,8 @@ import { FileModule } from './file/file.module';
     TrashCleanupModule,
     DashboardModule,
     EventLogsModule,
+    PreInstalledAppsModule,
+    AppBillingModule,
   ],
   providers: [
     {
