@@ -51,6 +51,7 @@ export class LogicFunctionExecutionException extends Error {
 
 export enum LogicFunctionExecutionExceptionCode {
   LOGIC_FUNCTION_NOT_FOUND = 'LOGIC_FUNCTION_NOT_FOUND',
+  LOGIC_FUNCTION_NOT_BUILT = 'LOGIC_FUNCTION_NOT_BUILT',
   RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
 }
 
@@ -87,6 +88,13 @@ export class LogicFunctionExecutorService {
         workspaceId,
         logicFunctionId,
       });
+
+    if (!flatLogicFunction.isBuildUpToDate) {
+      throw new LogicFunctionExecutionException(
+        `Logic function ${logicFunctionId} has not been built. Build it before execution.`,
+        LogicFunctionExecutionExceptionCode.LOGIC_FUNCTION_NOT_BUILT,
+      );
+    }
 
     const envVariables = await this.getExecutionEnvVariables({
       workspaceId,
