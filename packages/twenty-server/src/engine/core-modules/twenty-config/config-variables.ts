@@ -1396,6 +1396,15 @@ export class ConfigVariables {
   @ConfigVariablesMetadata({
     group: ConfigVariablesGroup.LLM,
     description:
+      'Storage path for the AI catalog override (e.g. config/ai-catalog.json). When set, the catalog is fetched from the configured storage backend at startup instead of using the built-in ai-providers.json.',
+    type: ConfigVariableType.STRING,
+  })
+  @IsOptional()
+  AI_CATALOG_STORAGE_PATH?: string;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.LLM,
+    description:
       'AI model admin preferences: disabled models, recommended models, and default fast/smart model lists. Managed via admin panel or env.',
     type: ConfigVariableType.JSON,
   })
