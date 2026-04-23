@@ -24,9 +24,9 @@ import { buildWorkspaceTableColumnSets } from 'src/database/commands/workspace-e
 import {
   formatSqlValue,
 } from 'src/database/commands/workspace-export/utils/format-sql-value.util';
-import { formatPgCopyField } from './utils/format-copy-value.util';
+import { formatPgCopyField } from './utils/format-pg-copy-value.util';
 
-const BATCH_SIZE = 50_000;
+const BATCH_SIZE = 10_000;
 
 type WorkspaceExportParams = {
   workspaceId: string;
