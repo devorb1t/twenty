@@ -22,6 +22,7 @@ import { AddUpgradeMigrationWorkspaceIdIndexFastInstanceCommand } from 'src/data
 import { AddCacheTokensToAgentChatThreadFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-2/2-2-instance-command-fast-1777455269302-add-cache-tokens-to-agent-chat-thread';
 import { AddLogoToApplicationFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-2/2-2-instance-command-fast-1777539664664-add-logo-to-application';
 import { AddDeletedAtToAgentChatThreadFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-3/2-3-instance-command-fast-1777682000000-add-deleted-at-to-agent-chat-thread';
+import { ConnectionProviderSyncableEntityFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-3/2-3-instance-command-fast-1777896012579-connection-provider-syncable-entity';
 import { RemoveUserDefaultAvatarUrlFastInstanceCommand } from 'src/database/commands/upgrade-version-command/2-3/2-3-instance-command-fast-1777915958318-remove-user-default-avatar-url';
 
 export const INSTANCE_COMMANDS = [
@@ -47,5 +48,6 @@ export const INSTANCE_COMMANDS = [
   AddCacheTokensToAgentChatThreadFastInstanceCommand,
   AddLogoToApplicationFastInstanceCommand,
   AddDeletedAtToAgentChatThreadFastInstanceCommand,
+  ConnectionProviderSyncableEntityFastInstanceCommand,
   RemoveUserDefaultAvatarUrlFastInstanceCommand,
 ];
