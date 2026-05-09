@@ -74,6 +74,14 @@ const SettingsEditImapSmtpCaldavConnection = lazy(() =>
   })),
 );
 
+const SettingsNewEmailGroupChannel = lazy(() =>
+  import(
+    '@/settings/accounts/components/SettingsAccountsNewEmailGroupChannel'
+  ).then((module) => ({
+    default: module.SettingsAccountsNewEmailGroupChannel,
+  })),
+);
+
 const SettingsObjectDetailPage = lazy(() =>
   import('~/pages/settings/data-model/SettingsObjectDetailPage').then(
     (module) => ({
@@ -117,6 +125,14 @@ const SettingsLogicFunctionDetail = lazy(() =>
 const SettingsWorkspace = lazy(() =>
   import('~/pages/settings/SettingsWorkspace').then((module) => ({
     default: module.SettingsWorkspace,
+  })),
+);
+
+const SettingsWorkspaceEmailGroupChannelDetail = lazy(() =>
+  import(
+    '~/pages/settings/workspace/SettingsWorkspaceEmailGroupChannelDetail'
+  ).then((module) => ({
+    default: module.SettingsWorkspaceEmailGroupChannelDetail,
   })),
 );
 
@@ -620,6 +636,14 @@ export const SettingsRoutes = ({ isAdminPageEnabled }: SettingsRoutesProps) => (
         }
       >
         <Route path={SettingsPath.Workspace} element={<SettingsWorkspace />} />
+        <Route
+          path={SettingsPath.NewEmailGroupChannel}
+          element={<SettingsNewEmailGroupChannel />}
+        />
+        <Route
+          path={SettingsPath.EmailGroupChannelDetail}
+          element={<SettingsWorkspaceEmailGroupChannelDetail />}
+        />
         <Route path={SettingsPath.Domains} element={<SettingsDomains />} />
         <Route
           path={SettingsPath.ApiWebhooks}

@@ -23,6 +23,8 @@ export enum SettingsPath {
   WorkspaceMembersPage = 'members',
   WorkspaceMemberPage = 'members/:workspaceMemberId',
   Workspace = 'general',
+  EmailGroupChannelDetail = 'general/email-group/:messageChannelId',
+  NewEmailGroupChannel = 'general/new-email-group',
   Domains = 'domains',
   Subdomain = 'domains/subdomain',
   CustomDomain = 'domains/custom-domain',
