@@ -3119,7 +3119,7 @@ export default {
                 1
             ]
         },
-        "BillingMeteredProductUsage": {
+        "BillingResourceCreditUsage": {
             "productKey": [
                 137
             ],
@@ -5980,7 +5980,7 @@ export default {
             "listPlans": [
                 150
             ],
-            "getMeteredProductsUsage": [
+            "getResourceCreditUsage": [
                 149
             ],
             "findWorkspaceInvitations": [
@@ -7231,7 +7231,7 @@ export default {
             "cancelSwitchBillingInterval": [
                 152
             ],
-            "setMeteredSubscriptionPrice": [
+            "setResourceCreditSubscriptionPrice": [
                 152,
                 {
                     "priceId": [
@@ -7243,7 +7243,7 @@ export default {
             "endSubscriptionTrialPeriod": [
                 148
             ],
-            "cancelSwitchMeteredPrice": [
+            "cancelSwitchResourceCreditPrice": [
                 152
             ],
             "deleteWorkspaceInvitation": [
