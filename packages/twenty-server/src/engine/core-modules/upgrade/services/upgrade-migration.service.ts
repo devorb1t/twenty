@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import chunk from 'lodash.chunk';
 import { isDefined } from 'twenty-shared/utils';
 import { In, IsNull, type QueryRunner, Repository } from 'typeorm';
 
@@ -20,6 +21,8 @@ export type WorkspaceLastAttemptedCommand = {
   createdAt: Date;
   isInitial: boolean;
 };
+
+const UPGRADE_MIGRATION_SAVE_BATCH_SIZE = 1000;
 
 @Injectable()
 export class UpgradeMigrationService {
@@ -95,7 +98,7 @@ export class UpgradeMigrationService {
         where: { name, workspaceId: IsNull() },
       });
 
-      await repository.save([
+      const instanceRows = [
         {
           name,
           status,
@@ -112,7 +115,14 @@ export class UpgradeMigrationService {
           workspaceId,
           errorMessage,
         })),
-      ]);
+      ];
+
+      for (const batch of chunk(
+        instanceRows,
+        UPGRADE_MIGRATION_SAVE_BATCH_SIZE,
+      )) {
+        await repository.save(batch);
+      }
 
       return;
     }
@@ -134,7 +144,9 @@ export class UpgradeMigrationService {
       });
     }
 
-    await repository.save(rows);
+    for (const batch of chunk(rows, UPGRADE_MIGRATION_SAVE_BATCH_SIZE)) {
+      await repository.save(batch);
+    }
   }
 
   async markAsWorkspaceInitial({
