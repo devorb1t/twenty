@@ -53,6 +53,7 @@ export const extractRecordIdsAndDatesAsExpectAny = (
     if (
       options.normalizeIdCollections &&
       Array.isArray(value) &&
+      value.length > 0 &&
       (key.endsWith('Ids') || key.endsWith('UniversalIdentifiers'))
     ) {
       return {
