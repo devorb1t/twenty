@@ -91,7 +91,9 @@ describe('syncApplication', () => {
     });
 
     expect(firstSyncData).toMatchSnapshot(
-      extractRecordIdsAndDatesAsExpectAny(firstSyncData),
+      extractRecordIdsAndDatesAsExpectAny(firstSyncData, {
+        normalizeIdCollections: true,
+      }),
     );
 
     // Verify database state after first sync
@@ -353,7 +355,9 @@ describe('syncApplication', () => {
     });
 
     expect(firstSyncData).toMatchSnapshot(
-      extractRecordIdsAndDatesAsExpectAny(firstSyncData),
+      extractRecordIdsAndDatesAsExpectAny(firstSyncData, {
+        normalizeIdCollections: true,
+      }),
     );
 
     const { data: secondSyncData } = await syncApplication({
@@ -374,7 +378,9 @@ describe('syncApplication', () => {
     });
 
     expect(secondSyncData).toMatchSnapshot(
-      extractRecordIdsAndDatesAsExpectAny(secondSyncData),
+      extractRecordIdsAndDatesAsExpectAny(secondSyncData, {
+        normalizeIdCollections: true,
+      }),
     );
   }, 60000);
 
@@ -404,7 +410,9 @@ describe('syncApplication', () => {
     });
 
     expect(syncData).toMatchSnapshot(
-      extractRecordIdsAndDatesAsExpectAny(syncData),
+      extractRecordIdsAndDatesAsExpectAny(syncData, {
+        normalizeIdCollections: true,
+      }),
     );
   }, 60000);
 });
